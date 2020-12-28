@@ -1,0 +1,4 @@
+[submodule "External/DiligentEngine"]
+	path = External/DiligentEngine
+	url = git@github.com:DiligentGraphics/DiligentEngine.git
+	branch = master
