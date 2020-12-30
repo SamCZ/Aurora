@@ -23,16 +23,23 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(Aurora PRIVATE -static-libgcc -static-libstdc++)
 endif()
 ########################################################################################
-target_compile_options(Aurora PRIVATE -DUNICODE -DENGINE_DLL)
-target_include_directories(Aurora PRIVATE "External/DiligentEngine/DiligentCore")
+target_compile_options(Aurora PUBLIC -DUNICODE -DENGINE_DLL)
+target_include_directories(Aurora PUBLIC "External/DiligentEngine/DiligentCore")
+target_include_directories(Aurora PUBLIC "External/DiligentEngine/DiligentTools/NativeApp")
 
 target_link_libraries(Aurora
-        PRIVATE
+        PUBLIC
+        Diligent-NativeAppBase
+        Diligent-BuildSettings
         Diligent-GraphicsEngineOpenGL-shared
         Diligent-GraphicsEngineVk-shared
         )
+install_tools_lib(Aurora)
 copy_required_dlls(Aurora)
 ########################################################################################
+
+target_link_libraries(Aurora PUBLIC glfw)
+
 if(BUILD_TESTING)
     include(CTest)
     enable_testing()
