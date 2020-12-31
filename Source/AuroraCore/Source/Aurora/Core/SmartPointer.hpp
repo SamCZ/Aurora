@@ -3,7 +3,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace Hydra
+namespace Aurora
 {
 	template<typename T>
 	using SharedPtr = std::shared_ptr<T>;

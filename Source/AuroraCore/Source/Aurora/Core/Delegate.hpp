@@ -95,7 +95,7 @@ namespace Aurora
 
 		DelegateEvent& operator-=(const String evtName)
 		{
-			if (_Events.find(evtName) != _Events.end())
+			if (m_Events.find(evtName) != m_Events.end())
 			{
 				delete m_Events[evtName];
 

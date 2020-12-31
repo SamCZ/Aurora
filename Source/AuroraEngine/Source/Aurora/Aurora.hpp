@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "Render/RenderInterface.hpp"
+#include <Aurora/Core/Vector.hpp>
 
 #include <EngineFactory.h>
 #include <RenderDevice.h>
@@ -13,15 +14,23 @@
 
 #include <RefCntAutoPtr.hpp>
 #include <EngineFactoryVk.h>
+#include <MapHelper.hpp>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include "App/Window.hpp"
+#include "App/Input/InputManager.hpp"
+
 using namespace Diligent;
 
 static const char* VSSource = R"(
+cbuffer Constants
+{
+    float4x4 rotato;
+};
 struct PSInput
 {
     float4 Pos   : SV_POSITION;
@@ -41,7 +50,7 @@ void main(in  uint    VertId : SV_VertexID,
     Col[1] = float3(0.0, 1.0, 0.0); // green
     Col[2] = float3(0.0, 0.0, 1.0); // blue
 
-    PSIn.Pos   = Pos[VertId];
+    PSIn.Pos   = mul(rotato, Pos[VertId]);
     PSIn.Color = Col[VertId];
 }
 )";
@@ -68,15 +77,15 @@ void main(in  PSInput  PSIn,
 
 static void run()
 {
-    glfwInit();
+    Aurora::App::FWindowDefinition windowDefinition = {};
+    windowDefinition.Width = 1280;
+    windowDefinition.Height = 720;
+    windowDefinition.CenterScreen = true;
+    windowDefinition.HasOSWindowBorder = true;
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
-
-    auto* window = glfwCreateWindow(300, 300, "Hydra", nullptr, nullptr);
+    Aurora::App::FWindow window;
+    window.Initialize(windowDefinition, nullptr);
+    window.Show();
 
     SwapChainDesc SCDesc;
 
@@ -96,7 +105,7 @@ static void run()
     auto* pFactoryVk = GetEngineFactoryVk();
     pFactoryVk->CreateDeviceAndContextsVk(EngineCI, &m_pDevice, &m_pImmediateContext);
 
-    HWND hWnd = glfwGetWin32Window(window);
+    HWND hWnd = glfwGetWin32Window(window.GetWindowHandle());
 
     if (!m_pSwapChain && hWnd != nullptr)
     {
@@ -106,7 +115,18 @@ static void run()
     //LINUX
     //xcb_connection_t* connection = XGetXCBConnection(glfwGetX11Display());
 
+    RefCntAutoPtr<IShaderResourceBinding> shaderResourceBinding;
+
     RefCntAutoPtr<IPipelineState> m_pPSO;
+    RefCntAutoPtr<IBuffer> constants;
+
+    BufferDesc CBDesc;
+    CBDesc.Name           = "VS constants CB";
+    CBDesc.uiSizeInBytes  = sizeof(Aurora::Matrix4);
+    CBDesc.Usage          = USAGE_DYNAMIC;
+    CBDesc.BindFlags      = BIND_UNIFORM_BUFFER;
+    CBDesc.CPUAccessFlags = CPU_ACCESS_WRITE;
+    m_pDevice->CreateBuffer(CBDesc, nullptr, &constants);
 
     {
         // Pipeline state object encompasses configuration of all GPU stages
@@ -166,32 +186,25 @@ static void run()
         PSOCreateInfo.pPS = pPS;
         m_pDevice->CreateGraphicsPipelineState(PSOCreateInfo, &m_pPSO);
 
-        std::cout << Aurora::Render::RenderInterface::GetGraphicsPipelineStateCreateInfoHash(PSOCreateInfo) << std::endl;
+        m_pPSO->GetStaticVariableByName(SHADER_TYPE_VERTEX, "Constants")->Set(constants);
 
-        PSOCreateInfo.GraphicsPipeline.RasterizerDesc.CullMode = CULL_MODE_FRONT;
-        std::cout << Aurora::Render::RenderInterface::GetGraphicsPipelineStateCreateInfoHash(PSOCreateInfo) << std::endl;
+        m_pPSO->CreateShaderResourceBinding(&shaderResourceBinding, true);
     }
 
-    struct Test
-    {
-        RefCntAutoPtr<ISwapChain> SwapChain;
-    };
+    float a = 0;
 
-    Test test {m_pSwapChain};
-
-    glfwSetWindowUserPointer(window, &test);
-
-    glfwSetWindowSizeCallback(window, [](GLFWwindow* rawWindow, int width, int height){
-        Test* test = (Test*)glfwGetWindowUserPointer(rawWindow);
-        test->SwapChain->Resize(width, height);
-    });
-
-    while(!glfwWindowShouldClose(window)) {
+    while(!window.IsShouldClose()) {
         glfwPollEvents();
+        window.GetInputManager()->Update();
 
         auto* pRTV = m_pSwapChain->GetCurrentBackBufferRTV();
         auto* pDSV = m_pSwapChain->GetDepthBufferDSV();
         m_pImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+
+        MapHelper<glm::mat4x4> CBConstants(m_pImmediateContext, constants, MAP_WRITE, MAP_FLAG_DISCARD);
+        CBConstants[0] = glm::rotate(a, glm::vec3(0, 0, 1));
+
+        a += 0.01f;
 
         // Clear the back buffer
         const float ClearColor[] = {0.350f, 0.350f, 0.350f, 1.0f};
@@ -202,8 +215,7 @@ static void run()
         // Set the pipeline state in the immediate context
         m_pImmediateContext->SetPipelineState(m_pPSO);
 
-        // Typically we should now call CommitShaderResources(), however shaders in this example don't
-        // use any resources.
+        m_pImmediateContext->CommitShaderResources(shaderResourceBinding, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
         DrawAttribs drawAttrs;
         drawAttrs.NumVertices = 3; // Render 3 vertices
@@ -212,7 +224,7 @@ static void run()
         m_pSwapChain->Present();
     }
 
-    glfwDestroyWindow(window);
+    window.Destroy();
 
     glfwTerminate();
 }

@@ -33,6 +33,7 @@ target_include_directories(AuroraEngine PUBLIC "././External/DiligentEngine/Dili
 target_link_libraries(AuroraEngine
         PUBLIC
         Diligent-Common
+        Diligent-GraphicsTools
         Diligent-NativeAppBase
         Diligent-BuildSettings
         Diligent-GraphicsEngineOpenGL-shared
