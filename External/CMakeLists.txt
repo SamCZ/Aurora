@@ -1,6 +1,7 @@
 set(DILIGENT_BUILD_SAMPLES OFF)
 set(DILIGENT_BUILD_DEMOS OFF)
 set(DILIGENT_BUILD_UNITY_PLUGIN OFF)
+set(DILIGENT_INSTALL_TOOLS OFF)
 add_subdirectory(DiligentEngine)
 
 #------------------------------
@@ -13,3 +14,5 @@ set(GLFW_BUILD_TESTS OFF)
 set(GLFW_BUILD_DOCS OFF)
 set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(glfw)
+
+add_subdirectory(glm)

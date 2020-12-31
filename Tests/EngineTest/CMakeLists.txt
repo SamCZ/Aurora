@@ -1,5 +1,6 @@
 add_executable(RenderTest main.cpp)
-target_link_libraries(RenderTest Aurora)
+target_link_libraries(RenderTest AuroraCore)
+target_link_libraries(RenderTest AuroraEngine)
 add_test(NAME RenderTest COMMAND Aurora)
 install_tools_lib(RenderTest)
 copy_required_dlls(RenderTest)

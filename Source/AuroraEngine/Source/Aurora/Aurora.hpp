@@ -4,16 +4,15 @@
 #include <string>
 #include <memory>
 
-#include <NativeAppBase.hpp>
+#include "Render/RenderInterface.hpp"
 
 #include <EngineFactory.h>
 #include <RenderDevice.h>
 #include <DeviceContext.h>
 #include <SwapChain.h>
 
-#include <Common/interface/RefCntAutoPtr.hpp>
-#include "Graphics/GraphicsEngineOpenGL/interface/EngineFactoryOpenGL.h"
-#include "Graphics/GraphicsEngineVulkan/interface/EngineFactoryVk.h"
+#include <RefCntAutoPtr.hpp>
+#include <EngineFactoryVk.h>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_INCLUDE_VULKAN
@@ -167,6 +166,10 @@ static void run()
         PSOCreateInfo.pPS = pPS;
         m_pDevice->CreateGraphicsPipelineState(PSOCreateInfo, &m_pPSO);
 
+        std::cout << Aurora::Render::RenderInterface::GetGraphicsPipelineStateCreateInfoHash(PSOCreateInfo) << std::endl;
+
+        PSOCreateInfo.GraphicsPipeline.RasterizerDesc.CullMode = CULL_MODE_FRONT;
+        std::cout << Aurora::Render::RenderInterface::GetGraphicsPipelineStateCreateInfoHash(PSOCreateInfo) << std::endl;
     }
 
     struct Test
