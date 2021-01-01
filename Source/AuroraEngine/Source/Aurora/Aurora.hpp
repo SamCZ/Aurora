@@ -171,6 +171,13 @@ static void run()
             m_pDevice->CreateShader(ShaderCI, &pVS);
         }
 
+        for (int i = 0; i < pVS->GetResourceCount(); ++i) {
+            ShaderResourceDesc desc;
+            pVS->GetResourceDesc(i, desc);
+
+            std::cout << desc.Name << " " << desc.ArraySize << " " << desc.Type << std::endl;
+        }
+
         // Create a pixel shader
         RefCntAutoPtr<IShader> pPS;
         {
@@ -189,6 +196,7 @@ static void run()
         m_pPSO->GetStaticVariableByName(SHADER_TYPE_VERTEX, "Constants")->Set(constants);
 
         m_pPSO->CreateShaderResourceBinding(&shaderResourceBinding, true);
+
     }
 
     float a = 0;
