@@ -1,6 +1,6 @@
 [submodule "External/DiligentEngine"]
 	path = External/DiligentEngine
-	url = git@github.com:DiligentGraphics/DiligentEngine.git
+	url = git@github.com:SamCZ/DiligentEngine.git
 	branch = master
 [submodule "External/glfw"]
 	path = External/glfw
