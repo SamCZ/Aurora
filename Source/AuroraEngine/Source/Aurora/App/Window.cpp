@@ -128,7 +128,10 @@ namespace Aurora::App
 #undef MAP
     }
 
-    FWindow::FWindow() : FSizeable(), m_WindowHandle(nullptr), m_Focused(false), m_CursorMode(ECursorMode::Normal), m_InputManager(MakeShared<FInputManager>(this)), m_SwapChain(nullptr)
+    FWindow::FWindow()
+    : FSizeable(), m_WindowHandle(nullptr), m_Focused(false),
+    m_CursorMode(ECursorMode::Normal), m_InputManager(MakeShared<FInputManager>(this)),
+    m_SwapChain(nullptr), m_Vsync(true)
     {
 
     }
@@ -144,6 +147,8 @@ namespace Aurora::App
             InitGLFWKeyMap();
             IS_GLFW_CONTEXT_INITIALIZED = true;
         }
+
+        m_Title = windowDefinition.Title;
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 

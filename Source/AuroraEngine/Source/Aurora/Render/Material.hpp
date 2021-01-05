@@ -9,6 +9,8 @@
 #include <PipelineState.h>
 #include <MapHelper.hpp>
 
+#include "../AuroraEngine.hpp"
+
 using namespace Diligent;
 
 namespace Aurora::Render
@@ -62,21 +64,21 @@ namespace Aurora::Render
         void AssignShaders();
     public:
         template <typename DataType, bool KeepStrongReferences = false>
-        bool GetConstantBuffer(const String& name, MapHelper<DataType, KeepStrongReferences>& map, RefCntAutoPtr<IDeviceContext>& immediateContext)
+        bool GetConstantBuffer(const String& name, MapHelper<DataType, KeepStrongReferences>& map)
         {
             if(m_ShaderConstantBuffers.find(name) == m_ShaderConstantBuffers.end()) {
                 return false;
             }
 
-            map = MapHelper<DataType, KeepStrongReferences>(immediateContext, m_ShaderConstantBuffers[name].Buffer, MAP_WRITE, MAP_FLAG_DISCARD);
+            map = MapHelper<DataType, KeepStrongReferences>(AuroraEngine::ImmediateContext, m_ShaderConstantBuffers[name].Buffer, MAP_WRITE, MAP_FLAG_DISCARD);
 
             return true;
         }
 
-        void ValidateGraphicsPipelineState(FRenderInterface& renderInterface);
+        void ValidateGraphicsPipelineState();
 
-        void ApplyPipeline(FRenderInterface& renderInterface);
-        void CommitShaderResources(FRenderInterface& renderInterface);
+        void ApplyPipeline();
+        void CommitShaderResources();
 
         GraphicsPipelineDesc& GetPipelineDesc();
 
@@ -168,4 +170,5 @@ namespace Aurora::Render
     private:
         static uint32_t GetGraphicsPipelineStateCreateInfoHash(Diligent::GraphicsPipelineStateCreateInfo& gpsci);
     };
+    DEFINE_PTR(FMaterial)
 }

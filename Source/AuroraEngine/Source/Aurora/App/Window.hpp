@@ -34,9 +34,11 @@ namespace Aurora::App
     private:
         static bool IS_GLFW_CONTEXT_INITIALIZED;
     private:
+        String m_Title;
         GLFWwindow* m_WindowHandle;
         bool m_Focused;
         ECursorMode m_CursorMode;
+        bool m_Vsync;
     private:
         FInputManagerPtr m_InputManager;
         RefCntAutoPtr<ISwapChain> m_SwapChain;
@@ -58,6 +60,21 @@ namespace Aurora::App
         void Focus();
 
         void SetTitle(const String& title);
+
+        [[nodiscard]] inline String GetOriginalTitle() const
+        {
+            return m_Title;
+        }
+
+        inline void SetVsync(bool enabled)
+        {
+            m_Vsync = enabled;
+        }
+
+        [[nodiscard]] inline bool IsVsyncEnabled() const
+        {
+            return m_Vsync;
+        }
 
         [[nodiscard]] bool IsFocused() const;
 

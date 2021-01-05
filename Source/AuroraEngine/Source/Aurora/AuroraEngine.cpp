@@ -1,12 +1,14 @@
 #include "AuroraEngine.hpp"
+
+#include <queue>
+
 #include <EngineFactoryVk.h>
+#include <Timer.hpp>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-
-#include <queue>
 
 #include "App/Input/InputManager.hpp"
 
@@ -46,10 +48,17 @@ namespace Aurora
         IsRunning = true;
 
         bool anyWindowRunning;
-
         std::queue<SharedPtr<FWindowGameContext>> contextsToRemove;
 
+        Timer timer;
+        auto PrevTime = timer.GetElapsedTime();
+        double filteredFrameTime = 0.0;
+
         do {
+            auto CurrTime    = timer.GetElapsedTime();
+            auto ElapsedTime = CurrTime - PrevTime;
+            PrevTime         = CurrTime;
+
             anyWindowRunning = false;
 
             glfwPollEvents();
@@ -67,10 +76,10 @@ namespace Aurora
 
                 window->GetInputManager()->Update();
 
-                context->Update(0, 0);
+                context->Update(ElapsedTime, CurrTime);
                 context->Render();
 
-                window->GetSwapChain()->Present(1);
+                window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
             }
 
             while(!contextsToRemove.empty()) {
@@ -78,6 +87,16 @@ namespace Aurora
                 contextsToRemove.pop();
             }
 
+            double filterScale = 0.2;
+            filteredFrameTime  = filteredFrameTime * (1.0 - filterScale) + filterScale * ElapsedTime;
+
+            for (auto& context : GameContexts) {
+                std::stringstream fpsCounterSS;
+                fpsCounterSS << context->GetWindow()->GetOriginalTitle() << " - " << std::fixed << std::setprecision(1) << filteredFrameTime * 1000;
+                fpsCounterSS << " ms (" << 1.0 / filteredFrameTime << " fps)";
+
+                context->GetWindow()->SetTitle(fpsCounterSS.str());
+            }
         } while(IsRunning && anyWindowRunning);
 
         glfwTerminate();

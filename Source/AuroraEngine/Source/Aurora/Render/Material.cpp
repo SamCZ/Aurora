@@ -2,6 +2,8 @@
 #include "RenderInterface.hpp"
 #include <Aurora/Core/Crc.hpp>
 
+#include "../AuroraEngine.hpp"
+
 namespace Aurora::Render
 {
     FMaterial::FMaterial(const String& name, FShaderCollectionPtr shaderCollection)
@@ -26,6 +28,9 @@ namespace Aurora::Render
         if(shader == nullptr) {
             return;
         }
+
+
+        List<StateTransitionDesc> barriers;
 
         for (int i = 0; i < shader->GetResourceCount(); ++i) {
             ShaderResourceDesc desc;
@@ -58,6 +63,9 @@ namespace Aurora::Render
                         CBDesc.CPUAccessFlags = CPU_ACCESS_WRITE;
 
                         shaderConstantBufferInfo.Desc = CBDesc;
+
+                        AuroraEngine::RenderDevice->CreateBuffer(shaderConstantBufferInfo.Desc, nullptr, &shaderConstantBufferInfo.Buffer);
+                        barriers.push_back({shaderConstantBufferInfo.Buffer, RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_CONSTANT_BUFFER, true});
 
                         m_ShaderConstantBuffers[desc.Name] = shaderConstantBufferInfo;
                     }
@@ -97,6 +105,10 @@ namespace Aurora::Render
                     continue;
             }
         }
+
+        if(!barriers.empty()) {
+            AuroraEngine::ImmediateContext->TransitionResourceStates(barriers.size(), barriers.data());
+        }
     }
 
     void FMaterial::AssignShaders()
@@ -110,7 +122,7 @@ namespace Aurora::Render
         m_PSOCreateInfo.pMS = m_ShaderCollection->Mesh;
     }
 
-    void FMaterial::ValidateGraphicsPipelineState(FRenderInterface& renderInterface)
+    void FMaterial::ValidateGraphicsPipelineState()
     {
         // Setup PSO
         m_PSOCreateInfo.PSODesc.ResourceLayout.Variables = m_ShaderResourceVariables.data();
@@ -118,22 +130,6 @@ namespace Aurora::Render
 
         m_PSOCreateInfo.PSODesc.ResourceLayout.ImmutableSamplers = m_ShaderResourceSamplers.data();
         m_PSOCreateInfo.PSODesc.ResourceLayout.NumImmutableSamplers = m_ShaderResourceSamplers.size();
-
-        // Create constant buffers
-        List<StateTransitionDesc> barriers;
-
-        for(auto& it : m_ShaderConstantBuffers) {
-            ShaderConstantBuffer& shaderConstantBuffer = it.second;
-
-            if(shaderConstantBuffer.Buffer == nullptr) {
-                renderInterface.GetDevice()->CreateBuffer(shaderConstantBuffer.Desc, nullptr, &shaderConstantBuffer.Buffer);
-                barriers.push_back({shaderConstantBuffer.Buffer, RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_CONSTANT_BUFFER, true});
-            }
-        }
-
-        if(!barriers.empty()) {
-            renderInterface.GetImmediateContext()->TransitionResourceStates(barriers.size(), barriers.data());
-        }
 
         // Update pipeline
         uint32_t hash = GetGraphicsPipelineStateCreateInfoHash(m_PSOCreateInfo);
@@ -153,7 +149,7 @@ namespace Aurora::Render
         m_CurrentPipelineState.Release();
 
         GraphicsPipelineStateCreateInfo infoCopy(m_PSOCreateInfo);
-        renderInterface.GetDevice()->CreateGraphicsPipelineState(infoCopy, &m_CurrentPipelineState);
+        AuroraEngine::RenderDevice->CreateGraphicsPipelineState(infoCopy, &m_CurrentPipelineState);
 
         // Bind constant buffers
         for(auto& it : m_ShaderConstantBuffers) {
@@ -174,12 +170,12 @@ namespace Aurora::Render
         m_PipelineStates[hash] = stateData;
     }
 
-    void FMaterial::ApplyPipeline(FRenderInterface& renderInterface)
+    void FMaterial::ApplyPipeline()
     {
-        renderInterface.GetImmediateContext()->SetPipelineState(GetCurrentPipelineState());
+        AuroraEngine::ImmediateContext->SetPipelineState(GetCurrentPipelineState());
     }
 
-    void FMaterial::CommitShaderResources(FRenderInterface& renderInterface)
+    void FMaterial::CommitShaderResources()
     {
         for (auto& var : m_ShaderTextures) {
             if(!var.second.NeedsUpdate) continue;
@@ -190,7 +186,7 @@ namespace Aurora::Render
             }
         }
 
-        renderInterface.GetImmediateContext()->CommitShaderResources(GetCurrentResourceBinding(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        AuroraEngine::ImmediateContext->CommitShaderResources(GetCurrentResourceBinding(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     }
 
     GraphicsPipelineDesc& FMaterial::GetPipelineDesc()
