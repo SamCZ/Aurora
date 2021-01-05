@@ -7,6 +7,12 @@
 #include <Aurora/Core/Sizeable.hpp>
 #include "CursorMode.hpp"
 
+#include <SwapChain.h>
+#include <RefCntAutoPtr.hpp>
+#include <utility>
+
+using namespace Diligent;
+
 namespace Aurora::App
 {
     class FInputManager;
@@ -16,9 +22,6 @@ namespace Aurora::App
     {
         int Width;
         int Height;
-        int XPositionOnScreen;
-        int YPositionOnScreen;
-        bool CenterScreen;
 
         bool HasOSWindowBorder;
         bool Maximized;
@@ -36,10 +39,12 @@ namespace Aurora::App
         ECursorMode m_CursorMode;
     private:
         FInputManagerPtr m_InputManager;
+        RefCntAutoPtr<ISwapChain> m_SwapChain;
     public:
         FWindow();
+        ~FWindow() override;
 
-        void Initialize(FWindowDefinition& windowDefinition, const SharedPtr<FWindow>& parentWindow);
+        void Initialize(const FWindowDefinition& windowDefinition, const SharedPtr<FWindow>& parentWindow);
 
         void Show();
         void Hide();
@@ -66,6 +71,18 @@ namespace Aurora::App
         bool IsIconified();
 
         FInputManagerPtr GetInputManager();
+    public:
+        inline void SetSwapChain(RefCntAutoPtr<ISwapChain> swapChain)
+        {
+            if(m_SwapChain != nullptr) return;
+
+            m_SwapChain = std::move(swapChain);
+        }
+
+        inline RefCntAutoPtr<ISwapChain>& GetSwapChain()
+        {
+            return m_SwapChain;
+        }
     private:
         static void OnResizeCallback(GLFWwindow* rawWindow,int width,int height);
         static void OnFocusCallback(GLFWwindow* rawWindow, int focused);
@@ -74,4 +91,5 @@ namespace Aurora::App
         static void OnMouseScrollCallback(GLFWwindow* rawWindow, double xOffset, double yOffset);
         static void OnMouseButtonCallback(GLFWwindow* rawWindow, int button, int action, int mods);
     };
+    DEFINE_PTR(FWindow)
 }

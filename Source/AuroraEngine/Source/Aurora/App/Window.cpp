@@ -128,12 +128,14 @@ namespace Aurora::App
 #undef MAP
     }
 
-    FWindow::FWindow() : FSizeable(), m_WindowHandle(nullptr), m_Focused(false), m_CursorMode(ECursorMode::Normal), m_InputManager(MakeShared<FInputManager>(this))
+    FWindow::FWindow() : FSizeable(), m_WindowHandle(nullptr), m_Focused(false), m_CursorMode(ECursorMode::Normal), m_InputManager(MakeShared<FInputManager>(this)), m_SwapChain(nullptr)
     {
 
     }
 
-    void FWindow::Initialize(App::FWindowDefinition& windowDefinition, const SharedPtr<App::FWindow>& parentWindow)
+    FWindow::~FWindow() = default;
+
+    void FWindow::Initialize(const App::FWindowDefinition& windowDefinition, const SharedPtr<App::FWindow>& parentWindow)
     {
         if(!IS_GLFW_CONTEXT_INITIALIZED)
         {
@@ -173,7 +175,9 @@ namespace Aurora::App
             return;
         }
 
-        if(windowDefinition.CenterScreen) {
+        if(parentWindow != nullptr && !windowDefinition.Maximized) {
+            // TODO: Center relative to parent
+        } else if(!windowDefinition.Maximized) {
             int x = vidMode->width / 2 - windowDefinition.Width / 2;
             int y = vidMode->height / 2 - windowDefinition.Height / 2;
             glfwSetWindowPos(m_WindowHandle, x, y);

@@ -62,6 +62,5 @@ namespace Aurora::Framework
         FastMap<uint8_t, FMaterialSlot> MaterialSlots;
 
         void UpdateBuffers(Diligent::RefCntAutoPtr<Diligent::IRenderDevice>& renderDevice, Diligent::RefCntAutoPtr<Diligent::IDeviceContext>& immediateContext);
-        void DeleteBuffers();
     };
 }

@@ -30,7 +30,7 @@ namespace Aurora
 #define StaticCastSharedPtr std::static_pointer_cast
 #define DynamicCastSharedPtr std::dynamic_pointer_cast
 
-#define New(classname, ...) MakeShared<classname>(__VA_ARGS__)
+#define New(classname, ...) Aurora::MakeShared<classname>(__VA_ARGS__)
 
 #define DEFINE_PTR(className) typedef SharedPtr<className> className ## Ptr; typedef WeakPtr<className> className ## WeakPtr;
 #define PREDEFINE_PTR(type, className) type className; DEFINE_PTR(className)

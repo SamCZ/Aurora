@@ -8,7 +8,15 @@ add_compile_options("$<$<CONFIG:DEBUG>:-DDEBUG>") # Define DEBUG in Debug builds
 
 if(MINGW)
     message(NOTICE "MinGW detected, setting compilation to Windows")
+    add_compile_options(-mthreads -lpthread -msse4 -lstdc++fs)
     set(WIN32 ON)
+    set(CMAKE_SYSTEM_NAME Windows)
+
+    if(VL_TOOLS AND VL_TOOLS_CONSOLE AND CMAKE_BUILD_TYPE EQUAL "DEBUG")
+        add_compile_options("-mconsole") # Open console window in addition to GLFW window
+    else()
+        add_compile_options("-mwindows") # Only GLFW window
+    endif()
 endif()
 
 add_subdirectory(External)

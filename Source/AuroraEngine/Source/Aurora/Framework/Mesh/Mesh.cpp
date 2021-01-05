@@ -8,6 +8,8 @@ namespace Aurora::Framework
     // TODO: Move this method to render interface
     void HMesh::UpdateBuffers(Diligent::RefCntAutoPtr<Diligent::IRenderDevice>& renderDevice, Diligent::RefCntAutoPtr<Diligent::IDeviceContext>& immediateContext)
     {
+        List<StateTransitionDesc> barriers;
+
         for(auto& it : LODResources) {
             HMeshLodResource& resource = it.second;
 
@@ -29,6 +31,8 @@ namespace Aurora::Framework
                 immediateContext->UpdateBuffer(resource.VertexBuffer, 0, resource.Vertices->GetSize(), resource.Vertices->GetData(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
             }
 
+            barriers.push_back({resource.VertexBuffer, RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_VERTEX_BUFFER, true});
+
             if(resource.Indices.empty()) {
                 continue;
             }
@@ -46,6 +50,10 @@ namespace Aurora::Framework
             } else {
                 immediateContext->UpdateBuffer(resource.IndexBuffer, 0, resource.Indices.size() * sizeof(uint32_t), resource.Indices.data(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
             }
+
+            barriers.push_back({resource.IndexBuffer,  RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_INDEX_BUFFER,  true});
         }
+
+        immediateContext->TransitionResourceStates(barriers.size(), barriers.data());
     }
 }
