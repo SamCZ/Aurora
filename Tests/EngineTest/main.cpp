@@ -86,46 +86,18 @@ public:
 
     void Init() override
     {
-        TextureLoadInfo loadInfo;
-        loadInfo.IsSRGB = false;
-        CreateTextureFromFile("DGLogo.png", loadInfo, AuroraEngine::RenderDevice, &Tex);
+        Tex = AuroraEngine::AssetManager->LoadTexture("DGLogo.png");
 
         if(Tex == nullptr) {
             std::cout << "Cannot load texture!" << std::endl;
         }
 
-        FShaderCollectionPtr shaderCollection = std::make_shared<FShaderCollection>();
+        FShaderCollectionPtr shaders = AuroraEngine::AssetManager->LoadShaders({
+            {SHADER_TYPE_VERTEX, SHADER_SOURCE_LANGUAGE_HLSL, "", VSSource, {}},
+            {SHADER_TYPE_PIXEL, SHADER_SOURCE_LANGUAGE_HLSL, "", PSSource, {}}
+        });
 
-        ShaderCreateInfo ShaderCI;
-        // Tell the system that the shader source code is in HLSL.
-        // For OpenGL, the engine will convert this into GLSL under the hood
-        ShaderCI.SourceLanguage = SHADER_SOURCE_LANGUAGE_HLSL;
-        // OpenGL backend requires emulated combined HLSL texture samplers (g_Texture + g_Texture_sampler combination)
-        ShaderCI.UseCombinedTextureSamplers = true;
-
-        // Create a vertex shader
-        RefCntAutoPtr<IShader> pVS;
-        {
-            ShaderCI.Desc.ShaderType = SHADER_TYPE_VERTEX;
-            ShaderCI.EntryPoint      = "main";
-            ShaderCI.Desc.Name       = "Triangle vertex shader";
-            ShaderCI.Source          = VSSource;
-            AuroraEngine::RenderDevice->CreateShader(ShaderCI, &pVS);
-        }
-        shaderCollection->Vertex = pVS;
-
-        // Create a pixel shader
-        RefCntAutoPtr<IShader> pPS;
-        {
-            ShaderCI.Desc.ShaderType = SHADER_TYPE_PIXEL;
-            ShaderCI.EntryPoint      = "main";
-            ShaderCI.Desc.Name       = "Triangle pixel shader";
-            ShaderCI.Source          = PSSource;
-            AuroraEngine::RenderDevice->CreateShader(ShaderCI, &pPS);
-        }
-        shaderCollection->Pixel = pPS;
-
-        testMaterial = New(FMaterial, "Tringel", shaderCollection);
+        testMaterial = New(FMaterial, "Tringel", shaders);
         testMaterial->SetTexture("g_Texture", Tex);
 
         GraphicsPipelineDesc& graphicsPipelineDesc = testMaterial->GetPipelineDesc();

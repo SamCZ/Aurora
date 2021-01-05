@@ -18,6 +18,7 @@ namespace Aurora
     bool AuroraEngine::IsRunning = false;
     RefCntAutoPtr<IRenderDevice> AuroraEngine::RenderDevice(nullptr);
     RefCntAutoPtr<IDeviceContext> AuroraEngine::ImmediateContext(nullptr);
+    SharedPtr<FAssetManager> AuroraEngine::AssetManager = nullptr;
     List<SharedPtr<FWindowGameContext>> AuroraEngine::GameContexts;
 
     static IEngineFactoryVk* EngineFactory = nullptr;
@@ -33,9 +34,15 @@ namespace Aurora
         EngineCI.EnableValidation = true;
 #    endif
 
+        EngineCI.Features.ComputeShaders  = DEVICE_FEATURE_STATE_ENABLED;
+        EngineCI.Features.DepthClamp      = DEVICE_FEATURE_STATE_OPTIONAL;
+        EngineCI.Features.WireframeFill   = DEVICE_FEATURE_STATE_OPTIONAL;
+        EngineCI.Features.GeometryShaders = DEVICE_FEATURE_STATE_OPTIONAL;
+
         EngineFactory = GetEngineFactoryVk();
         EngineFactory->CreateDeviceAndContextsVk(EngineCI, &RenderDevice, &ImmediateContext);
 
+        AuroraEngine::AssetManager = New(FAssetManager);
         IsInitialized = true;
     }
 

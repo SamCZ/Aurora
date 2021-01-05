@@ -11,6 +11,8 @@
 #include "App/WindowGameContext.hpp"
 #include "App/Window.hpp"
 
+#include "Assets/AssetManager.hpp"
+
 using namespace Diligent;
 
 using namespace Aurora::App;
@@ -25,6 +27,7 @@ namespace Aurora
     public:
         static RefCntAutoPtr<IRenderDevice> RenderDevice;
         static RefCntAutoPtr<IDeviceContext> ImmediateContext;
+        static SharedPtr<FAssetManager> AssetManager;
     private:
         static List<SharedPtr<FWindowGameContext>> GameContexts;
     public:

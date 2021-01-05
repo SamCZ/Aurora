@@ -25,3 +25,5 @@ if(WIN32)
 endif()
 
 target_link_libraries(AuroraCore PUBLIC glfw glm::glm)
+
+target_link_libraries(AuroraCore PUBLIC Diligent-BuildSettings Diligent-Common)
