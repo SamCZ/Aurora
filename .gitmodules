@@ -10,3 +10,7 @@
 	path = External/glm
 	url = git@github.com:g-truc/glm.git
 	branch = master
+[submodule "External/assimp"]
+	path = External/assimp
+	url = git@github.com:assimp/assimp.git
+	branch = master
