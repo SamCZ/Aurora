@@ -3,11 +3,11 @@
 #include <Aurora/Aurora.hpp>
 #include <Aurora/AuroraEngine.hpp>
 
-#include <TextureLoader.h>
-#include <TextureUtilities.h>
 #include <MapHelper.hpp>
 
 #include <Aurora/Render/Material.hpp>
+
+#include <Aurora/Assets/ModelImporter.hpp>
 
 using namespace Aurora;
 using namespace Aurora::App;
@@ -49,6 +49,37 @@ void main(in  uint    VertId : SV_VertexID,
 }
 )";
 
+static const char* VSSourceMesh = R"(
+cbuffer Constants
+{
+    float4x4 MVP;
+};
+
+struct VS_Input
+{
+	float3 position : ATTRIB0;
+	float2 texCoord : ATTRIB1;
+
+	float3 normal : ATTRIB2;
+	float3 tangent : ATTRIB3;
+	float3 bitan : ATTRIB4;
+};
+
+struct PSInput
+{
+    float4 Pos   : SV_POSITION;
+    float2 TexCoord : TEXCOORD;
+    float3 Color : COLOR;
+};
+
+void main(in VS_Input input, out PSInput PSIn)
+{
+    PSIn.Pos   = mul(MVP, float4(input.position, 1.0));
+    //PSIn.Color = input.normal;
+    PSIn.TexCoord = input.texCoord;
+}
+)";
+
 // Pixel shader simply outputs interpolated vertex color
 static const char* PSSource = R"(
 struct PSInput
@@ -79,6 +110,7 @@ class TestGame : public FWindowGameContext
 private:
     RefCntAutoPtr<ITexture> Tex;
     FMaterialPtr testMaterial;
+    HStaticMeshPtr staticMesh;
 
     double a = 0;
 public:
@@ -86,14 +118,17 @@ public:
 
     void Init() override
     {
-        Tex = AuroraEngine::AssetManager->LoadTexture("DGLogo.png");
+        staticMesh = FModelImporter::LoadMesh(AuroraEngine::AssetManager->LoadFile("sword_pbr.fbx"));
+        staticMesh->UpdateBuffers(AuroraEngine::RenderDevice, AuroraEngine::ImmediateContext);
+
+        Tex = AuroraEngine::AssetManager->LoadTexture("BaseColor.png");
 
         if(Tex == nullptr) {
             std::cout << "Cannot load texture!" << std::endl;
         }
 
         FShaderCollectionPtr shaders = AuroraEngine::AssetManager->LoadShaders({
-            {SHADER_TYPE_VERTEX, SHADER_SOURCE_LANGUAGE_HLSL, "", VSSource, {}},
+            {SHADER_TYPE_VERTEX, SHADER_SOURCE_LANGUAGE_HLSL, "", VSSourceMesh, {}},
             {SHADER_TYPE_PIXEL, SHADER_SOURCE_LANGUAGE_HLSL, "", PSSource, {}}
         });
 
@@ -106,10 +141,13 @@ public:
         graphicsPipelineDesc.DSVFormat                    = GetSwapChain()->GetDesc().DepthBufferFormat;
 
         testMaterial->SetCullMode(CULL_MODE_NONE);
-        testMaterial->SetDepthEnable(false);
+        testMaterial->SetDepthEnable(true);
+        testMaterial->SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+        graphicsPipelineDesc.InputLayout.LayoutElements = staticMesh->GetLayout();
+        graphicsPipelineDesc.InputLayout.NumElements = staticMesh->GetLayoutElementCount();
 
         GetWindow()->GetInputManager()->AddActionMapping("ToggleWireframe", Keys::M);
-
         GetWindow()->GetInputManager()->BindAction("ToggleWireframe", IE_Pressed, new LambdaDelegate<void>([this](){
             static bool state = true;
             testMaterial->SetFillMode(state ? FILL_MODE_WIREFRAME : FILL_MODE_SOLID);
@@ -134,19 +172,41 @@ public:
         AuroraEngine::ImmediateContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         AuroraEngine::ImmediateContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
+        Uint32   offset   = 0;
+        IBuffer* pBuffs[] = {staticMesh->LODResources[0].VertexBuffer};
+        AuroraEngine::ImmediateContext->SetVertexBuffers(0, 1, pBuffs, &offset, RESOURCE_STATE_TRANSITION_MODE_TRANSITION, SET_VERTEX_BUFFERS_FLAG_RESET);
+        AuroraEngine::ImmediateContext->SetIndexBuffer(staticMesh->LODResources[0].IndexBuffer, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+
         testMaterial->ValidateGraphicsPipelineState();
 
         MapHelper<glm::mat4x4> CBConstants;
         if(testMaterial->GetConstantBuffer("Constants", CBConstants)) {
-            CBConstants[0] = glm::rotate((float)a, glm::vec3(0, 0, 1));
+            float aspect = (float)1280 / (float)720;
+            float h = glm::tan(glm::radians(90.0f) * .5f) * 0.01f;
+            float w = h * aspect;
+            float _FrustumLeft = -w;
+            float _FrustumRight = w;
+            float _FrustumBottom = -h;
+            float _FrustumTop = h;
+            float _FrustumNear = 0.01f;
+            float _FrustumFar = 1000;
+
+            Matrix4 proj = glm::frustum(_FrustumLeft, _FrustumRight, _FrustumBottom, _FrustumTop, _FrustumNear, _FrustumFar);
+
+            CBConstants[0] = proj * glm::translate(Vector3(0, 0, -10)) * glm::rotate((float)a, Vector3(0, 1, 0)) * glm::scale(Vector3(0.01f));
         }
 
         testMaterial->ApplyPipeline();
         testMaterial->CommitShaderResources();
 
-        DrawAttribs drawAttrs;
-        drawAttrs.NumVertices = 3; // Render 3 vertices
-        AuroraEngine::ImmediateContext->Draw(drawAttrs);
+        for (auto& section : staticMesh->LODResources[0].Sections) {
+            DrawIndexedAttribs drawAttrs;
+            drawAttrs.IndexType  = VT_UINT32;
+            drawAttrs.Flags = DRAW_FLAG_VERIFY_ALL;
+            drawAttrs.FirstIndexLocation = section.FirstIndex;
+            drawAttrs.NumIndices = section.NumTriangles;
+            AuroraEngine::ImmediateContext->DrawIndexed(drawAttrs);
+        }
     }
 };
 

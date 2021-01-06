@@ -315,6 +315,10 @@ namespace Aurora::App
     {
         auto* window = static_cast<FWindow*>(glfwGetWindowUserPointer(rawWindow));
         window->SetSize({width, height});
+
+        if(window->GetSwapChain() != nullptr) {
+            window->GetSwapChain()->Resize(width, height);
+        }
     }
 
     void FWindow::OnFocusCallback(GLFWwindow *rawWindow, int focused)

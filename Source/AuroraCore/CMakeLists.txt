@@ -20,9 +20,7 @@ add_library(AuroraCore STATIC ${PROJECT_SOURCE})
 
 target_include_directories(AuroraCore PUBLIC Source/)
 
-if(WIN32)
-    target_link_libraries(AuroraCore PUBLIC -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic)
-endif()
+target_link_libraries(AuroraCore PUBLIC -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic)
 
 target_link_libraries(AuroraCore PUBLIC glfw glm::glm)
 

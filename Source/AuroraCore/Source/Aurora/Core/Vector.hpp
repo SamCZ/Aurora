@@ -23,10 +23,6 @@
 #define IntInf std::numeric_limits<int>::infinity()
 
 
-#ifdef VECTOR_ASSIMP_TYPES
-#include <assimp/types.h>
-#endif
-
 namespace Aurora
 {
 	typedef glm::vec4 Vector4;
@@ -49,14 +45,6 @@ namespace Aurora
 	typedef glm::mat3 Matrix3;
 
 	typedef glm::quat Quaternion;
-
-#ifdef VECTOR_ASSIMP_TYPES
-    static inline Vector3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); }
-	static inline Vector2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); }
-	static inline Quaternion quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); }
-	static inline Matrix4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
-	static inline Matrix4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
-#endif
 
     static constexpr double DoubleMax = std::numeric_limits<double>::max();
 

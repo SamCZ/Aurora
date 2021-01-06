@@ -58,8 +58,13 @@ namespace Aurora::Framework
     private:
 
     public:
+        virtual ~HMesh();
+
         FastMap<uint8_t, HMeshLodResource> LODResources;
         FastMap<uint8_t, FMaterialSlot> MaterialSlots;
+
+        virtual LayoutElement* GetLayout() const = 0;
+        virtual int GetLayoutElementCount() const = 0;
 
         void UpdateBuffers(Diligent::RefCntAutoPtr<Diligent::IRenderDevice>& renderDevice, Diligent::RefCntAutoPtr<Diligent::IDeviceContext>& immediateContext);
     };

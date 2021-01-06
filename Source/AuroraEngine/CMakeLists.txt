@@ -9,7 +9,7 @@ target_include_directories(AuroraEngine PUBLIC Source/)
 
 target_link_libraries(AuroraEngine PUBLIC -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic)
 
-target_link_libraries(AuroraEngine PUBLIC AuroraCore glfw glm::glm)
+target_link_libraries(AuroraEngine PUBLIC AuroraCore glfw glm::glm assimp)
 
 ########################################################################################
 target_compile_options(AuroraEngine PUBLIC -DUNICODE -DENGINE_DLL)
