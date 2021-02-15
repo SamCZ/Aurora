@@ -27,5 +27,10 @@ target_link_libraries(AuroraEngine
         Diligent-GraphicsEngineVk-shared
         )
 install_tools_lib(AuroraEngine)
-copy_required_dlls(AuroraEngine)
+if(WIN32)
+    copy_required_dlls(AuroraEngine)
+endif()
+if(UNIX)
+    target_link_libraries(AuroraEngine PUBLIC X11-xcb)
+endif()
 ########################################################################################

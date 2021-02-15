@@ -5,12 +5,19 @@
 #include <EngineFactoryVk.h>
 #include <Timer.hpp>
 
-#define GLFW_EXPOSE_NATIVE_WIN32
+
+#include "App/Input/InputManager.hpp"
+
+#ifdef _WIN32
+    #define GLFW_EXPOSE_NATIVE_WIN32
+#endif
+#ifdef __unix__
+    #include <X11/Xlib-xcb.h>
+    #define GLFW_EXPOSE_NATIVE_X11
+#endif
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
-
-#include "App/Input/InputManager.hpp"
 
 namespace Aurora
 {
@@ -136,6 +143,7 @@ namespace Aurora
 
     bool AuroraEngine::CreateSwapChain(const FWindowPtr& window, const SwapChainDesc& desc, RefCntAutoPtr<ISwapChain>& swapChain)
     {
+#ifdef _WIN32
         HWND hWnd = glfwGetWin32Window(window->GetWindowHandle());
 
         if (!swapChain && hWnd != nullptr)
@@ -144,6 +152,19 @@ namespace Aurora
             EngineFactory->CreateSwapChainVk(RenderDevice, ImmediateContext, desc, Window, &swapChain);
             return true;
         }
+#endif
+#ifdef __unix__
+        if (!swapChain)
+        {
+            Uint32 x11window = glfwGetX11Window(window->GetWindowHandle());
+            Display* x11display = glfwGetX11Display();
+            xcb_connection_t* connection = XGetXCBConnection(x11display);
+
+            LinuxNativeWindow Window{x11window, x11display, connection};
+            EngineFactory->CreateSwapChainVk(RenderDevice, ImmediateContext, desc, Window, &swapChain);
+            return true;
+        }
+#endif
 
         return false;
     }

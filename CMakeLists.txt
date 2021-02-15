@@ -23,8 +23,8 @@ add_subdirectory(External)
 add_subdirectory(Source)
 
 if(BUILD_TESTING)
-    include(CTest)
+    #include(CTest)
     enable_testing()
 
-    add_subdirectory(tests)
+    add_subdirectory(Tests)
 endif()
