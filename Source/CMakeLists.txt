@@ -1,2 +1,0 @@
-add_subdirectory(AuroraCore)
-add_subdirectory(AuroraEngine)

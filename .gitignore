@@ -1,8 +1,0 @@
-.idea/
-.vs/
-cmake-build-*/
-.directory
-*/.directory
-
-ServerData
-ServerData/**
