@@ -70,7 +70,7 @@ namespace Aurora
 							for (int j = 0; j < variables.size(); ++j) {
 								const ShaderVariable& var = variables[j];
 
-								std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << std::endl;
+								std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << ":" << var.MatrixStride << std::endl;
 							}
 						} else {
 							// TODO: throw exception and exit program
