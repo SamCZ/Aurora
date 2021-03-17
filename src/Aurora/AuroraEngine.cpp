@@ -3,6 +3,7 @@
 #include <queue>
 #include <sstream>
 #include <memory>
+#include <thread>
 
 #include <EngineFactoryVk.h>
 
@@ -157,16 +158,21 @@ namespace Aurora
 
 				context->Update(ElapsedTime, CurrTime);
 
-				ITextureView* pRTV = swapChain->GetCurrentBackBufferRTV();
-				ITextureView* pDSV = swapChain->GetDepthBufferDSV();
-				ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+				if(!window->IsIconified()) {
+					ITextureView* pRTV = swapChain->GetCurrentBackBufferRTV();
+					ITextureView* pDSV = swapChain->GetDepthBufferDSV();
+					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
-				context->Render();
+					context->Render();
 
-				ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-				ImGuiImpl->Render(ImmediateContext);
+					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+					ImGuiImpl->Render(ImmediateContext);
 
-				window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
+					window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
+				} else {
+					ImGuiImpl->EndFrame();
+					std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				}
 			}
 
 			while(!contextsToRemove.empty()) {
@@ -189,7 +195,7 @@ namespace Aurora
 		RefCntAutoPtr<ISwapChain> swapChain;
 
 		SwapChainDesc swapChainDesc = {};
-		swapChainDesc.ColorBufferFormat = TEX_FORMAT_RGBA8_UNORM;
+		swapChainDesc.ColorBufferFormat = TEX_FORMAT_BGRA8_UNORM;
 
 		if(!CreateSwapChain(window, swapChainDesc, swapChain)) {
 			window->Destroy();
