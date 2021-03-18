@@ -87,7 +87,7 @@ namespace Aurora
 			for(auto* subSystem : m_SubCollisionSystems) {
 				if(subSystem == nullptr) continue;
 
-				if(!CollisionMatrix::CanCollide(component->GetLayer(), subSystem->Layer())) {
+				if(!CollisionMatrix::CanCollide(component->GetLayer(), subSystem->GetLayer())) {
 					continue;
 				}
 

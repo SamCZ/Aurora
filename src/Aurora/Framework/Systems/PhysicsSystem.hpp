@@ -18,7 +18,7 @@ namespace Aurora
 	public:
 		virtual void Collide(class Actor* actor, SceneComponent* rootComponent, PhysicsBody* body, Vector3D& position, Vector3D& velocity, Vector3D& acceleration, double delta) = 0;
 	public:
-		Layer& Layer() { return m_Layer; }
+		Layer& GetLayer() { return m_Layer; }
 	};
 
 	class PhysicsSystem : public ISystem<SceneComponent>
