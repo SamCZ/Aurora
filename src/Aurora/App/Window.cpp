@@ -228,6 +228,10 @@ namespace Aurora
 		if(window->GetSwapChain() != nullptr) {
 			window->GetSwapChain()->Resize(width, height);
 		}
+
+		for(auto& listener : window->m_ResizeListeners) {
+			if(listener) listener(width, height);
+		}
 	}
 
 	void Window::OnFocusCallback(GLFWwindow *rawWindow, int focused)

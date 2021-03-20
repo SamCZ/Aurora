@@ -5,6 +5,7 @@
 #include "Components/Base/SceneComponent.hpp"
 #include "Components/Mesh/MeshComponent.hpp"
 #include "ComponentList.hpp"
+#include "GameModeBase.hpp"
 
 #define COMPONENT_LIST(name) \
 ComponentList<name> m_##name##s;      \
@@ -22,12 +23,24 @@ namespace Aurora
 
 		COMPONENT_LIST(MeshComponent)
 		COMPONENT_LIST(SceneComponent)
-	public:
-		inline Scene() : m_Actors(), m_MeshComponents()
-		{
 
+		GameModeBase* m_GameMode;
+	public:
+		inline Scene() : m_Actors(), m_MeshComponents(), m_GameMode(nullptr) { }
+
+		inline ~Scene()
+		{
+			auto actors = m_Actors;
+
+			for(auto* actor : actors) {
+				actor->Destroy();
+			}
+
+			if(m_GameMode != nullptr) {
+				m_GameMode->BeginDestroy();
+			}
+			delete m_GameMode;
 		}
-		~Scene() = default;
 
 		template<class T, BASE_OF(T, Actor)>
 		T* SpawnActor(const String& Name, const Vector3D& Position, const Vector3D& Rotation = Vector3D(0.0), const Vector3D& Scale = Vector3D(1.0))
@@ -126,10 +139,29 @@ namespace Aurora
 		{
 			return m_Actors;
 		}
+	public:
+		template<typename T, typename... Args, BASE_OF(T, GameModeBase)>
+		inline T* OverrideGameMode(Args&&... args)
+		{
+			if(m_GameMode != nullptr) {
+				m_GameMode->BeginDestroy();
+				delete m_GameMode;
+			}
 
+			T* newGamemode = new T(std::forward<Args>(args)...);
+			newGamemode->m_Scene = this;
+			newGamemode->BeginPlay();
+
+			m_GameMode = newGamemode;
+			return newGamemode;
+		}
 	public:
 		inline void Update(double delta)
 		{
+			if(m_GameMode != nullptr) {
+				m_GameMode->Tick(delta);
+			}
+
 			m_SceneComponents.PreUpdateComponents(delta);
 			m_MeshComponents.PreUpdateComponents(delta);
 

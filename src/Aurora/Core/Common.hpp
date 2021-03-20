@@ -101,3 +101,5 @@ inline bool VectorContains(std::vector<T>& vector, T& data)
 #       define AU_DEBUG_CERR(content)
 #   endif
 #endif
+
+#define AU_THROW_ERROR(content) std::cerr << content << std::endl; exit(-1)

@@ -3,6 +3,7 @@
 #include <BasicFileSystem.hpp>
 #include <BasicFileStream.hpp>
 #include <StringTools.hpp>
+#include <ShaderMacroHelper.hpp>
 
 #include "Aurora/AuroraEngine.hpp"
 #include "Aurora/Core/FileSystem.hpp"
@@ -27,14 +28,14 @@ namespace Aurora
 		}
 	}
 
-	ShaderCollection_ptr AssetManager::LoadShaders(const std::vector<ShaderLoadDesc>& shaderLoadDescriptions)
+	ShaderCollection_ptr AssetManager::LoadShaders(const std::vector<ShaderLoadDesc>& shaderLoadDescriptions, const std::map<String, String>& macros)
 	{
 		ShaderCollection_ptr collection = std::make_shared<ShaderCollection>();
 
 		for(auto& desc : shaderLoadDescriptions) {
 			RefCntAutoPtr<IShader> shader;
 
-			if(m_LoadedShaders.find(desc.FilePath) != m_LoadedShaders.end() && desc.Source.length() == 0) {
+			if(m_LoadedShaders.find(desc.FilePath) != m_LoadedShaders.end() && desc.Source.length() == 0 && macros.empty()) {
 				shader = m_LoadedShaders[desc.FilePath];
 			} else {
 				if(!FileExists(desc.FilePath) && desc.Source.length() == 0) {
@@ -48,6 +49,13 @@ namespace Aurora
 				ShaderCI.Desc.ShaderType = desc.ShaderType;
 				ShaderCI.EntryPoint      = "main";
 				ShaderCI.Desc.Name       = desc.FilePath.string().c_str();
+
+				ShaderMacroHelper Macros;
+				for(auto& it : macros) {
+					Macros.AddShaderMacro(it.first.c_str(), it.second);
+				}
+
+				ShaderCI.Macros = Macros;
 
 				String source;
 				if(desc.Source.length() > 0) {
@@ -96,7 +104,7 @@ namespace Aurora
 		return collection;
 	}
 
-	ShaderCollection_ptr AssetManager::LoadShaders(const Path &shaderFolder)
+	ShaderCollection_ptr AssetManager::LoadShaders(const Path &shaderFolder, const std::map<String, String>& macros)
 	{
 		std::vector<ShaderLoadDesc> descriptors;
 
@@ -116,7 +124,46 @@ namespace Aurora
 			exit(1);
 		}
 
-		return LoadShaders(descriptors);
+		return LoadShaders(descriptors, macros);
+	}
+
+	RefCntAutoPtr<IShader> AssetManager::LoadShader(const Path& path, const SHADER_TYPE& type, const std::map<String, String>& macros)
+	{
+		RefCntAutoPtr<IShader> shader;
+
+		SHADER_SOURCE_LANGUAGE language = SHADER_SOURCE_LANGUAGE_DEFAULT;
+
+		String extension = path.extension().string();
+
+		std::cout << extension << std::endl;
+
+		if(extension == ".glsl") {
+			language = SHADER_SOURCE_LANGUAGE_GLSL;
+		} else if(extension == ".hlsl") {
+			language = SHADER_SOURCE_LANGUAGE_HLSL;
+		} else {
+			AU_THROW_ERROR("Unknown shader extension " << extension << " for " << path);
+		}
+
+		ShaderCreateInfo ShaderCI = {};
+		ShaderCI.SourceLanguage = language;
+		ShaderCI.UseCombinedTextureSamplers = true;
+		ShaderCI.Desc.ShaderType = type;
+		ShaderCI.EntryPoint      = "main";
+		ShaderCI.Desc.Name       = path.string().c_str();
+		String source = LoadFileToString(path);
+		ShaderCI.Source          = source.c_str();
+
+		ShaderMacroHelper Macros;
+		for(auto& it : macros) {
+			Macros.AddShaderMacro(it.first.c_str(), it.second);
+		}
+
+		ShaderCI.Macros = Macros;
+
+		AuroraEngine::RenderDevice->CreateShader(ShaderCI, &shader);
+
+		return shader;
 	}
 
 	String AssetManager::LoadFileToString(const Path& path)

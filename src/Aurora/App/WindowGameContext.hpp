@@ -18,6 +18,8 @@ namespace Aurora
 		virtual void Update(double delta, double currentTime) {}
 		virtual void Render() {}
 
+		virtual void Resize(int width, int height) {}
+
 	public:
 		const Window_ptr& GetWindow();
 		const Input::IManager_ptr& GetInputManager();

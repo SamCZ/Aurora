@@ -5,6 +5,7 @@
 #include <DeviceContext.h>
 #include <PipelineState.h>
 #include <MapHelper.hpp>
+#include <CommonlyUsedStates.h>
 
 #include "ShaderCollection.hpp"
 #include "Aurora/Core/Common.hpp"
@@ -30,11 +31,15 @@ namespace Aurora
 			uint32_t Size;
 			RefCntAutoPtr<IBuffer> Buffer;
 			BufferDesc Desc;
+			std::vector<uint8_t> BufferData;
+			std::vector<ShaderVariable> Variables;
+			bool NeedsUpdate;
 		};
 
 		struct ShaderTextureDef
 		{
 			std::vector<SHADER_TYPE> ShaderTypes;
+			RefCntAutoPtr<ITexture> TextureRef;
 			ITextureView* TextureView;
 			bool NeedsUpdate;
 		};
@@ -61,7 +66,58 @@ namespace Aurora
 		void InitShaderResources(const RefCntAutoPtr<IShader>& shader);
 		void AssignShaders();
 	public:
-		template <typename DataType, bool KeepStrongReferences = false>
+		template <typename T>
+		inline bool SetVariable(const String& name, T data)
+		{
+			void* rawData = (void*)(&data);
+			size_t size = sizeof(data);
+
+			for(auto& it : m_ShaderConstantBuffers) {
+				const String &buffer_name = it.first;
+				ShaderConstantBuffer &buffer = it.second;
+
+				for(auto& var : buffer.Variables) {
+					if(var.Name == name) {
+						if(var.Size == size) {
+							memcpy(buffer.BufferData.data() + var.Offset, rawData, size);
+							buffer.NeedsUpdate = true;
+							return true;
+						} else {
+							AU_THROW_ERROR("Size is not exact !");
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template <typename T>
+		inline bool GetVariable(const String& name, T* outData, bool autoSize = true, size_t customSize = 0)
+		{
+			size_t size = sizeof(T);
+
+			if (!autoSize)
+			{
+				size = customSize;
+			}
+
+			for(auto& it : m_ShaderConstantBuffers) {
+				const String &buffer_name = it.first;
+				ShaderConstantBuffer &buffer = it.second;
+
+				for(auto& var : buffer.Variables) {
+					if(var.Name == name) {
+						memcpy(outData, buffer.BufferData.data(), size);
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+	public:
+		/*template <typename DataType, bool KeepStrongReferences = false>
 		bool GetConstantBuffer(const String& name, MapHelper<DataType, KeepStrongReferences>& map)
 		{
 			auto iter = m_ShaderConstantBuffers.find(name);
@@ -72,7 +128,7 @@ namespace Aurora
 			map = MapHelper<DataType, KeepStrongReferences>(AuroraEngine::ImmediateContext, iter->second.Buffer, MAP_WRITE, MAP_FLAG_DISCARD);
 
 			return true;
-		}
+		}*/
 
 		void ValidateGraphicsPipelineState();
 
@@ -111,16 +167,20 @@ namespace Aurora
 			}
 		}
 
-		inline void SetTexture(const String& name, RefCntAutoPtr<ITexture>& texture)
+		inline void SetTexture(const String& name, const RefCntAutoPtr<ITexture>& texture)
 		{
 			if(texture == nullptr) {
 				std::cerr << "Null texture " << name << " in " << m_Name << std::endl;
 				return;
 			}
 
+			// This is just internal! Don't do this!!!
+			auto& tex = const_cast<RefCntAutoPtr<ITexture>&>(texture);
+
 			for (auto& var : m_ShaderTextures) {
 				if(var.first == name) {
-					var.second.TextureView = texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+					var.second.TextureRef = texture;
+					var.second.TextureView = tex->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
 					var.second.NeedsUpdate = true;
 				}
 			}

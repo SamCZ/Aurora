@@ -24,6 +24,7 @@
 
 #include "App/ImGuiImplGLFW.hpp"
 #include "App/Input/GLFW/Manager.hpp"
+#include "Graphics/GraphicUtilities.hpp"
 
 namespace Aurora
 {
@@ -76,6 +77,7 @@ namespace Aurora
 
 		AuroraEngine::AssetManager = std::make_shared<Aurora::AssetManager>();
 
+		GraphicUtilities::Init();
 		IsInitialized = true;
 	}
 
@@ -180,6 +182,8 @@ namespace Aurora
 				contextsToRemove.pop(); // This will call destructor on WindowGameContext
 			}
 		} while (IsRunning && anyWindowRunning);
+
+		GraphicUtilities::Destroy();
 
 		glfwTerminate();
 

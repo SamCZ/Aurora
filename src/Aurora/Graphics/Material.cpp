@@ -2,6 +2,7 @@
 #include "Aurora/Core/Crc.hpp"
 
 #include <GraphicsAccessories.hpp>
+#include "GraphicUtilities.hpp"
 
 namespace Aurora
 {
@@ -18,7 +19,7 @@ namespace Aurora
 
 		AssignShaders();
 
-		m_PSOCreateInfo.PSODesc.Name = ("Material(" + name + ")").c_str();
+		m_PSOCreateInfo.PSODesc.Name = name.c_str();
 		m_PSOCreateInfo.PSODesc.PipelineType = PIPELINE_TYPE_GRAPHICS; //TODO: check by attached shaders if compute PIPELINE_TYPE_COMPUTE
 	}
 
@@ -28,6 +29,7 @@ namespace Aurora
 			return;
 		}
 
+		m_PSOCreateInfo.PSODesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
 
 		std::vector<StateTransitionDesc> barriers;
 
@@ -48,12 +50,14 @@ namespace Aurora
 							continue;
 						}
 
-						std::cerr << "Found two different constant buffers in material: " << m_Name << std::endl;
+						AU_THROW_ERROR("Found two different constant buffers in material: " << m_Name);
 					} else {
 						ShaderConstantBuffer shaderConstantBufferInfo = {};
 						shaderConstantBufferInfo.Size = desc.Size;
 						shaderConstantBufferInfo.Buffer = nullptr;
 						shaderConstantBufferInfo.ShaderTypes.push_back(shaderType);
+						shaderConstantBufferInfo.BufferData.resize(desc.Size);
+						shaderConstantBufferInfo.NeedsUpdate = true;
 
 						BufferDesc CBDesc;
 						CBDesc.Name           = ("Constant buffer " + String(desc.Name) + "for shader " + m_Name).c_str();
@@ -72,6 +76,8 @@ namespace Aurora
 
 								std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << ":" << var.MatrixStride << std::endl;
 							}
+
+							shaderConstantBufferInfo.Variables = variables;
 						} else {
 							// TODO: throw exception and exit program
 						}
@@ -90,8 +96,6 @@ namespace Aurora
 					break;
 				}
 				case SHADER_RESOURCE_TYPE_TEXTURE_SRV: {
-					m_PSOCreateInfo.PSODesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
-
 					m_ShaderResourceVariables.emplace_back(shaderType, desc.Name, SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC);
 
 					SamplerDesc SamLinearClampDesc
@@ -104,7 +108,7 @@ namespace Aurora
 					if(m_ShaderTextures.find(desc.Name) != m_ShaderTextures.end()) {
 						m_ShaderTextures[desc.Name].ShaderTypes.push_back(shaderType);
 					} else {
-						m_ShaderTextures[desc.Name] = {{shaderType}, nullptr, true};
+						m_ShaderTextures[desc.Name] = {{shaderType}, GraphicUtilities::GetPlaceholderTexture(), GraphicUtilities::GetPlaceholderTexture()->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE), true};
 					}
 
 					std::cout << "Texture: " << desc.Name << std::endl;
@@ -145,6 +149,10 @@ namespace Aurora
 	 */
 	void Material::ValidateGraphicsPipelineState()
 	{
+		for(auto& it : m_ShaderConstantBuffers) {
+			it.second.NeedsUpdate = true;
+		}
+
 		// Setup PSO
 		m_PSOCreateInfo.PSODesc.ResourceLayout.Variables = m_ShaderResourceVariables.data();
 		m_PSOCreateInfo.PSODesc.ResourceLayout.NumVariables = m_ShaderResourceVariables.size();
@@ -209,6 +217,36 @@ namespace Aurora
 			for (auto& shaderType : var.second.ShaderTypes) {
 				GetCurrentResourceBinding()->GetVariableByName(shaderType, var.first.c_str())->Set(var.second.TextureView);
 			}
+		}
+
+		for(auto& it : m_ShaderConstantBuffers) {
+			const String& name = it.first;
+			ShaderConstantBuffer& buffer = it.second;
+
+			if(!buffer.NeedsUpdate) {
+				continue;
+			}
+
+			// TODO: Find out whats best for performance
+			if(false) {
+				// Option one: update buffer
+				// This is not working !
+				StateTransitionDesc barrier = {buffer.Buffer, RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_CONSTANT_BUFFER, true};
+				AuroraEngine::ImmediateContext->UpdateBuffer(buffer.Buffer, 0, buffer.Size, buffer.BufferData.data(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+				AuroraEngine::ImmediateContext->TransitionResourceStates(1, &barrier);
+			} else {
+				// Option two map raw buffer to variable and copy data
+				uint8_t* mappedData = nullptr;
+				AuroraEngine::ImmediateContext->MapBuffer(buffer.Buffer, MAP_WRITE, MAP_FLAG_DISCARD, (PVoid&)mappedData);
+				memcpy(mappedData, buffer.BufferData.data(), buffer.Size);
+				AuroraEngine::ImmediateContext->UnmapBuffer(buffer.Buffer, MAP_WRITE);
+			}
+
+			buffer.NeedsUpdate = false;
+
+			/*for(auto& shaderType : buffer.ShaderTypes) {
+				GetCurrentResourceBinding()->GetVariableByName(shaderType, name.c_str())->Set(buffer.Buffer);
+			}*/
 		}
 
 		AuroraEngine::ImmediateContext->CommitShaderResources(GetCurrentResourceBinding(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);

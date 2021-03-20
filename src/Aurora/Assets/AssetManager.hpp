@@ -35,8 +35,10 @@ namespace Aurora
 		String LoadFileToString(const Path& path);
 
 		void LoadPackageFile(const Path& path);
-		ShaderCollection_ptr LoadShaders(const std::vector<ShaderLoadDesc>& shaderLoadDescriptions);
-		ShaderCollection_ptr LoadShaders(const Path& shaderFolder);
+		ShaderCollection_ptr LoadShaders(const std::vector<ShaderLoadDesc>& shaderLoadDescriptions, const std::map<String, String>& macros = {});
+		ShaderCollection_ptr LoadShaders(const Path& shaderFolder, const std::map<String, String>& macros = {});
+
+		RefCntAutoPtr<IShader> LoadShader(const Path& path, const SHADER_TYPE& type, const std::map<String, String>& macros = {});
 
 		RefCntAutoPtr<ITexture> LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo = {});
 

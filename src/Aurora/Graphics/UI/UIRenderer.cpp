@@ -75,7 +75,7 @@ namespace Aurora
 
 	void UIRenderer::FillRect(float x, float y, float w, float h, const Vector4 &color, float radius)
 	{
-		MapHelper<UIVertexUniform> vertexUniform;
+		/*MapHelper<UIVertexUniform> vertexUniform;
 		if(m_Material->GetConstantBuffer("VertexUniform", vertexUniform)) {
 			vertexUniform->Projection = m_ProjectionMatrix;
 			vertexUniform->ModelMat = glm::translate(Vector3(x, y, -0.5 + (depth++) * 0.1)) * glm::scale(Vector3(w, h, 1));
@@ -89,7 +89,7 @@ namespace Aurora
 			fragmentUniform->Color = color;
 			fragmentUniform->Size.x = w;
 			fragmentUniform->Size.y = h;
-		}
+		}*/
 
 		m_Material->CommitShaderResources();
 
@@ -101,7 +101,7 @@ namespace Aurora
 
 	void UIRenderer::DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius)
 	{
-		MapHelper<UIVertexUniform> vertexUniform;
+		/*MapHelper<UIVertexUniform> vertexUniform;
 		if(m_Material->GetConstantBuffer("VertexUniform", vertexUniform)) {
 			vertexUniform->Projection = m_ProjectionMatrix;
 			vertexUniform->ModelMat = glm::translate(Vector3(x, y, -0.5 + (depth++) * 0.1)) * glm::scale(Vector3(w, h, 1));
@@ -115,7 +115,7 @@ namespace Aurora
 			fragmentUniform->Color = color;
 			fragmentUniform->Size.x = w;
 			fragmentUniform->Size.y = h;
-		}
+		}*/
 
 		m_Material->CommitShaderResources();
 

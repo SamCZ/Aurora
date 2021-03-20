@@ -44,6 +44,7 @@ namespace Aurora
 	private:
 		Input::IManager_ptr m_InputManager;
 		RefCntAutoPtr<ISwapChain> m_SwapChain;
+		std::vector<std::function<void(int, int)>> m_ResizeListeners;
 	public:
 		Window();
 		~Window() = default;
@@ -74,6 +75,11 @@ namespace Aurora
 		[[nodiscard]] inline int GetHeight() const
 		{
 			return m_Size.y;
+		}
+
+		inline void AddResizeListener(const std::function<void(int, int)>& listener)
+		{
+			m_ResizeListeners.push_back(listener);
 		}
 
 		void Show();
