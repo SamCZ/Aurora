@@ -53,6 +53,7 @@ namespace Aurora
 			windowDefinition.Height = height;
 			windowDefinition.HasOSWindowBorder = true;
 			windowDefinition.Title = title;
+			windowDefinition.Maximized = true;
 
 			Window_ptr window = std::make_shared<Window>();
 			return AddWindow(std::make_shared<GameContext>(window), window, windowDefinition, showImmediately);

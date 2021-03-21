@@ -50,6 +50,10 @@ namespace Aurora
 		GLFWmonitor* primary = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vidMode = glfwGetVideoMode(primary);
 
+		if(windowDefinition.Maximized) {
+			SetSize(vidMode->width, vidMode->height);
+		}
+
 		m_WindowHandle = glfwCreateWindow(GetSize().x, GetSize().y, windowDefinition.Title.c_str(), nullptr, nullptr);
 		glfwSwapInterval(0);
 

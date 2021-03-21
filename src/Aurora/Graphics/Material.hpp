@@ -66,6 +66,11 @@ namespace Aurora
 		void InitShaderResources(const RefCntAutoPtr<IShader>& shader);
 		void AssignShaders();
 	public:
+		[[nodiscard]] inline std::map<String, ShaderConstantBuffer>& GetConstantBuffers()
+		{
+			return m_ShaderConstantBuffers;
+		}
+
 		template <typename T>
 		inline bool SetVariable(const String& name, T data)
 		{

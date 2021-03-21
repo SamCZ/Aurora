@@ -33,6 +33,10 @@ namespace Aurora::Input
 
     void IManager::ActiveCategory(const std::string& category) // Setter
     {
+    	if(m_ActiveCategory == category) {
+			return;
+    	}
+
         m_ActiveCategory = category;
 
         // Update `Active` of all bindings

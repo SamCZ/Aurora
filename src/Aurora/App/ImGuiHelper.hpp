@@ -71,4 +71,20 @@ namespace ImGui
 			return g.ActiveIdPreviousFrame== GImGui->CurrentWindow->DC.LastItemId;
 		return false;
 	}
+
+	inline void BeginWindow(const std::string& name, float x, float y, float width, float height, bool stay = false, int padding = -1, bool* p_open = (bool*)0) {
+		if (padding >= 0) {
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { (float)padding, (float)padding });
+		}
+		ImGui::SetNextWindowPos(ImVec2(x, y), stay ? 0 : ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(width, height), stay ? 0 : ImGuiCond_FirstUseEver);
+		ImGui::Begin(name.c_str(), p_open, stay ? (ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize) : 0);
+		if (padding >= 0) {
+			ImGui::PopStyleVar();
+		}
+	}
+
+	inline void EndWindow() {
+		ImGui::End();
+	}
 }
