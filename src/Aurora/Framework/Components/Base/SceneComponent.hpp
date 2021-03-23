@@ -18,6 +18,7 @@ namespace Aurora
 		Vector3D m_Acceleration;
 		Vector3D m_Velocity;
 		bool m_IsSimulatingPhysics;
+		bool m_CollidingAxes[3];
 	private:
 		SceneComponent* m_Parent;
 		std::vector<SceneComponent*> m_Components;
@@ -59,6 +60,14 @@ namespace Aurora
 		inline SceneComponent* GetParent()
 		{
 			return m_Parent;
+		}
+
+		inline bool& CollidingAxes(uint8_t axis)
+		{
+			if(axis >= 3) {
+				return m_CollidingAxes[2];
+			}
+			return m_CollidingAxes[axis];
 		}
 
 		[[nodiscard]] inline const Vector3D& GetLocation() { return m_Location; }

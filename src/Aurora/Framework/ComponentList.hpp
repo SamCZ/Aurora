@@ -78,7 +78,7 @@ namespace Aurora
 			return m_Systems.size();
 		}
 	public:
-		void PreUpdateComponents(double delta)
+		void PreUpdateSystems(double delta)
 		{
 			for(ISystem<T>* system : m_Systems) {
 				system->PreUpdate(m_Components, delta);
@@ -90,13 +90,16 @@ namespace Aurora
 			for(auto* component : m_Components) {
 				component->Tick(delta);
 			}
+		}
 
+		void UpdateSystems(double delta)
+		{
 			for(ISystem<T>* system : m_Systems) {
 				system->Update(m_Components, delta);
 			}
 		}
 
-		void PostUpdateComponents(double delta)
+		void PostUpdateSystems(double delta)
 		{
 			for(ISystem<T>* system : m_Systems) {
 				system->PostUpdate(m_Components, delta);

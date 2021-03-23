@@ -63,6 +63,10 @@ namespace Aurora
 		for (int i = 0; i < componentCount; ++i) {
 			auto* component = components[i];
 
+			component->CollidingAxes(0) = false;
+			component->CollidingAxes(1) = false;
+			component->CollidingAxes(2) = false;
+
 			Actor* who = component->GetOwner();
 
 			if(!component->IsSimulatingPhysics() || !component->IsRootComponent() || !component->IsActive() || !who->IsActive()) {

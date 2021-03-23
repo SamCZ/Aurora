@@ -43,7 +43,7 @@ namespace Aurora
 		//UpdateProjectionMatrix();
 
 		m_ViewMatrix = GetViewMatrix();
-		m_ProjectionViewMatrix = GetProjectionMatrix() * GetViewMatrix();
+		m_ProjectionViewMatrix = GetProjectionMatrix() * m_ViewMatrix;
 
 		if(m_IsFrustumUpdateEnabled)
 			m_Frustum = Frustum(m_ProjectionViewMatrix);

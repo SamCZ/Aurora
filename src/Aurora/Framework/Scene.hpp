@@ -162,18 +162,20 @@ namespace Aurora
 				m_GameMode->Tick(delta);
 			}
 
-			m_SceneComponents.PreUpdateComponents(delta);
-			m_MeshComponents.PreUpdateComponents(delta);
-
-			m_SceneComponents.UpdateComponents(delta);
-			m_MeshComponents.UpdateComponents(delta);
-
-			m_SceneComponents.PostUpdateComponents(delta);
-			m_MeshComponents.PostUpdateComponents(delta);
+			m_SceneComponents.PreUpdateSystems(delta);
+			m_MeshComponents.PreUpdateSystems(delta);
 
 			for(Actor* actor : m_Actors) {
 				actor->Tick(delta);
 			}
+
+			m_SceneComponents.UpdateSystems(delta);
+			m_MeshComponents.UpdateSystems(delta);
+
+			m_SceneComponents.UpdateComponents(delta);
+
+			m_SceneComponents.PostUpdateSystems(delta);
+			m_MeshComponents.PostUpdateSystems(delta);
 		}
 	};
 }
