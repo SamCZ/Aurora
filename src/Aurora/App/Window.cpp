@@ -45,17 +45,17 @@ namespace Aurora
 			glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 		}
 
-		SetSize(windowDefinition.Width, windowDefinition.Height);
-
 		GLFWmonitor* primary = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vidMode = glfwGetVideoMode(primary);
 
-		if(windowDefinition.Maximized) {
-			SetSize(vidMode->width, vidMode->height);
-		}
+		SetSize(windowDefinition.Width, windowDefinition.Height);
 
 		m_WindowHandle = glfwCreateWindow(GetSize().x, GetSize().y, windowDefinition.Title.c_str(), nullptr, nullptr);
-		glfwSwapInterval(0);
+
+		int width, height;
+		glfwGetWindowSize(m_WindowHandle, &width, &height);
+
+		SetSize(width, height);
 
 		if(!m_WindowHandle) {
 			std::cerr << "Cannot create window !" << std::endl;
