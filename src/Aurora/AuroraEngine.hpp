@@ -39,6 +39,7 @@ namespace Aurora
 		static int Run();
 
 		static WindowGameContext_ptr AddWindow(const WindowGameContext_ptr& gameContext, const Window_ptr & window, const WindowDefinition& windowDef, bool showImmediately = true);
+		static const std::vector<WindowGameContext_ptr>& GetGameContexts();
 	public:
 		template<class GameContext>
 		static std::shared_ptr<WindowGameContext> AddWindow(int width, int height, const String& title, bool showImmediately = true)

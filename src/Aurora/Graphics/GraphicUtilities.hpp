@@ -19,7 +19,7 @@ namespace Aurora
 	class GraphicUtilities
 	{
 		friend class AuroraEngine;
-	private:
+	public:
 		static void Init();
 		static void Destroy();
 	public:

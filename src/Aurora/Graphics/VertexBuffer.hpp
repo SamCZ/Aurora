@@ -21,9 +21,7 @@ namespace Aurora
 		std::vector<VertexBufferType> Buffer{};
 	public:
 		~VertexBuffer() override
-		{
-
-		}
+		= default;
 
 		inline void Add(const VertexBufferType& element) {
 			Buffer.emplace_back(element);
@@ -46,12 +44,12 @@ namespace Aurora
 			return &Buffer[0]; // Gets pointer to first element
 		}
 
-		[[nodiscard]] inline virtual uint32_t GetSize() const override
+		[[nodiscard]] inline uint32_t GetSize() const override
 		{
 			return Buffer.size() * GetStride();
 		}
 
-		[[nodiscard]] inline virtual uint32_t GetStride() const override
+		[[nodiscard]] inline uint32_t GetStride() const override
 		{
 			return sizeof(VertexBufferType);
 		}

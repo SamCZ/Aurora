@@ -21,6 +21,10 @@ namespace Aurora
 
 		m_PSOCreateInfo.PSODesc.Name = name.c_str();
 		m_PSOCreateInfo.PSODesc.PipelineType = PIPELINE_TYPE_GRAPHICS; //TODO: check by attached shaders if compute PIPELINE_TYPE_COMPUTE
+
+		SetCullMode(CULL_MODE_FRONT);
+		SetDepthEnable(true);
+		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 	}
 
 	void Material::InitShaderResources(const RefCntAutoPtr<IShader>& shader)

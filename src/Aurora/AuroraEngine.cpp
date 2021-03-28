@@ -77,7 +77,6 @@ namespace Aurora
 
 		AuroraEngine::AssetManager = std::make_shared<Aurora::AssetManager>();
 
-		GraphicUtilities::Init();
 		IsInitialized = true;
 	}
 
@@ -243,5 +242,10 @@ namespace Aurora
 #endif
 
 		return false;
+	}
+
+	const std::vector<WindowGameContext_ptr> &AuroraEngine::GetGameContexts()
+	{
+		return GameContexts;
 	}
 }

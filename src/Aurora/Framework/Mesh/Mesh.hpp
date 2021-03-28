@@ -12,6 +12,8 @@
 
 namespace Aurora
 {
+	typedef uint32_t Index_t;
+
 	struct MaterialSlot
 	{
 		Material_ptr Material;
@@ -27,8 +29,8 @@ namespace Aurora
 	{
 		int32_t MaterialIndex;
 
-		uint32_t FirstIndex;
-		uint32_t NumTriangles;
+		Index_t FirstIndex;
+		Index_t NumTriangles;
 
 		bool EnableCollision;
 		bool CastShadow;
@@ -46,7 +48,7 @@ namespace Aurora
 	struct MeshLodResource
 	{
 		IVertexBuffer* Vertices;
-		std::vector<uint32_t> Indices;
+		std::vector<Index_t> Indices;
 		std::vector<MeshSection> Sections;
 
 		Diligent::RefCntAutoPtr<Diligent::IBuffer> VertexBuffer;
@@ -57,7 +59,7 @@ namespace Aurora
 	AU_CLASS(Mesh)
 	{
 	public:
-		typedef std::vector<uint32_t> IndexBufferType;
+		typedef std::vector<Index_t> IndexBufferType;
 	public:
 		virtual ~Mesh();
 	public:
@@ -90,6 +92,7 @@ namespace Aurora
 	private:
 		MeshType* m_Mesh;
 	public:
+		typedef BufferTypename StructName;
 		typedef VertexBuffer<BufferTypename> BufferType;
 
 		inline explicit MeshBufferHelper(MeshType* selfInstance) : m_Mesh(selfInstance)
