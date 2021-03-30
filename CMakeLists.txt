@@ -3,7 +3,7 @@ cmake_policy(SET CMP0077 NEW) # set() overrides option()
 
 file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
 
-add_library(Aurora STATIC ${PROJECT_SOURCE})
+add_library(Aurora STATIC ${PROJECT_SOURCE} src/Aurora/Profiler/Profiler.cpp src/Aurora/Profiler/Profiler.hpp)
 
 target_include_directories(Aurora PUBLIC src)
 target_link_libraries(Aurora PUBLIC glfw glm glad assimp nlohmann_json)

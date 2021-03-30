@@ -26,6 +26,8 @@
 #include "App/Input/GLFW/Manager.hpp"
 #include "Graphics/GraphicUtilities.hpp"
 
+#include "Profiler/Profiler.hpp"
+
 namespace Aurora
 {
 	bool AuroraEngine::IsInitialized = false;
@@ -96,10 +98,13 @@ namespace Aurora
 		int frameCount = 0;
 
 		do {
+			Profiler::RestartProfiler();
+
 			auto CurrTime    = glfwGetTime();
 			auto ElapsedTime = CurrTime - PrevTime;
 			PrevTime         = CurrTime;
 
+			Profiler::Begin("FrameTimeCalculation");
 			frameCount++;
 			if(CurrTime - lastFpsTime >= 1.0) {
 				for (auto& context : GameContexts) {
@@ -113,6 +118,7 @@ namespace Aurora
 				frameCount = 0;
 				lastFpsTime += 1.0;
 			}
+			Profiler::End("FrameTimeCalculation");
 
 			anyWindowRunning = false;
 
@@ -142,9 +148,6 @@ namespace Aurora
 					anyWindowRunning = true;
 				}
 
-				if(false)
-					glfwMakeContextCurrent(window->GetWindowHandle());
-
 				auto& swapChain = window->GetSwapChain();
 				const SwapChainDesc& swapChainDesc = swapChain->GetDesc();
 
@@ -157,19 +160,27 @@ namespace Aurora
 
 				ImGuiImpl->NewFrame(swapChainDesc.Width, swapChainDesc.Height, swapChainDesc.PreTransform);
 
+				Profiler::Begin("WindowGameContext::Update");
 				context->Update(ElapsedTime, CurrTime);
+				Profiler::End("WindowGameContext::Update");
 
 				if(!window->IsIconified()) {
+					Profiler::Begin("Render");
 					ITextureView* pRTV = swapChain->GetCurrentBackBufferRTV();
 					ITextureView* pDSV = swapChain->GetDepthBufferDSV();
 					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
+					Profiler::Begin("WindowGameContext::Render");
 					context->Render();
+					Profiler::End("WindowGameContext::Render");
 
 					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 					ImGuiImpl->Render(ImmediateContext);
 
+					Profiler::Begin("SwapChain()->Present");
 					window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
+					Profiler::End("SwapChain()->Present");
+					Profiler::End("Render");
 				} else {
 					ImGuiImpl->EndFrame();
 					std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -180,7 +191,11 @@ namespace Aurora
 				GameContexts.erase(std::find(GameContexts.begin(), GameContexts.end(), contextsToRemove.front()));
 				contextsToRemove.pop(); // This will call destructor on WindowGameContext
 			}
+
+			Profiler::Finalize();
 		} while (IsRunning && anyWindowRunning);
+
+		Profiler::RestartProfiler();
 
 		GraphicUtilities::Destroy();
 
