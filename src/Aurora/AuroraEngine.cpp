@@ -72,7 +72,7 @@ namespace Aurora
 		EngineCI.Features.GeometryShaders = DEVICE_FEATURE_STATE_OPTIONAL;
 		EngineCI.Features.SeparablePrograms = DEVICE_FEATURE_STATE_ENABLED;
 
-		EngineCI.DynamicHeapSize = 1048576 * 128;
+		EngineCI.DynamicHeapSize = 1048576 * 512;
 
 		EngineFactory = GetEngineFactoryVk();
 		EngineFactory->CreateDeviceAndContextsVk(EngineCI, &RenderDevice, &ImmediateContext);

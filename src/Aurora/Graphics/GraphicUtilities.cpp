@@ -120,7 +120,7 @@ namespace Aurora
 		return pTexArray;
 	}
 
-	RefCntAutoPtr<ITexture> GraphicUtilities::CreateRenderTarget2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, const Vector4& clearColor, bool useAsShaderResource)
+	RefCntAutoPtr<ITexture> GraphicUtilities::CreateRenderTarget2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav)
 	{
 		TextureDesc RTColorDesc;
 		RTColorDesc.Name      = name;
@@ -134,6 +134,11 @@ namespace Aurora
 		if(useAsShaderResource) {
 			RTColorDesc.BindFlags |= BIND_SHADER_RESOURCE;
 		}
+
+		if(useUav) {
+			RTColorDesc.BindFlags |= BIND_UNORDERED_ACCESS;
+		}
+
 		// Define optimal clear value
 		RTColorDesc.ClearValue.Format   = RTColorDesc.Format;
 		RTColorDesc.ClearValue.Color[0] = clearColor.x;
@@ -142,10 +147,15 @@ namespace Aurora
 		RTColorDesc.ClearValue.Color[3] = clearColor.w;
 		RefCntAutoPtr<ITexture> pRTColor;
 		AuroraEngine::RenderDevice->CreateTexture(RTColorDesc, nullptr, &pRTColor);
+
+		if(useUav) {
+
+		}
+
 		return pRTColor;
 	}
 
-	RefCntAutoPtr<ITexture> GraphicUtilities::CreateRenderTargetDepth2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, bool useAsShaderResource)
+	RefCntAutoPtr<ITexture> GraphicUtilities::CreateRenderTargetDepth2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, bool useAsShaderResource, bool useUav)
 	{
 		TextureDesc desc;
 		desc.Name      = name;
@@ -157,6 +167,10 @@ namespace Aurora
 		desc.BindFlags = BIND_DEPTH_STENCIL;
 		if(useAsShaderResource) {
 			desc.BindFlags |= BIND_SHADER_RESOURCE;
+		}
+
+		if(useUav) {
+			desc.BindFlags |= BIND_UNORDERED_ACCESS;
 		}
 		// Define optimal clear value
 		desc.ClearValue.Format               = desc.Format;

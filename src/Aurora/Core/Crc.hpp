@@ -8,7 +8,7 @@
 namespace Aurora
 {
 #ifdef _WIN32
-	bool GetSSE42Support()
+	inline bool GetSSE42Support()
 	{
 		int cpui[4];
 		__cpuidex(cpui, 1, 0);

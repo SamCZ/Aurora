@@ -25,8 +25,8 @@ namespace Aurora
 	public:
 		static RefCntAutoPtr<ITexture> CreateTextureArray(const std::vector<RefCntAutoPtr<ITexture>>& textures);
 		static RefCntAutoPtr<ITexture> CreateCubeMap(const std::array<RefCntAutoPtr<ITexture>, 6>& textures);
-		static RefCntAutoPtr<ITexture> CreateRenderTarget2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, const Vector4& clearColor, bool useAsShaderResource);
-		static RefCntAutoPtr<ITexture> CreateRenderTargetDepth2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, bool useAsShaderResource);
+		static RefCntAutoPtr<ITexture> CreateRenderTarget2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav = false);
+		static RefCntAutoPtr<ITexture> CreateRenderTargetDepth2D(const char* name, int width, int height, const TEXTURE_FORMAT& format, bool useAsShaderResource, bool useUav = false);
 
 		static void Blit(RefCntAutoPtr<ITexture>& src, RefCntAutoPtr<ITexture>& dest);
 		static void Blit(RefCntAutoPtr<ITexture> & src, ITextureView* dest);
