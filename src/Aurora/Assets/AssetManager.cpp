@@ -42,13 +42,12 @@ namespace Aurora
 					std::cerr << "Shader not found: " << desc.FilePath << std::endl;
 					continue;
 				}
-
 				ShaderCreateInfo ShaderCI = {};
 				ShaderCI.SourceLanguage = desc.SourceLanguage;
 				ShaderCI.UseCombinedTextureSamplers = true;
 				ShaderCI.Desc.ShaderType = desc.ShaderType;
 				ShaderCI.EntryPoint      = "main";
-				ShaderCI.Desc.Name       = desc.FilePath.string().c_str();
+				ShaderCI.Desc.Name       = "...";
 
 				ShaderMacroHelper Macros;
 				for(auto& it : macros) {

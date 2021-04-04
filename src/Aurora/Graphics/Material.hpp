@@ -72,10 +72,14 @@ namespace Aurora
 		}
 
 		template <typename T>
-		inline bool SetVariable(const String& name, T data)
+		inline bool SetVariable(const String& name, T data, uint32_t customSize = 0)
 		{
 			void* rawData = (void*)(&data);
 			size_t size = sizeof(data);
+
+			if(customSize > 0) {
+				size = customSize;
+			}
 
 			for(auto& it : m_ShaderConstantBuffers) {
 				const String &buffer_name = it.first;
@@ -88,7 +92,36 @@ namespace Aurora
 							buffer.NeedsUpdate = true;
 							return true;
 						} else {
-							AU_THROW_ERROR("Size is not exact !");
+							AU_THROW_ERROR("Size is not exact ! " << var.Name << " - " << var.Size << " - " << var.ArrayStride << " - " << size);
+						}
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template <typename T>
+		inline bool SetArray(const String& name, T* data, uint32_t customSize = 0)
+		{
+			size_t size = sizeof(data);
+
+			if(customSize > 0) {
+				size = customSize;
+			}
+
+			for(auto& it : m_ShaderConstantBuffers) {
+				const String &buffer_name = it.first;
+				ShaderConstantBuffer &buffer = it.second;
+
+				for(auto& var : buffer.Variables) {
+					if(var.Name == name) {
+						if(var.Size == size) {
+							memcpy(buffer.BufferData.data() + var.Offset, data, size);
+							buffer.NeedsUpdate = true;
+							return true;
+						} else {
+							AU_THROW_ERROR("Size is not exact ! " << var.Name << " - " << var.Size << " - " << var.ArrayStride << " - " << size);
 						}
 					}
 				}

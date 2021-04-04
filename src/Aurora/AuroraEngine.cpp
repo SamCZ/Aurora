@@ -62,9 +62,11 @@ namespace Aurora
                 auto GetEngineFactoryVk = LoadGraphicsEngineVk();
 #    endif
 		EngineVkCreateInfo EngineCI;
-#    ifdef DILIGENT_DEBUG
+#    ifdef AU_VK_LAYERS
 		EngineCI.EnableValidation = true;
 #    endif
+
+		//EngineCI.EnableValidation = true;
 
 		EngineCI.Features.ComputeShaders  = DEVICE_FEATURE_STATE_ENABLED;
 		EngineCI.Features.DepthClamp      = DEVICE_FEATURE_STATE_OPTIONAL;
