@@ -6,6 +6,8 @@
 
 namespace Aurora
 {
+	std::vector<Material*> Material::m_CurrentMaterials;
+
 	Material::Material(const String& name, ShaderCollection_ptr shaderCollection)
 			: m_Name(name), m_ShaderCollection(std::move(shaderCollection)), m_CurrentPipelineState(nullptr), m_CurrentResourceBinding(nullptr), m_CurrentPipelineStateHash(0)
 	{
@@ -25,6 +27,13 @@ namespace Aurora
 		SetCullMode(CULL_MODE_FRONT);
 		SetDepthEnable(true);
 		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+		m_CurrentMaterials.push_back(this);
+	}
+
+	Material::~Material()
+	{
+		m_CurrentMaterials.erase(std::find(m_CurrentMaterials.begin(), m_CurrentMaterials.end(), this));
 	}
 
 	void Material::InitShaderResources(const RefCntAutoPtr<IShader>& shader)

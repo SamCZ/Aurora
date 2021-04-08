@@ -44,6 +44,8 @@ namespace Aurora
 			bool NeedsUpdate;
 		};
 	private:
+		static std::vector<Material*> m_CurrentMaterials;
+	private:
 		String m_Name;
 		ShaderCollection_ptr m_ShaderCollection;
 
@@ -61,7 +63,9 @@ namespace Aurora
 		std::map<String, ShaderTextureDef> m_ShaderTextures;
 	public:
 		explicit Material(const String& name, ShaderCollection_ptr shaderCollection);
-		~Material() = default;
+		~Material();
+
+		[[nodiscard]] inline const String& GetName() const noexcept { return m_Name; }
 	private:
 		void InitShaderResources(const RefCntAutoPtr<IShader>& shader);
 		void AssignShaders();
@@ -270,5 +274,8 @@ namespace Aurora
 		}
 	private:
 		static uint32_t GetGraphicsPipelineStateCreateInfoHash(Diligent::GraphicsPipelineStateCreateInfo& gpsci);
+
+	public:
+		inline static const std::vector<Material*>& GetAllMaterials() noexcept { return m_CurrentMaterials; }
 	};
 }
