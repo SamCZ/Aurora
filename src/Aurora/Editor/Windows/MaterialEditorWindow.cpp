@@ -34,6 +34,7 @@ namespace Aurora::Editor
 			ImGui::BeginChild("Recompile", 0, 128, true, -1);
 			{
 				ImGui::Text("Info");
+				ImGui::Text("Hash: " + std::to_string(material->GetHash()));
 			}
 			ImGui::EndChild();
 
@@ -64,6 +65,27 @@ namespace Aurora::Editor
 
 					if(m_SelectedShader != nullptr) {
 						if(ImGui::Button("Compile and save")) {
+							TextEditor::ErrorMarkers markers;
+
+							auto compileStatus = m_SelectedShader->Compile(m_ShaderTextEditor.GetText(), material->GetMacros());
+
+							if(compileStatus.Compiled) {
+								m_SelectedShader->SetShaderSource(m_ShaderTextEditor.GetText());
+							} else {
+								for(const auto& err : compileStatus.LineErrors) {
+									markers.insert(err);
+								}
+							}
+
+							m_ShaderTextEditor.SetErrorMarkers(markers);
+						}
+
+						ImGui::SameLine();
+
+						if(ImGui::Button("Reload from file")) {
+							m_SelectedShader->Load(true);
+							m_ShaderTextEditor.SetText(m_SelectedShader->GetShaderSource());
+
 							TextEditor::ErrorMarkers markers;
 
 							auto compileStatus = m_SelectedShader->Compile(m_ShaderTextEditor.GetText(), material->GetMacros());

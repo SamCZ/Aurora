@@ -78,7 +78,7 @@ namespace ImGui
 		return false;
 	}
 
-	inline void BeginWindow(const std::string& name, float x, float y, float width, float height, bool stay = false, int padding = -1, bool* p_open = (bool*)0) {
+	inline void BeginWindow(const std::string& name, float x, float y, float width, float height, bool stay = false, int padding = -1, bool* p_open = nullptr) {
 		if (padding >= 0) {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { (float)padding, (float)padding });
 		}

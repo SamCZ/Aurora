@@ -59,6 +59,22 @@ namespace Aurora
 		}
 	}
 
+	int CountLines(const String& str)
+	{
+		int lineCount = 0;
+
+		for (int i = 0; i < str.length(); ++i) {
+			if(i != str.length() - 1 && str[i] == '\r' && str[i + 1] == '\n') {
+				lineCount++;
+				i++;
+			} else if(str[i] == '\n') {
+				lineCount++;
+			}
+		}
+
+		return lineCount;
+	}
+
 	ShaderCompileState ShaderResourceObject::Compile(const String& shaderSource, const ShaderMacros_t& macros)
 	{
 		ShaderCompileState compileState = {};
@@ -89,8 +105,28 @@ namespace Aurora
 			const char* str = reinterpret_cast<const char*>(outputLog->GetConstDataPtr());
 			auto out = std::string(str, str + outputLog->GetSize());
 
-			std::regex findErrRegex("ERROR: (.*)[^\\r\\n]*");
+			int lineOffset = 0;
 
+			auto shaderStringOffset = String::npos;
+
+			// Find line offset
+			for (int i = 0; i < out.length(); ++i) {
+				if(i == 0) continue;
+
+				if(out[i] == '\n' && out[i - 1] == '\n') {
+					shaderStringOffset = i + 1;
+					break;
+				}
+			}
+
+			// Count final shader string line numbers
+			if(shaderStringOffset != String::npos) {
+				String finalShaderString = out.substr(shaderStringOffset);
+				lineOffset = CountLines(finalShaderString) - CountLines(shaderSource);
+			}
+
+			// Find errors
+			std::regex findErrRegex("ERROR: (.*)[^\\r\\n]*");
 			std::smatch matches;
 
 			String::const_iterator searchStart(out.cbegin());
@@ -116,7 +152,7 @@ namespace Aurora
 
 				int lineNumber = std::stoi(first.substr(startFirstIndex + 2));
 
-				lineNumber = lineNumber - 9; //TODO: Find another way to move line shader line number
+				lineNumber -= lineOffset;
 
 				compileState.LineErrors.emplace_back(lineNumber, lineMessage);
 				compileState.Compiled = false;
