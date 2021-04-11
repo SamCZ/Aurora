@@ -44,7 +44,7 @@ namespace Aurora
 				break;
 			}
 			case LoadType::ShaderFolder: {
-				shaderCollection = AuroraEngine::AssetManager->LoadShaders(m_Path, m_Macros);
+
 				break;
 			}
 		}
@@ -53,7 +53,7 @@ namespace Aurora
 			AU_THROW_ERROR("Cannot load shader !" << m_Path);
 		}
 
-		return std::make_shared<Material>(m_Path.filename().string(), shaderCollection);
+		return std::make_shared<Material>(m_Path.filename().string(), m_Path, m_Macros);
 	}
 
 	void LoadCubeMap(std::shared_ptr<Material>& material, const String& name, nlohmann::json& value)
@@ -101,7 +101,7 @@ namespace Aurora
 			AU_THROW_ERROR("Cannot load " << path);
 		}
 
-		auto shaderCollection = std::make_shared<ShaderCollection>();
+		std::vector<ShaderResourceObject_ptr> shaderCollection;
 
 		if(json.find("shader_macros") != json.end()) {
 			auto& shader_macros = json["shader_macros"];
@@ -118,9 +118,9 @@ namespace Aurora
 				const Path shader_path = it.value().get<String>();
 
 				if(shader_type == "vertex") {
-					shaderCollection->Vertex = AuroraEngine::AssetManager->LoadShader(shader_path, SHADER_TYPE_VERTEX, macros);
+					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, SHADER_SOURCE_LANGUAGE_GLSL, SHADER_TYPE_VERTEX));
 				} else if(shader_type == "pixel") {
-					shaderCollection->Pixel = AuroraEngine::AssetManager->LoadShader(shader_path, SHADER_TYPE_PIXEL, macros);
+					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, SHADER_SOURCE_LANGUAGE_GLSL, SHADER_TYPE_PIXEL));
 				} else {
 					AU_THROW_ERROR("Unknown shader type " << shader_type << " for material " << path);
 				}
@@ -129,7 +129,7 @@ namespace Aurora
 			AU_THROW_ERROR("No shaders in " << path << " material file !");
 		}
 
-		auto material = std::make_shared<Material>(path.filename().string(), shaderCollection);
+		auto material = std::make_shared<Material>(path.filename().string(), shaderCollection, macros);
 
 		if(json.find("variables") != json.end()) {
 			auto& variables = json["variables"];

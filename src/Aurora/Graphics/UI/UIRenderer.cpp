@@ -40,7 +40,7 @@ namespace Aurora
 
 	UIRenderer::UIRenderer() : m_Material(nullptr)
 	{
-		m_Material = std::make_shared<Material>("UI", AuroraEngine::AssetManager->LoadShaders("Assets/Shaders/UI"));
+		m_Material = std::make_shared<Material>("UI", "Assets/Shaders/UI");
 
 		m_Material->SetCullMode(CULL_MODE_NONE);
 		m_Material->SetDepthEnable(true);

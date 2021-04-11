@@ -64,7 +64,7 @@ namespace Aurora::Editor
 					ImGui::Separator();
 
 					if(m_SelectedShader != nullptr) {
-						if(ImGui::Button("Compile and save")) {
+						if(ImGui::Button("Compile and reload")) {
 							TextEditor::ErrorMarkers markers;
 
 							auto compileStatus = m_SelectedShader->Compile(m_ShaderTextEditor.GetText(), material->GetMacros());
@@ -101,6 +101,13 @@ namespace Aurora::Editor
 							m_ShaderTextEditor.SetErrorMarkers(markers);
 						}
 
+						ImGui::SameLine();
+
+						if(ImGui::Button("Save to file")) {
+							if(m_SelectedShader != nullptr)
+								m_SelectedShader->Save();
+						}
+
 						ImGui::Separator();
 
 						m_ShaderTextEditor.Render("shaderTextEditor");
@@ -111,7 +118,7 @@ namespace Aurora::Editor
 		ImGui::EndWindow();
 	}
 
-	void MaterialEditorWindow::SetMaterial(const Material2_wptr &material, bool showWindow)
+	void MaterialEditorWindow::SetMaterial(const Material_wptr &material, bool showWindow)
 	{
 		m_Material = material;
 		m_WindowOpened = showWindow;

@@ -29,7 +29,7 @@ namespace Aurora
 			AuroraEngine::RenderDevice->CreateTexture(RTColorDesc, nullptr, &m_PlaceholderTexture);
 		}
 
-		m_BlitMaterial = Setup2DMaterial(std::make_shared<Material>("UI", AuroraEngine::AssetManager->LoadShaders("Assets/Shaders/Blit")), true);
+		m_BlitMaterial = Setup2DMaterial(std::make_shared<Material>("UI", "Assets/Shaders/Blit"), true);
 	}
 
 	void GraphicUtilities::Destroy()

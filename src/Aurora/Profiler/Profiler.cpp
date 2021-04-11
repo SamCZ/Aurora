@@ -86,8 +86,8 @@ namespace Aurora
 	void Profiler::DrawWithImGui(bool createWindow)
 	{
 		if(createWindow) {
-			static bool profileWindowOpened = true;
-			ImGui::BeginWindow("Profiler window", 255, 250, 550, 600, false, 5, &profileWindowOpened);
+			static bool profileWindowOpened = false;
+			ImGui::BeginWindow("Profiler window", ImGui::GetIO().DisplaySize.x - 550, 0, 550, 600, false, 5, &profileWindowOpened);
 		}
 
 		ImGui::Checkbox("Paused###ProfilerPaused", &m_IsPaused);
