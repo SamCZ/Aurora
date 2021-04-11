@@ -66,6 +66,8 @@ namespace Aurora
 		typedef std::vector<ShaderTextureDef> TextureDefList;
 		typedef std::vector<std::pair<String, ImmutableSamplerDesc>> SamplerList;
 	private:
+		static std::vector<Material*> m_CurrentMaterials;
+	private:
 		String m_Name;
 		ShaderMacros_t m_Macros;
 
@@ -91,11 +93,13 @@ namespace Aurora
 		Material(String name, const Path& shaderPath, ShaderMacros_t macros = {});
 		Material(String name, const std::vector<ShaderResourceObject_ptr>& shaders, ShaderMacros_t macros = {});
 		explicit Material(String name, ShaderMacros_t macros = {});
-		~Material() override = default;
+		~Material() override;
 
 		void SetShader(const ShaderResourceObject_ptr &sharedPtr);
 		void RemoveShader(const SHADER_TYPE& shaderType);
 		ShaderResourceObject_ptr GetShader(const SHADER_TYPE& shaderType);
+	public:
+		[[nodiscard]] inline const String& GetName() const noexcept { return m_Name; }
 	private:
 		void OnShaderResourceUpdate(ResourceObject* obj);
 		void LoadConstantBuffers(ShaderObject &object, ShaderResourceDesc desc, std::vector<StateTransitionDesc>& barriers, ConstantBufferList& constantBufferStorage, ConstantBufferList& constantBufferListCopy);
@@ -133,6 +137,8 @@ namespace Aurora
 	public:
 		void SetSampler(const String& textureName, const SamplerDesc& sampler);
 		void SetTexture(const String& name, const RefCntAutoPtr<ITexture>& texture);
+	public:
+		inline static const std::vector<Material*>& GetAllMaterials() noexcept { return m_CurrentMaterials; }
 	public:
 		template <typename T>
 		inline bool SetVariable(const String& name, T data, uint32_t customSize = 0)

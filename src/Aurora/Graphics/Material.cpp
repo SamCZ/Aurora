@@ -7,6 +7,8 @@
 
 namespace Aurora
 {
+	std::vector<Material*> Material::m_CurrentMaterials;
+
 	Material::Material(String name, const Path &shaderPath, ShaderMacros_t macros)
 	: m_Name(std::move(name)),
 	  m_Macros(std::move(macros)),
@@ -31,6 +33,8 @@ namespace Aurora
 		SetCullMode(CULL_MODE_FRONT);
 		SetDepthEnable(true);
 		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+		m_CurrentMaterials.push_back(this);
 	}
 
 	Material::Material(String name, const std::vector<ShaderResourceObject_ptr> &shaders, ShaderMacros_t macros)
@@ -57,6 +61,8 @@ namespace Aurora
 		SetCullMode(CULL_MODE_FRONT);
 		SetDepthEnable(true);
 		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+		m_CurrentMaterials.push_back(this);
 	}
 
 	Material::Material(String name, ShaderMacros_t macros)
@@ -76,6 +82,13 @@ namespace Aurora
 		SetCullMode(CULL_MODE_FRONT);
 		SetDepthEnable(true);
 		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+
+		m_CurrentMaterials.push_back(this);
+	}
+
+	Material::~Material()
+	{
+		m_CurrentMaterials.erase(std::find(m_CurrentMaterials.begin(), m_CurrentMaterials.end(), this));
 	}
 
 	void Material::SetShader(const ShaderResourceObject_ptr &sharedPtr)

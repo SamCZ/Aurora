@@ -4,7 +4,7 @@
 
 namespace Aurora::Editor
 {
-	MaterialEditorWindow::MaterialEditorWindow() : m_ShaderTextEditor()
+	MaterialEditorWindow::MaterialEditorWindow() : m_ShaderTextEditor(), m_Material(nullptr), m_WindowOpened(true)
 	{
 		m_ShaderTextEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
 		m_ShaderTextEditor.SetShowWhitespaces(false);
@@ -12,7 +12,7 @@ namespace Aurora::Editor
 
 	void MaterialEditorWindow::Draw()
 	{
-		auto material = m_Material.lock();
+		auto material = m_Material;
 
 		if(material == nullptr) return;
 
@@ -53,7 +53,7 @@ namespace Aurora::Editor
 				if(menus["Shaders"]) {
 
 					for(const auto& it : material->GetShaders()) {
-						if(ImGui::Button(String(GetShaderTypeLiteralName(it.first)) + ":" + PointerToString(it.second.Shader.RawPtr()))) {
+						if(ImGui::Button(String(GetShaderTypeLiteralName(it.first))/* + ":" + PointerToString(it.second.Shader.RawPtr())*/)) {
 							m_SelectedShader = it.second.ResourceObject;
 							m_ShaderTextEditor.SetText(m_SelectedShader->GetShaderSource());
 						}
@@ -91,7 +91,7 @@ namespace Aurora::Editor
 							auto compileStatus = m_SelectedShader->Compile(m_ShaderTextEditor.GetText(), material->GetMacros());
 
 							if(compileStatus.Compiled) {
-								m_SelectedShader->SetShaderSource(m_ShaderTextEditor.GetText());
+								//m_SelectedShader->SetShaderSource(m_ShaderTextEditor.GetText());
 							} else {
 								for(const auto& err : compileStatus.LineErrors) {
 									markers.insert(err);
@@ -118,7 +118,7 @@ namespace Aurora::Editor
 		ImGui::EndWindow();
 	}
 
-	void MaterialEditorWindow::SetMaterial(const Material_wptr &material, bool showWindow)
+	void MaterialEditorWindow::SetMaterial(Material* &material, bool showWindow)
 	{
 		m_Material = material;
 		m_WindowOpened = showWindow;
