@@ -11,6 +11,8 @@ namespace Aurora
 	Material::Material(const String& name, ShaderCollection_ptr shaderCollection)
 			: m_Name(name), m_ShaderCollection(std::move(shaderCollection)), m_CurrentPipelineState(nullptr), m_CurrentResourceBinding(nullptr), m_CurrentPipelineStateHash(0)
 	{
+		m_PSOCreateInfo.PSODesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
+
 		InitShaderResources(m_ShaderCollection->Vertex);
 		InitShaderResources(m_ShaderCollection->Pixel);
 		InitShaderResources(m_ShaderCollection->Domain);
@@ -22,7 +24,7 @@ namespace Aurora
 		AssignShaders();
 
 		m_PSOCreateInfo.PSODesc.Name = name.c_str();
-		m_PSOCreateInfo.PSODesc.PipelineType = PIPELINE_TYPE_GRAPHICS; //TODO: check by attached shaders if compute PIPELINE_TYPE_COMPUTE
+		m_PSOCreateInfo.PSODesc.PipelineType = PIPELINE_TYPE_GRAPHICS;
 
 		SetCullMode(CULL_MODE_FRONT);
 		SetDepthEnable(true);
@@ -41,8 +43,6 @@ namespace Aurora
 		if(shader == nullptr) {
 			return;
 		}
-
-		m_PSOCreateInfo.PSODesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
 
 		std::vector<StateTransitionDesc> barriers;
 
@@ -87,7 +87,7 @@ namespace Aurora
 							for (int j = 0; j < variables.size(); ++j) {
 								const ShaderVariable& var = variables[j];
 
-								std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << ":" << var.MatrixStride << std::endl;
+								//std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << ":" << var.MatrixStride << std::endl;
 							}
 
 							shaderConstantBufferInfo.Variables = variables;
@@ -100,12 +100,12 @@ namespace Aurora
 
 						m_ShaderConstantBuffers[desc.Name] = shaderConstantBufferInfo;
 
-						std::cout << "Initialized constant buffer " << desc.Name << "(" << GetShaderTypeLiteralName(shaderType) << ") for material " << m_Name << " with buffer: " << shaderConstantBufferInfo.Buffer.RawPtr() << std::endl;
+						//std::cout << "Initialized constant buffer " << desc.Name << "(" << GetShaderTypeLiteralName(shaderType) << ") for material " << m_Name << " with buffer: " << shaderConstantBufferInfo.Buffer.RawPtr() << std::endl;
 					}
 					break;
 				}
 				case SHADER_RESOURCE_TYPE_SAMPLER: {
-					std::cout << "Sampler for: " << desc.Name << std::endl;
+					//std::cout << "Sampler for: " << desc.Name << std::endl;
 					break;
 				}
 				case SHADER_RESOURCE_TYPE_TEXTURE_SRV: {
@@ -124,11 +124,11 @@ namespace Aurora
 						m_ShaderTextures[desc.Name] = {{shaderType}, GraphicUtilities::GetPlaceholderTexture(), GraphicUtilities::GetPlaceholderTexture()->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE), true};
 					}
 
-					std::cout << "Texture: " << desc.Name << std::endl;
+					//std::cout << "Texture: " << desc.Name << std::endl;
 					break;
 				}
 				case SHADER_RESOURCE_TYPE_INPUT_ATTACHMENT: {
-					std::cout << "Input: " << desc.Name << std::endl;
+					//std::cout << "Input: " << desc.Name << std::endl;
 					break;
 				}
 				default:

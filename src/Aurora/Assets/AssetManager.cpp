@@ -9,6 +9,7 @@
 #include "Aurora/Core/FileSystem.hpp"
 
 #include <fstream>
+#include <regex>
 
 namespace Aurora
 {
@@ -144,6 +145,8 @@ namespace Aurora
 			AU_THROW_ERROR("Unknown shader extension " << extension << " for " << path);
 		}
 
+		IDataBlob* outputLog = nullptr;
+
 		ShaderCreateInfo ShaderCI = {};
 		ShaderCI.SourceLanguage = language;
 		ShaderCI.UseCombinedTextureSamplers = true;
@@ -152,6 +155,7 @@ namespace Aurora
 		ShaderCI.Desc.Name       = path.string().c_str();
 		String source = LoadFileToString(path);
 		ShaderCI.Source          = source.c_str();
+		ShaderCI.ppCompilerOutput = &outputLog;
 
 		ShaderMacroHelper Macros;
 		for(auto& it : macros) {
@@ -162,21 +166,33 @@ namespace Aurora
 
 		AuroraEngine::RenderDevice->CreateShader(ShaderCI, &shader);
 
+		if(outputLog != nullptr) {
+
+		}
+
 		return shader;
 	}
 
-	String AssetManager::LoadFileToString(const Path& path)
+	String AssetManager::LoadFileToString(const Path& path, bool* isFromAssetPackage)
 	{
-		auto blob = LoadFile(path);
+		auto blob = LoadFile(path, isFromAssetPackage);
 		const char* str = reinterpret_cast<const char*>(blob->GetConstDataPtr());
 		return std::string(str, str + blob->GetSize());
 	}
 
-	RefCntAutoPtr<IDataBlob> AssetManager::LoadFile(const Path& path)
+	RefCntAutoPtr<IDataBlob> AssetManager::LoadFile(const Path& path, bool* isFromAssetPackage)
 	{
 		if(m_AssetPackageFiles.find(path) != m_AssetPackageFiles.end()) {
+			if(isFromAssetPackage != nullptr) {
+				*isFromAssetPackage = true;
+			}
+
 			auto& packageDesc = m_AssetPackageFiles[path];
 			return FilePackager::ReadFileFromPackage(packageDesc.first, packageDesc.second);
+		}
+
+		if(isFromAssetPackage != nullptr) {
+			*isFromAssetPackage = false;
 		}
 
 		/*auto blob = FS::LoadFile(path);
@@ -186,7 +202,7 @@ namespace Aurora
 
 		RefCntAutoPtr<BasicFileStream> pFileStream(MakeNewRCObj<BasicFileStream>()((const Char*)path.string().c_str(), EFileAccessMode::Read));
 		if (!pFileStream->IsValid())
-			LOG_ERROR_AND_THROW("Failed to open image file \"", path, '\"');
+			LOG_ERROR_AND_THROW("Failed to open file \"", path, '\"');
 
 		RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(0));
 		pFileStream->ReadBlob(pFileData);
@@ -194,10 +210,17 @@ namespace Aurora
 		return pFileData;
 	}
 
-	bool AssetManager::FileExists(const Path& path) const
+	bool AssetManager::FileExists(const Path& path, bool* isFromAssetPackage) const
 	{
 		if(m_AssetPackageFiles.find(path) != m_AssetPackageFiles.end()) {
+			if(isFromAssetPackage != nullptr) {
+				*isFromAssetPackage = true;
+			}
 			return true;
+		}
+
+		if(isFromAssetPackage != nullptr) {
+			*isFromAssetPackage = false;
 		}
 
 		return FS::FileExists(path);
@@ -301,5 +324,68 @@ namespace Aurora
 		json = nlohmann::json::parse(data, data + dataLen);
 
 		return true;
+	}
+
+	const ShaderResourceObject_ptr &AssetManager::LoadShaderResource(const Path &path, const SHADER_SOURCE_LANGUAGE& shaderSourceLanguage, const SHADER_TYPE &type)
+	{
+		if(m_ShaderResources.find(path) != m_ShaderResources.end()) {
+			return m_ShaderResources[path];
+		} else {
+			m_ShaderResources[path] = ShaderResourceObject_ptr(new ShaderResourceObject(path, shaderSourceLanguage, type));
+			auto& res = m_ShaderResources[path];
+			res->Load(false);
+			return res;
+		}
+	}
+
+	static std::map<String, SHADER_TYPE> ShaderFileTypeNames = { // NOLINT(cert-err58-cpp)
+			{"vertex", SHADER_TYPE_VERTEX},
+			{"fragment", SHADER_TYPE_PIXEL},
+			{"geometry", SHADER_TYPE_GEOMETRY},
+			{"hull", SHADER_TYPE_HULL},
+			{"domain", SHADER_TYPE_DOMAIN},
+			{"compute", SHADER_TYPE_COMPUTE}
+	};
+
+	static std::map<String, SHADER_SOURCE_LANGUAGE> ShaderLanguageFileExt = { // NOLINT(cert-err58-cpp)
+			{".glsl", SHADER_SOURCE_LANGUAGE_GLSL},
+			{".hlsl", SHADER_SOURCE_LANGUAGE_HLSL}
+	};
+
+	std::vector<ShaderResourceObject_ptr> AssetManager::LoadShaderResourceFolder(const Path &path)
+	{
+		std::vector<ShaderResourceObject_ptr> shaders;
+
+		for(auto& file: std::filesystem::directory_iterator(path)) {
+			const auto& filePath = file.path();
+			auto extension = filePath.extension().string();
+
+			// Find shader language by file extension
+			auto extTypeIter = ShaderLanguageFileExt.find(extension);
+
+			if(extTypeIter == ShaderLanguageFileExt.end()) {
+				std::cerr << "Unknown shader extension " << extension << std::endl;
+				continue;
+			}
+
+			auto shaderLang = ShaderLanguageFileExt[extension];
+
+			// Find shader type by filename
+
+			auto filenameWithoutExtension = filePath.stem().string();
+			auto shaderTypeIter = ShaderFileTypeNames.find(filenameWithoutExtension);
+
+			if(shaderTypeIter == ShaderFileTypeNames.end()) {
+				std::cerr << "Unknown shader type " << filenameWithoutExtension << std::endl;
+				continue;
+			}
+
+			auto shaderType = ShaderFileTypeNames[filenameWithoutExtension];
+
+			// Load resource
+			shaders.push_back(LoadShaderResource(filePath, shaderLang, shaderType));
+		}
+
+		return shaders;
 	}
 }

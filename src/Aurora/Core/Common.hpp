@@ -126,3 +126,12 @@ inline std::vector<std::string> SplitString(const std::string& str, char delimit
 
 	return list;
 }
+
+template<typename T>
+inline String PointerToString(T* pointer)
+{
+	const void * address = static_cast<const void*>(pointer);
+	std::stringstream ss;
+	ss << address;
+	return ss.str();
+}

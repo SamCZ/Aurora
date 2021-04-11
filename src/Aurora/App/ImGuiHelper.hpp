@@ -8,6 +8,11 @@
 
 namespace ImGui
 {
+	inline bool Button(const std::string& label, const ImVec2& size_arg = ImVec2(0, 0))
+	{
+		return ButtonEx(label.c_str(), size_arg, ImGuiButtonFlags_None);
+	}
+
 	inline bool Selectable(const std::string& label, bool selected = false, ImGuiSelectableFlags flags = 0, const ImVec2& size = ImVec2(0,0))
 	{
 		return ImGui::Selectable(label.c_str(), selected, flags, size);
