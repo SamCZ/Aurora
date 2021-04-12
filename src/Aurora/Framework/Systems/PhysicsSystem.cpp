@@ -69,6 +69,8 @@ namespace Aurora
 
 			Actor* who = component->GetOwner();
 
+			if(!who->IsActive()) continue;
+
 			if(!component->IsSimulatingPhysics() || !component->IsRootComponent() || !component->IsActive() || !who->IsActive()) {
 				continue;
 			}

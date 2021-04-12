@@ -9,6 +9,7 @@ namespace Aurora
 	{
 	private:
 		Bound* m_Collider;
+		BoundingBox m_Transformed;
 	public:
 		inline PhysicsBody() : m_Collider(nullptr)
 		{
@@ -31,7 +32,11 @@ namespace Aurora
 
 		void Transform(const Matrix4& matrix)
 		{
-
+			if(HasCollider()) {
+				BoundingBox bounds = *(BoundingBox*)GetBounds();
+				bounds *= matrix;
+				m_Transformed = bounds;
+			}
 		}
 
 		inline bool HasCollider()
@@ -42,6 +47,11 @@ namespace Aurora
 		inline Bound* GetBounds()
 		{
 			return m_Collider;
+		}
+
+		inline BoundingBox& GetTransformedBounds()
+		{
+			return m_Transformed;
 		}
 	};
 }

@@ -20,6 +20,7 @@ namespace Aurora
 
 			if(m_Mesh != nullptr) {
 				m_Body.SetCollider(m_Mesh->m_Bounds.get());
+				m_Body.Transform(GetTransformMatrix());
 			} else {
 				m_Body.SetCollider(nullptr);
 			}

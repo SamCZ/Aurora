@@ -88,6 +88,7 @@ namespace Aurora
 		void UpdateComponents(double delta)
 		{
 			for(auto* component : m_Components) {
+				if(!component->IsActive()) continue;
 				component->Tick(delta);
 			}
 		}
