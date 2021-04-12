@@ -18,7 +18,9 @@ namespace Aurora
 		Vector3D m_Acceleration;
 		Vector3D m_Velocity;
 		bool m_IsSimulatingPhysics;
-		bool m_CollidingAxes[3];
+		bool m_CanReceiveCollisions;
+		bool m_IsGravityEnabled;
+		bool m_CollidingAxes[3]{};
 	private:
 		SceneComponent* m_Parent;
 		std::vector<SceneComponent*> m_Components;
@@ -40,6 +42,8 @@ namespace Aurora
 		m_Acceleration(),
 		m_Velocity(),
 		m_IsSimulatingPhysics(false),
+		m_CanReceiveCollisions(true),
+		m_IsGravityEnabled(true),
 		m_Body() {}
 
 		~SceneComponent() override = default;
@@ -92,6 +96,12 @@ namespace Aurora
 	public:
 		inline void SetSimulatePhysics(bool enabled) { m_IsSimulatingPhysics = enabled; }
 		inline bool IsSimulatingPhysics() const { return m_IsSimulatingPhysics; }
+
+		inline void SetCanReceiveCollisions(bool receiveCollision) { m_CanReceiveCollisions = receiveCollision; }
+		inline bool CanReceiveCollisions() const noexcept { return m_CanReceiveCollisions; }
+
+		inline void SetIsGravityEnabled(bool enabledGravity) { m_IsGravityEnabled = enabledGravity; }
+		inline bool IsGravityEnabled() const noexcept { return m_IsGravityEnabled; }
 
 		inline void SetAcceleration(const Vector3D& acceleration) { m_Acceleration = acceleration; }
 		inline void SetVelocity(const Vector3D& velocity) { m_Velocity = velocity; }
