@@ -9,6 +9,9 @@
 
 #include <Aurora/Profiler/Profiler.hpp>
 
+#include <Aurora/Physics/Ray.hpp>
+#include <Aurora/Physics/CollisionResult.hpp>
+
 #define COMPONENT_LIST(name) \
 ComponentList<name> m_##name##s;      \
 public:                            \
@@ -44,17 +47,17 @@ namespace Aurora
 			delete m_GameMode;
 		}
 
-		template<class T, BASE_OF(T, Actor)>
+		template<class T, class RootCmp = SceneComponent, BASE_OF(T, Actor)>
 		T* SpawnActor(const String& Name, const Vector3D& Position, const Vector3D& Rotation = Vector3D(0.0), const Vector3D& Scale = Vector3D(1.0))
 		{
-			T* actor = BeginSpawnActor<T>(Name, Position, Rotation, Scale);
+			T* actor = BeginSpawnActor<T, RootCmp>(Name, Position, Rotation, Scale);
 
 			FinishSpawningActor(actor);
 
 			return actor;
 		}
 
-		template<class T, BASE_OF(T, Actor)>
+		template<class T, class RootCmp = SceneComponent, BASE_OF(T, Actor)>
 		T* BeginSpawnActor(const String& Name, const Vector3D& Position, const Vector3D& Rotation, const Vector3D& Scale = Vector3D(1.0))
 		{
 			T* actorTemplated = new T();
@@ -64,7 +67,7 @@ namespace Aurora
 
 			if (!actor->m_RootComponent)
 			{
-				actor->m_RootComponent = actor->AddComponent<SceneComponent>("SceneRoot");
+				actor->m_RootComponent = actor->AddComponent<RootCmp>("SceneRoot");
 			}
 
 			actor->InitializeComponents();
@@ -100,6 +103,7 @@ namespace Aurora
 
 				actor->m_Components.clear();
 
+				UnregisterComponent(actor->m_RootComponent);
 				delete actor->m_RootComponent;
 				actor->m_RootComponent = nullptr;
 
@@ -172,9 +176,12 @@ namespace Aurora
 			Profiler::End("PreUpdateSystems");
 
 			Profiler::Begin("Actors::Tick");
-			for(Actor* actor : m_Actors) {
+
+			for(int i = (int)m_Actors.size() - 1; i >= 0; i--) {
+				Actor* actor = m_Actors[i];
 				actor->Tick(delta);
 			}
+
 			Profiler::End("Actors::Tick");
 
 			Profiler::Begin("UpdateSystems");
@@ -191,6 +198,8 @@ namespace Aurora
 			m_MeshComponents.PostUpdateSystems(delta);
 			Profiler::End("PostUpdateSystems");
 		}
+
+		std::optional<CollisionResult> RayCast(const Ray& ray, const Layer& layer = Layer("RayCast"));
 	};
 }
 #undef COMPONENT_LIST

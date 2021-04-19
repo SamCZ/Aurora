@@ -59,6 +59,9 @@ namespace Aurora
 		{
 			return m_Components;
 		}
+
+		inline typename std::vector<T*>::iterator begin() { return m_Components.begin(); }
+		inline typename std::vector<T*>::iterator end() { return m_Components.end(); }
 	public:
 		template<typename System, typename... Args, BASE_OF(System, ISystem<T>)>
 		inline System* AddSystem(Args&& ... args)
@@ -87,8 +90,13 @@ namespace Aurora
 
 		void UpdateComponents(double delta)
 		{
-			for(auto* component : m_Components) {
+			/*for(auto* component : m_Components) {
 				if(!component->IsActive()) continue;
+				component->Tick(delta);
+			}*/
+
+			for(int i = (int)m_Components.size() - 1; i >= 0; i--) {
+				auto* component = m_Components[i];
 				component->Tick(delta);
 			}
 		}

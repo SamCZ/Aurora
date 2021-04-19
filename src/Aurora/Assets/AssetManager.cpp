@@ -255,6 +255,34 @@ namespace Aurora
 				UNEXPECTED("Unexpected format");
 		}
 
+		m_LoadedTextures[path] = ppTexture;
+
+		return ppTexture;
+	}
+
+	RefCntAutoPtr<ITexture> AssetManager::LoadTexture(const String& filename, IDataBlob* fileData, const TextureLoadInfo &textureLoadInfo)
+	{
+		if(fileData == nullptr) {
+			return RefCntAutoPtr<ITexture>(nullptr);
+		}
+
+		RefCntAutoPtr<ITexture> ppTexture;
+		RefCntAutoPtr<Image> pImage;
+
+		auto ImgFmt = CreateImageFromDataBlob(filename, fileData, &pImage);
+
+		if (pImage)
+			CreateTextureFromImage(pImage, textureLoadInfo, AuroraEngine::RenderDevice, &ppTexture);
+		else if (fileData)
+		{
+			if (ImgFmt == IMAGE_FILE_FORMAT_DDS)
+				CreateTextureFromDDS(fileData, textureLoadInfo, AuroraEngine::RenderDevice,  &ppTexture);
+			else if (ImgFmt == IMAGE_FILE_FORMAT_KTX)
+				CreateTextureFromKTX(fileData, textureLoadInfo, AuroraEngine::RenderDevice,  &ppTexture);
+			else
+				UNEXPECTED("Unexpected format");
+		}
+
 		return ppTexture;
 	}
 

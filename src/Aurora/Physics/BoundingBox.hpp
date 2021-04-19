@@ -64,8 +64,8 @@ namespace Aurora
 			corners[6] = Vector3(m_Max.x, m_Max.y, m_Min.z);
 			corners[7] = m_Max;
 
-			Vector3 min = Vector3(1, 1, 1) * std::numeric_limits<float>::infinity();
-			Vector3 max = Vector3(1, 1, 1) * -std::numeric_limits<float>::infinity();
+			Vector3 min = Vector3(1) * std::numeric_limits<float>::infinity();
+			Vector3 max = Vector3(1) * -std::numeric_limits<float>::infinity();
 
 			for(auto & corner : corners) {
 				Vector4 transformed = matrix * Vector4(corner, 1.0);

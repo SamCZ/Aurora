@@ -413,6 +413,7 @@ namespace Aurora
 		}
 
 		// Update pipeline
+		// TODO: fixme hashing not work
 		uint32_t hash = HashPSO(m_PSOCreateInfo);
 
 		if(m_CurrentPipelineStateHash == hash) {
@@ -458,6 +459,14 @@ namespace Aurora
 		m_PipelineStates[hash] = stateData;
 	}
 
+	std::size_t hashVec(std::vector<uintptr_t> const& vec) {
+		std::size_t seed = vec.size();
+		for(auto& i : vec) {
+			seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+		}
+		return seed;
+	}
+
 	uint32_t Material::HashPSO(const GraphicsPipelineStateCreateInfo &gpsci)
 	{
 		CrcHash hasher;
@@ -490,13 +499,27 @@ namespace Aurora
 
 		// Hash shaders
 
-		hasher.Add(gpsci.pVS);
+
+		std::vector<uintptr_t> shadersPointers;
+
+		if(gpsci.pVS != nullptr) {
+			shadersPointers.push_back(reinterpret_cast<uintptr_t>(&gpsci.pVS));
+		}
+
+		if(gpsci.pPS != nullptr) {
+			shadersPointers.push_back(reinterpret_cast<uintptr_t>(&gpsci.pPS));
+		}
+
+		hasher.Add(hashVec(shadersPointers));
+
+		// Pointers not work in hashing
+		/*hasher.Add(gpsci.pVS);
 		hasher.Add(gpsci.pPS);
 		hasher.Add(gpsci.pDS);
 		hasher.Add(gpsci.pHS);
 		hasher.Add(gpsci.pGS);
 		hasher.Add(gpsci.pAS);
-		hasher.Add(gpsci.pMS);
+		hasher.Add(gpsci.pMS);*/
 
 		// Pso desc
 		hasher.Add(gpsci.PSODesc.CommandQueueMask);
@@ -560,7 +583,7 @@ namespace Aurora
 					AuroraEngine::ImmediateContext->UnmapBuffer(buffer.Buffer, MAP_WRITE);
 				}
 
-				buffer.NeedsUpdate = false;
+				buffer.NeedsUpdate = true;
 
 				//GetCurrentResourceBinding()->GetVariableByName(constantList.first, buffer.Name.c_str())->Set(buffer.Buffer);
 			}

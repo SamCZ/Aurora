@@ -1,6 +1,7 @@
 #include "ModelImporter.hpp"
 
 #include <Aurora/Physics/BoundingBox.hpp>
+#include <Aurora/AuroraEngine.hpp>
 
 namespace Aurora
 {
@@ -10,6 +11,13 @@ namespace Aurora
 			"aiTextureType_AMBIENT", "aiTextureType_EMISSIVE", "aiTextureType_HEIGHT",
 			"aiTextureType_NORMALS", "aiTextureType_SHININESS", "aiTextureType_OPACITY",
 			"aiTextureType_DISPLACEMENT", "aiTextureType_LIGHTMAP", "aiTextureType_REFLECTION",
+			"aiTextureType_UNKNOWN", "_aiTextureType_Force32Bit" };
+
+	static std::vector<std::string> TextureTypeEnumToShaderNameString = {
+			"aiTextureType_NONE", "AlbedoMap", "SpecularMap",
+			"aiTextureType_AMBIENT", "EmissionMap", "HeightMap",
+			"NormalMap", "aiTextureType_SHININESS", "OpacityMap",
+			"DisplacementMap", "LightMap", "ReflectionMap",
 			"aiTextureType_UNKNOWN", "_aiTextureType_Force32Bit" };
 
 	static std::map<uint8_t, String> PrimitiveTypeToString {
@@ -32,14 +40,14 @@ namespace Aurora
 												   aiProcess_FlipUVs;
 
 	template<typename MeshProcessor, typename MeshType>
-	static void ProcessNodes(MeshProcessor meshProcessor, MeshType* engineMesh, const aiScene* scene, aiNode* node, int& materialSlotIndex, BoundingBox& boundingBox);
+	static void ProcessNodes(MeshProcessor meshProcessor, MeshType* engineMesh, const aiScene* scene, aiNode* node, int& materialSlotIndex, BoundingBox& boundingBox, std::map<String, aiTexture*>& embeddedTextures);
 
 	static void ProcessStaticMesh(aiMesh* mesh, aiNode* node, StaticMesh* staticMesh, int materialSlotIndex, BoundingBox& boundingBox);
 
 	StaticMesh_ptr ModelImporter::LoadMesh(const RefCntAutoPtr<IDataBlob>& dataBlob)
 	{
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFileFromMemory(dataBlob->GetConstDataPtr(), dataBlob->GetSize(), MESH_PROCESS_FLAGS | aiProcess_PreTransformVertices);
+		const aiScene* scene = importer.ReadFileFromMemory(dataBlob->GetConstDataPtr(), dataBlob->GetSize(), MESH_PROCESS_FLAGS | aiProcess_PreTransformVertices | aiProcess_EmbedTextures);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -53,8 +61,18 @@ namespace Aurora
 
 		BoundingBox boundingBox;
 
+		std::map<String, aiTexture*> embeddedTextures;
+		for (uint32_t i = 0; i < scene->mNumTextures; i++)
+		{
+			aiTexture* tex = scene->mTextures[i];
+			Path file = tex->mFilename.C_Str();
+			embeddedTextures[file.string()] = tex;
+
+			std::cout << "EMBEDDED: " << file << std::endl;
+		}
+
 		int materialSlotIndex = 0;
-		ProcessNodes(&ProcessStaticMesh, mesh.get(), scene, scene->mRootNode, materialSlotIndex, boundingBox);
+		ProcessNodes(&ProcessStaticMesh, mesh.get(), scene, scene->mRootNode, materialSlotIndex, boundingBox, embeddedTextures);
 
 		mesh->SetBounds(boundingBox);
 
@@ -62,7 +80,7 @@ namespace Aurora
 	}
 
 	template<typename MeshProcessor, typename MeshType>
-	static void ProcessNodes(MeshProcessor meshProcessor, MeshType* engineMesh, const aiScene* scene, aiNode* node, int& materialSlotIndex, BoundingBox& boundingBox)
+	static void ProcessNodes(MeshProcessor meshProcessor, MeshType* engineMesh, const aiScene* scene, aiNode* node, int& materialSlotIndex, BoundingBox& boundingBox, std::map<String, aiTexture*>& embeddedTextures)
 	{
 		std::vector<aiMesh*> triangleMeshes;
 
@@ -87,7 +105,6 @@ namespace Aurora
 				MaterialSlot materialSlot = {};
 				materialSlot.Material = nullptr;
 				materialSlot.MaterialSlotName = String(sourceMaterial->GetName().C_Str()) + "_" + std::to_string(meshMaterialSlot);
-				engineMesh->MaterialSlots[meshMaterialSlot] = materialSlot;
 
 				for (uint8_t texType = 0; texType < (uint8_t)aiTextureType::aiTextureType_UNKNOWN; texType++) {
 					unsigned int textureCount = sourceMaterial->GetTextureCount((aiTextureType)texType);
@@ -106,8 +123,40 @@ namespace Aurora
 
 					Path filePath = texturePathAiStr.C_Str();
 
+					std::cout << TextureTypeEnumToString[texType] << ": " << filePath << std::endl;
+
+					auto iter = embeddedTextures.find(filePath.string());
+
+					if (iter != embeddedTextures.end())
+					{
+						aiTexture* tex = iter->second;
+						auto* aiData = (unsigned char*)tex->pcData;
+
+						auto dataSize = tex->mWidth;
+						if(tex->mHeight != 0) {
+							dataSize *= tex->mHeight;
+						}
+
+						//aiTexel* aiData = tex->pcData;
+						std::cout << tex->achFormatHint << std::endl;
+						RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(dataSize));
+
+						memcpy(pFileData->GetDataPtr(), aiData, pFileData->GetSize());
+
+						auto texture = AuroraEngine::AssetManager->LoadTexture(filePath.string(), pFileData);
+						materialSlot.Textures[TextureTypeEnumToShaderNameString[texType]] = texture;
+					} else {
+						/*auto texture = AuroraEngine::AssetManager->LoadTexture(filePath);
+
+						if(texture != nullptr) {
+							materialSlot.Textures[TextureTypeEnumToShaderNameString[texType]] = texture;
+						}*/
+					}
+
 					//Log(TextureTypeEnumToString[texType], filePath.string());
 				}
+
+				engineMesh->MaterialSlots[meshMaterialSlot] = materialSlot;
 			}
 
 			meshProcessor(mesh, node, engineMesh, meshMaterialSlot, boundingBox);
@@ -116,7 +165,7 @@ namespace Aurora
 		// Iterate over children
 		for (uint32_t i = 0; i < node->mNumChildren; i++)
 		{
-			ProcessNodes(meshProcessor, engineMesh, scene, node->mChildren[i], materialSlotIndex, boundingBox);
+			ProcessNodes(meshProcessor, engineMesh, scene, node->mChildren[i], materialSlotIndex, boundingBox, embeddedTextures);
 		}
 	}
 

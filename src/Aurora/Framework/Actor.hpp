@@ -6,8 +6,12 @@
 #include "Components/Base/SceneComponent.hpp"
 #include "ComponentConcept.hpp"
 
+
 namespace Aurora
 {
+	class Scene;
+	class Material;
+
 	class Actor : public Object
 	{
 		friend class ActorComponent;
@@ -89,6 +93,10 @@ namespace Aurora
 		inline virtual void SetActive(bool newActive) { m_IsActive = newActive; }
 		inline virtual void ToggleActive() { m_IsActive = !m_IsActive; }
 		virtual inline bool IsActive() { return m_IsActive; }
+
+		inline Scene* GetScene() { return m_Scene; }
+
+		inline virtual void OnPreRender(Material* material) {}
 	public:
 		void DestroyComponent(SceneComponent*& component);
 		virtual void Destroy();

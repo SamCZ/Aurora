@@ -10,7 +10,7 @@ namespace Aurora
 		}
 	};
 
-	CollisionResults::CollisionResults() : _results()
+	CollisionResults::CollisionResults() : _results(), m_CurrentObject(nullptr)
 	{
 	}
 
@@ -21,13 +21,14 @@ namespace Aurora
 		_results.clear();
 	}
 
-	void CollisionResults::AddCollision(const CollisionResult& result)
+	void CollisionResults::AddCollision(CollisionResult result)
 	{
+		result.Object = m_CurrentObject;
 		_results.push_back(result);
 		_sorted = false;
 	}
 
-	int CollisionResults::Size()
+	size_t CollisionResults::Size()
 	{
 		return _results.size();
 	}
@@ -81,5 +82,10 @@ namespace Aurora
 			return CollisionResult();
 		}
 		return _results[index];
+	}
+
+	void CollisionResults::SetCurrentObject(CollisionResultObject *actor)
+	{
+		m_CurrentObject = actor;
 	}
 }

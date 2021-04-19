@@ -49,6 +49,7 @@ namespace Aurora
 		std::vector<ShaderResourceObject_ptr> LoadShaderResourceFolder(const Path& path);
 
 		RefCntAutoPtr<ITexture> LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo = {});
+		RefCntAutoPtr<ITexture> LoadTexture(const String& filename, IDataBlob* fileData, const TextureLoadInfo& textureLoadInfo = {});
 
 		bool LoadJson(const Path& path, nlohmann::json& json);
 	private:

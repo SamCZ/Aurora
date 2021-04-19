@@ -153,10 +153,6 @@ namespace Aurora
 				auto& swapChain = window->GetSwapChain();
 				const SwapChainDesc& swapChainDesc = swapChain->GetDesc();
 
-				if(ImGuiImpl == nullptr) {
-					ImGuiImpl = std::make_unique<ImGuiImplGLFW>(window->GetWindowHandle(), RenderDevice, swapChainDesc.ColorBufferFormat, swapChainDesc.DepthBufferFormat);
-				}
-
 				//window->GetInputManager()->Update();
 				std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->Update(ElapsedTime);
 
@@ -227,6 +223,10 @@ namespace Aurora
 		if(showImmediately) window->Show();
 
 		GameContexts.push_back(gameContext);
+
+		if(ImGuiImpl == nullptr) {
+			ImGuiImpl = std::make_unique<ImGuiImplGLFW>(window->GetWindowHandle(), RenderDevice, swapChainDesc.ColorBufferFormat, swapChainDesc.DepthBufferFormat);
+		}
 
 		gameContext->Init();
 

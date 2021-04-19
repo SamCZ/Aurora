@@ -4,9 +4,13 @@
 
 namespace Aurora
 {
+	class Actor;
+
+	typedef Actor CollisionResultObject;
+
 	struct CollisionResult
 	{
-		void* Object = nullptr;
+		CollisionResultObject* Object = nullptr;
 		Vector3D ContactPoint = {};
 		Vector3D ContactNormal = {};
 		double Distance = 0;
@@ -20,12 +24,15 @@ namespace Aurora
 	private:
 		std::vector<CollisionResult> _results;
 		bool _sorted = false;
+		CollisionResultObject* m_CurrentObject;
 	public:
 		CollisionResults();
 		~CollisionResults();
 		void Clear();
-		void AddCollision(const CollisionResult& result);
-		int Size();
+		void AddCollision(CollisionResult result);
+		size_t Size();
+
+		void SetCurrentObject(CollisionResultObject* actor);
 
 		CollisionResult GetClosestCollision();
 		CollisionResult GetFarthestCollision();
