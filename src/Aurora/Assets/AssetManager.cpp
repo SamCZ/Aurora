@@ -388,6 +388,8 @@ namespace Aurora
 			const auto& filePath = file.path();
 			auto extension = filePath.extension().string();
 
+			if(extension == ".disabled") continue;
+
 			// Find shader language by file extension
 			auto extTypeIter = ShaderLanguageFileExt.find(extension);
 

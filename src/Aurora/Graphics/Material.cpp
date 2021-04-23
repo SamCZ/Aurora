@@ -310,7 +310,9 @@ namespace Aurora
 		textureDef.ShaderType = shaderType;
 
 		textureDef.TextureRef = GraphicUtilities::GetPlaceholderTexture();
-		textureDef.TextureView = GraphicUtilities::GetPlaceholderTexture()->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+		if(textureDef.TextureRef != nullptr) {
+			textureDef.TextureView = GraphicUtilities::GetPlaceholderTexture()->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+		}
 
 		//textureDef.TextureRef = nullptr;
 		//textureDef.TextureView = nullptr;

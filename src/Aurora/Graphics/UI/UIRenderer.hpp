@@ -8,6 +8,17 @@ namespace Aurora
 	class UIRenderer
 	{
 	private:
+		struct DrawArgs
+		{
+			float StrokeSize = 1.0f;
+			float Radius = 0.0f;
+			bool Fill = true;
+			Vector4 Color = Vector4(1, 1, 1, 1);
+			Vector4 Tint = Vector4(1, 1, 1, 1);
+			RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
+
+		};
+	private:
 		Material_ptr m_Material;
 		Matrix4 m_ProjectionMatrix;
 	public:
@@ -18,7 +29,10 @@ namespace Aurora
 
 		void FillRect(float x, float y, float w, float h, const Vector4& color, float radius = 0.0f);
 		void DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius = 0.0f);
-		void DrawImage(float x, float y, float w, float h, float radius = 0.0f);
+		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f);
+
+	private:
+		void Draw(float x, float y, float w, float h, const DrawArgs& drawArgs);
 
 	private:
 		enum class EVGCommand : uint8_t

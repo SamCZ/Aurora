@@ -2,48 +2,14 @@
 
 namespace Aurora
 {
-	/*struct UIUniform
-	{
-		float scissorMat[12]; // matrices are actually 3 vec4s
-		float paintMat[12];
-		Vector4 innerCol;
-		Vector4 outerCol;
-		float scissorExt[2];
-		float scissorScale[2];
-		float extent[2];
-		float radius;
-		float feather;
-		float strokeMult;
-		float strokeThr;
-		int texType;
-		int type;
-	};*/
-
-	struct UIVertexUniform
-	{
-		Matrix4 Projection;
-		Matrix4 ModelMat;
-	};
-
-	struct UIFragmentUniform
-	{
-		uint32_t Type;
-		float StrokeSize;
-		float Radius;
-		float c;
-		Vector4 Color;
-		Vector2 Size;
-		Vector2 d;
-	};
-
 	static float depth = 0;
 
-	UIRenderer::UIRenderer() : m_Material(nullptr)
+	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix()
 	{
 		m_Material = std::make_shared<Material>("UI", "Assets/Shaders/UI");
 
 		m_Material->SetCullMode(CULL_MODE_NONE);
-		m_Material->SetDepthEnable(true);
+		m_Material->SetDepthEnable(false);
 		m_Material->SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP);
 
 		RenderTargetBlendDesc blendDesc;
@@ -75,47 +41,59 @@ namespace Aurora
 
 	void UIRenderer::FillRect(float x, float y, float w, float h, const Vector4 &color, float radius)
 	{
-		/*MapHelper<UIVertexUniform> vertexUniform;
-		if(m_Material->GetConstantBuffer("VertexUniform", vertexUniform)) {
-			vertexUniform->Projection = m_ProjectionMatrix;
-			vertexUniform->ModelMat = glm::translate(Vector3(x, y, -0.5 + (depth++) * 0.1)) * glm::scale(Vector3(w, h, 1));
-		}
-
-		MapHelper<UIFragmentUniform> fragmentUniform;
-		if(m_Material->GetConstantBuffer("FragmentUniform", fragmentUniform)) {
-			fragmentUniform->Type = 0;
-			fragmentUniform->StrokeSize = 0;
-			fragmentUniform->Radius = radius;
-			fragmentUniform->Color = color;
-			fragmentUniform->Size.x = w;
-			fragmentUniform->Size.y = h;
-		}*/
-
-		m_Material->CommitShaderResources();
-
-		DrawAttribs drawAttrs;
-		drawAttrs.Flags = DRAW_FLAG_VERIFY_ALL;
-		drawAttrs.NumVertices = 4;
-		AuroraEngine::ImmediateContext->Draw(drawAttrs);
+		DrawArgs drawArgs;
+		drawArgs.Color = color;
+		drawArgs.Radius = radius;
+		Draw(x, y, w, h, drawArgs);
 	}
 
 	void UIRenderer::DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius)
 	{
-		/*MapHelper<UIVertexUniform> vertexUniform;
-		if(m_Material->GetConstantBuffer("VertexUniform", vertexUniform)) {
-			vertexUniform->Projection = m_ProjectionMatrix;
-			vertexUniform->ModelMat = glm::translate(Vector3(x, y, -0.5 + (depth++) * 0.1)) * glm::scale(Vector3(w, h, 1));
+		DrawArgs drawArgs;
+		drawArgs.Color = color;
+		drawArgs.Fill = false;
+		drawArgs.StrokeSize = strokeSize;
+		drawArgs.Radius = radius;
+		Draw(x, y, w, h, drawArgs);
+	}
+
+	void UIRenderer::Draw(float x, float y, float w, float h, const DrawArgs& drawArgs)
+	{
+		if(!drawArgs.Fill) {
+			float strokeHalf = drawArgs.StrokeSize / 2.0f;
+			x -= strokeHalf;
+			y -= strokeHalf;
+			w += strokeHalf * 2.0f;
+			h += strokeHalf * 2.0f;
 		}
 
-		MapHelper<UIFragmentUniform> fragmentUniform;
-		if(m_Material->GetConstantBuffer("FragmentUniform", fragmentUniform)) {
-			fragmentUniform->Type = 1;
-			fragmentUniform->StrokeSize = strokeSize;
-			fragmentUniform->Radius = radius;
-			fragmentUniform->Color = color;
-			fragmentUniform->Size.x = w;
-			fragmentUniform->Size.y = h;
-		}*/
+		m_Material->SetVariable<Matrix4>("Projection", m_ProjectionMatrix);
+		m_Material->SetVariable<Matrix4>("ModelMat", glm::translate(Vector3(x, y, 0)) * glm::scale(Vector3(w, h, 1)));
+
+		if(drawArgs.Texture != nullptr) {
+			m_Material->SetVariable<uint32_t>("Type", 0);
+			m_Material->SetTexture("Texture", drawArgs.Texture);
+			m_Material->SetVariable<Vector4>("Color", drawArgs.Tint);
+		} else {
+			if(drawArgs.Fill) {
+				m_Material->SetVariable<uint32_t>("Type", 1);
+			} else {
+				m_Material->SetVariable<uint32_t>("Type", 2);
+				m_Material->SetVariable<float>("StrokeSize", drawArgs.StrokeSize / 2.0f);
+			}
+
+			m_Material->SetVariable<Vector4>("Color", drawArgs.Color);
+		}
+
+		m_Material->SetVariable<Vector2>("Size", Vector2(w, h));
+		m_Material->SetVariable<float>("Radius", drawArgs.Radius);
+
+		//m_Material->SetVariable<uint32_t>("Type", 4);
+		//m_Material->SetVariable<Vector4>("Color", color);
+
+		m_Material->SetVariable<int>("ImageEdgeDetectionEnabled", false);
+		m_Material->SetVariable<int>("EdgeThickness", 5);
+		m_Material->SetVariable<Vector4>("EdgeColor", Vector4(1.0));
 
 		m_Material->CommitShaderResources();
 
@@ -125,8 +103,12 @@ namespace Aurora
 		AuroraEngine::ImmediateContext->Draw(drawAttrs);
 	}
 
-	void UIRenderer::DrawImage(float x, float y, float w, float h, float radius)
+	void UIRenderer::DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture> &texture, float radius)
 	{
-
+		DrawArgs drawArgs;
+		drawArgs.Texture = texture;
+		drawArgs.Radius = radius;
+		drawArgs.Fill = true;
+		Draw(x, y, w, h, drawArgs);
 	}
 }
