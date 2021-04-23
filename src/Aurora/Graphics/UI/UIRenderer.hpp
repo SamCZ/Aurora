@@ -37,9 +37,12 @@ namespace Aurora
 			RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
 			Vector2 CustomUVs[4]{};
 			bool EnabledCustomUVs = false;
+			Material_ptr OverrideMaterial = nullptr;
 		};
 	private:
 		Material_ptr m_Material;
+		Material_ptr m_FontMaterial;
+		Material_ptr m_LastMaterial;
 		Matrix4 m_ProjectionMatrix;
 	public:
 		UIRenderer();
@@ -53,6 +56,8 @@ namespace Aurora
 		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder());
 
 		void SetImageEdgeDetection(bool enabled, int thickness = 3, const Vector4& edgeColor = Vector4(1.0));
+
+		void Text(const String& text, float x, float y, const Vector4& color);
 	private:
 		void Draw(float x, float y, float w, float h, const DrawArgs& drawArgs);
 
