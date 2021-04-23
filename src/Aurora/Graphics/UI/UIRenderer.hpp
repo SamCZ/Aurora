@@ -5,6 +5,25 @@
 
 namespace Aurora
 {
+	enum class ImageDrawMode : uint8_t
+	{
+		Simple = 0,
+		Sliced,
+		Tiled
+	};
+
+	struct SpriteBorder
+	{
+		float Left = 0;
+		float Right = 0;
+		float Top = 0;
+		float Bottom = 0;
+
+		inline SpriteBorder() = default;
+		inline SpriteBorder(float left, float right, float top, float bottom) : Left(left), Right(right), Top(top), Bottom(bottom) { }
+		inline SpriteBorder(float size) : Left(size), Right(size), Top(size), Bottom(size) { }
+	};
+
 	class UIRenderer
 	{
 	private:
@@ -16,7 +35,8 @@ namespace Aurora
 			Vector4 Color = Vector4(1, 1, 1, 1);
 			Vector4 Tint = Vector4(1, 1, 1, 1);
 			RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
-
+			Vector2 CustomUVs[4]{};
+			bool EnabledCustomUVs = false;
 		};
 	private:
 		Material_ptr m_Material;
@@ -29,8 +49,10 @@ namespace Aurora
 
 		void FillRect(float x, float y, float w, float h, const Vector4& color, float radius = 0.0f);
 		void DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius = 0.0f);
-		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f);
 
+		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder());
+
+		void SetImageEdgeDetection(bool enabled, int thickness = 3, const Vector4& edgeColor = Vector4(1.0));
 	private:
 		void Draw(float x, float y, float w, float h, const DrawArgs& drawArgs);
 
