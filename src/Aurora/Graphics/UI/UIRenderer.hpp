@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Font.hpp"
 #include "Aurora/Core/Color.hpp"
 #include "../Material.hpp"
 
@@ -44,6 +45,8 @@ namespace Aurora
 		Material_ptr m_FontMaterial;
 		Material_ptr m_LastMaterial;
 		Matrix4 m_ProjectionMatrix;
+
+		std::map<String, Font_ptr> m_Fonts;
 	public:
 		UIRenderer();
 
@@ -52,12 +55,14 @@ namespace Aurora
 
 		void FillRect(float x, float y, float w, float h, const Vector4& color, float radius = 0.0f);
 		void DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius = 0.0f);
-
 		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder());
-
 		void SetImageEdgeDetection(bool enabled, int thickness = 3, const Vector4& edgeColor = Vector4(1.0));
 
-		void Text(const String& text, float x, float y, const Vector4& color);
+	public:
+		Font_ptr FindFont(const String& name);
+		bool LoadFont(const String& name, const Path& path);
+		void Text(const String& text, float x, float y, float fontSize, const Vector4& color, const String& fontName = "Default");
+		Vector2 GetTextSize(const String& text, float fontSize, const String& fontName = "Default");
 	private:
 		void Draw(float x, float y, float w, float h, const DrawArgs& drawArgs);
 

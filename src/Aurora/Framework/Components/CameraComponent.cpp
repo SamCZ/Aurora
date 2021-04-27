@@ -18,6 +18,10 @@ namespace Aurora
 
 	void CameraComponent::Resize(int width, int height)
 	{
+		if(width == 0 || height == 0) {
+			return;
+		}
+
 		if(m_Width == width && m_Height == height) {
 			return;
 		}

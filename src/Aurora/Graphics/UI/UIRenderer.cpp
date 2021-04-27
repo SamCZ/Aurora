@@ -1,8 +1,5 @@
 #include "UIRenderer.hpp"
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "stb_truetype.h"
-
 namespace Aurora
 {
 	unsigned char temp_bitmap[512*512];
@@ -38,7 +35,7 @@ namespace Aurora
 		return pRTColor;
 	}
 
-	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr)
+	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts()
 	{
 		{
 			m_Material = std::make_shared<Material>("UI", "Assets/Shaders/UI");
@@ -62,19 +59,30 @@ namespace Aurora
 			blendDesc.SrcBlend = BLEND_FACTOR_SRC_ALPHA;
 			blendDesc.DestBlend = BLEND_FACTOR_INV_SRC_ALPHA;
 			m_FontMaterial->SetBlendState(blendDesc);
+			//m_FontMaterial->SetFillMode(FILL_MODE_WIREFRAME);
 		}
+
+		LoadFont("Default", "Assets/Fonts/GROBOLD.ttf");
 
 		auto fontData = AuroraEngine::AssetManager->LoadFile("Assets/Fonts/GROBOLD.ttf");
 		if(fontData != nullptr) {
-			stbtt_BakeFontBitmap(reinterpret_cast<unsigned char *>(fontData->GetDataPtr()),0, 32.0, temp_bitmap,512,512, 32,96, cdata);
+			// 0x0020 - 0x00FF
 
+			stbtt_BakeFontBitmap(reinterpret_cast<unsigned char *>(fontData->GetDataPtr()),0, 16.0, temp_bitmap,512,512, 32,96, cdata);
 			FontTexture = CreateFontTexture(512, 512, temp_bitmap);
+
+
+
+
+			//CalcTextSize
 		}
 	}
 
 	void UIRenderer::Begin(const Vector2i& size, const TEXTURE_FORMAT& textureFormat, const TEXTURE_FORMAT& depthFormat)
 	{
-		m_ProjectionMatrix = glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f, -1.0f, 1.0f);
+		if(size.x > 0 && size.y > 0) {
+			m_ProjectionMatrix = glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f, -1.0f, 1.0f);
+		}
 
 		{
 			GraphicsPipelineDesc& graphicsPipelineDesc = m_Material->GetPipelineDesc();
@@ -312,37 +320,119 @@ namespace Aurora
 		}
 	}
 
-	void UIRenderer::Text(const String &text, float x, float y, const Vector4 &color)
+	Font_ptr UIRenderer::FindFont(const String &name)
 	{
+		auto iter = m_Fonts.find(name);
+
+		if(iter != m_Fonts.end()) {
+			return iter->second;
+		}
+
+		return nullptr;
+	}
+
+	bool UIRenderer::LoadFont(const String &name, const Path &path)
+	{
+		auto fontData = AuroraEngine::AssetManager->LoadFile(path);
+		if(fontData == nullptr) {
+			return false;
+		}
+
+		m_Fonts[name] = std::make_shared<Font>(name, fontData);
+		return true;
+	}
+
+	void UIRenderer::Text(const String& text, float x, float y, float fontSize, const Vector4& color, const String& fontName)
+	{
+		Font_ptr font = FindFont(fontName);
+
+		if(font == nullptr) {
+			AU_DEBUG_CERR("Cannot find font " << fontName);
+			return;
+		}
+
+		FontSize_t optimalFontSize = font->FindSuitableSize(fontSize);
+
+		FontBitmapPageList_ptr fontBitmapPageList = font->FindOrCreatePageList(optimalFontSize);
+
 		DrawArgs drawArgs;
-		drawArgs.Texture = FontTexture;
 		drawArgs.Radius = 0;
 		drawArgs.Fill = true;
 		drawArgs.EnabledCustomUVs = true;
 		drawArgs.OverrideMaterial = m_FontMaterial;
+
+		//auto textSize = GetTextSize(text, fontSize, fontName);
+
+		float fontScale = fontSize / static_cast<float>(optimalFontSize);
+
+		float baseLine = 0;
+
+
+		{ // Sets the baseline
+			for(char c : text) {
+				FontGlyph firstGlyph = {};
+				if(!fontBitmapPageList->FindGlyph(c, firstGlyph)) {
+					continue;
+				}
+
+				baseLine = glm::min(baseLine, firstGlyph.yOff);
+			}
+
+			y += glm::abs(baseLine) * fontScale;
+		}
+
+		BakedRect bakedRect = {};
+		float xAdvance = 0;
+
+		// TODO: convert to UTF32
+		for(char c : text) {
+			if(fontBitmapPageList->GetBakedRectForCodepoint(c, x, y, bakedRect, xAdvance, fontScale)) {
+				// Set UVs
+				drawArgs.CustomUVs[0] = Vector2(bakedRect.RightBottomUV.x, bakedRect.LeftTopUV.y);
+				drawArgs.CustomUVs[1] = Vector2(bakedRect.LeftTopUV.x, bakedRect.LeftTopUV.y);
+				drawArgs.CustomUVs[2] = Vector2(bakedRect.RightBottomUV.x, bakedRect.RightBottomUV.y);
+				drawArgs.CustomUVs[3] = Vector2(bakedRect.LeftTopUV.x, bakedRect.RightBottomUV.y);
+
+				// We can set custom color to every character,
+				// for now we just set the color same for every character
+				drawArgs.Tint = color;
+
+				// Set the page texture
+				drawArgs.Texture = bakedRect.Texture;
+
+				// Draw rect
+				Draw(bakedRect.x, bakedRect.y, bakedRect.width, bakedRect.height, drawArgs);
+
+				// Move to next char position
+				x += xAdvance;
+			}
+		}
+	}
+
+	Vector2 UIRenderer::GetTextSize(const String& text, float fontSize, const String& font)
+	{
+		// TODO: Fix to new font system
+
+		Vector2 min = {999999, 999999};
+		Vector2 max = {-999999, -999999};
+
+		float x = 0, y = 0;
 
 		for(char c : text) {
 			if (c >= 32 && c < 128) {
 				stbtt_aligned_quad q;
 				stbtt_GetBakedQuad(cdata, 512,512, c-32, &x,&y,&q,1);//1=opengl & d3d10+,0=d3d9
 
-				drawArgs.CustomUVs[0] = Vector2(q.s1, q.t0);
-				drawArgs.CustomUVs[1] = Vector2(q.s0, q.t0);
-				drawArgs.CustomUVs[2] = Vector2(q.s1, q.t1);
-				drawArgs.CustomUVs[3] = Vector2(q.s0, q.t1);
+				min.x = std::min<float>(min.x, q.x0);
+				min.y = std::min<float>(min.y, q.y0);
 
-				float gx = q.x0;
-				float gy = q.y0;
-
-				float gw = q.x1 - q.x0;
-				float gh = q.y1 - q.y0;
-
-				// We can set custom color to every character,
-				// for now we just set the color same for every character
-				drawArgs.Tint = color;
-
-				Draw(gx, gy, gw, gh, drawArgs);
+				max.x = std::max<float>(max.x, q.x1);
+				max.y = std::max<float>(max.y, q.y1);
 			}
 		}
+
+		//std::cout << glm::to_string(min) << " - " << glm::to_string(max) << std::endl;
+
+		return max - min;
 	}
 }
