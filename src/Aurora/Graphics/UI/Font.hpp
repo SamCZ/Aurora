@@ -86,5 +86,6 @@ namespace Aurora
 		FontBitmapPageList_ptr FindOrCreatePageList(FontSize_t fontSize);
 	public:
 		[[nodiscard]] FontSize_t FindSuitableSize(float fontSize) const;
+		[[nodiscard]] inline const String& GetName() const noexcept { return m_Name; }
 	};
 }

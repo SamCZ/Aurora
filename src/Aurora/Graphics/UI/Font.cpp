@@ -8,8 +8,7 @@
 namespace Aurora
 {
 	std::vector<int> Font::FontSizesDefs = { // NOLINT(cert-err58-cpp)
-			6, 12, 16, 20, 24, 42, 64, 82, 100, 106,
-			//106, 100, 82, 64, 42, 24, 20, 16, 12, 6
+			6, 12, 16, 20, 24, 42, 64, 82, 100, 112
 	};
 
 	Font::Font(String name, RefCntAutoPtr<IDataBlob> &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
@@ -38,9 +37,9 @@ namespace Aurora
 
 	FontSize_t Font::FindSuitableSize(float fontSize) const
 	{
-		for (int i = 0; i < FontSizesDefs.size(); ++i) {
-			if(static_cast<float>(FontSizesDefs[i]) >= fontSize) {
-				return FontSizesDefs[i];
+		for (int FontSizesDef : FontSizesDefs) {
+			if(static_cast<float>(FontSizesDef) >= fontSize) {
+				return FontSizesDef;
 			}
 		}
 
@@ -87,7 +86,7 @@ namespace Aurora
 	{
 		// Build bitmap pages
 
-		const float scale = (m_FontSize > 0) ? stbtt_ScaleForPixelHeight(&fontInfo, m_FontSize) : stbtt_ScaleForMappingEmToPixels(&fontInfo, -m_FontSize);
+		const float scale = (m_FontSize > 0) ? stbtt_ScaleForPixelHeight(&fontInfo, static_cast<float>(m_FontSize)) : stbtt_ScaleForMappingEmToPixels(&fontInfo, -static_cast<float>(m_FontSize));
 
 		int OversampleH = 3;
 		int OversampleV = 1;
@@ -108,7 +107,8 @@ namespace Aurora
 		}
 
 		const int surface_sqrt = (int)glm::sqrt((float)total_surface) + 1;
-		int textureSize = (surface_sqrt >= 4096 * 0.7f) ? 4096 : (surface_sqrt >= 2048 * 0.7f) ? 2048 : (surface_sqrt >= 1024 * 0.7f) ? 1024 : 512;
+		const auto surface_sqrt_f = static_cast<float>(surface_sqrt);
+		int textureSize = (surface_sqrt_f >= 4096 * 0.7f) ? 4096 : (surface_sqrt_f >= 2048 * 0.7f) ? 2048 : (surface_sqrt_f >= 1024 * 0.7f) ? 1024 : 512;
 
 		std::cout << "Font texture size: " << textureSize << std::endl;
 
@@ -116,8 +116,8 @@ namespace Aurora
 			FontBitmap bitmap(textureSize * textureSize);
 			std::fill(bitmap.begin(), bitmap.end(), 0);
 
-			int x,y,bottom_y, i;
-			x=y=1;
+			int x,y,bottom_y;
+			x = y = 1;
 			bottom_y = 1;
 
 			float ipw = 1.0f / (float)textureSize, iph = 1.0f / (float)textureSize;
@@ -154,13 +154,14 @@ namespace Aurora
 				glyph.yOff     = (float) y0;
 				glyph.PageIndex = 0;
 
-				glyph.LeftTopUV = Vector2(x * ipw, y * iph);
-				glyph.RightBottomUV = Vector2((x + gw) * ipw, (y + gh) * iph);
+				glyph.LeftTopUV = Vector2(static_cast<float>(x) * ipw, static_cast<float>(y) * iph);
+				glyph.RightBottomUV = Vector2((static_cast<float>(x + gw)) * ipw, (static_cast<float>(y + gh)) * iph);
 
 				x = x + gw + 1;
 
-				if (y+gh+1 > bottom_y)
+				if (y+gh+1 > bottom_y) {
 					bottom_y = y+gh+1;
+				}
 			}
 
 			FontBitmapPage bitmapPage = {};
@@ -199,8 +200,8 @@ namespace Aurora
 	{
 		rect.x = STBTT_ifloor((x + glyph.xOff * scale) + 0.5f);
 		rect.y = STBTT_ifloor((y + glyph.yOff * scale) + 0.5f);
-		rect.width = glyph.Width * scale;
-		rect.height = glyph.Height * scale;
+		rect.width = static_cast<float>(glyph.Width) * scale;
+		rect.height = static_cast<float>(glyph.Height) * scale;
 		rect.LeftTopUV = glyph.LeftTopUV;
 		rect.RightBottomUV = glyph.RightBottomUV;
 		rect.Texture = m_FontBitmapPages[glyph.PageIndex].Texture;

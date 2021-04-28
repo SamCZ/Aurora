@@ -68,4 +68,13 @@ namespace Aurora
 		}
 		return Vector4(1.0f);
 	}
+
+	namespace Color
+	{
+		static const Vector4 White = MakeRGB(255, 255, 255);
+		static const Vector4 Black = MakeRGB(0, 0, 0);
+		static const Vector4 Red = MakeRGB(255, 0, 0);
+		static const Vector4 Green = MakeRGB(0, 255, 0);
+		static const Vector4 Blue = MakeRGB(0, 0, 255);
+	}
 }

@@ -2,40 +2,7 @@
 
 namespace Aurora
 {
-	unsigned char temp_bitmap[512*512];
-	stbtt_bakedchar cdata[96]; // ASCII 32..126 is 95 glyphs
-
-	RefCntAutoPtr<ITexture> FontTexture;
-
-	RefCntAutoPtr<ITexture> CreateFontTexture(int w, int h, const unsigned char* data)
-	{
-		TextureDesc TexDesc;
-		TexDesc.Name      = "RandomNoise";
-		TexDesc.Type      = RESOURCE_DIM_TEX_2D;
-		TexDesc.Width     = w;
-		TexDesc.Height    = h;
-		TexDesc.MipLevels = 1;
-		TexDesc.Format    = TEX_FORMAT_R8_UNORM;
-		// The render target can be bound as a shader resource and as a render target
-		TexDesc.BindFlags = BIND_RENDER_TARGET;
-
-		TexDesc.BindFlags |= BIND_SHADER_RESOURCE;
-
-		std::vector<TextureSubResData>  pSubResources(TexDesc.MipLevels);
-		pSubResources[0].pData  = data;
-		pSubResources[0].Stride = sizeof(unsigned char) * w;
-
-		TextureData TexData;
-		TexData.pSubResources   = pSubResources.data();
-		TexData.NumSubresources = TexDesc.MipLevels;
-
-		RefCntAutoPtr<ITexture> pRTColor;
-		AuroraEngine::RenderDevice->CreateTexture(TexDesc, &TexData, &pRTColor);
-
-		return pRTColor;
-	}
-
-	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts()
+	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts(), m_CurrentFont("Default")
 	{
 		{
 			m_Material = std::make_shared<Material>("UI", "Assets/Shaders/UI");
@@ -63,19 +30,6 @@ namespace Aurora
 		}
 
 		LoadFont("Default", "Assets/Fonts/GROBOLD.ttf");
-
-		auto fontData = AuroraEngine::AssetManager->LoadFile("Assets/Fonts/GROBOLD.ttf");
-		if(fontData != nullptr) {
-			// 0x0020 - 0x00FF
-
-			stbtt_BakeFontBitmap(reinterpret_cast<unsigned char *>(fontData->GetDataPtr()),0, 16.0, temp_bitmap,512,512, 32,96, cdata);
-			FontTexture = CreateFontTexture(512, 512, temp_bitmap);
-
-
-
-
-			//CalcTextSize
-		}
 	}
 
 	void UIRenderer::Begin(const Vector2i& size, const TEXTURE_FORMAT& textureFormat, const TEXTURE_FORMAT& depthFormat)
@@ -311,6 +265,11 @@ namespace Aurora
 		}
 	}
 
+	void UIRenderer::DrawImage(const Vector2 &position, const Vector2 &size, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode &imageDrawMode, const SpriteBorder &spriteBorder)
+	{
+		DrawImage(position.x, position.y, size.x, size.y, texture, radius, imageDrawMode, spriteBorder);
+	}
+
 	void UIRenderer::SetImageEdgeDetection(bool enabled, int thickness, const Vector4& edgeColor)
 	{
 		m_Material->SetVariable<int>("ImageEdgeDetectionEnabled", enabled);
@@ -351,6 +310,8 @@ namespace Aurora
 			return;
 		}
 
+		SetFont(fontName);
+
 		FontSize_t optimalFontSize = font->FindSuitableSize(fontSize);
 
 		FontBitmapPageList_ptr fontBitmapPageList = font->FindOrCreatePageList(optimalFontSize);
@@ -367,15 +328,14 @@ namespace Aurora
 
 		float baseLine = 0;
 
-
 		{ // Sets the baseline
+			FontGlyph glyph = {};
 			for(char c : text) {
-				FontGlyph firstGlyph = {};
-				if(!fontBitmapPageList->FindGlyph(c, firstGlyph)) {
+				if(!fontBitmapPageList->FindGlyph(c, glyph)) {
 					continue;
 				}
 
-				baseLine = glm::min(baseLine, firstGlyph.yOff);
+				baseLine = glm::min(baseLine, glyph.yOff);
 			}
 
 			y += glm::abs(baseLine) * fontScale;
@@ -409,29 +369,42 @@ namespace Aurora
 		}
 	}
 
-	Vector2 UIRenderer::GetTextSize(const String& text, float fontSize, const String& font)
+	Vector2 UIRenderer::GetTextSize(const String& text, float fontSize, const String& fontName)
 	{
-		// TODO: Fix to new font system
+		Font_ptr font = FindFont(fontName);
 
-		Vector2 min = {999999, 999999};
-		Vector2 max = {-999999, -999999};
-
-		float x = 0, y = 0;
-
-		for(char c : text) {
-			if (c >= 32 && c < 128) {
-				stbtt_aligned_quad q;
-				stbtt_GetBakedQuad(cdata, 512,512, c-32, &x,&y,&q,1);//1=opengl & d3d10+,0=d3d9
-
-				min.x = std::min<float>(min.x, q.x0);
-				min.y = std::min<float>(min.y, q.y0);
-
-				max.x = std::max<float>(max.x, q.x1);
-				max.y = std::max<float>(max.y, q.y1);
-			}
+		if(font == nullptr) {
+			AU_DEBUG_CERR("Cannot find font " << fontName);
+			return {0, 0};
 		}
 
-		//std::cout << glm::to_string(min) << " - " << glm::to_string(max) << std::endl;
+		FontSize_t optimalFontSize = font->FindSuitableSize(fontSize);
+		FontBitmapPageList_ptr fontBitmapPageList = font->FindOrCreatePageList(optimalFontSize);
+
+		float fontScale = fontSize / static_cast<float>(optimalFontSize);
+
+		Vector2 min = std::numeric_limits<Vector2>::infinity();
+		Vector2 max = -min;
+
+		FontGlyph glyph = {};
+		float x = 0;
+		for(char c : text) {
+			if(!fontBitmapPageList->FindGlyph(c, glyph)) {
+				continue;
+			}
+
+			x = glm::floor((x + glyph.xOff * fontScale) + 0.5f);
+			float y = glm::floor((glyph.yOff * fontScale) + 0.5f);
+			float w = static_cast<float>(glyph.Width) * fontScale;
+			float h = static_cast<float>(glyph.Height) * fontScale;
+			x += glyph.xAdvance * fontScale;
+
+			min.x = std::min<float>(min.x, x);
+			min.y = std::min<float>(min.y, y);
+
+			max.x = std::max<float>(max.x, x + w);
+			max.y = std::max<float>(max.y, y + h);
+		}
 
 		return max - min;
 	}

@@ -47,17 +47,18 @@ namespace Aurora
 		Matrix4 m_ProjectionMatrix;
 
 		std::map<String, Font_ptr> m_Fonts;
+		String m_CurrentFont;
 	public:
 		UIRenderer();
-
+	public:
 		void Begin(const Vector2i& size, const TEXTURE_FORMAT& textureFormat, const TEXTURE_FORMAT& depthFormat);
 		void End();
-
+	public:
 		void FillRect(float x, float y, float w, float h, const Vector4& color, float radius = 0.0f);
 		void DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius = 0.0f);
 		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder());
+		void DrawImage(const Vector2& position, const Vector2& size, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder());
 		void SetImageEdgeDetection(bool enabled, int thickness = 3, const Vector4& edgeColor = Vector4(1.0));
-
 	public:
 		Font_ptr FindFont(const String& name);
 		bool LoadFont(const String& name, const Path& path);
@@ -65,23 +66,9 @@ namespace Aurora
 		Vector2 GetTextSize(const String& text, float fontSize, const String& fontName = "Default");
 	private:
 		void Draw(float x, float y, float w, float h, const DrawArgs& drawArgs);
-
-	private:
-		enum class EVGCommand : uint8_t
-		{
-			MoveTo = 0,
-			LineTo,
-			BezierTo,
-			Close,
-			Winding
-		};
-
-		enum class EVGPointFlags : uint8_t
-		{
-			Corner = 1u << 0u,
-			Left = 1u << 1u,
-			Bevel = 1u << 2u,
-			InnerBevel = 1u << 3u
-		};
+	public:
+		inline void SetFont(const String& fontName) { m_CurrentFont = fontName; }
+		inline void SetDefaultFont() { m_CurrentFont = "Default"; }
+		[[nodiscard]] inline const String& GetCurrentFont() const { return m_CurrentFont; }
 	};
 }
