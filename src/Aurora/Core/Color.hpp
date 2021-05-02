@@ -69,7 +69,9 @@ namespace Aurora
 		return Vector4(1.0f);
 	}
 
-	namespace Color
+	typedef glm::vec4 Color;
+
+	namespace Colors
 	{
 		static const Vector4 White = MakeRGB(255, 255, 255);
 		static const Vector4 Black = MakeRGB(0, 0, 0);
