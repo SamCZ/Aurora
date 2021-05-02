@@ -92,8 +92,8 @@ namespace Aurora::Input
     private:
         std::string m_ActiveCategory = "loading";
     public:
-        [[nodiscard]] inline const std::string& ActiveCategory() const noexcept { return m_ActiveCategory; }
-        virtual void ActiveCategory(const std::string& category);
+        [[nodiscard]] inline const std::string& GetActiveCategory() const noexcept { return m_ActiveCategory; }
+        virtual bool ActiveCategory(const std::string& category);
 
     // Cursor
     public:

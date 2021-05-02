@@ -31,10 +31,10 @@ namespace Aurora::Input
         return binding;
     }
 
-    void IManager::ActiveCategory(const std::string& category) // Setter
+    bool IManager::ActiveCategory(const std::string& category) // Setter
     {
     	if(m_ActiveCategory == category) {
-			return;
+			return false;
     	}
 
         m_ActiveCategory = category;
@@ -53,6 +53,8 @@ namespace Aurora::Input
                 binding->m_HeldTime = 0;
             }
         }
+
+        return true;
     }
 
     void IManager::LoadConfig_JSON(const nlohmann::json& jConfig)

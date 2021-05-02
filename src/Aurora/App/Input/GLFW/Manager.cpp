@@ -547,7 +547,7 @@ namespace Aurora::Input
             CurrentInputType(IsPictogramControllerConnected() ? InputType::Gamepad_Pictogram : InputType::Gamepad_ABXY);
         }
 
-        auto itConfigs = m_Configurations.find(ActiveCategory());
+        auto itConfigs = m_Configurations.find(GetActiveCategory());
         if(itConfigs == m_Configurations.end())
         {
             // No active actions
@@ -883,6 +883,28 @@ namespace Aurora::Input
         }
         return false;
     }
+
+	bool Manager::ActiveCategory(const std::string &category)
+	{
+		bool changed = IManager::ActiveCategory(category);
+
+		// TODO: Change this is future, because this cancles continuous button held in cotegory transition
+		// This fixed instant button call after category change
+		// If you listening on same button in two different categories and then you
+		// cahange category to the other, the callback will call the button in the set
+		// category in the SAME TICK!
+		// So this prevent that
+		// (This was made when you want to lock and unlock cursor in two different categories)
+		// (When this wasn't here, it randomly set the cursor and when I hold it, it flicker the cursor)
+		if(changed) {
+			std::fill(m_KeyCodes.begin(), m_KeyCodes.end(), false);
+			std::fill(m_ScanCodes.begin(), m_ScanCodes.end(), false);
+			std::fill(m_MouseButtons.begin(), m_MouseButtons.end(), false);
+			std::fill(m_Gamepads.begin(), m_Gamepads.end(), GLFWgamepadstate{});
+		}
+
+		return changed;
+	}
 
 }
 

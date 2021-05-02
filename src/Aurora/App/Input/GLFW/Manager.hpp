@@ -132,6 +132,8 @@ namespace Aurora::Input
         [[nodiscard]]                     bool         IsCursorLocked()            const          override { return m_GlfwWindow->GetCursorMode() != ECursorMode::Normal;   }
                                           void         LockCursor(bool locked)     const          override {        m_GlfwWindow->SetCursorMode(locked ? ECursorMode::Disabled : ECursorMode::Normal); }
 
+		bool ActiveCategory(const std::string& category) override;
+
     // Scroll Wheel
     private:
         glm::dvec2 m_ScrollWheelChange{};
