@@ -63,22 +63,34 @@ namespace Aurora
 
 	}
 
-	void UIRenderer::FillRect(float x, float y, float w, float h, const Vector4 &color, float radius)
+	void UIRenderer::FillRect(float x, float y, float w, float h, const Vector4 &color, float radius, float rotation)
 	{
 		DrawArgs drawArgs;
 		drawArgs.Color = color;
 		drawArgs.Radius = radius;
+		drawArgs.Rotation = rotation;
 		Draw(x, y, w, h, drawArgs);
 	}
 
-	void UIRenderer::DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius)
+	void UIRenderer::FillRect(const Vector2 &position, const Vector2 &size, const Vector4 &color, float radius, float rotation)
+	{
+		FillRect(position.x, position.y, size.x, size.y, color, radius, rotation);
+	}
+
+	void UIRenderer::DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius, float rotation)
 	{
 		DrawArgs drawArgs;
 		drawArgs.Color = color;
 		drawArgs.Fill = false;
-		drawArgs.StrokeSize = strokeSize;
+		drawArgs.StrokeSize = strokeSize + 1.0f;
 		drawArgs.Radius = radius;
+		drawArgs.Rotation = rotation;
 		Draw(x, y, w, h, drawArgs);
+	}
+
+	void UIRenderer::DrawRect(const Vector2 &position, const Vector2 &size, const Vector4 &color, float strokeSize, float radius, float rotation)
+	{
+		DrawRect(position.x, position.y, size.x, size.y, color, strokeSize, radius, rotation);
 	}
 
 	void UIRenderer::Draw(float x, float y, float w, float h, const DrawArgs& drawArgs)
@@ -100,7 +112,7 @@ namespace Aurora
 		}
 
 		material->SetVariable<Matrix4>("Projection", m_ProjectionMatrix);
-		material->SetVariable<Matrix4>("ModelMat", glm::translate(Vector3(x, y, 0)) * glm::scale(Vector3(w, h, 1)));
+		material->SetVariable<Matrix4>("ModelMat", glm::translate(Vector3(x + w / 2.0f, y + h / 2.0f, 0)) * glm::rotate(glm::radians(drawArgs.Rotation), Vector3(0, 0, 1)) * glm::scale(Vector3(w, h, 1)));
 
 		if(drawArgs.EnabledCustomUVs) {
 			static Vector4 cacheUvVal[4];
@@ -322,8 +334,6 @@ namespace Aurora
 		drawArgs.EnabledCustomUVs = true;
 		drawArgs.OverrideMaterial = m_FontMaterial;
 
-		//auto textSize = GetTextSize(text, fontSize, fontName);
-
 		float fontScale = fontSize / static_cast<float>(optimalFontSize);
 
 		float baseLine = 0;
@@ -369,6 +379,11 @@ namespace Aurora
 		}
 	}
 
+	void UIRenderer::Text(const String &text, const Vector2 &position, float fontSize, const Vector4 &color, const String &fontName)
+	{
+		Text(text, position.x, position.y, fontSize, color, fontName);
+	}
+
 	Vector2 UIRenderer::GetTextSize(const String& text, float fontSize, const String& fontName)
 	{
 		Font_ptr font = FindFont(fontName);
@@ -395,15 +410,17 @@ namespace Aurora
 
 			x = glm::floor((x + glyph.xOff * fontScale) + 0.5f);
 			float y = glm::floor((glyph.yOff * fontScale) + 0.5f);
+
 			float w = static_cast<float>(glyph.Width) * fontScale;
 			float h = static_cast<float>(glyph.Height) * fontScale;
-			x += glyph.xAdvance * fontScale;
 
 			min.x = std::min<float>(min.x, x);
 			min.y = std::min<float>(min.y, y);
 
 			max.x = std::max<float>(max.x, x + w);
 			max.y = std::max<float>(max.y, y + h);
+
+			x += glyph.xAdvance * fontScale;
 		}
 
 		return max - min;
