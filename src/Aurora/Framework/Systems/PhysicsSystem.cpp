@@ -120,9 +120,10 @@ namespace Aurora
 						continue;
 					}*/
 
-					if(!CollisionMatrix::CanCollide(component->GetLayer(), component2->GetLayer())) {
+					// TODO: Optimize the callision layers !
+					/*if(!CollisionMatrix::CanCollide(component->GetLayer(), component2->GetLayer())) {
 						continue;
-					}
+					}*/
 
 					/*auto& currentBody = component->GetBody();
 					auto& targetBody = component2->GetBody();
@@ -133,7 +134,7 @@ namespace Aurora
 
 					count++;
 
-					auto targetBodies = GetBodies(target);
+					//auto targetBodies = GetBodies(target);
 
 					//std::cout << "current bodies: " << currentBodies->size() << ", target bodies: " << targetBodies->size() << std::endl;
 
