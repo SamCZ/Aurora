@@ -25,7 +25,7 @@ namespace Aurora
 		inline SpriteBorder(float size) : Left(size), Right(size), Top(size), Bottom(size) { }
 	};
 
-	class UIRenderer
+	AU_CLASS(UIRenderer)
 	{
 	private:
 		struct DrawArgs
@@ -61,8 +61,8 @@ namespace Aurora
 		void DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius = 0.0f, float rotation = 0.0f);
 		void DrawRect(const Vector2& position, const Vector2& size, const Vector4& color, float strokeSize, float radius = 0.0f, float rotation = 0.0f);
 
-		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder());
-		void DrawImage(const Vector2& position, const Vector2& size, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder());
+		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
+		void DrawImage(const Vector2& position, const Vector2& size, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
 		void SetImageEdgeDetection(bool enabled, int thickness = 3, const Vector4& edgeColor = Vector4(1.0));
 	public:
 		Font_ptr FindFont(const String& name);

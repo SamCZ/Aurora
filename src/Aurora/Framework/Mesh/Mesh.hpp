@@ -19,9 +19,10 @@ namespace Aurora
 		Material_ptr Material;
 		String MaterialSlotName;
 		std::map<String, RefCntAutoPtr<ITexture>> Textures;
+		std::map<String, Vector4> Colors;
 
-		MaterialSlot() : Material(nullptr), MaterialSlotName(), Textures() {}
-		MaterialSlot(Material_ptr Material, String  materialSlotName) : Material(std::move(Material)), MaterialSlotName(std::move(materialSlotName)), Textures() {}
+		MaterialSlot() : Material(nullptr), MaterialSlotName(), Textures(), Colors() {}
+		MaterialSlot(Material_ptr Material, String  materialSlotName) : Material(std::move(Material)), MaterialSlotName(std::move(materialSlotName)), Textures(), Colors() {}
 
 		bool operator==(const MaterialSlot& left) const { return Material == left.Material && MaterialSlotName == left.MaterialSlotName; }
 	};

@@ -1,10 +1,17 @@
 #include "FileWatcher.hpp"
 
+#include <iostream>
+
 namespace Aurora
 {
 	FileWatcher::FileWatcher(std::filesystem::path watchPath, bool recursive, std::chrono::duration<int64_t, std::milli> delay, WatchFlags watchFlags)
 	: m_WatchPath(std::move(watchPath)), m_Recursive(recursive), m_Delay(delay), m_WatchFlags(watchFlags), m_Thread(), m_IsRunning(true), m_Paths()
 	{
+		if(!std::filesystem::exists(m_WatchPath)) {
+			std::cerr << "Could not init FileWatcher path " << m_WatchPath << " doesn't exists !" << std::endl;
+			return;
+		}
+
 		m_Thread = std::thread([this]() -> void {
 			if(m_Recursive) {
 				for(auto &file : std::filesystem::recursive_directory_iterator(m_WatchPath)) {

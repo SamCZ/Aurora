@@ -135,3 +135,20 @@ inline String PointerToString(T* pointer)
 	ss << address;
 	return ss.str();
 }
+
+struct dotted : std::numpunct<char> {
+	char do_thousands_sep()   const override { return ' '; }  // separate with dots
+	std::string do_grouping() const override { return "\3"; } // groups of 3 digits
+	static void imbue(std::ostream &os) {
+		os.imbue(std::locale(os.getloc(), new dotted));
+	}
+};
+
+template<typename T>
+inline String Stringify(T val)
+{
+	std::ostringstream oss;
+	dotted::imbue(oss);
+	oss << val;
+	return oss.str();
+}

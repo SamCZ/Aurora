@@ -137,7 +137,7 @@ namespace Aurora
 	{
 		auto* shaderResourceObject = dynamic_cast<ShaderResourceObject*>(obj);
 
-		std::cout << "resource update!" << std::endl;
+		//std::cout << "resource update!" << std::endl;
 
 		auto findShaderObjIter = m_Shaders.find(shaderResourceObject->GetShaderType());
 
@@ -257,14 +257,14 @@ namespace Aurora
 			shaderConstantBufferInfo.Desc = CBDesc;
 
 			for (const auto & var : variables) {
-				std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << ":" << var.MatrixStride << std::endl;
+				//std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << ":" << var.MatrixStride << std::endl;
 				shaderConstantBufferInfo.Variables = variables;
 
 				{ // Search for old variables and set the value to the current buffer
 					for(const auto& otherBufferStore : constantBufferListCopy) {
 						for (const auto& otherVar : otherBufferStore.Variables) {
 							if(otherVar.Name == var.Name && otherVar.Size == var.Size) {
-								std::cout << "Copying same variable: " << var.Name << std::endl;
+								//std::cout << "Copying same variable: " << var.Name << std::endl;
 								memcpy(shaderConstantBufferInfo.BufferData.data() + var.Offset, otherBufferStore.BufferData.data() + otherVar.Offset, var.Size);
 								goto exit_loop;
 							}
@@ -452,7 +452,7 @@ namespace Aurora
 					std::cerr << "var is null! " << shaderConstantBuffer.Name << std::endl;
 				}
 
-				std::cout << shaderConstantBuffer.Name << " - " << m_Name << "(" << GetShaderTypeLiteralName(shaderConstantBuffer.ShaderType) << ") - " << shaderConstantBuffer.Buffer.RawPtr() << std::endl;
+				//std::cout << shaderConstantBuffer.Name << " - " << m_Name << "(" << GetShaderTypeLiteralName(shaderConstantBuffer.ShaderType) << ") - " << shaderConstantBuffer.Buffer.RawPtr() << std::endl;
 				// TODO: Warn about two different buffers with same name
 			}
 		}

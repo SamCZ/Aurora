@@ -26,13 +26,14 @@ namespace Aurora
 
 		if(/* is vulkan */true) {
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-			glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+			//glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 		}
 
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+		glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
 
 		//glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 		//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
@@ -226,6 +227,8 @@ namespace Aurora
 
 	void Window::OnResizeCallback(GLFWwindow* rawWindow, int width, int height)
 	{
+		if(width == 0 || height == 0) return;
+
 		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
 		window->SetSize(width, height);
 

@@ -36,6 +36,9 @@ namespace Aurora
 	RefCntAutoPtr<IRenderDevice> AuroraEngine::RenderDevice(nullptr);
 	RefCntAutoPtr<IDeviceContext> AuroraEngine::ImmediateContext(nullptr);
 	AssetManager_ptr AuroraEngine::AssetManager = nullptr;
+#ifdef FMOD_SUPPORTED
+	SoundSystem_ptr AuroraEngine::SoundSystem = nullptr;
+#endif
 
 	std::unique_ptr<Diligent::ImGuiImplDiligent> AuroraEngine::ImGuiImpl(nullptr);
 
@@ -80,6 +83,9 @@ namespace Aurora
 		EngineFactory->CreateDeviceAndContextsVk(EngineCI, &RenderDevice, &ImmediateContext);
 
 		AuroraEngine::AssetManager = std::make_shared<Aurora::AssetManager>();
+#ifdef FMOD_SUPPORTED
+		AuroraEngine::SoundSystem = std::make_shared<Sound::SoundSystem>();
+#endif
 
 		IsInitialized = true;
 	}
@@ -94,6 +100,8 @@ namespace Aurora
 
 		bool anyWindowRunning;
 		std::queue<WindowGameContext_ptr> contextsToRemove;
+
+		const float ClearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
 
 		auto PrevTime = glfwGetTime();
 		auto lastFpsTime = PrevTime;
@@ -137,7 +145,9 @@ namespace Aurora
 			}
 
 			glfwPollEvents();
-
+#ifdef FMOD_SUPPORTED
+			SoundSystem->Update();
+#endif
 			for (auto& context : GameContexts) {
 				const std::shared_ptr<Window>& window = context->GetWindow();
 
@@ -167,6 +177,11 @@ namespace Aurora
 					ITextureView* pRTV = swapChain->GetCurrentBackBufferRTV();
 					ITextureView* pDSV = swapChain->GetDepthBufferDSV();
 					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+
+					Profiler::Begin("Clear back buffer targets");
+					AuroraEngine::ImmediateContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+					AuroraEngine::ImmediateContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+					Profiler::End("Clear back buffer targets");
 
 					Profiler::Begin("WindowGameContext::Render");
 					context->Render();
@@ -264,5 +279,12 @@ namespace Aurora
 	const std::vector<WindowGameContext_ptr> &AuroraEngine::GetGameContexts()
 	{
 		return GameContexts;
+	}
+
+	void AuroraEngine::Play2DSound(const String &path, float volume, float pitch)
+	{
+#ifdef FMOD_SUPPORTED
+	SoundSystem->PlaySoundOneShot(path, volume, pitch);
+#endif
 	}
 }

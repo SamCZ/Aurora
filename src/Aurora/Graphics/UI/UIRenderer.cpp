@@ -14,6 +14,7 @@ namespace Aurora
 			blendDesc.SrcBlend = BLEND_FACTOR_SRC_ALPHA;
 			blendDesc.DestBlend = BLEND_FACTOR_INV_SRC_ALPHA;
 			m_Material->SetBlendState(blendDesc);
+			//m_Material->SetFillMode(FILL_MODE_WIREFRAME);
 		}
 
 		{
@@ -105,6 +106,7 @@ namespace Aurora
 
 		if(!drawArgs.Fill) {
 			float strokeHalf = drawArgs.StrokeSize / 2.0f;
+			if(strokeHalf < 1.0) strokeHalf = 1.0f;
 			x -= strokeHalf;
 			y -= strokeHalf;
 			w += strokeHalf * 2.0f;
@@ -145,6 +147,7 @@ namespace Aurora
 
 		material->SetVariable<Vector2>("Size", Vector2(w, h));
 		material->SetVariable<float>("Radius", drawArgs.Radius);
+		material->SetVariable<float>("GrayScale", 0.0f); // TODO: Add this as setting
 
 		material->CommitShaderResources();
 
@@ -154,7 +157,7 @@ namespace Aurora
 		AuroraEngine::ImmediateContext->Draw(drawAttrs);
 	}
 
-	void UIRenderer::DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder)
+	void UIRenderer::DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)
 	{
 		switch (imageDrawMode) {
 			case ImageDrawMode::Simple: {
@@ -162,6 +165,7 @@ namespace Aurora
 				drawArgs.Texture = texture;
 				drawArgs.Radius = radius;
 				drawArgs.Fill = true;
+				drawArgs.Tint = tint;
 				Draw(x, y, w, h, drawArgs);
 				break;
 			}
@@ -171,6 +175,7 @@ namespace Aurora
 				drawArgs.Radius = radius;
 				drawArgs.Fill = true;
 				drawArgs.EnabledCustomUVs = true;
+				drawArgs.Tint = tint;
 
 				auto realW = static_cast<float>(texture->GetDesc().Width);
 				auto realH = static_cast<float>(texture->GetDesc().Height);
@@ -277,9 +282,9 @@ namespace Aurora
 		}
 	}
 
-	void UIRenderer::DrawImage(const Vector2 &position, const Vector2 &size, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode &imageDrawMode, const SpriteBorder &spriteBorder)
+	void UIRenderer::DrawImage(const Vector2 &position, const Vector2 &size, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode &imageDrawMode, const SpriteBorder &spriteBorder, const Color& tint)
 	{
-		DrawImage(position.x, position.y, size.x, size.y, texture, radius, imageDrawMode, spriteBorder);
+		DrawImage(position.x, position.y, size.x, size.y, texture, radius, imageDrawMode, spriteBorder, tint);
 	}
 
 	void UIRenderer::SetImageEdgeDetection(bool enabled, int thickness, const Vector4& edgeColor)

@@ -3,6 +3,8 @@
 #include <Texture.h>
 #include <RefCntAutoPtr.hpp>
 
+using namespace Diligent;
+
 namespace Aurora
 {
 	typedef Diligent::RefCntAutoPtr<Diligent::ITexture> Texture_ptr;

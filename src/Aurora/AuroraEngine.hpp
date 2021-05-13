@@ -14,6 +14,7 @@
 #include "App/WindowGameContext.hpp"
 
 #include "Assets/AssetManager.hpp"
+#include "Sound/SoundSystem.hpp"
 
 namespace Diligent
 {
@@ -22,6 +23,8 @@ namespace Diligent
 
 namespace Aurora
 {
+	using namespace Sound;
+
 	class AuroraEngine
 	{
 	private:
@@ -34,6 +37,9 @@ namespace Aurora
 		static RefCntAutoPtr<IRenderDevice> RenderDevice;
 		static RefCntAutoPtr<IDeviceContext> ImmediateContext;
 		static AssetManager_ptr AssetManager;
+#ifdef FMOD_SUPPORTED
+		static SoundSystem_ptr SoundSystem;
+#endif
 	public:
 		static void Init();
 		static int Run();
@@ -62,5 +68,9 @@ namespace Aurora
 	private:
 		static bool CreateSwapChain(const Window_ptr& window, const SwapChainDesc& desc, RefCntAutoPtr<ISwapChain>& swapChain);
 		static void joystick_callback(int jid, int event);
+	public:
+		static void Play2DSound(const String& path, float volume = 1.0f, float pitch = 1.0f);
 	};
+
+#define ASM AuroraEngine::AssetManager
 }

@@ -29,7 +29,7 @@ namespace Aurora
 			AuroraEngine::RenderDevice->CreateTexture(RTColorDesc, nullptr, &m_PlaceholderTexture);
 		}
 
-		m_BlitMaterial = Setup2DMaterial(std::make_shared<Material>("UI", "Assets/Shaders/Blit"), true);
+		m_BlitMaterial = Setup2DMaterial(std::make_shared<Material>("Blit", "Assets/Shaders/Blit"), true);
 	}
 
 	void GraphicUtilities::Destroy()
@@ -184,12 +184,12 @@ namespace Aurora
 		return pRTDepth;
 	}
 
-	void GraphicUtilities::Blit(RefCntAutoPtr<ITexture> &src, RefCntAutoPtr<ITexture> &dest)
+	void GraphicUtilities::Blit(RefCntAutoPtr<ITexture> src, RefCntAutoPtr<ITexture> &dest)
 	{
 		Blit(m_BlitMaterial, src, dest);
 	}
 
-	void GraphicUtilities::Blit(std::shared_ptr<Material>& material, RefCntAutoPtr<ITexture> &src, RefCntAutoPtr<ITexture> &dest)
+	void GraphicUtilities::Blit(std::shared_ptr<Material>& material, RefCntAutoPtr<ITexture> src, RefCntAutoPtr<ITexture> &dest)
 	{
 		ITextureView* view = dest->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
 		AuroraEngine::ImmediateContext->SetRenderTargets(1, &view, nullptr, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
@@ -221,12 +221,12 @@ namespace Aurora
 		m_PlaceholderTexture = texture;
 	}
 
-	void GraphicUtilities::Blit(RefCntAutoPtr<ITexture> &src, ITextureView *dest)
+	void GraphicUtilities::Blit(RefCntAutoPtr<ITexture> src, ITextureView *dest)
 	{
 		Blit(m_BlitMaterial, src, dest);
 	}
 
-	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, RefCntAutoPtr<ITexture> &src, ITextureView *dest)
+	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, RefCntAutoPtr<ITexture> src, ITextureView *dest)
 	{
 		AuroraEngine::ImmediateContext->SetRenderTargets(1, &dest, nullptr, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 

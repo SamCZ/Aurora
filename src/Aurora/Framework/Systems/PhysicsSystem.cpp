@@ -163,7 +163,7 @@ namespace Aurora
 
 			float friction = 0.8;
 
-			if (component->CollidingAxes(1)) {
+			if (component->CollidingAxes(1) || !component->IsGravityEnabled()) {
 				velocity.x *= friction;
 				velocity.z *= friction;
 			}

@@ -22,6 +22,11 @@ target_link_libraries(Aurora
         Diligent-GraphicsAccessories
 )
 
+if(WIN32)
+    target_link_libraries(Aurora PUBLIC FMod_SDK)
+    add_compile_definitions(FMOD_SUPPORTED=1)
+endif()
+
 if(ES_PRODUCTION)
     target_link_libraries(Aurora PUBLIC Diligent-GraphicsEngineVk-static)
 else()

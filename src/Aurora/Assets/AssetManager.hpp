@@ -30,6 +30,7 @@ namespace Aurora
 	private:
 		std::map<Path, RefCntAutoPtr<IShader>> m_LoadedShaders;
 		std::map<Path, std::pair<Path, FileHeader>> m_AssetPackageFiles;
+		std::map<Path, std::vector<Path>> m_AssetPackageFolders;
 		std::map<Path, RefCntAutoPtr<ITexture>> m_LoadedTextures;
 
 		std::map<Path, ShaderResourceObject_ptr> m_ShaderResources;
@@ -54,5 +55,7 @@ namespace Aurora
 		bool LoadJson(const Path& path, nlohmann::json& json);
 	private:
 		static IMAGE_FILE_FORMAT CreateImageFromDataBlob(const String& filename, IDataBlob* dataBlob, Image** ppImage);
+
+		std::vector<Path> ListFiles(const Path &path);
 	};
 }

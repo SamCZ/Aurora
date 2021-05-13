@@ -4,6 +4,7 @@
 
 #include "Components/Base/SceneComponent.hpp"
 #include "Components/Mesh/MeshComponent.hpp"
+#include "Components/CameraComponent.hpp"
 #include "ComponentList.hpp"
 #include "GameModeBase.hpp"
 
@@ -28,6 +29,7 @@ namespace Aurora
 
 		COMPONENT_LIST(MeshComponent)
 		COMPONENT_LIST(SceneComponent)
+		COMPONENT_LIST(CameraComponent)
 
 		GameModeBase* m_GameMode;
 	public:
@@ -128,6 +130,10 @@ namespace Aurora
 			if(auto* cmp = component->SafeCast<SceneComponent>()) {
 				m_SceneComponents.Add(cmp);
 			}
+
+			if(auto* cmp = component->SafeCast<CameraComponent>()) {
+				m_CameraComponents.Add(cmp);
+			}
 		}
 
 		inline void UnregisterComponent(ActorComponent* component)
@@ -138,6 +144,10 @@ namespace Aurora
 
 			if(auto* cmp = component->SafeCast<SceneComponent>()) {
 				m_SceneComponents.Remove(cmp);
+			}
+
+			if(auto* cmp = component->SafeCast<CameraComponent>()) {
+				m_CameraComponents.Remove(cmp);
 			}
 		}
 

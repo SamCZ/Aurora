@@ -26,6 +26,10 @@ namespace Aurora
 			}
 
 			m_AssetPackageFiles[it.first] = std::pair<Path, FileHeader>(path, it.second);
+
+			Path fileFolder = it.first.parent_path();
+
+			m_AssetPackageFolders[fileFolder].push_back(it.first);
 		}
 	}
 
@@ -135,7 +139,7 @@ namespace Aurora
 
 		String extension = path.extension().string();
 
-		std::cout << extension << std::endl;
+		//std::cout << extension << std::endl;
 
 		if(extension == ".glsl") {
 			language = SHADER_SOURCE_LANGUAGE_GLSL;
@@ -317,13 +321,16 @@ namespace Aurora
 					ImgFileFormat = IMAGE_FILE_FORMAT_DDS;
 				else if (Extension == "ktx")
 					ImgFileFormat = IMAGE_FILE_FORMAT_KTX;
+				else if (Extension == "tga")
+					ImgFileFormat = IMAGE_FILE_FORMAT_TGA;
 				else
 					LOG_ERROR_AND_THROW("Unsupported file format ", Extension);
 			}
 
 			if (ImgFileFormat == IMAGE_FILE_FORMAT_PNG ||
 				ImgFileFormat == IMAGE_FILE_FORMAT_JPEG ||
-				ImgFileFormat == IMAGE_FILE_FORMAT_TIFF)
+				ImgFileFormat == IMAGE_FILE_FORMAT_TIFF ||
+				ImgFileFormat == IMAGE_FILE_FORMAT_TGA)
 			{
 				ImageLoadInfo ImgLoadInfo;
 				ImgLoadInfo.Format = ImgFileFormat;
@@ -384,8 +391,7 @@ namespace Aurora
 	{
 		std::vector<ShaderResourceObject_ptr> shaders;
 
-		for(auto& file: std::filesystem::directory_iterator(path)) {
-			const auto& filePath = file.path();
+		for(auto& filePath: ListFiles(path)) {
 			auto extension = filePath.extension().string();
 
 			if(extension == ".disabled") continue;
@@ -417,5 +423,22 @@ namespace Aurora
 		}
 
 		return shaders;
+	}
+
+	std::vector<Path> AssetManager::ListFiles(const Path &path)
+	{
+		std::vector<Path> files;
+
+		if(m_AssetPackageFolders.contains(path)) {
+			for(const auto& file : m_AssetPackageFolders[path]) {
+				files.push_back(file);
+			}
+		} else {
+			for(auto& file: std::filesystem::directory_iterator(path)) {
+				files.push_back(file.path());
+			}
+		}
+
+		return files;
 	}
 }

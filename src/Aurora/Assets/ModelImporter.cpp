@@ -28,6 +28,7 @@ namespace Aurora
 			{(uint8_t)aiPrimitiveType::_aiPrimitiveType_Force32Bit, "_aiPrimitiveType_Force32Bit"}
 	};
 
+	static inline Vector4 color_cast(const aiColor4D &v) { return glm::vec4(v.r, v.g, v.b, v.a); }
 	static inline Vector3 vec3_cast(const aiVector3D &v) { return glm::vec3(v.x, v.y, v.z); }
 	static inline Vector2 vec2_cast(const aiVector3D &v) { return glm::vec2(v.x, v.y); }
 	static inline Quaternion quat_cast(const aiQuaternion &q) { return glm::quat(q.w, q.x, q.y, q.z); }
@@ -68,7 +69,7 @@ namespace Aurora
 			Path file = tex->mFilename.C_Str();
 			embeddedTextures[file.string()] = tex;
 
-			std::cout << "EMBEDDED: " << file << std::endl;
+			//std::cout << "EMBEDDED: " << file << std::endl;
 		}
 
 		int materialSlotIndex = 0;
@@ -106,6 +107,11 @@ namespace Aurora
 				materialSlot.Material = nullptr;
 				materialSlot.MaterialSlotName = String(sourceMaterial->GetName().C_Str()) + "_" + std::to_string(meshMaterialSlot);
 
+				aiColor4D diffuse;
+				if(AI_SUCCESS == aiGetMaterialColor(sourceMaterial, AI_MATKEY_COLOR_DIFFUSE, &diffuse)) {
+					materialSlot.Colors["Color"] = color_cast(diffuse);
+				}
+
 				for (uint8_t texType = 0; texType < (uint8_t)aiTextureType::aiTextureType_UNKNOWN; texType++) {
 					unsigned int textureCount = sourceMaterial->GetTextureCount((aiTextureType)texType);
 
@@ -123,7 +129,7 @@ namespace Aurora
 
 					Path filePath = texturePathAiStr.C_Str();
 
-					std::cout << TextureTypeEnumToString[texType] << ": " << filePath << std::endl;
+					//std::cout << TextureTypeEnumToString[texType] << ": " << filePath << std::endl;
 
 					auto iter = embeddedTextures.find(filePath.string());
 
@@ -138,13 +144,14 @@ namespace Aurora
 						}
 
 						//aiTexel* aiData = tex->pcData;
-						std::cout << tex->achFormatHint << std::endl;
+						//std::cout << tex->achFormatHint << std::endl;
 						RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(dataSize));
 
 						memcpy(pFileData->GetDataPtr(), aiData, pFileData->GetSize());
 
 						auto texture = AuroraEngine::AssetManager->LoadTexture(filePath.string(), pFileData);
 						materialSlot.Textures[TextureTypeEnumToShaderNameString[texType]] = texture;
+						//std::cout << "TEXXX: " << TextureTypeEnumToShaderNameString[texType] << " - " << filePath.string() << std::endl;
 					} else {
 						/*auto texture = AuroraEngine::AssetManager->LoadTexture(filePath);
 
