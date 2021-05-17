@@ -1,4 +1,5 @@
 #include "SceneRenderer.hpp"
+#include "Aurora/AuroraEngine.hpp"
 
 namespace Aurora
 {

@@ -81,22 +81,6 @@ namespace Aurora
 #endif
 		}
 
-		if(false) { // If opengl render device
-			glfwMakeContextCurrent(m_WindowHandle);
-
-			// This is gonna break after second window is created !
-			if(!gladLoadGL()) {
-				printf("\n");
-				exit(-1);
-			}
-			printf("OpenGL %d.%d\n", GLVersion.major, GLVersion.minor);
-
-			if(!GLAD_GL_EXT_texture_array) {
-				std::cerr << "GLAD_GL_EXT_texture_array not found !" << std::endl;
-			}
-
-			glfwSwapInterval(0);
-		}
 		glfwSetInputMode(m_WindowHandle, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
 		glfwSetWindowUserPointer(m_WindowHandle, this);

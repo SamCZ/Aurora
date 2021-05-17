@@ -12,8 +12,6 @@
 #include "ShaderCollection.hpp"
 #include "Aurora/Core/Common.hpp"
 
-#include "Aurora/AuroraEngine.hpp"
-
 #include "Aurora/Assets/Resources/ShaderResourceObject.hpp"
 
 using namespace Diligent;

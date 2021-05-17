@@ -2,6 +2,7 @@
 #include "AssetManager.hpp"
 #include "../Graphics/Material.hpp"
 #include "../Graphics/GraphicUtilities.hpp"
+#include "Aurora/AuroraEngine.hpp"
 
 namespace Aurora
 {

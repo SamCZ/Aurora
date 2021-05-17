@@ -1,4 +1,5 @@
 #include "Material.hpp"
+#include "Aurora/AuroraEngine.hpp"
 
 #include <GraphicsAccessories.hpp>
 
