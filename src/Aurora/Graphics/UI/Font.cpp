@@ -149,7 +149,7 @@ namespace Aurora
 				glyph.Y = (stbtt_int16) y;
 				glyph.Width = (stbtt_int16) gw;
 				glyph.Height = (stbtt_int16) gh;
-				glyph.xAdvance = scale * static_cast<float>(advance);
+				glyph.xAdvance = glm::round(scale * static_cast<float>(advance));
 				glyph.xOff     = (float) x0;
 				glyph.yOff     = (float) y0;
 				glyph.PageIndex = 0;

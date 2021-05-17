@@ -1,4 +1,5 @@
 #include "UIRenderer.hpp"
+#include "Aurora/AuroraEngine.hpp"
 
 namespace Aurora
 {
@@ -391,6 +392,10 @@ namespace Aurora
 
 	Vector2 UIRenderer::GetTextSize(const String& text, float fontSize, const String& fontName)
 	{
+		if(text.empty()) {
+			return Vector2(0, 0);
+		}
+
 		Font_ptr font = FindFont(fontName);
 
 		if(font == nullptr) {
@@ -408,13 +413,20 @@ namespace Aurora
 
 		FontGlyph glyph = {};
 		float x = 0;
+		float y = 0;
+		float maxX = 0;
+
 		for(char c : text) {
 			if(!fontBitmapPageList->FindGlyph(c, glyph)) {
 				continue;
 			}
 
-			x = glm::floor((x + glyph.xOff * fontScale) + 0.5f);
-			float y = glm::floor((glyph.yOff * fontScale) + 0.5f);
+			min.x = std::min<float>(min.x, x);
+			min.y = std::min<float>(min.y, y);
+
+			//x = x + glyph.xOff * fontScale;
+			y = (glyph.yOff * fontScale);
+
 
 			float w = static_cast<float>(glyph.Width) * fontScale;
 			float h = static_cast<float>(glyph.Height) * fontScale;
@@ -425,9 +437,13 @@ namespace Aurora
 			max.x = std::max<float>(max.x, x + w);
 			max.y = std::max<float>(max.y, y + h);
 
-			x += glyph.xAdvance * fontScale;
+			maxX = x + w;
+
+			x += (glyph.xAdvance * fontScale);
 		}
 
-		return max - min;
+		max.x = maxX;
+
+		return glm::abs(max - min);
 	}
 }
