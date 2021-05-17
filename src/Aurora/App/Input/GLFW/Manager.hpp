@@ -149,5 +149,8 @@ namespace Aurora::Input
     public:
         [[nodiscard]] double        GetValue        (const Key_t& name) override;
         [[nodiscard]] std::u8string GetValueName    (const Key_t& name) override;
+
+    public:
+		const std::vector<char8_t>& GetTypedChars() override { return m_TextBuffer; }
     };
 }

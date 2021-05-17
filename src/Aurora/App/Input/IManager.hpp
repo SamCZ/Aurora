@@ -121,6 +121,8 @@ namespace Aurora::Input
         [[nodiscard]] virtual double        GetValue        (const Key_t& name) = 0;
         [[nodiscard]] virtual std::u8string GetValueName    (const Key_t& name) = 0;
 
+    public:
+    	virtual const std::vector<char8_t>& GetTypedChars() = 0;
     //TODO Scroll
     };
 }
