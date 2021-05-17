@@ -39,6 +39,7 @@ namespace Aurora
 #ifdef FMOD_SUPPORTED
 	SoundSystem_ptr AuroraEngine::SoundSystem = nullptr;
 #endif
+	UIRenderer_ptr AuroraEngine::UI_Renderer = nullptr;
 
 	std::unique_ptr<Diligent::ImGuiImplDiligent> AuroraEngine::ImGuiImpl(nullptr);
 

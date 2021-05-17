@@ -15,6 +15,7 @@
 
 #include "Assets/AssetManager.hpp"
 #include "Sound/SoundSystem.hpp"
+#include "Graphics/UI/UIRenderer.hpp"
 
 namespace Diligent
 {
@@ -40,6 +41,7 @@ namespace Aurora
 #ifdef FMOD_SUPPORTED
 		static SoundSystem_ptr SoundSystem;
 #endif
+		static UIRenderer_ptr UI_Renderer;
 	public:
 		static void Init();
 		static int Run();
