@@ -28,6 +28,11 @@ namespace Aurora
 
 	typedef std::map<SHADER_TYPE, ShaderObject> ShaderList;
 
+	struct PSOInfoComparator
+	{
+		bool operator()(const GraphicsPipelineStateCreateInfo &left, const GraphicsPipelineStateCreateInfo &right) const;
+	};
+
 	AU_CLASS(Material) : public IGraphicsPipeline
 	{
 	private:
@@ -82,8 +87,8 @@ namespace Aurora
 		std::vector<ShaderResourceVariableDesc> m_PSO_ResourceVariableDescList;
 		std::vector<ImmutableSamplerDesc> m_PSO_ShaderResourceSamplers;
 
-		uint32_t m_CurrentPipelineStateHash;
-		std::map<uint32_t, PipelineStateData> m_PipelineStates;
+		GraphicsPipelineStateCreateInfo m_CurrentPipelineStateInfo;
+		std::map<GraphicsPipelineStateCreateInfo, PipelineStateData, PSOInfoComparator> m_PipelineStates;
 
 		RefCntAutoPtr<IPipelineState> m_CurrentPipelineState;
 		RefCntAutoPtr<IShaderResourceBinding> m_CurrentResourceBinding;
@@ -112,10 +117,7 @@ namespace Aurora
 
 	public:
 		void ValidateGraphicsPipelineState();
-	private:
-		static uint32_t HashPSO(const GraphicsPipelineStateCreateInfo& gpsci);
 	public:
-		[[nodiscard]] inline uint32_t GetHash() const noexcept { return m_CurrentPipelineStateHash; }
 		inline RefCntAutoPtr<IPipelineState>& GetCurrentPipelineState() { return m_CurrentPipelineState; }
 		inline RefCntAutoPtr<IShaderResourceBinding>& GetCurrentResourceBinding() { return m_CurrentResourceBinding; }
 		inline GraphicsPipelineDesc& GetPipelineDesc() { return m_PSOCreateInfo.GraphicsPipeline; }

@@ -34,7 +34,7 @@ namespace Aurora::Editor
 			ImGui::BeginChild("Recompile", 0, 128, true, -1);
 			{
 				ImGui::Text("Info");
-				ImGui::Text("Hash: " + std::to_string(material->GetHash()));
+				//ImGui::Text("Hash: " + std::to_string(material->GetHash()));
 			}
 			ImGui::EndChild();
 

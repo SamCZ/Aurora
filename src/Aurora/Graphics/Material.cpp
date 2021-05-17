@@ -6,6 +6,23 @@
 #include <Aurora/Graphics/GraphicUtilities.hpp>
 #include <Aurora/Core/Crc.hpp>
 
+static bool operator==(const GraphicsPipelineStateCreateInfo& left, const GraphicsPipelineStateCreateInfo&right)
+{
+	return false;
+}
+
+/*namespace std
+{
+	template<> struct less<GraphicsPipelineStateCreateInfo>
+	{
+		bool operator() (const GraphicsPipelineStateCreateInfo& lhs, const GraphicsPipelineStateCreateInfo& rhs) const
+		{
+			return false;
+		}
+	};
+
+}*/
+
 namespace Aurora
 {
 	std::vector<Material*> Material::m_CurrentMaterials;
@@ -16,7 +33,7 @@ namespace Aurora
 	  m_OnShaderResourceChangeEvent(nullptr),
 	  m_CurrentPipelineState(nullptr),
 	  m_CurrentResourceBinding(nullptr),
-	  m_CurrentPipelineStateHash(0),
+	  //m_CurrentPipelineStateHash(0),
 	  m_NeedsRebuildResourceLayout(true)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
@@ -44,7 +61,7 @@ namespace Aurora
 			  m_OnShaderResourceChangeEvent(nullptr),
 			  m_CurrentPipelineState(nullptr),
 			  m_CurrentResourceBinding(nullptr),
-			  m_CurrentPipelineStateHash(0),
+			  //m_CurrentPipelineStateHash(0),
 			  m_NeedsRebuildResourceLayout(true)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
@@ -71,7 +88,7 @@ namespace Aurora
 	  m_Macros(std::move(macros)),
 	  m_CurrentPipelineState(nullptr),
 	  m_CurrentResourceBinding(nullptr),
-	  m_CurrentPipelineStateHash(0),
+	  //m_CurrentPipelineStateHash(0),
 	  m_NeedsRebuildResourceLayout(true)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
@@ -417,17 +434,12 @@ namespace Aurora
 
 		// Update pipeline
 		// TODO: fixme hashing not work
-		uint32_t hash = HashPSO(m_PSOCreateInfo);
+		//uint32_t hash = HashPSO(m_PSOCreateInfo);
 
-		if(m_CurrentPipelineStateHash == hash) {
-			return;
-		}
-
-		if(m_PipelineStates.find(hash) != m_PipelineStates.end()) {
-			auto& data = m_PipelineStates[hash];
+		if(m_PipelineStates.find(m_PSOCreateInfo) != m_PipelineStates.end()) {
+			auto& data = m_PipelineStates[m_PSOCreateInfo];
 			m_CurrentPipelineState = data.State;
 			m_CurrentResourceBinding = data.ResourceBinding;
-			m_CurrentPipelineStateHash = hash;
 			return;
 		}
 
@@ -458,8 +470,7 @@ namespace Aurora
 			}
 		}
 
-		m_CurrentPipelineStateHash = hash;
-		m_PipelineStates[hash] = stateData;
+		m_PipelineStates[infoCopy] = stateData;
 	}
 
 	std::size_t hashVec(std::vector<uintptr_t> const& vec) {
@@ -470,75 +481,19 @@ namespace Aurora
 		return seed;
 	}
 
-	uint32_t Material::HashPSO(const GraphicsPipelineStateCreateInfo &gpsci)
+	bool PSOInfoComparator::operator()(const GraphicsPipelineStateCreateInfo &left, const GraphicsPipelineStateCreateInfo &right) const
 	{
-		CrcHash hasher;
+		// TODO: Figure out if this is the right solution
+		/*const auto* leftData = reinterpret_cast<const uint8_t*>(&left);
+		const auto* rightData = reinterpret_cast<const uint8_t*>(&right);
 
-		const GraphicsPipelineDesc& gpd = gpsci.GraphicsPipeline;
+		for (int i = 0; i < sizeof(left); ++i) {
+			if(leftData[i] != rightData[i]) {
+				return true;
+			}
+		}*/
 
-		// Hash blend state
-		hasher.Add(gpd.BlendDesc);
-
-		// Hash raster state
-		hasher.Add(gpd.RasterizerDesc);
-
-		// Hash depth stencil
-		hasher.Add(gpd.DepthStencilDesc);
-
-		// Hash input layout
-		const InputLayoutDesc& inputLayout = gpd.InputLayout;
-		hasher.Add(inputLayout.NumElements);
-		for (int i = 0; i < inputLayout.NumElements; ++i) {
-			hasher.Add(inputLayout.LayoutElements[i]);
-		}
-
-		// Hash other things
-		hasher.Add(gpd.PrimitiveTopology);
-		hasher.Add(gpd.NumViewports);
-		hasher.Add(gpd.NumRenderTargets);
-		hasher.Add(gpd.SubpassIndex);
-		hasher.Add(gpd.SubpassIndex);
-		hasher.Add(gpd.SmplDesc);
-
-		// Hash shaders
-
-
-		std::vector<uintptr_t> shadersPointers;
-
-		if(gpsci.pVS != nullptr) {
-			shadersPointers.push_back(reinterpret_cast<uintptr_t>(&gpsci.pVS));
-		}
-
-		if(gpsci.pPS != nullptr) {
-			shadersPointers.push_back(reinterpret_cast<uintptr_t>(&gpsci.pPS));
-		}
-
-		hasher.Add(hashVec(shadersPointers));
-
-		// Pointers not work in hashing
-		/*hasher.Add(gpsci.pVS);
-		hasher.Add(gpsci.pPS);
-		hasher.Add(gpsci.pDS);
-		hasher.Add(gpsci.pHS);
-		hasher.Add(gpsci.pGS);
-		hasher.Add(gpsci.pAS);
-		hasher.Add(gpsci.pMS);*/
-
-		// Pso desc
-		hasher.Add(gpsci.PSODesc.CommandQueueMask);
-		hasher.Add(gpsci.PSODesc.PipelineType);
-
-		hasher.Add(gpsci.PSODesc.ResourceLayout.DefaultVariableType);
-
-		for (int i = 0; i < gpsci.PSODesc.ResourceLayout.NumVariables; ++i) {
-			hasher.Add(gpsci.PSODesc.ResourceLayout.Variables[i]);
-		}
-
-		for (int i = 0; i < gpsci.PSODesc.ResourceLayout.NumImmutableSamplers; ++i) {
-			hasher.Add(gpsci.PSODesc.ResourceLayout.ImmutableSamplers[i]);
-		}
-
-		return hasher.Get();
+		return std::memcmp(&left, &right, sizeof(GraphicsPipelineStateCreateInfo)) != 0;
 	}
 
 	void Material::ApplyPipeline()
