@@ -68,8 +68,6 @@ namespace Aurora
 			aiTexture* tex = scene->mTextures[i];
 			Path file = tex->mFilename.C_Str();
 			embeddedTextures[file.string()] = tex;
-
-			//std::cout << "EMBEDDED: " << file << std::endl;
 		}
 
 		int materialSlotIndex = 0;

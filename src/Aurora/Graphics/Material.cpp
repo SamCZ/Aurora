@@ -155,8 +155,6 @@ namespace Aurora
 	{
 		auto* shaderResourceObject = dynamic_cast<ShaderResourceObject*>(obj);
 
-		//std::cout << "resource update!" << std::endl;
-
 		auto findShaderObjIter = m_Shaders.find(shaderResourceObject->GetShaderType());
 
 		if(findShaderObjIter == m_Shaders.end()) {
@@ -576,7 +574,7 @@ namespace Aurora
 			}
 			endfor:;
 
-			std::cout << "Null texture " << name << " in " << m_Name << std::endl;
+			AU_LOG_WARNING("Null texture ", name, " in ", m_Name)
 			return;
 		}
 

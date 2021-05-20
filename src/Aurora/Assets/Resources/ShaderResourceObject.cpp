@@ -44,7 +44,7 @@ namespace Aurora
 	bool ShaderResourceObject::Save()
 	{
 		if(m_FromAssetPackage) {
-			std::cout << "Cannot save " << m_Path << " because it was loaded from asset package !" << std::endl;
+			AU_LOG_WARNING("Cannot save ", m_Path, " because it was loaded from asset package !")
 			return false;
 		}
 

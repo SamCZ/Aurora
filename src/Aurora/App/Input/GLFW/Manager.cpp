@@ -22,7 +22,7 @@ namespace Aurora::Input
         {
             if(keyCode >= MaxKeyCount) [[unlikely]]
             {
-                AU_DEBUG_CERR("Keycode " << keyCode << " is too high");
+				AU_LOG_ERROR("Keycode ", keyCode, " is too high");
                 return;
             }
             m_KeyCodes[keyCode] = down;
@@ -32,7 +32,7 @@ namespace Aurora::Input
         {
             if(scanCode >= MaxKeyCount) [[unlikely]]
             {
-                AU_DEBUG_CERR("Keycode " << keyCode << " is too high");
+				AU_LOG_ERROR("Keycode ", keyCode, " is too high");
                 return;
             }
             m_ScanCodes[scanCode] = down;
@@ -40,7 +40,7 @@ namespace Aurora::Input
         }
         else
         {
-            AU_DEBUG_CERR("OnKeyChange with no keyCode and scanCode, why?");
+			AU_LOG_ERROR("OnKeyChange with no keyCode and scanCode, why?");
             return;
         }
 
@@ -104,15 +104,15 @@ namespace Aurora::Input
 
         if(joyIndex < 0 || joyIndex >= MaxJoystickCount)
         {
-            AU_DEBUG_COUT("Joystick at index " << joyIndex << (connected ? "connected" : "disconnected") << " but index is not valid");
+			AU_LOG_INFO("Joystick at index ", joyIndex, (connected ? "connected" : "disconnected"), " but index is not valid");
             return;
         }
 
 #ifdef DEBUG
         if(connected)
-            AU_DEBUG_COUT("Joystick " << joyIndex << " " << "connected and " << (glfwJoystickIsGamepad(joyIndex) ? "has a mapping" : "is not a valid gamepad"));
+            AU_LOG_INFO("Joystick ", joyIndex, " ", "connected and ", (glfwJoystickIsGamepad(joyIndex) ? "has a mapping" : "is not a valid gamepad"));
         else
-            AU_DEBUG_COUT("Joystick " << joyIndex << " " << "disconnected");
+            AU_LOG_INFO("Joystick ", joyIndex, " ", "disconnected");
 #endif
 
         if(connected)
@@ -451,7 +451,7 @@ namespace Aurora::Input
                         return false;
                 }
 
-                AU_DEBUG_CERR("Unknown `IsPressed` key requested: " << key);
+				AU_LOG_WARNING("Unknown `IsPressed` key requested: ", key);
                 return false;
             }
         }
@@ -471,7 +471,7 @@ namespace Aurora::Input
             {
             }
 
-            AU_DEBUG_CERR("Unknown `IsPressed` mouse button requested: " << key);
+			AU_LOG_WARNING("Unknown `IsPressed` mouse button requested: ", key);
             return false;
         }
 
@@ -508,10 +508,10 @@ namespace Aurora::Input
 #ifdef AU_DEBUG_INPUT
 #   define AU_DEBUG_COUT_INPUT_GAMEPAD(index, buttonName, glfwButton) \
             if(old.buttons[glfwButton] != m_Gamepads[index].buttons[glfwButton]) \
-                AU_DEBUG_COUT("Gamepad " << static_cast<int>(index) << ", " << buttonName << ": " << static_cast<bool>(m_Gamepads[index].buttons[glfwButton]));
+                AU_LOG_INFO("Gamepad ", static_cast<int>(index), ", " << buttonName, ": ", static_cast<bool>(m_Gamepads[index].buttons[glfwButton]));
 #   define AU_DEBUG_COUT_INPUT_GAMEPAD_AXIS(index, axisName, glfwAxis) \
             if(old.axes[glfwAxis] != m_Gamepads[index].axes[glfwAxis]) \
-                AU_DEBUG_COUT("Gamepad " << static_cast<int>(index) << ", " << axisName << ": " << static_cast<double>(m_Gamepads[index].axes[glfwAxis]));
+                AU_LOG_INFO("Gamepad ", static_cast<int>(index), ", ", axisName, ": ", static_cast<double>(m_Gamepads[index].axes[glfwAxis]));
 
             AU_DEBUG_COUT_INPUT_GAMEPAD(i, "a", GLFW_GAMEPAD_BUTTON_A);
             AU_DEBUG_COUT_INPUT_GAMEPAD(i, "b", GLFW_GAMEPAD_BUTTON_B);
@@ -588,7 +588,7 @@ namespace Aurora::Input
                     auto itCurrentAction = currentActions.find(binding->m_InputName);
                     if(itCurrentAction == currentActions.end()) // No config for the action
                     {
-                        AU_DEBUG_CERR("No configuration for action " << binding->m_InputName);
+						AU_LOG_WARNING("No configuration for action ", binding->m_InputName);
                         continue;
                     }
 
@@ -635,7 +635,7 @@ namespace Aurora::Input
                         return 0.0;
                 }
 
-                AU_DEBUG_CERR("Unknown `GetValue` key requested: " << name);
+				AU_LOG_INFO("Unknown `GetValue` key requested: ", name);
                 return 0.0;
             }
         }
@@ -665,7 +665,7 @@ namespace Aurora::Input
             {
             }
 
-            AU_DEBUG_CERR("Unknown `GetValue` mouse button/axis requested: " << name);
+			AU_LOG_INFO("Unknown `GetValue` mouse button/axis requested: ", name);
             return 0.0;
         }
 
@@ -817,12 +817,12 @@ namespace Aurora::Input
             }
             else
             {
-                AU_DEBUG_CERR("Unknown `GetValue` gamepad button/axis requested: " << name);
+				AU_LOG_INFO("Unknown `GetValue` gamepad button/axis requested: ", name);
                 return 0.0;
             }
         }
 
-        AU_DEBUG_CERR("Unknown `GetValue` input requested: " << name);
+		AU_LOG_INFO("Unknown `GetValue` input requested: ", name);
         return 0.0;
     }
 

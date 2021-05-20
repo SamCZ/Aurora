@@ -324,7 +324,7 @@ namespace Aurora
 		Font_ptr font = FindFont(fontName);
 
 		if(font == nullptr) {
-			AU_DEBUG_CERR("Cannot find font " << fontName);
+			AU_LOG_ERROR("Cannot find font ", fontName);
 			return;
 		}
 
@@ -399,7 +399,7 @@ namespace Aurora
 		Font_ptr font = FindFont(fontName);
 
 		if(font == nullptr) {
-			AU_DEBUG_CERR("Cannot find font " << fontName);
+			AU_LOG_ERROR("Cannot find font ", fontName);
 			return {0, 0};
 		}
 

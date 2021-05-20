@@ -69,8 +69,6 @@ namespace Aurora
 					ShaderCI.Source          = source.c_str();
 				}
 
-				//std::cout << ShaderCI.Source << std::endl;
-
 				AuroraEngine::RenderDevice->CreateShader(ShaderCI, &shader);
 
 				if(desc.Source.length() == 0) {
@@ -139,14 +137,12 @@ namespace Aurora
 
 		String extension = path.extension().string();
 
-		//std::cout << extension << std::endl;
-
 		if(extension == ".glsl") {
 			language = SHADER_SOURCE_LANGUAGE_GLSL;
 		} else if(extension == ".hlsl") {
 			language = SHADER_SOURCE_LANGUAGE_HLSL;
 		} else {
-			AU_THROW_ERROR("Unknown shader extension " << extension << " for " << path);
+			AU_LOG_ERROR("Unknown shader extension ", extension, " for ", path);
 		}
 
 		IDataBlob* outputLog = nullptr;
@@ -299,16 +295,16 @@ namespace Aurora
 			ImgFileFormat = Image::GetFileFormat(reinterpret_cast<Uint8*>(pFileData->GetDataPtr()), pFileData->GetSize());
 			if (ImgFileFormat == IMAGE_FILE_FORMAT_UNKNOWN)
 			{
-				LOG_WARNING_MESSAGE("Unable to derive image format from the header for file \"", filename, "\". Trying to analyze extension.");
+				//LOG_WARNING_MESSAGE("Unable to derive image format from the header for file \"", filename, "\". Trying to analyze extension.");
 
 				// Try to use extension to derive format
 				auto* pDotPos = strrchr(filename.c_str(), '.');
-				if (pDotPos == nullptr)
-					LOG_ERROR_AND_THROW("Unable to recognize file format: file name \"", filename, "\" does not contain extension");
+				/*if (pDotPos == nullptr)
+					LOG_ERROR_AND_THROW("Unable to recognize file format: file name \"", filename, "\" does not contain extension");*/
 
 				auto* pExtension = pDotPos + 1;
-				if (*pExtension == 0)
-					LOG_ERROR_AND_THROW("Unable to recognize file format: file name \"", filename, "\" contain empty extension");
+				/*if (*pExtension == 0)
+					LOG_ERROR_AND_THROW("Unable to recognize file format: file name \"", filename, "\" contain empty extension");*/
 
 				String Extension = StrToLower(pExtension);
 				if (Extension == "png")

@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include "../Logger/Logger.hpp"
 
 #define BASE_OF(TypeName, BaseClass) typename std::enable_if<std::is_base_of<BaseClass, TypeName>::value>::type* = nullptr
 
@@ -83,26 +84,6 @@ inline bool VectorContains(std::vector<T>& vector, T& data)
 {
 	return std::find(vector.begin(), vector.end(), data) != vector.end();
 }
-
-#ifndef NDEBUG
-#   ifndef AU_DEBUG_COUT
-#       define AU_DEBUG_COUT(content) std::cout << content << std::endl
-#   endif
-
-#   ifndef AU_DEBUG_CERR
-#       define AU_DEBUG_CERR(content) std::cerr << content << std::endl
-#   endif
-#else
-#   ifndef AU_DEBUG_COUT
-#       define AU_DEBUG_COUT(content)
-#   endif
-
-#   ifndef AU_DEBUG_CERR
-#       define AU_DEBUG_CERR(content)
-#   endif
-#endif
-
-#define AU_THROW_ERROR(content) std::cerr << content << std::endl; exit(-1)
 
 inline std::vector<std::string> SplitString(const std::string& str, char delimiter)
 {

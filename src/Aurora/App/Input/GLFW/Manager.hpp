@@ -87,7 +87,7 @@ namespace Aurora::Input
             {
                 if(buttonCode >= MaxMouseButtonCount) [[unlikely]]
                 {
-                    AU_DEBUG_CERR("Mouse button " << buttonCode << " is too high");
+					AU_LOG_ERROR("Mouse button ", buttonCode, " is too high");
                     return;
                 }
                 m_MouseButtons[buttonCode] = down;
@@ -96,7 +96,7 @@ namespace Aurora::Input
             }
             else
             {
-                AU_DEBUG_CERR("OnMouseButton with invalid buttonCode, why?");
+				AU_LOG_ERROR("OnMouseButton with invalid buttonCode, why?");
             }
         }
         void OnJoystickConnectChange(JoystickIndex_t joyIndex, bool connected);

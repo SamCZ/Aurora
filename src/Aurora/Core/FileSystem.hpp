@@ -48,16 +48,6 @@ namespace Aurora
 				lines.push_back(line);
 			}
 
-			//std::cout << String(blob->GetData(), blob->GetDataSize()) << std::endl;
-
-			//std::stringstream stream(String(blob->GetData(), blob->GetDataSize()));
-
-			/*String line;
-			while (std::getline(stream, line))
-			{
-				lines.push_back(line);
-			}*/
-
 			return lines;
 		}
 
@@ -81,8 +71,6 @@ namespace Aurora
 				file.read(reinterpret_cast<char *>(fileData.data()), size);
 				std::streamsize bytes = file.gcount();
 				file.close();
-
-				//std::cout << path << " - expected size: " << size << ", actual size: " << bytes << std::endl;
 
 				return fileData;
 			}

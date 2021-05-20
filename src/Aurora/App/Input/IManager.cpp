@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <fstream>
+#include <Aurora/Logger/Logger.hpp>
 
 namespace Aurora::Input
 {
@@ -69,7 +70,7 @@ namespace Aurora::Input
             {
                 m_Configurations.clear();
 #ifdef DEBUG
-                std::cout << "Cleared input configurations, loading new" << std::endl;
+				AU_LOG_INFO("Cleared input configurations, loading new")
 #endif
 
                 for (auto itCategory = jConfig.begin(); itCategory != jConfig.end(); ++itCategory)
@@ -101,7 +102,7 @@ namespace Aurora::Input
                             const std::string& key = jValue.get<std::string>();
                             if(key.empty())
                             {
-                                AU_DEBUG_CERR("Empty key in an Action");
+                                AU_LOG_ERROR("Empty key in an Action");
                                 continue;
                             }
                             bool inverted = key[0] == '-';
@@ -112,7 +113,7 @@ namespace Aurora::Input
                         }
                     }
 #ifdef DEBUG
-                    std::cout << "\t" << itCategory.key() << ": " << actionCount << " actions with " << inputSourceCount << " input sources total" << std::endl;
+					AU_LOG_INFO("\t", itCategory.key(), ": " << actionCount, " actions with ", inputSourceCount, " input sources total")
 #endif
                 }
                 return;
@@ -150,7 +151,7 @@ namespace Aurora::Input
             value = ControllerType::Gamepad_Pictogram;
 #endif
         m_InputType = value;
-        AU_DEBUG_COUT("Changed Current Input Type to " << to_string(value));
+		AU_LOG_INFO("Changed Current Input Type to ", to_string(value));
     }
 
     void IManager::LockedInputType(std::optional<InputType> value) noexcept
@@ -175,9 +176,9 @@ namespace Aurora::Input
 
 #ifdef DEBUG
         if(value.has_value())
-            AU_DEBUG_COUT("Changed Locked Input Type to " << to_string(value.value()));
+            AU_LOG_INFO("Changed Locked Input Type to ", to_string(value.value()));
         else
-            AU_DEBUG_COUT("Cleared Locked Input Type");
+            AU_LOG_INFO("Cleared Locked Input Type");
 #endif
     }
 }

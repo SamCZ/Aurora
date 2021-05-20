@@ -55,6 +55,33 @@ namespace Aurora
 		}
 	}
 
+	void CustomDiligentLogger(enum DEBUG_MESSAGE_SEVERITY dSeverity,
+							  const Char*                 Message,
+							  const Char*                 Function,
+							  const Char*                 File,
+							  int                         Line)
+	{
+		if(std::strstr(Message, "VulkanMemoryManager")) return;
+
+		Logger::Severity severity;
+		switch (dSeverity) {
+			case DEBUG_MESSAGE_SEVERITY_INFO:
+				severity = Logger::Severity::Info;
+				break;
+			case DEBUG_MESSAGE_SEVERITY_WARNING:
+				severity = Logger::Severity::Warning;
+				break;
+			case DEBUG_MESSAGE_SEVERITY_ERROR:
+				severity = Logger::Severity::Error;
+				break;
+			case DEBUG_MESSAGE_SEVERITY_FATAL_ERROR:
+				severity = Logger::Severity::FatalError;
+				break;
+		}
+
+		Logger::Log(severity, Function, File, Line, Message);
+	}
+
 	void AuroraEngine::Init()
 	{
 		glfwInit();
@@ -79,6 +106,8 @@ namespace Aurora
 		EngineCI.Features.SeparablePrograms = DEVICE_FEATURE_STATE_ENABLED;
 
 		EngineCI.DynamicHeapSize = 1048576 * 512;
+
+		EngineCI.DebugMessageCallback = CustomDiligentLogger;
 
 		EngineFactory = GetEngineFactoryVk();
 		EngineFactory->CreateDeviceAndContextsVk(EngineCI, &RenderDevice, &ImmediateContext);

@@ -158,7 +158,7 @@ namespace Aurora
 								memcpy(buffer.BufferData.data() + var.Offset, rawData, size);
 								buffer.NeedsUpdate = true;
 							} else {
-								AU_THROW_ERROR("Size is not exact ! " << var.Name << " - " << var.Size << " - " << var.ArrayStride << " - " << size);
+								AU_LOG_ERROR("Size is not exact ! ", var.Name, " - ", var.Size, " - ", var.ArrayStride, " - ", size);
 							}
 						}
 					}
@@ -185,7 +185,7 @@ namespace Aurora
 								memcpy(buffer.BufferData.data() + var.Offset, data, size);
 								buffer.NeedsUpdate = true;
 							} else {
-								AU_THROW_ERROR("Size is not exact ! " << var.Name << " - " << var.Size << " - " << var.ArrayStride << " - " << size);
+								AU_LOG_ERROR("Size is not exact ! ", var.Name, " - ", var.Size, " - ", var.ArrayStride, " - ", size);
 							}
 						}
 					}

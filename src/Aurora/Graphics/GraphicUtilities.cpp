@@ -58,9 +58,9 @@ namespace Aurora
 			}
 
 			if(pTexArray->GetDesc().Width != TexDesc.Width || pTexArray->GetDesc().Height != TexDesc.Height) {
-				std::cout << pTexArray->GetDesc().Width << ":" << pTexArray->GetDesc().Height << std::endl;
-				std::cout << TexDesc.Width << ":" << TexDesc.Height << std::endl;
-				std::cerr << "Cannot create texture array with different texture sizes ! (" << String(TexDesc.Name) << ")" << std::endl;
+				/*std::cout << pTexArray->GetDesc().Width << ":" << pTexArray->GetDesc().Height << std::endl;
+				std::cout << TexDesc.Width << ":" << TexDesc.Height << std::endl;*/
+				AU_LOG_ERROR("Cannot create texture array with different texture sizes ! (", TexDesc.Name, ")")
 				exit(1);
 			}
 

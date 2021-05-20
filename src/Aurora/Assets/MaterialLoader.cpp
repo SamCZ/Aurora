@@ -51,7 +51,7 @@ namespace Aurora
 		}
 
 		if(shaderCollection == nullptr) {
-			AU_THROW_ERROR("Cannot load shader !" << m_Path);
+			AU_LOG_ERROR("Cannot load shader !", m_Path);
 		}
 
 		return std::make_shared<Material>(m_Path.filename().string(), m_Path, m_Macros);
@@ -69,7 +69,7 @@ namespace Aurora
 					auto texture = AuroraEngine::AssetManager->LoadTexture(path);
 
 					if(texture == nullptr) {
-						AU_THROW_ERROR("Cannot find texture " << path <<" !");
+						AU_LOG_ERROR("Cannot find texture ", path, " !");
 					}
 
 					textures[i++] = texture;
@@ -78,7 +78,7 @@ namespace Aurora
 				auto texture = GraphicUtilities::CreateCubeMap(textures);
 
 				if(texture == nullptr) {
-					AU_THROW_ERROR("Cannot create cubemap " << name << " !");
+					AU_LOG_ERROR("Cannot create cubemap ", name, " !");
 				}
 
 				material->SetTexture(name, texture);
@@ -90,7 +90,7 @@ namespace Aurora
 				break;
 			}
 			default:
-				AU_THROW_ERROR("Cubemap " << name << "has unknown number of textures " << value.size() << " !");
+				AU_LOG_WARNING("Cubemap ", name, "has unknown number of textures ", value.size(), " !");
 		}
 	}
 
@@ -99,7 +99,7 @@ namespace Aurora
 		nlohmann::json json;
 
 		if(!AuroraEngine::AssetManager->LoadJson(path, json)) {
-			AU_THROW_ERROR("Cannot load " << path);
+			AU_LOG_ERROR("Cannot load ", path);
 		}
 
 		std::vector<ShaderResourceObject_ptr> shaderCollection;
@@ -123,11 +123,11 @@ namespace Aurora
 				} else if(shader_type == "pixel") {
 					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, SHADER_SOURCE_LANGUAGE_GLSL, SHADER_TYPE_PIXEL));
 				} else {
-					AU_THROW_ERROR("Unknown shader type " << shader_type << " for material " << path);
+					AU_LOG_ERROR("Unknown shader type ", shader_type, " for material ", path);
 				}
 			}
 		} else {
-			AU_THROW_ERROR("No shaders in " << path << " material file !");
+			AU_LOG_ERROR("No shaders in ", path, " material file !");
 		}
 
 		auto material = std::make_shared<Material>(path.filename().string(), shaderCollection, macros);
@@ -149,7 +149,7 @@ namespace Aurora
 					auto texture = AuroraEngine::AssetManager->LoadTexture(texturePath);
 
 					if(texture == nullptr) {
-						AU_THROW_ERROR("Cannot load texture " << texturePath << " !");
+						AU_LOG_ERROR("Cannot load texture ", texturePath, " !");
 					}
 
 					material->SetTexture(varName, texture);

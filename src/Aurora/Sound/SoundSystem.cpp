@@ -15,7 +15,7 @@ namespace Aurora::Sound
 {
     SoundSystem::SoundSystem() : m_FModStudioSystem(nullptr)
     {
-        std::cout << "Initializing FMOD..." << std::endl;
+		AU_LOG_INFO("Initializing FMOD..." )
         ERRCHECK(FMOD_Studio_System_Create(&m_FModStudioSystem, FMOD_VERSION));
         ERRCHECK(FMOD_Studio_System_Initialize(m_FModStudioSystem, 1024, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, NULL));
 
@@ -27,7 +27,7 @@ namespace Aurora::Sound
         //SoundInstancePtr abimentSounds = GetEvent("event:/Ambience/Forest")->GetOrCreateInstance("Ambiance");
         //abimentSounds->Play();
 
-        std::cout << "FMOD complete." << std::endl;
+		AU_LOG_INFO("FMOD complete.")
     }
 
     SoundSystem::~SoundSystem()
@@ -78,7 +78,7 @@ namespace Aurora::Sound
         FMOD_STUDIO_EVENTDESCRIPTION* eventDesc = nullptr;
 
         if(!ERRCHECK(FMOD_Studio_System_GetEvent(m_FModStudioSystem, name.c_str(), &eventDesc))) {
-            std::cerr << "Cannot find event " << name << " in FMOD !" << std::endl;
+			AU_LOG_ERROR("Cannot find event ",  name,  " in FMOD !")
             return nullptr;
         }
 
@@ -111,7 +111,7 @@ namespace Aurora::Sound
         SoundEvent_ptr event = GetEvent(eventName);
 
         if(event == nullptr) {
-            std::cerr << "Cannot find sound event " << eventName << " in FMOD!" << std::endl;
+			AU_LOG_ERROR("Cannot find sound event ", eventName, " in FMOD!")
             return nullptr;
         }
 

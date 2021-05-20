@@ -66,7 +66,7 @@ namespace Aurora
 			return m_Targets[name].Texture;
 		}
 
-		std::cout << "Target " << name << " not found !" << std::endl;
+		AU_LOG_WARNING("Target ", name, " not found !")
 
 		return Texture_ptr_null;
 	}
@@ -110,7 +110,7 @@ namespace Aurora
 	void RenderTargetManager::CreatePack(const String &name, const std::vector<String> &target_names, const String &depth_target_name)
 	{
 		if(m_Packs.contains(name)) {
-			std::cerr << "Target pack " << name << " already exists !" << std::endl;
+			AU_LOG_WARNING("Target pack ", name, " already exists !")
 			return;
 		}
 
@@ -127,7 +127,7 @@ namespace Aurora
 			auto it = m_Targets.find(targetName);
 
 			if(it == m_Targets.end()) {
-				std::cerr << "Target " << targetName << " not found !" << std::endl;
+				AU_LOG_WARNING("Target ", targetName, " not found !")
 				return;
 			}
 

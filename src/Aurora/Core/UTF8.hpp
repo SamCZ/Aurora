@@ -37,7 +37,7 @@ namespace Aurora
         }
         else
         {
-            AU_DEBUG_CERR("Unsupported codepoint " << codepoint);
+			AU_LOG_WARNING("Unsupported codepoint ", codepoint);
             return {};
         }
     }

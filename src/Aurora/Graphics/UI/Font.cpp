@@ -15,7 +15,7 @@ namespace Aurora
 	{
 		stbtt_InitFont(&m_FontInfo, reinterpret_cast<unsigned char *>(FontData->GetDataPtr()), 0);
 
-		AU_DEBUG_COUT("Font loaded");
+		AU_LOG_INFO("Font loaded: ", name);
 	}
 
 	FontBitmapPageList_ptr Font::FindOrCreatePageList(FontSize_t fontSize)
@@ -30,7 +30,7 @@ namespace Aurora
 		m_FontContainers[fontSize] = container;
 		container->Init(m_FontInfo);
 
-		std::cout << "font created for size " << fontSize << std::endl;
+		AU_LOG_INFO("font created for size ", fontSize)
 
 		return container;
 	}
@@ -109,8 +109,6 @@ namespace Aurora
 		const int surface_sqrt = (int)glm::sqrt((float)total_surface) + 1;
 		const auto surface_sqrt_f = static_cast<float>(surface_sqrt);
 		int textureSize = (surface_sqrt_f >= 4096 * 0.7f) ? 4096 : (surface_sqrt_f >= 2048 * 0.7f) ? 2048 : (surface_sqrt_f >= 1024 * 0.7f) ? 1024 : 512;
-
-		std::cout << "Font texture size: " << textureSize << std::endl;
 
 		{
 			FontBitmap bitmap(textureSize * textureSize);

@@ -36,7 +36,7 @@ namespace Aurora
 					auto iter = m_ShaderConstantBuffers.find(desc.Name);
 					if(iter != m_ShaderConstantBuffers.end()) {
 						auto& constBufferData = iter->second;
-						AU_THROW_ERROR("Found two different constant buffers in material: " << m_Name);
+						AU_LOG_ERROR("Found two different constant buffers in material: ", m_Name);
 					} else {
 						ShaderConstantBuffer shaderConstantBufferInfo = {};
 						shaderConstantBufferInfo.Size = desc.Size;
@@ -57,12 +57,6 @@ namespace Aurora
 						if(desc.Variables != nullptr) {
 							const std::vector<ShaderVariable>& variables = *desc.Variables;
 
-							for (int j = 0; j < variables.size(); ++j) {
-								const ShaderVariable& var = variables[j];
-
-								std::cout << desc.Name << " - " << var.Name << ":" << var.Size << ":" << var.ArrayStride << ":" << var.MatrixStride << std::endl;
-							}
-
 							shaderConstantBufferInfo.Variables = variables;
 						} else {
 							// TODO: throw exception and exit program
@@ -72,13 +66,10 @@ namespace Aurora
 						barriers.emplace_back(shaderConstantBufferInfo.Buffer, RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_CONSTANT_BUFFER, true);
 
 						m_ShaderConstantBuffers[desc.Name] = shaderConstantBufferInfo;
-
-						std::cout << "Initialized constant buffer " << desc.Name << " for material " << m_Name << " with buffer: " << shaderConstantBufferInfo.Buffer.RawPtr() << std::endl;
 					}
 					break;
 				}
 				case SHADER_RESOURCE_TYPE_SAMPLER: {
-					std::cout << "Sampler for: " << desc.Name << std::endl;
 					break;
 				}
 				case SHADER_RESOURCE_TYPE_TEXTURE_UAV:
@@ -98,15 +89,13 @@ namespace Aurora
 						m_ShaderTextures[desc.Name] = {{shaderType}, GraphicUtilities::GetPlaceholderTexture(), GraphicUtilities::GetPlaceholderTexture()->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE), true};
 					}
 
-					std::cout << "Texture: " << desc.Name << std::endl;
 					break;
 				}
 				case SHADER_RESOURCE_TYPE_INPUT_ATTACHMENT: {
-					std::cout << "Input: " << desc.Name << std::endl;
 					break;
 				}
 				default:
-					std::cout << "Unimplemented resource type: " << desc.Name << std::endl;
+					AU_LOG_WARNING("Unimplemented resource type: ", desc.Name)
 					//TODO: Complete other buffers and UAV
 					continue;
 			}
@@ -211,8 +200,6 @@ namespace Aurora
 		for(auto& it : m_ShaderConstantBuffers) {
 			String constantBufferName = it.first;
 			ShaderConstantBuffer& shaderConstantBuffer = it.second;
-
-			std::cout << constantBufferName << " - " << m_Name << " - " << shaderConstantBuffer.Buffer.RawPtr() << std::endl;
 			m_CurrentPipelineState->GetStaticVariableByName(SHADER_TYPE_COMPUTE, constantBufferName.c_str())->Set(shaderConstantBuffer.Buffer);
 		}
 

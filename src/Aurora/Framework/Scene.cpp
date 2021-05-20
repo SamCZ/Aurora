@@ -31,8 +31,6 @@ namespace Aurora
 			collisionCount += bounds.CollideWithRay(ray, results);
 		}
 
-		//std::cout << collisionCount << std::endl;
-
 		if(collisionCount > 0) {
 			return results.GetClosestCollision();
 		}
