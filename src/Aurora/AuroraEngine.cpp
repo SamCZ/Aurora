@@ -44,6 +44,7 @@ namespace Aurora
 	std::unique_ptr<Diligent::ImGuiImplDiligent> AuroraEngine::ImGuiImpl(nullptr);
 
 	std::vector<WindowGameContext_ptr> AuroraEngine::GameContexts;
+	std::map<std::thread::id, WindowGameContext_ptr> AuroraEngine::GameContextsByThread;
 
 	static IEngineFactoryVk* EngineFactory = nullptr;
 
@@ -231,7 +232,9 @@ namespace Aurora
 			}
 
 			while(!contextsToRemove.empty()) {
-				GameContexts.erase(std::find(GameContexts.begin(), GameContexts.end(), contextsToRemove.front()));
+				auto context = contextsToRemove.front();
+				GameContextsByThread.erase(context->m_ThreadId);
+				GameContexts.erase(std::find(GameContexts.begin(), GameContexts.end(), context));
 				contextsToRemove.pop(); // This will call destructor on WindowGameContext
 			}
 
@@ -251,6 +254,15 @@ namespace Aurora
 															   const Window_ptr& window,
 															   const WindowDefinition &windowDef, bool showImmediately)
 	{
+		auto thisThreadId = std::this_thread::get_id();
+
+		if(GameContextsByThread.contains(thisThreadId)) {
+			AU_LOG_FATAL("Windows already exists in this thread !");
+			return nullptr;
+		}
+
+		gameContext->m_ThreadId = thisThreadId;
+
 		window->Initialize(windowDef, nullptr);
 
 		RefCntAutoPtr<ISwapChain> swapChain;
@@ -268,6 +280,8 @@ namespace Aurora
 		if(showImmediately) window->Show();
 
 		GameContexts.push_back(gameContext);
+
+		GameContextsByThread[thisThreadId] = gameContext;
 
 		if(ImGuiImpl == nullptr) {
 			ImGuiImpl = std::make_unique<ImGuiImplGLFW>(window->GetWindowHandle(), RenderDevice, swapChainDesc.ColorBufferFormat, swapChainDesc.DepthBufferFormat);
@@ -316,5 +330,18 @@ namespace Aurora
 #ifdef FMOD_SUPPORTED
 	SoundSystem->PlaySoundOneShot(path, volume, pitch);
 #endif
+	}
+
+	WindowGameContext_ptr AuroraEngine::GetCurrentThreadContext()
+	{
+		auto thisThreadId = std::this_thread::get_id();
+
+		auto it = GameContextsByThread.find(thisThreadId);
+
+		if(it != GameContextsByThread.end()) {
+			return it->second;
+		}
+
+		return nullptr;
 	}
 }

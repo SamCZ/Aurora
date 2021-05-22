@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <thread>
 
 #include <EngineFactory.h>
 #include <RenderDevice.h>
@@ -32,6 +33,7 @@ namespace Aurora
 		static bool IsInitialized;
 		static bool IsRunning;
 		static std::vector<WindowGameContext_ptr> GameContexts;
+		static std::map<std::thread::id, WindowGameContext_ptr> GameContextsByThread;
 
 		static std::unique_ptr<Diligent::ImGuiImplDiligent> ImGuiImpl;
 	public:
@@ -48,6 +50,7 @@ namespace Aurora
 
 		static WindowGameContext_ptr AddWindow(const WindowGameContext_ptr& gameContext, const Window_ptr & window, const WindowDefinition& windowDef, bool showImmediately = true);
 		static const std::vector<WindowGameContext_ptr>& GetGameContexts();
+		static WindowGameContext_ptr GetCurrentThreadContext();
 	public:
 		template<class GameContext>
 		static std::shared_ptr<WindowGameContext> AddWindow(int width, int height, const String& title, bool showImmediately = true)
