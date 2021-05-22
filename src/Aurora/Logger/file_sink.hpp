@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <utility>
 #include "Logger.hpp"
 
 namespace Aurora
@@ -10,15 +11,24 @@ namespace Aurora
 	class file_sink : public Logger::Sink
 	{
 	private:
+		std::filesystem::path m_Path;
 		std::ofstream m_Stream;
 	public:
-		inline explicit file_sink(const std::filesystem::path& path) : m_Stream()
+		inline explicit file_sink(std::filesystem::path path) : m_Path(std::move(path)), m_Stream()
 		{
-			m_Stream.open(path);
+
 		}
 
 		void Log(const std::string& severity, const std::string& file, const std::string& function, int line, const std::string& message) override
 		{
+			if(!m_Stream.good()) {
+				m_Stream.open(m_Path);
+
+				if(!m_Stream.good()) {
+					return;
+				}
+			}
+
 			if(!file.empty()) {
 				m_Stream << severity << ": " << file << ": " << function << "(): " << line << ": " << message << std::endl;
 			} else {
