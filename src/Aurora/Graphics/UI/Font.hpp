@@ -22,6 +22,7 @@ namespace Aurora
 		float y;
 		float width;
 		float height;
+		float Baseline;
 		Vector2 LeftTopUV;
 		Vector2 RightBottomUV;
 		RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
@@ -38,12 +39,12 @@ namespace Aurora
 		float xAdvance = 0;
 		float xOff = 0;
 		float yOff = 0;
+		float Baseline = 0;
 		uint8_t PageIndex = 0;
 	};
 
 	struct FontBitmapPage
 	{
-		//float BaseLine = 0;
 		FontBitmap Bitmap = {};
 		RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
 	};

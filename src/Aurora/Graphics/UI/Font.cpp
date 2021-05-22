@@ -8,7 +8,7 @@
 namespace Aurora
 {
 	std::vector<int> Font::FontSizesDefs = { // NOLINT(cert-err58-cpp)
-			6, 12, 16, 20, 24, 42, 64, 82, 100, 112
+			6, 12, 14, 16, 20, 24, 42, 64, 82, 100, 112
 	};
 
 	Font::Font(String name, RefCntAutoPtr<IDataBlob> &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
@@ -120,13 +120,23 @@ namespace Aurora
 
 			float ipw = 1.0f / (float)textureSize, iph = 1.0f / (float)textureSize;
 
+			int fX0;
+			int fY0;
+			int fX1;
+			int fY1;
+			stbtt_GetFontBoundingBox(&fontInfo, &fX0, &fY0, &fX1, &fY1);
+
 			for (Codepoint_t codepoint = m_FirstChar; codepoint <= m_EndChar; ++codepoint) {
 				FontGlyph& glyph = m_Glyphs[codepoint - m_FirstChar];
 				int advance, lsb, x0,y0,x1,y1,gw,gh;
 				int g = stbtt_FindGlyphIndex(&fontInfo, codepoint);
+				int ascent;
+				int descent;
+				int lineGap;
 
 				stbtt_GetGlyphHMetrics(&fontInfo, g, &advance, &lsb);
 				stbtt_GetGlyphBitmapBox(&fontInfo, g, scale,scale, &x0,&y0,&x1,&y1);
+				stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
 
 				gw = x1-x0;
 				gh = y1-y0;
@@ -151,6 +161,7 @@ namespace Aurora
 				glyph.xOff     = (float) x0;
 				glyph.yOff     = (float) y0;
 				glyph.PageIndex = 0;
+				glyph.Baseline = ((float)ascent * scale);
 
 				glyph.LeftTopUV = Vector2(static_cast<float>(x) * ipw, static_cast<float>(y) * iph);
 				glyph.RightBottomUV = Vector2((static_cast<float>(x + gw)) * ipw, (static_cast<float>(y + gh)) * iph);
@@ -164,7 +175,6 @@ namespace Aurora
 
 			FontBitmapPage bitmapPage = {};
 			bitmapPage.Bitmap = bitmap;
-			//bitmapPage.BaseLine = static_cast<float>(bottom_y); // <- This was not the baseline
 			bitmapPage.Texture = CreateTextureFromData(textureSize, textureSize, bitmap.data());
 			m_FontBitmapPages.emplace_back(bitmapPage);
 		}
@@ -203,6 +213,7 @@ namespace Aurora
 		rect.LeftTopUV = glyph.LeftTopUV;
 		rect.RightBottomUV = glyph.RightBottomUV;
 		rect.Texture = m_FontBitmapPages[glyph.PageIndex].Texture;
+		rect.Baseline = glyph.Baseline;
 
 		xAdvance = glyph.xAdvance * scale;
 		return true;
