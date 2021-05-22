@@ -56,6 +56,13 @@ namespace Aurora
 			return sink;
 		}
 
+		template<class Sink, typename... ArgsType>
+		static std::shared_ptr<Sink> AddSinkPtr(const std::shared_ptr<Sink>& sink)
+		{
+			m_Sinks.push_back(sink);
+			return sink;
+		}
+
 		template<class Sink>
 		static bool RemoveSink(const std::shared_ptr<Sink>& sink)
 		{
