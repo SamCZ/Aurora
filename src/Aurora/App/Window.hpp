@@ -123,6 +123,9 @@ namespace Aurora
 		::Aurora::Input::IManager_ptr& GetInputManager();
 
 		Vector2i GetCursorPos();
+
+		void SetClipboardString(const String& str);
+		String GetClipboardString();
 	public:
 		inline void SetSwapChain(RefCntAutoPtr<ISwapChain> swapChain)
 		{

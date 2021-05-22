@@ -205,6 +205,21 @@ namespace Aurora
 		return m_InputManager;
 	}
 
+	void Aurora::Window::SetClipboardString(const String &str)
+	{
+		glfwSetClipboardString(m_WindowHandle, str.c_str());
+	}
+
+	String Window::GetClipboardString()
+	{
+		auto clipboardString = glfwGetClipboardString(m_WindowHandle);
+		if(strlen(clipboardString) > 0) {
+			return clipboardString;
+		}
+
+		return String();
+	}
+
 	/**
 	 * Callbacks
 	 */
