@@ -46,7 +46,7 @@ namespace Aurora
 			graphicsPipelineDesc.RTVFormats[0] = textureFormat;
 			graphicsPipelineDesc.DSVFormat = depthFormat;
 			m_Material->ValidateGraphicsPipelineState();
-			m_Material->ApplyPipeline();
+			//m_Material->ApplyPipeline();
 		}
 
 		{
@@ -101,9 +101,11 @@ namespace Aurora
 
 		if(m_LastMaterial != material) {
 			m_LastMaterial = material;
-			material->ValidateGraphicsPipelineState();
-			material->ApplyPipeline();
+			//material->ValidateGraphicsPipelineState();
+
 		}
+
+		material->ApplyPipeline();
 
 		if(!drawArgs.Fill) {
 			float strokeHalf = drawArgs.StrokeSize / 2.0f;
@@ -344,7 +346,7 @@ namespace Aurora
 
 		float baseLine = 0;
 
-		{ // Sets the baseline
+		/*{ // Sets the baseline
 			FontGlyph glyph = {};
 			for(char c : text) {
 				if(!fontBitmapPageList->FindGlyph(c, glyph)) {
@@ -355,7 +357,7 @@ namespace Aurora
 			}
 
 			y += glm::abs(baseLine) * fontScale;
-		}
+		}*/
 
 		BakedRect bakedRect = {};
 		float xAdvance = 0;
@@ -377,7 +379,7 @@ namespace Aurora
 				drawArgs.Texture = bakedRect.Texture;
 
 				// Draw rect
-				Draw(bakedRect.x, bakedRect.y, bakedRect.width, bakedRect.height, drawArgs);
+				Draw(bakedRect.x, bakedRect.y + bakedRect.Baseline, bakedRect.width, bakedRect.height, drawArgs);
 
 				// Move to next char position
 				x += xAdvance;
@@ -425,8 +427,8 @@ namespace Aurora
 			min.y = std::min<float>(min.y, y);
 
 			//x = x + glyph.xOff * fontScale;
-			y = (glyph.yOff * fontScale);
-
+			y = (glyph.yOff * fontScale) + glyph.Baseline;
+			//y = glyph.Baseline;
 
 			float w = static_cast<float>(glyph.Width) * fontScale;
 			float h = static_cast<float>(glyph.Height) * fontScale;
@@ -443,6 +445,9 @@ namespace Aurora
 		}
 
 		max.x = maxX;
+
+		max.x -= 1;
+		max.y -= 1;
 
 		return glm::abs(max - min);
 	}
