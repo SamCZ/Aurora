@@ -80,7 +80,7 @@ namespace Aurora
 							buffer.NeedsUpdate = true;
 							return true;
 						} else {
-							AU_THROW_ERROR("Size is not exact !");
+							AU_LOG_ERROR("Size is not exact !");
 						}
 					}
 				}

@@ -34,7 +34,8 @@ namespace Aurora
 	  m_CurrentPipelineState(nullptr),
 	  m_CurrentResourceBinding(nullptr),
 	  //m_CurrentPipelineStateHash(0),
-	  m_NeedsRebuildResourceLayout(true)
+	  m_NeedsRebuildResourceLayout(true),
+	  m_NeedsRebuildPipeline(true)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
@@ -62,7 +63,8 @@ namespace Aurora
 			  m_CurrentPipelineState(nullptr),
 			  m_CurrentResourceBinding(nullptr),
 			  //m_CurrentPipelineStateHash(0),
-			  m_NeedsRebuildResourceLayout(true)
+			  m_NeedsRebuildResourceLayout(true),
+			  m_NeedsRebuildPipeline(true)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
@@ -89,7 +91,8 @@ namespace Aurora
 	  m_CurrentPipelineState(nullptr),
 	  m_CurrentResourceBinding(nullptr),
 	  //m_CurrentPipelineStateHash(0),
-	  m_NeedsRebuildResourceLayout(true)
+	  m_NeedsRebuildResourceLayout(true),
+	  m_NeedsRebuildPipeline(true)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
@@ -121,6 +124,7 @@ namespace Aurora
 		OnShaderResourceUpdate(sharedPtr.get());
 
 		m_NeedsRebuildResourceLayout = true;
+		m_NeedsRebuildPipeline = true;
 	}
 
 	void Material::RemoveShader(const SHADER_TYPE &shaderType)
@@ -138,6 +142,7 @@ namespace Aurora
 		ApplyShaderToPSO(nullptr, shaderType);
 
 		m_NeedsRebuildResourceLayout = true;
+		m_NeedsRebuildPipeline = true;
 	}
 
 	ShaderResourceObject_ptr Material::GetShader(const SHADER_TYPE &shaderType)
@@ -244,6 +249,7 @@ namespace Aurora
 		ApplyShaderToPSO(shader, shaderObj.Type);
 
 		m_NeedsRebuildResourceLayout = true;
+		m_NeedsRebuildPipeline = true;
 	}
 
 	void Material::LoadConstantBuffers(ShaderObject &object, ShaderResourceDesc desc, std::vector<StateTransitionDesc>& barriers, ConstantBufferList& constantBufferStorage, ConstantBufferList& constantBufferListCopy)
@@ -434,12 +440,11 @@ namespace Aurora
 		// TODO: fixme hashing not work
 		//uint32_t hash = HashPSO(m_PSOCreateInfo);
 
-		if(m_PipelineStates.find(m_PSOCreateInfo) != m_PipelineStates.end()) {
-			auto& data = m_PipelineStates[m_PSOCreateInfo];
-			m_CurrentPipelineState = data.State;
-			m_CurrentResourceBinding = data.ResourceBinding;
+		if(!m_NeedsRebuildPipeline) {
 			return;
 		}
+
+		m_NeedsRebuildPipeline = false;
 
 		m_CurrentPipelineState.Release();
 
@@ -467,8 +472,6 @@ namespace Aurora
 				// TODO: Warn about two different buffers with same name
 			}
 		}
-
-		m_PipelineStates[infoCopy] = stateData;
 	}
 
 	std::size_t hashVec(std::vector<uintptr_t> const& vec) {
@@ -477,21 +480,6 @@ namespace Aurora
 			seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 		}
 		return seed;
-	}
-
-	bool PSOInfoComparator::operator()(const GraphicsPipelineStateCreateInfo &left, const GraphicsPipelineStateCreateInfo &right) const
-	{
-		// TODO: Figure out if this is the right solution
-		/*const auto* leftData = reinterpret_cast<const uint8_t*>(&left);
-		const auto* rightData = reinterpret_cast<const uint8_t*>(&right);
-
-		for (int i = 0; i < sizeof(left); ++i) {
-			if(leftData[i] != rightData[i]) {
-				return true;
-			}
-		}*/
-
-		return std::memcmp(&left, &right, sizeof(GraphicsPipelineStateCreateInfo)) != 0;
 	}
 
 	void Material::ApplyPipeline()

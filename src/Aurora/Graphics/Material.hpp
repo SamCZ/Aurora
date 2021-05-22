@@ -28,11 +28,6 @@ namespace Aurora
 
 	typedef std::map<SHADER_TYPE, ShaderObject> ShaderList;
 
-	struct PSOInfoComparator
-	{
-		bool operator()(const GraphicsPipelineStateCreateInfo &left, const GraphicsPipelineStateCreateInfo &right) const;
-	};
-
 	AU_CLASS(Material) : public IGraphicsPipeline
 	{
 	private:
@@ -88,7 +83,7 @@ namespace Aurora
 		std::vector<ImmutableSamplerDesc> m_PSO_ShaderResourceSamplers;
 
 		GraphicsPipelineStateCreateInfo m_CurrentPipelineStateInfo;
-		std::map<GraphicsPipelineStateCreateInfo, PipelineStateData, PSOInfoComparator> m_PipelineStates;
+		bool m_NeedsRebuildPipeline;
 
 		RefCntAutoPtr<IPipelineState> m_CurrentPipelineState;
 		RefCntAutoPtr<IShaderResourceBinding> m_CurrentResourceBinding;
@@ -125,15 +120,15 @@ namespace Aurora
 		void ApplyPipeline();
 		void CommitShaderResources();
 	public:
-		inline void SetFillMode(const FILL_MODE& fillMode) noexcept { m_PSOCreateInfo.GraphicsPipeline.RasterizerDesc.FillMode = fillMode; }
-		inline void SetCullMode(const CULL_MODE& cullMode) noexcept { m_PSOCreateInfo.GraphicsPipeline.RasterizerDesc.CullMode = cullMode; }
-		inline void SetBlendStateForRenderTarget(int index, const RenderTargetBlendDesc& blendDesc) { m_PSOCreateInfo.GraphicsPipeline.BlendDesc.RenderTargets[index] = blendDesc; }
-		inline void SetBlendState(const RenderTargetBlendDesc& blendDesc) { SetBlendStateForRenderTarget(0, blendDesc); }
-		inline void SetIndependentBlend(bool flag) noexcept { m_PSOCreateInfo.GraphicsPipeline.BlendDesc.IndependentBlendEnable = flag; }
-		inline void SetPrimitiveTopology(const PRIMITIVE_TOPOLOGY& primitiveTopology) noexcept { m_PSOCreateInfo.GraphicsPipeline.PrimitiveTopology = primitiveTopology; }
-		inline void SetDepthEnable(bool enabled) noexcept { m_PSOCreateInfo.GraphicsPipeline.DepthStencilDesc.DepthEnable = enabled; }
-		inline void SetDepthWriteEnable(bool enabled) noexcept { m_PSOCreateInfo.GraphicsPipeline.DepthStencilDesc.DepthWriteEnable = enabled; }
-		inline void SetDepthFunc(const COMPARISON_FUNCTION& comparisonFunction) noexcept { m_PSOCreateInfo.GraphicsPipeline.DepthStencilDesc.DepthFunc = comparisonFunction; }
+		inline void SetFillMode(const FILL_MODE& fillMode) noexcept { m_PSOCreateInfo.GraphicsPipeline.RasterizerDesc.FillMode = fillMode; m_NeedsRebuildPipeline = true; }
+		inline void SetCullMode(const CULL_MODE& cullMode) noexcept { m_PSOCreateInfo.GraphicsPipeline.RasterizerDesc.CullMode = cullMode; m_NeedsRebuildPipeline = true; }
+		inline void SetBlendStateForRenderTarget(int index, const RenderTargetBlendDesc& blendDesc) { m_PSOCreateInfo.GraphicsPipeline.BlendDesc.RenderTargets[index] = blendDesc; m_NeedsRebuildPipeline = true; }
+		inline void SetBlendState(const RenderTargetBlendDesc& blendDesc) { SetBlendStateForRenderTarget(0, blendDesc); m_NeedsRebuildPipeline = true; }
+		inline void SetIndependentBlend(bool flag) noexcept { m_PSOCreateInfo.GraphicsPipeline.BlendDesc.IndependentBlendEnable = flag; m_NeedsRebuildPipeline = true; }
+		inline void SetPrimitiveTopology(const PRIMITIVE_TOPOLOGY& primitiveTopology) noexcept { m_PSOCreateInfo.GraphicsPipeline.PrimitiveTopology = primitiveTopology; m_NeedsRebuildPipeline = true; }
+		inline void SetDepthEnable(bool enabled) noexcept { m_PSOCreateInfo.GraphicsPipeline.DepthStencilDesc.DepthEnable = enabled; m_NeedsRebuildPipeline = true; }
+		inline void SetDepthWriteEnable(bool enabled) noexcept { m_PSOCreateInfo.GraphicsPipeline.DepthStencilDesc.DepthWriteEnable = enabled; m_NeedsRebuildPipeline = true; }
+		inline void SetDepthFunc(const COMPARISON_FUNCTION& comparisonFunction) noexcept { m_PSOCreateInfo.GraphicsPipeline.DepthStencilDesc.DepthFunc = comparisonFunction; m_NeedsRebuildPipeline = true; }
 	public:
 		void SetSampler(const String& textureName, const SamplerDesc& sampler);
 		void SetTexture(const String& name, const RefCntAutoPtr<ITexture>& texture);
