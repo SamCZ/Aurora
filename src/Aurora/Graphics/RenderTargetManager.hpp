@@ -1,20 +1,16 @@
 #pragma once
 
-#include <PipelineState.h>
-
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/Vector.hpp>
 #include <Aurora/Graphics/Texture.hpp>
-
-using namespace Diligent;
 
 namespace Aurora
 {
 	struct TargetInfo
 	{
-		Texture_ptr Texture;
-		TextureDesc TextureDesc;
-		bool AutoResize;
+		Texture_ptr Texture{};
+		TextureDesc TextureDesc{};
+		bool AutoResize{};
 	};
 
 	AU_CLASS(RenderTargetPack)
@@ -27,8 +23,7 @@ namespace Aurora
 	public:
 		inline RenderTargetPack() : m_Targets(), m_DepthTarget(nullptr) {}
 
-		void Apply(bool clear = true);
-		void Apply(GraphicsPipelineDesc& pipelineDesc);
+		void Apply(DrawCallState& pipelineDesc);
 	};
 
 	AU_CLASS(RenderTargetManager)
@@ -40,10 +35,9 @@ namespace Aurora
 	public:
 		RenderTargetManager();
 	public:
-		void AddTarget(const String& name, const TEXTURE_FORMAT& format, const Vector4& clearColor = Vector4(0, 0, 0, 0), bool useAsShaderResource = true, bool useUav = false, bool autoResize = true);
+		void AddTarget(const String& name, const Format::Enum& format, const Vector4& clearColor = Vector4(0, 0, 0, 0), bool useAsShaderResource = true, bool useUav = false, bool autoResize = true);
 
 		Texture_ptr GetTarget(const String& name);
-		ITextureView* GetTargetView(const String& name, const TEXTURE_VIEW_TYPE& viewType = TEXTURE_VIEW_RENDER_TARGET);
 
 		void CreatePack(const String& name, const std::vector<String>& target_names, const String& depth_target_name = "__NONE__");
 		RenderTargetPack_ptr GetPack(const String& name);

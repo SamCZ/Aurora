@@ -3,15 +3,13 @@
 #include <fstream>
 #include <regex>
 
-#include <ShaderMacroHelper.hpp>
-
 #include "../AssetManager.hpp"
 #include "../../AuroraEngine.hpp"
 
 namespace Aurora
 {
-	ShaderResourceObject::ShaderResourceObject(const Path &path, const SHADER_SOURCE_LANGUAGE& shaderSourceLanguage, const SHADER_TYPE &type)
-	: ResourceObject(path, false), m_SourceLanguage(shaderSourceLanguage), m_Type(type), m_Shader(nullptr)
+	ShaderResourceObject::ShaderResourceObject(const Path &path, const ShaderType &type)
+	: ResourceObject(path, false), m_Type(type), m_Shader(nullptr)
 	{
 
 	}
@@ -24,14 +22,14 @@ namespace Aurora
 
 		auto data = AuroraEngine::AssetManager->LoadFile(GetPath(), &m_FromAssetPackage);
 
-		if(data == nullptr) {
+		if(data.empty()) {
 			m_IsLoaded = false;
 			throw std::runtime_error("Cannot load shader: " + m_Path.string());
 			return false;
 		}
 
-		const char* str = reinterpret_cast<const char*>(data->GetConstDataPtr());
-		m_ShaderSource = String(str, str + data->GetSize());
+		const char* str = reinterpret_cast<const char*>(data.data());
+		m_ShaderSource = String(str, str + data.size());
 
 		if(m_IsLoaded) {
 			m_ResourceChangedEvents.Invoke(this);
@@ -80,7 +78,32 @@ namespace Aurora
 		ShaderCompileState compileState = {};
 		compileState.Shader = nullptr;
 
-		ShaderCreateInfo ShaderCI = {};
+		//TODO: Implement this
+		//throw std::runtime_error("ShaderResourceObject::Compile() not implemented");
+
+		String completeSource;
+		completeSource += "#version 430\n";
+		//completeSource += "#extension GL_EXT_separate_shader_objects : enable\n";
+
+		if(m_Type == ShaderType::Vertex) {
+			//completeSource += "#extension GL_KHR_vulkan_glsl : enable\n";
+			//completeSource += "#define gl_VertexID gl_VertexIndex\n";
+			//completeSource += "#define gl_InstanceID gl_InstanceIndex\n";
+		}
+
+		completeSource += shaderSource;
+
+		Shader_ptr shaderHandle = AuroraEngine::RenderDevice->createShader(ShaderDesc(m_Type), completeSource.c_str(), 0);
+
+		if(shaderHandle != nullptr) {
+			compileState.Compiled = true;
+			compileState.Shader = shaderHandle;
+		} else {
+			//compileState.LineErrors.emplace_back(lineNumber, lineMessage);
+			compileState.Compiled = false;
+		}
+
+		/*ShaderCreateInfo ShaderCI = {};
 		ShaderCI.SourceLanguage = m_SourceLanguage;
 		ShaderCI.UseCombinedTextureSamplers = true;
 		ShaderCI.Desc.ShaderType = m_Type;
@@ -160,7 +183,7 @@ namespace Aurora
 		} else {
 			compileState.Compiled = true;
 			compileState.Shader = shader;
-		}
+		}*/
 
 		return compileState;
 	}

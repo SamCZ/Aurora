@@ -5,7 +5,9 @@
 #include <memory>
 #include <thread>
 
-#include <EngineFactoryVk.h>
+#include "Graphics/OpenGL/RenderDeviceGl4.hpp"
+#include "Graphics/OpenGL/SwapChainGL4.hpp"
+#include <GLFW/glfw3.h>
 
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -18,11 +20,10 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-#include <imgui.h>
+/*#include <imgui.h>
 #include <ImGuiImplDiligent.hpp>
-#include <ImGuiUtils.hpp>
+#include <ImGuiUtils.hpp>*/
 
-#include "App/ImGuiImplGLFW.hpp"
 #include "App/Input/GLFW/Manager.hpp"
 #include "Graphics/GraphicUtilities.hpp"
 
@@ -30,23 +31,30 @@
 
 namespace Aurora
 {
+	class PipelineErrorHandler : public IErrorCallback
+	{
+		void signalError(const char* file, int line, const char* errorDesc) override
+		{
+			Logger::Log(Logger::Severity::Error, "Unknown", file, line, errorDesc);
+		}
+	};
+
 	bool AuroraEngine::IsInitialized = false;
 	bool AuroraEngine::IsRunning = false;
 
-	RefCntAutoPtr<IRenderDevice> AuroraEngine::RenderDevice(nullptr);
-	RefCntAutoPtr<IDeviceContext> AuroraEngine::ImmediateContext(nullptr);
+	IRendererInterface* AuroraEngine::RenderDevice = nullptr;
 	AssetManager_ptr AuroraEngine::AssetManager = nullptr;
 #ifdef FMOD_SUPPORTED
 	SoundSystem_ptr AuroraEngine::SoundSystem = nullptr;
 #endif
 	UIRenderer_ptr AuroraEngine::UI_Renderer = nullptr;
 
-	std::unique_ptr<Diligent::ImGuiImplDiligent> AuroraEngine::ImGuiImpl(nullptr);
+	//std::unique_ptr<Diligent::ImGuiImplDiligent> AuroraEngine::ImGuiImpl(nullptr);
 
 	std::vector<WindowGameContext_ptr> AuroraEngine::GameContexts;
 	std::map<std::thread::id, WindowGameContext_ptr> AuroraEngine::GameContextsByThread;
 
-	static IEngineFactoryVk* EngineFactory = nullptr;
+	PipelineErrorHandler errorHandler;
 
 	void AuroraEngine::joystick_callback(int jid, int event)
 	{
@@ -56,62 +64,11 @@ namespace Aurora
 		}
 	}
 
-	void CustomDiligentLogger(enum DEBUG_MESSAGE_SEVERITY dSeverity,
-							  const Char*                 Message,
-							  const Char*                 Function,
-							  const Char*                 File,
-							  int                         Line)
-	{
-		if(std::strstr(Message, "VulkanMemoryManager")) return;
-
-		Logger::Severity severity;
-		switch (dSeverity) {
-			case DEBUG_MESSAGE_SEVERITY_INFO:
-				severity = Logger::Severity::Info;
-				break;
-			case DEBUG_MESSAGE_SEVERITY_WARNING:
-				severity = Logger::Severity::Warning;
-				break;
-			case DEBUG_MESSAGE_SEVERITY_ERROR:
-				severity = Logger::Severity::Error;
-				break;
-			case DEBUG_MESSAGE_SEVERITY_FATAL_ERROR:
-				severity = Logger::Severity::FatalError;
-				break;
-		}
-
-		Logger::Log(severity, Function, File, Line, Message);
-	}
-
 	void AuroraEngine::Init()
 	{
 		glfwInit();
 
 		glfwSetJoystickCallback(joystick_callback);
-
-#    if EXPLICITLY_LOAD_ENGINE_VK_DLL
-		// Load the dll and import GetEngineFactoryVk() function
-                auto GetEngineFactoryVk = LoadGraphicsEngineVk();
-#    endif
-		EngineVkCreateInfo EngineCI;
-#    ifdef AU_VK_LAYERS
-		EngineCI.EnableValidation = true;
-#    endif
-
-		//EngineCI.EnableValidation = true;
-
-		EngineCI.Features.ComputeShaders  = DEVICE_FEATURE_STATE_ENABLED;
-		EngineCI.Features.DepthClamp      = DEVICE_FEATURE_STATE_OPTIONAL;
-		EngineCI.Features.WireframeFill   = DEVICE_FEATURE_STATE_OPTIONAL;
-		EngineCI.Features.GeometryShaders = DEVICE_FEATURE_STATE_OPTIONAL;
-		EngineCI.Features.SeparablePrograms = DEVICE_FEATURE_STATE_ENABLED;
-
-		EngineCI.DynamicHeapSize = 1048576 * 512;
-
-		EngineCI.DebugMessageCallback = CustomDiligentLogger;
-
-		EngineFactory = GetEngineFactoryVk();
-		EngineFactory->CreateDeviceAndContextsVk(EngineCI, &RenderDevice, &ImmediateContext);
 
 		AuroraEngine::AssetManager = std::make_shared<Aurora::AssetManager>();
 #ifdef FMOD_SUPPORTED
@@ -185,11 +142,13 @@ namespace Aurora
 				if(window->IsShouldClose()) {
 					window->Destroy();
 					contextsToRemove.push(context);
-					ImGuiImpl.reset();
+					//ImGuiImpl.reset();
 					continue;
 				} else {
 					anyWindowRunning = true;
 				}
+
+				glfwMakeContextCurrent(window->GetWindowHandle());
 
 				auto& swapChain = window->GetSwapChain();
 				const SwapChainDesc& swapChainDesc = swapChain->GetDesc();
@@ -197,7 +156,7 @@ namespace Aurora
 				//window->GetInputManager()->Update();
 				std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->Update(ElapsedTime);
 
-				ImGuiImpl->NewFrame(swapChainDesc.Width, swapChainDesc.Height, swapChainDesc.PreTransform);
+				//ImGuiImpl->NewFrame(swapChainDesc.Width, swapChainDesc.Height, swapChainDesc.PreTransform);
 
 				Profiler::Begin("WindowGameContext::Update");
 				context->Update(ElapsedTime, CurrTime);
@@ -205,28 +164,33 @@ namespace Aurora
 
 				if(!window->IsIconified()) {
 					Profiler::Begin("Render");
-					ITextureView* pRTV = swapChain->GetCurrentBackBufferRTV();
+					/*ITextureView* pRTV = swapChain->GetCurrentBackBufferRTV();
 					ITextureView* pDSV = swapChain->GetDepthBufferDSV();
 					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
 					Profiler::Begin("Clear back buffer targets");
 					AuroraEngine::ImmediateContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 					AuroraEngine::ImmediateContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-					Profiler::End("Clear back buffer targets");
+					Profiler::End("Clear back buffer targets");*/
+
+					glViewport(0, 0, window->GetSize().x, window->GetSize().y);
+
+					glClearColor(0, 0, 0, 1);
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 					Profiler::Begin("WindowGameContext::Render");
 					context->Render();
 					Profiler::End("WindowGameContext::Render");
 
-					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-					ImGuiImpl->Render(ImmediateContext);
+					/*ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+					ImGuiImpl->Render(ImmediateContext);*/
 
 					Profiler::Begin("SwapChain()->Present");
 					window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
 					Profiler::End("SwapChain()->Present");
 					Profiler::End("Render");
 				} else {
-					ImGuiImpl->EndFrame();
+					//ImGuiImpl->EndFrame();
 					std::this_thread::sleep_for(std::chrono::milliseconds(1));
 				}
 			}
@@ -240,6 +204,7 @@ namespace Aurora
 
 			Profiler::Finalize();
 		} while (IsRunning && anyWindowRunning);
+		delete RenderDevice;
 
 		Profiler::RestartProfiler();
 
@@ -265,10 +230,15 @@ namespace Aurora
 
 		window->Initialize(windowDef, nullptr);
 
-		RefCntAutoPtr<ISwapChain> swapChain;
+		if(RenderDevice == nullptr) {
+			auto oglRender = new RendererInterfaceOGL(&errorHandler);
+			RenderDevice = oglRender;
+			oglRender->init();
+		}
 
+		ISwapChain_ptr swapChain;
 		SwapChainDesc swapChainDesc = {};
-		swapChainDesc.ColorBufferFormat = TEX_FORMAT_BGRA8_UNORM;
+		//swapChainDesc.ColorBufferFormat = TEX_FORMAT_BGRA8_UNORM;
 
 		if(!CreateSwapChain(window, swapChainDesc, swapChain)) {
 			window->Destroy();
@@ -283,18 +253,18 @@ namespace Aurora
 
 		GameContextsByThread[thisThreadId] = gameContext;
 
-		if(ImGuiImpl == nullptr) {
+		/*if(ImGuiImpl == nullptr) {
 			ImGuiImpl = std::make_unique<ImGuiImplGLFW>(window->GetWindowHandle(), RenderDevice, swapChainDesc.ColorBufferFormat, swapChainDesc.DepthBufferFormat);
-		}
+		}*/
 
 		gameContext->Init();
 
 		return gameContext;
 	}
 
-	bool AuroraEngine::CreateSwapChain(const Window_ptr& window, const SwapChainDesc& desc, RefCntAutoPtr<ISwapChain>& swapChain)
+	bool AuroraEngine::CreateSwapChain(const Window_ptr& window, const SwapChainDesc& desc, ISwapChain_ptr& swapChain)
 	{
-#ifdef _WIN32
+/*#ifdef _WIN32
 		HWND hWnd = glfwGetWin32Window(window->GetWindowHandle());
 
 		if (!swapChain && hWnd != nullptr)
@@ -315,9 +285,13 @@ namespace Aurora
             EngineFactory->CreateSwapChainVk(RenderDevice, ImmediateContext, desc, Window, &swapChain);
             return true;
         }
-#endif
+#endif*/
 
-		return false;
+		// TODO: Comple swap chain
+
+		swapChain = std::make_shared<SwapChainGL4>(window->GetWindowHandle());
+
+		return true;
 	}
 
 	const std::vector<WindowGameContext_ptr> &AuroraEngine::GetGameContexts()

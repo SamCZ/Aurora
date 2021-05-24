@@ -4,8 +4,8 @@
 #include <iostream>
 #endif
 
-#include <imgui.h>
-#include <Aurora/App/ImGuiHelper.hpp>
+//#include <imgui.h>
+//#include <Aurora/App/ImGuiHelper.hpp>
 
 namespace Aurora
 {
@@ -70,7 +70,7 @@ namespace Aurora
 
 	void DrawNode(const Profiler::ProfileNode& node)
 	{
-		std::string name = node.Name + " - " + std::to_string(node.GetElapsedTimeMillis()) + "ms###" + node.Name;
+		/*std::string name = node.Name + " - " + std::to_string(node.GetElapsedTimeMillis()) + "ms###" + node.Name;
 
 		static bool test = false;
 
@@ -80,12 +80,12 @@ namespace Aurora
 			}
 
 			ImGui::TreePop();
-		}
+		}*/
 	}
 
 	void Profiler::DrawWithImGui(bool createWindow)
 	{
-		if(createWindow) {
+		/*if(createWindow) {
 			static bool profileWindowOpened = false;
 			ImGui::BeginWindow("Profiler window", ImGui::GetIO().DisplaySize.x - 550, 0, 550, 600, false, 5, &profileWindowOpened);
 		}
@@ -112,7 +112,7 @@ namespace Aurora
 
 		if(createWindow) {
 			ImGui::EndWindow();
-		}
+		}*/
 	}
 
 #endif

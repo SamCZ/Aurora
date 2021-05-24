@@ -34,7 +34,7 @@ namespace Aurora
 	{
 		std::shared_ptr<ShaderCollection> shaderCollection = nullptr;
 
-		std::map<SHADER_TYPE, RefCntAutoPtr<IShader>> shaders;
+		std::map<ShaderType, Shader_ptr> shaders;
 
 		switch (m_LoadType) {
 			case LoadType::MaterialFile: {
@@ -61,7 +61,7 @@ namespace Aurora
 	{
 		switch (value.size()) {
 			case 6: {
-				std::array<RefCntAutoPtr<ITexture>, 6> textures;
+				std::array<TextureHandle, 6> textures;
 
 				int i = 0;
 				for(auto& it : value) {
@@ -119,9 +119,9 @@ namespace Aurora
 				const Path shader_path = it.value().get<String>();
 
 				if(shader_type == "vertex") {
-					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, SHADER_SOURCE_LANGUAGE_GLSL, SHADER_TYPE_VERTEX));
+					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, ShaderType::Vertex));
 				} else if(shader_type == "pixel") {
-					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, SHADER_SOURCE_LANGUAGE_GLSL, SHADER_TYPE_PIXEL));
+					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, ShaderType::Pixel));
 				} else {
 					AU_LOG_ERROR("Unknown shader type ", shader_type, " for material ", path);
 				}

@@ -1,15 +1,15 @@
 #include "AssetManager.hpp"
 
-#include <BasicFileSystem.hpp>
-#include <BasicFileStream.hpp>
-#include <StringTools.hpp>
-#include <ShaderMacroHelper.hpp>
-
 #include "Aurora/AuroraEngine.hpp"
 #include "Aurora/Core/FileSystem.hpp"
 
 #include <fstream>
 #include <regex>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "Tools/stb_image.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "Tools/stb_image_resize.h"
 
 namespace Aurora
 {
@@ -33,154 +33,14 @@ namespace Aurora
 		}
 	}
 
-	ShaderCollection_ptr AssetManager::LoadShaders(const std::vector<ShaderLoadDesc>& shaderLoadDescriptions, const std::map<String, String>& macros)
-	{
-		ShaderCollection_ptr collection = std::make_shared<ShaderCollection>();
-
-		for(auto& desc : shaderLoadDescriptions) {
-			RefCntAutoPtr<IShader> shader;
-
-			if(m_LoadedShaders.find(desc.FilePath) != m_LoadedShaders.end() && desc.Source.length() == 0 && macros.empty()) {
-				shader = m_LoadedShaders[desc.FilePath];
-			} else {
-				if(!FileExists(desc.FilePath) && desc.Source.length() == 0) {
-					std::cerr << "Shader not found: " << desc.FilePath << std::endl;
-					continue;
-				}
-				ShaderCreateInfo ShaderCI = {};
-				ShaderCI.SourceLanguage = desc.SourceLanguage;
-				ShaderCI.UseCombinedTextureSamplers = true;
-				ShaderCI.Desc.ShaderType = desc.ShaderType;
-				ShaderCI.EntryPoint      = "main";
-				ShaderCI.Desc.Name       = "...";
-
-				ShaderMacroHelper Macros;
-				for(auto& it : macros) {
-					Macros.AddShaderMacro(it.first.c_str(), it.second);
-				}
-
-				ShaderCI.Macros = Macros;
-
-				String source;
-				if(desc.Source.length() > 0) {
-					ShaderCI.Source          = desc.Source.c_str();
-				} else {
-					source = LoadFileToString(desc.FilePath);
-					ShaderCI.Source          = source.c_str();
-				}
-
-				AuroraEngine::RenderDevice->CreateShader(ShaderCI, &shader);
-
-				if(desc.Source.length() == 0) {
-					m_LoadedShaders[desc.FilePath] = shader;
-				}
-			}
-
-			switch (desc.ShaderType) {
-				case SHADER_TYPE_VERTEX:
-					collection->Vertex = shader;
-					break;
-				case SHADER_TYPE_PIXEL:
-					collection->Pixel = shader;
-					break;
-				case SHADER_TYPE_GEOMETRY:
-					collection->Geometry = shader;
-					break;
-				case SHADER_TYPE_HULL:
-					collection->Hull = shader;
-					break;
-				case SHADER_TYPE_DOMAIN:
-					collection->Domain = shader;
-					break;
-				case SHADER_TYPE_AMPLIFICATION:
-					collection->Amplification = shader;
-					break;
-				case SHADER_TYPE_MESH:
-					collection->Mesh = shader;
-					break;
-				default:
-					break;
-			}
-		}
-
-		return collection;
-	}
-
-	ShaderCollection_ptr AssetManager::LoadShaders(const Path &shaderFolder, const std::map<String, String>& macros)
-	{
-		std::vector<ShaderLoadDesc> descriptors;
-
-		Path vertex = shaderFolder / "vertex.glsl";
-		Path fragment = shaderFolder / "fragment.glsl";
-
-		if(FileExists(vertex)) {
-			descriptors.push_back({SHADER_TYPE_VERTEX, SHADER_SOURCE_LANGUAGE_GLSL, "", LoadFileToString(vertex), {}});
-		}
-
-		if(FileExists(fragment)) {
-			descriptors.push_back({SHADER_TYPE_PIXEL, SHADER_SOURCE_LANGUAGE_GLSL, "", LoadFileToString(fragment), {}});
-		}
-
-		if(descriptors.empty()) {
-			std::cerr << "Could not find any shader in " << shaderFolder << std::endl;
-			exit(1);
-		}
-
-		return LoadShaders(descriptors, macros);
-	}
-
-	RefCntAutoPtr<IShader> AssetManager::LoadShader(const Path& path, const SHADER_TYPE& type, const std::map<String, String>& macros)
-	{
-		RefCntAutoPtr<IShader> shader;
-
-		SHADER_SOURCE_LANGUAGE language = SHADER_SOURCE_LANGUAGE_DEFAULT;
-
-		String extension = path.extension().string();
-
-		if(extension == ".glsl") {
-			language = SHADER_SOURCE_LANGUAGE_GLSL;
-		} else if(extension == ".hlsl") {
-			language = SHADER_SOURCE_LANGUAGE_HLSL;
-		} else {
-			AU_LOG_ERROR("Unknown shader extension ", extension, " for ", path);
-		}
-
-		IDataBlob* outputLog = nullptr;
-
-		ShaderCreateInfo ShaderCI = {};
-		ShaderCI.SourceLanguage = language;
-		ShaderCI.UseCombinedTextureSamplers = true;
-		ShaderCI.Desc.ShaderType = type;
-		ShaderCI.EntryPoint      = "main";
-		ShaderCI.Desc.Name       = path.string().c_str();
-		String source = LoadFileToString(path);
-		ShaderCI.Source          = source.c_str();
-		ShaderCI.ppCompilerOutput = &outputLog;
-
-		ShaderMacroHelper Macros;
-		for(auto& it : macros) {
-			Macros.AddShaderMacro(it.first.c_str(), it.second);
-		}
-
-		ShaderCI.Macros = Macros;
-
-		AuroraEngine::RenderDevice->CreateShader(ShaderCI, &shader);
-
-		if(outputLog != nullptr) {
-
-		}
-
-		return shader;
-	}
-
 	String AssetManager::LoadFileToString(const Path& path, bool* isFromAssetPackage)
 	{
 		auto blob = LoadFile(path, isFromAssetPackage);
-		const char* str = reinterpret_cast<const char*>(blob->GetConstDataPtr());
-		return std::string(str, str + blob->GetSize());
+		const char* str = reinterpret_cast<const char*>(blob.data());
+		return std::string(str, str + blob.size());
 	}
 
-	RefCntAutoPtr<IDataBlob> AssetManager::LoadFile(const Path& path, bool* isFromAssetPackage)
+	DataBlob AssetManager::LoadFile(const Path& path, bool* isFromAssetPackage)
 	{
 		if(m_AssetPackageFiles.find(path) != m_AssetPackageFiles.end()) {
 			if(isFromAssetPackage != nullptr) {
@@ -195,19 +55,7 @@ namespace Aurora
 			*isFromAssetPackage = false;
 		}
 
-		/*auto blob = FS::LoadFile(path);
-
-		RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(blob.size()));
-		memcpy(pFileData->GetDataPtr(), blob.data(), blob.size());*/
-
-		RefCntAutoPtr<BasicFileStream> pFileStream(MakeNewRCObj<BasicFileStream>()((const Char*)path.string().c_str(), EFileAccessMode::Read));
-		if (!pFileStream->IsValid())
-			LOG_ERROR_AND_THROW("Failed to open file \"", path, '\"');
-
-		RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(0));
-		pFileStream->ReadBlob(pFileData);
-
-		return pFileData;
+		return FS::LoadFile(path);
 	}
 
 	bool AssetManager::FileExists(const Path& path, bool* isFromAssetPackage) const
@@ -226,7 +74,15 @@ namespace Aurora
 		return FS::FileExists(path);
 	}
 
-	RefCntAutoPtr<ITexture> AssetManager::LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo)
+	unsigned int getMipLevelsNum(unsigned int width, unsigned int height)
+	{
+		unsigned int size = __max(width, height);
+		unsigned int levelsNum = (unsigned int)(logf((float)size) / logf(2.0f)) + 1;
+
+		return levelsNum;
+	}
+
+	TextureHandle AssetManager::LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo)
 	{
 		if(m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
 			return m_LoadedTextures[path];
@@ -234,153 +90,135 @@ namespace Aurora
 
 		auto fileData = LoadFile(path);
 
-		if(fileData == nullptr) {
-			return RefCntAutoPtr<ITexture>(nullptr);
+		if(fileData.empty()) {
+			return nullptr;
 		}
 
-		RefCntAutoPtr<ITexture> ppTexture;
-		RefCntAutoPtr<Image> pImage;
+		TextureHandle texture = nullptr;
 
-		auto ImgFmt = CreateImageFromDataBlob(path.filename().string(), fileData, &pImage);
+		int width,height,channels_in_file;
+		unsigned char *data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+		if(!data) {
+			AU_LOG_ERROR("Cannot load texture !", path.string());
+			return nullptr;
+		}
 
-		if (pImage)
-			CreateTextureFromImage(pImage, textureLoadInfo, AuroraEngine::RenderDevice, &ppTexture);
-		else if (fileData)
+		TextureDesc textureDesc;
+		textureDesc.Width = width;
+		textureDesc.Height = height;
+		textureDesc.MipLevels = getMipLevelsNum(width, height);
+		textureDesc.ImageFormat = Format::RGBA8_UNORM;
+		textureDesc.DebugName = "Loaded texture";
+		texture = AuroraEngine::RenderDevice->createTexture(textureDesc, nullptr);
+
+		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
-			if (ImgFmt == IMAGE_FILE_FORMAT_DDS)
-				CreateTextureFromDDS(fileData, textureLoadInfo, AuroraEngine::RenderDevice,  &ppTexture);
-			else if (ImgFmt == IMAGE_FILE_FORMAT_KTX)
-				CreateTextureFromKTX(fileData, textureLoadInfo, AuroraEngine::RenderDevice,  &ppTexture);
-			else
-				UNEXPECTED("Unexpected format");
-		}
+			AuroraEngine::RenderDevice->writeTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
 
-		m_LoadedTextures[path] = ppTexture;
-
-		return ppTexture;
-	}
-
-	RefCntAutoPtr<ITexture> AssetManager::LoadTexture(const String& filename, IDataBlob* fileData, const TextureLoadInfo &textureLoadInfo)
-	{
-		if(fileData == nullptr) {
-			return RefCntAutoPtr<ITexture>(nullptr);
-		}
-
-		RefCntAutoPtr<ITexture> ppTexture;
-		RefCntAutoPtr<Image> pImage;
-
-		auto ImgFmt = CreateImageFromDataBlob(filename, fileData, &pImage);
-
-		if (pImage)
-			CreateTextureFromImage(pImage, textureLoadInfo, AuroraEngine::RenderDevice, &ppTexture);
-		else if (fileData)
-		{
-			if (ImgFmt == IMAGE_FILE_FORMAT_DDS)
-				CreateTextureFromDDS(fileData, textureLoadInfo, AuroraEngine::RenderDevice,  &ppTexture);
-			else if (ImgFmt == IMAGE_FILE_FORMAT_KTX)
-				CreateTextureFromKTX(fileData, textureLoadInfo, AuroraEngine::RenderDevice,  &ppTexture);
-			else
-				UNEXPECTED("Unexpected format");
-		}
-
-		return ppTexture;
-	}
-
-	IMAGE_FILE_FORMAT AssetManager::CreateImageFromDataBlob(const String& filename, IDataBlob* pFileData, Image** ppImage)
-	{
-		auto ImgFileFormat = IMAGE_FILE_FORMAT_UNKNOWN;
-
-		try
-		{
-			ImgFileFormat = Image::GetFileFormat(reinterpret_cast<Uint8*>(pFileData->GetDataPtr()), pFileData->GetSize());
-			if (ImgFileFormat == IMAGE_FILE_FORMAT_UNKNOWN)
+			if (mipLevel < textureDesc.MipLevels - 1u)
 			{
-				//LOG_WARNING_MESSAGE("Unable to derive image format from the header for file \"", filename, "\". Trying to analyze extension.");
+				int newWidth = __max(1, width >> 1);
+				int newHeight = __max(1, height >> 1);
 
-				// Try to use extension to derive format
-				auto* pDotPos = strrchr(filename.c_str(), '.');
-				/*if (pDotPos == nullptr)
-					LOG_ERROR_AND_THROW("Unable to recognize file format: file name \"", filename, "\" does not contain extension");*/
+				auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
+				stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);
 
-				auto* pExtension = pDotPos + 1;
-				/*if (*pExtension == 0)
-					LOG_ERROR_AND_THROW("Unable to recognize file format: file name \"", filename, "\" contain empty extension");*/
-
-				String Extension = StrToLower(pExtension);
-				if (Extension == "png")
-					ImgFileFormat = IMAGE_FILE_FORMAT_PNG;
-				else if (Extension == "jpeg" || Extension == "jpg")
-					ImgFileFormat = IMAGE_FILE_FORMAT_JPEG;
-				else if (Extension == "tiff" || Extension == "tif")
-					ImgFileFormat = IMAGE_FILE_FORMAT_TIFF;
-				else if (Extension == "dds")
-					ImgFileFormat = IMAGE_FILE_FORMAT_DDS;
-				else if (Extension == "ktx")
-					ImgFileFormat = IMAGE_FILE_FORMAT_KTX;
-				else if (Extension == "tga")
-					ImgFileFormat = IMAGE_FILE_FORMAT_TGA;
-				else
-					LOG_ERROR_AND_THROW("Unsupported file format ", Extension);
-			}
-
-			if (ImgFileFormat == IMAGE_FILE_FORMAT_PNG ||
-				ImgFileFormat == IMAGE_FILE_FORMAT_JPEG ||
-				ImgFileFormat == IMAGE_FILE_FORMAT_TIFF ||
-				ImgFileFormat == IMAGE_FILE_FORMAT_TGA)
-			{
-				ImageLoadInfo ImgLoadInfo;
-				ImgLoadInfo.Format = ImgFileFormat;
-				Image::CreateFromDataBlob(pFileData, ImgLoadInfo, ppImage);
+				stbi_image_free(data);
+				data = resizedData;
+				width = newWidth;
+				height = newHeight;
 			}
 		}
-		catch (std::runtime_error& err)
-		{
-			LOG_ERROR("Failed to create image from file: ", err.what());
+
+		stbi_image_free(data);
+
+		m_LoadedTextures[path] = texture;
+
+		return texture;
+	}
+
+	TextureHandle AssetManager::LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo &textureLoadInfo)
+	{
+		if(fileData.empty()) {
+			return nullptr;
 		}
 
-		return ImgFileFormat;
+		TextureHandle texture = nullptr;
+
+		int width,height,channels_in_file;
+		unsigned char *data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+		if(!data) {
+			AU_LOG_ERROR("Cannot load texture !", filename);
+			return nullptr;
+		}
+
+		TextureDesc textureDesc;
+		textureDesc.Width = width;
+		textureDesc.Height = height;
+		textureDesc.MipLevels = getMipLevelsNum(width, height);
+		textureDesc.ImageFormat = Format::RGBA8_UNORM;
+		textureDesc.DebugName = "Loaded texture";
+		texture = AuroraEngine::RenderDevice->createTexture(textureDesc, nullptr);
+
+		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
+		{
+			AuroraEngine::RenderDevice->writeTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
+
+			if (mipLevel < textureDesc.MipLevels - 1u)
+			{
+				int newWidth = __max(1, width >> 1);
+				int newHeight = __max(1, height >> 1);
+
+				auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
+				stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);
+
+				stbi_image_free(data);
+				data = resizedData;
+				width = newWidth;
+				height = newHeight;
+			}
+		}
+
+		stbi_image_free(data);
+
+		return texture;
 	}
 
 	bool AssetManager::LoadJson(const Path &path, nlohmann::json &json)
 	{
 		auto file = LoadFile(path);
 
-		if(file == nullptr) {
+		if(file.empty()) {
 			return false;
 		}
 
-		auto* data = reinterpret_cast<uint8_t*>(file->GetDataPtr());
-		auto dataLen = file->GetSize();
+		auto* data = reinterpret_cast<uint8_t*>(file.data());
+		auto dataLen = file.size();
 
 		json = nlohmann::json::parse(data, data + dataLen);
 
 		return true;
 	}
 
-	const ShaderResourceObject_ptr &AssetManager::LoadShaderResource(const Path &path, const SHADER_SOURCE_LANGUAGE& shaderSourceLanguage, const SHADER_TYPE &type)
+	const ShaderResourceObject_ptr &AssetManager::LoadShaderResource(const Path &path, const ShaderType& type)
 	{
 		if(m_ShaderResources.find(path) != m_ShaderResources.end()) {
 			return m_ShaderResources[path];
 		} else {
-			m_ShaderResources[path] = ShaderResourceObject_ptr(new ShaderResourceObject(path, shaderSourceLanguage, type));
+			m_ShaderResources[path] = ShaderResourceObject_ptr(new ShaderResourceObject(path, type));
 			auto& res = m_ShaderResources[path];
 			res->Load(false);
 			return res;
 		}
 	}
 
-	static std::map<String, SHADER_TYPE> ShaderFileTypeNames = { // NOLINT(cert-err58-cpp)
-			{"vertex", SHADER_TYPE_VERTEX},
-			{"fragment", SHADER_TYPE_PIXEL},
-			{"geometry", SHADER_TYPE_GEOMETRY},
-			{"hull", SHADER_TYPE_HULL},
-			{"domain", SHADER_TYPE_DOMAIN},
-			{"compute", SHADER_TYPE_COMPUTE}
-	};
-
-	static std::map<String, SHADER_SOURCE_LANGUAGE> ShaderLanguageFileExt = { // NOLINT(cert-err58-cpp)
-			{".glsl", SHADER_SOURCE_LANGUAGE_GLSL},
-			{".hlsl", SHADER_SOURCE_LANGUAGE_HLSL}
+	static std::map<String, ShaderType> ShaderFileTypeNames = { // NOLINT(cert-err58-cpp)
+			{"vertex", ShaderType::Vertex},
+			{"fragment", ShaderType::Pixel},
+			{"geometry", ShaderType::Geometry},
+			{"hull", ShaderType::Hull},
+			{"domain", ShaderType::Domain},
+			{"compute", ShaderType::Compute}
 	};
 
 	std::vector<ShaderResourceObject_ptr> AssetManager::LoadShaderResourceFolder(const Path &path)
@@ -390,17 +228,7 @@ namespace Aurora
 		for(auto& filePath: ListFiles(path)) {
 			auto extension = filePath.extension().string();
 
-			if(extension == ".disabled") continue;
-
-			// Find shader language by file extension
-			auto extTypeIter = ShaderLanguageFileExt.find(extension);
-
-			if(extTypeIter == ShaderLanguageFileExt.end()) {
-				std::cerr << "Unknown shader extension " << extension << std::endl;
-				continue;
-			}
-
-			auto shaderLang = ShaderLanguageFileExt[extension];
+			if(extension == ".disabled" || extension != ".glsl") continue;
 
 			// Find shader type by filename
 
@@ -415,7 +243,7 @@ namespace Aurora
 			auto shaderType = ShaderFileTypeNames[filenameWithoutExtension];
 
 			// Load resource
-			shaders.push_back(LoadShaderResource(filePath, shaderLang, shaderType));
+			shaders.push_back(LoadShaderResource(filePath, shaderType));
 		}
 
 		return shaders;

@@ -8,6 +8,8 @@
 #include <GLFW/glfw3native.h>
 #endif
 
+#include <glad/glad.h>
+
 #include "Input/GLFW/Manager.hpp"
 
 namespace Aurora
@@ -15,9 +17,75 @@ namespace Aurora
 	Window::Window()
 			: m_WindowHandle(nullptr), m_Focused(false),
 			  m_CursorMode(ECursorMode::Normal), m_InputManager(Input::Manager_ptr(new Input::Manager(this))),
-			  /*m_SwapChain(nullptr), */m_Vsync(true)
+			  m_SwapChain(nullptr), m_Vsync(true)
 	{
 
+	}
+
+	void GLAPIENTRY
+	MessageCallback( GLenum source,
+					 GLenum type,
+					 GLuint id,
+					 GLenum severity,
+					 GLsizei length,
+					 const GLchar* message,
+					 const void* userParam )
+	{
+		// Note: disabling flood of notifications through glDebugMessageControl() has no effect,
+		// so we have to filter them out here
+		if (id == 131185 || // Buffer detailed info: Buffer object <X> (bound to GL_XXXX ... , usage hint is GL_DYNAMIC_DRAW)
+			// will use VIDEO memory as the source for buffer object operations.
+			id == 131186 ||   // Buffer object <X> (bound to GL_XXXX, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory.
+			id == 131204 // Unused texture
+				)
+			return;
+
+		std::stringstream MessageSS;
+
+		MessageSS << "OpenGL debug message " << id << " (";
+		switch (source)
+		{
+			// clang-format off
+			case GL_DEBUG_SOURCE_API:             MessageSS << "Source: API.";             break;
+			case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   MessageSS << "Source: Window System.";   break;
+			case GL_DEBUG_SOURCE_SHADER_COMPILER: MessageSS << "Source: Shader Compiler."; break;
+			case GL_DEBUG_SOURCE_THIRD_PARTY:     MessageSS << "Source: Third Party.";     break;
+			case GL_DEBUG_SOURCE_APPLICATION:     MessageSS << "Source: Application.";     break;
+			case GL_DEBUG_SOURCE_OTHER:           MessageSS << "Source: Other.";           break;
+			default:                              MessageSS << "Source: Unknown (" << source << ").";
+				// clang-format on
+		}
+
+		switch (type)
+		{
+			// clang-format off
+			case GL_DEBUG_TYPE_ERROR:               MessageSS << " Type: ERROR.";                break;
+			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: MessageSS << " Type: Deprecated Behaviour."; break;
+			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  MessageSS << " Type: UNDEFINED BEHAVIOUR.";  break;
+			case GL_DEBUG_TYPE_PORTABILITY:         MessageSS << " Type: Portability.";          break;
+			case GL_DEBUG_TYPE_PERFORMANCE:         MessageSS << " Type: PERFORMANCE.";          break;
+			case GL_DEBUG_TYPE_MARKER:              MessageSS << " Type: Marker.";               break;
+			case GL_DEBUG_TYPE_PUSH_GROUP:          MessageSS << " Type: Push Group.";           break;
+			case GL_DEBUG_TYPE_POP_GROUP:           MessageSS << " Type: Pop Group.";            break;
+			case GL_DEBUG_TYPE_OTHER:               MessageSS << " Type: Other.";                break;
+			default:                                MessageSS << " Type: Unknown (" << type << ").";
+				// clang-format on
+		}
+
+		switch (severity)
+		{
+			// clang-format off
+			case GL_DEBUG_SEVERITY_HIGH:         MessageSS << " Severity: HIGH";         break;
+			case GL_DEBUG_SEVERITY_MEDIUM:       MessageSS << " Severity: Medium";       break;
+			case GL_DEBUG_SEVERITY_LOW:          MessageSS << " Severity: Low";          break;
+			case GL_DEBUG_SEVERITY_NOTIFICATION: MessageSS << " Severity: Notification"; break;
+			default:                             MessageSS << " Severity: Unknown (" << severity << ")"; break;
+				// clang-format on
+		}
+
+		MessageSS << "): " << message;
+
+		AU_LOG_INFO(MessageSS.str());
 	}
 
 	void Window::Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<Window>& parentWindow)
@@ -25,7 +93,7 @@ namespace Aurora
 		m_Title = windowDefinition.Title;
 
 		if(/* is vulkan */true) {
-			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+			//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			//glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 		}
 
@@ -80,6 +148,30 @@ namespace Aurora
 			::SetParent(hwNative, parentHwNative);
 #endif
 		}
+
+		// Init gl
+		glfwMakeContextCurrent(m_WindowHandle);
+
+		// This is gonna break after second window is created !
+		if(!gladLoadGL()) {
+			printf("Something went wrong!\n");
+			exit(-1);
+		}
+
+		// During init, enable debug output
+		//glEnable              ( GL_DEBUG_OUTPUT );
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback( MessageCallback, 0 );
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+
+		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor)
+
+		if(!GLAD_GL_EXT_texture_array) {
+			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
+		}
+
+		// Handling
 
 		glfwSetInputMode(m_WindowHandle, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 

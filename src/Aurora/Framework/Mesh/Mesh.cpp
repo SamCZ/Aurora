@@ -1,7 +1,5 @@
 #include "Mesh.hpp"
 
-using namespace Diligent;
-
 namespace Aurora
 {
 	Mesh::~Mesh()
@@ -12,9 +10,9 @@ namespace Aurora
 	}
 
 	// TODO: Move this method to render interface
-	void Mesh::UpdateBuffers(Diligent::RefCntAutoPtr<Diligent::IRenderDevice>& renderDevice, Diligent::RefCntAutoPtr<Diligent::IDeviceContext>& immediateContext)
+	void Mesh::UpdateBuffers()
 	{
-		std::vector<StateTransitionDesc> barriers;
+		/*std::vector<StateTransitionDesc> barriers;
 
 		for(auto& it : LODResources) {
 			MeshLodResource& resource = it.second;
@@ -60,6 +58,6 @@ namespace Aurora
 			}
 		}
 
-		immediateContext->TransitionResourceStates(barriers.size(), barriers.data());
+		immediateContext->TransitionResourceStates(barriers.size(), barriers.data());*/
 	}
 }

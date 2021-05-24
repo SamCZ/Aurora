@@ -5,7 +5,7 @@ namespace Aurora
 {
 	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts(), m_CurrentFont("Default")
 	{
-		{
+		/*{
 			m_Material = std::make_shared<Material>("UI", "Assets/Shaders/UI");
 			m_Material->SetCullMode(CULL_MODE_NONE);
 			m_Material->SetDepthEnable(false);
@@ -29,18 +29,18 @@ namespace Aurora
 			blendDesc.DestBlend = BLEND_FACTOR_INV_SRC_ALPHA;
 			m_FontMaterial->SetBlendState(blendDesc);
 			//m_FontMaterial->SetFillMode(FILL_MODE_WIREFRAME);
-		}
+		}*/
 
 		LoadFont("Default", "Assets/Fonts/GROBOLD.ttf");
 	}
 
-	void UIRenderer::Begin(const Vector2i& size, const TEXTURE_FORMAT& textureFormat, const TEXTURE_FORMAT& depthFormat)
+	void UIRenderer::Begin(const Vector2i& size)
 	{
 		if(size.x > 0 && size.y > 0) {
 			m_ProjectionMatrix = glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f, -1.0f, 1.0f);
 		}
 
-		{
+		/*{
 			GraphicsPipelineDesc& graphicsPipelineDesc = m_Material->GetPipelineDesc();
 			graphicsPipelineDesc.NumRenderTargets = 1;
 			graphicsPipelineDesc.RTVFormats[0] = textureFormat;
@@ -55,7 +55,7 @@ namespace Aurora
 			graphicsPipelineDesc.RTVFormats[0] = textureFormat;
 			graphicsPipelineDesc.DSVFormat = depthFormat;
 			m_FontMaterial->ValidateGraphicsPipelineState();
-		}
+		}*/
 
 		SetImageEdgeDetection(false, 3);
 	}
@@ -154,13 +154,13 @@ namespace Aurora
 
 		material->CommitShaderResources();
 
-		DrawAttribs drawAttrs;
+		/*DrawAttribs drawAttrs;
 		drawAttrs.Flags = DRAW_FLAG_VERIFY_ALL;
 		drawAttrs.NumVertices = 4;
-		AuroraEngine::ImmediateContext->Draw(drawAttrs);
+		AuroraEngine::ImmediateContext->Draw(drawAttrs);*/
 	}
 
-	void UIRenderer::DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)
+	void UIRenderer::DrawImage(float x, float y, float w, float h, Texture_ptr texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)
 	{
 		switch (imageDrawMode) {
 			case ImageDrawMode::Simple: {
@@ -180,8 +180,10 @@ namespace Aurora
 				drawArgs.EnabledCustomUVs = true;
 				drawArgs.Tint = tint;
 
-				auto realW = static_cast<float>(texture->GetDesc().Width);
-				auto realH = static_cast<float>(texture->GetDesc().Height);
+				TextureDesc textureDesc = AuroraEngine::RenderDevice->describeTexture(texture);
+
+				auto realW = static_cast<float>(textureDesc.Width);
+				auto realH = static_cast<float>(textureDesc.Height);
 
 				float borderLeftPercent = spriteBorder.Left / realW;
 				float borderRightPercent = spriteBorder.Right / realW;
@@ -285,7 +287,7 @@ namespace Aurora
 		}
 	}
 
-	void UIRenderer::DrawImage(const Vector2 &position, const Vector2 &size, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode &imageDrawMode, const SpriteBorder &spriteBorder, const Color& tint)
+	void UIRenderer::DrawImage(const Vector2 &position, const Vector2 &size, Texture_ptr texture, float radius, const ImageDrawMode &imageDrawMode, const SpriteBorder &spriteBorder, const Color& tint)
 	{
 		DrawImage(position.x, position.y, size.x, size.y, texture, radius, imageDrawMode, spriteBorder, tint);
 	}
@@ -313,7 +315,7 @@ namespace Aurora
 	bool UIRenderer::LoadFont(const String &name, const Path &path)
 	{
 		auto fontData = AuroraEngine::AssetManager->LoadFile(path);
-		if(fontData == nullptr) {
+		if(fontData.empty()) {
 			return false;
 		}
 

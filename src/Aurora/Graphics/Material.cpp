@@ -1,27 +1,8 @@
 #include "Material.hpp"
 #include "Aurora/AuroraEngine.hpp"
 
-#include <GraphicsAccessories.hpp>
-
 #include <Aurora/Graphics/GraphicUtilities.hpp>
 #include <Aurora/Core/Crc.hpp>
-
-static bool operator==(const GraphicsPipelineStateCreateInfo& left, const GraphicsPipelineStateCreateInfo&right)
-{
-	return false;
-}
-
-/*namespace std
-{
-	template<> struct less<GraphicsPipelineStateCreateInfo>
-	{
-		bool operator() (const GraphicsPipelineStateCreateInfo& lhs, const GraphicsPipelineStateCreateInfo& rhs) const
-		{
-			return false;
-		}
-	};
-
-}*/
 
 namespace Aurora
 {
@@ -30,28 +11,19 @@ namespace Aurora
 	Material::Material(String name, const Path &shaderPath, ShaderMacros_t macros)
 	: m_Name(std::move(name)),
 	  m_Macros(std::move(macros)),
-	  m_OnShaderResourceChangeEvent(nullptr),
-	  m_CurrentPipelineState(nullptr),
-	  m_CurrentResourceBinding(nullptr),
-	  //m_CurrentPipelineStateHash(0),
-	  m_NeedsRebuildResourceLayout(true),
-	  m_NeedsRebuildPipeline(true)
+	  m_OnShaderResourceChangeEvent(nullptr)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
 		for(const auto& shaderResource : AuroraEngine::AssetManager->LoadShaderResourceFolder(shaderPath)) {
-			if(shaderResource->GetShaderType() == SHADER_TYPE_COMPUTE) continue;
+			if(shaderResource->GetShaderType() == ShaderType::Compute) continue;
 
 			SetShader(shaderResource);
 		}
 
-		m_PSOCreateInfo.PSODesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
-		m_PSOCreateInfo.PSODesc.Name = name.c_str();
-		m_PSOCreateInfo.PSODesc.PipelineType = PIPELINE_TYPE_GRAPHICS;
-
-		SetCullMode(CULL_MODE_FRONT);
+		SetCullMode(RasterState::CullMode::Front);
 		SetDepthEnable(true);
-		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		SetPrimitiveTopology(PrimitiveType::TriangleList);
 
 		m_CurrentMaterials.push_back(this);
 	}
@@ -59,50 +31,33 @@ namespace Aurora
 	Material::Material(String name, const std::vector<ShaderResourceObject_ptr> &shaders, ShaderMacros_t macros)
 			: m_Name(std::move(name)),
 			  m_Macros(std::move(macros)),
-			  m_OnShaderResourceChangeEvent(nullptr),
-			  m_CurrentPipelineState(nullptr),
-			  m_CurrentResourceBinding(nullptr),
-			  //m_CurrentPipelineStateHash(0),
-			  m_NeedsRebuildResourceLayout(true),
-			  m_NeedsRebuildPipeline(true)
+			  m_OnShaderResourceChangeEvent(nullptr)
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
 		for(const auto& shaderResource : shaders) {
-			if(shaderResource->GetShaderType() == SHADER_TYPE_COMPUTE) continue;
+			if(shaderResource->GetShaderType() == ShaderType::Compute) continue;
 
 			SetShader(shaderResource);
 		}
 
-		m_PSOCreateInfo.PSODesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
-		m_PSOCreateInfo.PSODesc.Name = name.c_str();
-		m_PSOCreateInfo.PSODesc.PipelineType = PIPELINE_TYPE_GRAPHICS;
-
-		SetCullMode(CULL_MODE_FRONT);
+		SetCullMode(RasterState::CullMode::Front);
 		SetDepthEnable(true);
-		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		SetPrimitiveTopology(PrimitiveType::TriangleList);
 
 		m_CurrentMaterials.push_back(this);
 	}
 
 	Material::Material(String name, ShaderMacros_t macros)
 	: m_Name(std::move(name)),
-	  m_Macros(std::move(macros)),
-	  m_CurrentPipelineState(nullptr),
-	  m_CurrentResourceBinding(nullptr),
-	  //m_CurrentPipelineStateHash(0),
-	  m_NeedsRebuildResourceLayout(true),
-	  m_NeedsRebuildPipeline(true)
+	  m_Macros(std::move(macros))
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
-		m_PSOCreateInfo.PSODesc.ResourceLayout.DefaultVariableType = SHADER_RESOURCE_VARIABLE_TYPE_STATIC;
-		m_PSOCreateInfo.PSODesc.Name = name.c_str();
-		m_PSOCreateInfo.PSODesc.PipelineType = PIPELINE_TYPE_GRAPHICS;
 
-		SetCullMode(CULL_MODE_FRONT);
+		SetCullMode(RasterState::CullMode::Front);
 		SetDepthEnable(true);
-		SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		SetPrimitiveTopology(PrimitiveType::TriangleList);
 
 		m_CurrentMaterials.push_back(this);
 	}
@@ -122,12 +77,9 @@ namespace Aurora
 		m_Shaders[sharedPtr->GetShaderType()] = shaderObject;
 
 		OnShaderResourceUpdate(sharedPtr.get());
-
-		m_NeedsRebuildResourceLayout = true;
-		m_NeedsRebuildPipeline = true;
 	}
 
-	void Material::RemoveShader(const SHADER_TYPE &shaderType)
+	void Material::RemoveShader(const ShaderType &shaderType)
 	{
 		auto findShaderObjIter = m_Shaders.find(shaderType);
 
@@ -140,12 +92,9 @@ namespace Aurora
 		m_Shaders.erase(findShaderObjIter);
 
 		ApplyShaderToPSO(nullptr, shaderType);
-
-		m_NeedsRebuildResourceLayout = true;
-		m_NeedsRebuildPipeline = true;
 	}
 
-	ShaderResourceObject_ptr Material::GetShader(const SHADER_TYPE &shaderType)
+	ShaderResourceObject_ptr Material::GetShader(const ShaderType &shaderType)
 	{
 		auto findShaderObjIter = m_Shaders.find(shaderType);
 
@@ -179,7 +128,7 @@ namespace Aurora
 
 		// Load shader data
 
-		auto shader = shaderObj.Shader;
+		/*auto shader = shaderObj.Shader;
 
 		m_ShaderResourceVariables[shaderObj.Type].clear();
 
@@ -249,16 +198,14 @@ namespace Aurora
 		ApplyShaderToPSO(shader, shaderObj.Type);
 
 		m_NeedsRebuildResourceLayout = true;
-		m_NeedsRebuildPipeline = true;
+		m_NeedsRebuildPipeline = true;*/
 	}
 
-	void Material::LoadConstantBuffers(ShaderObject &object, ShaderResourceDesc desc, std::vector<StateTransitionDesc>& barriers, ConstantBufferList& constantBufferStorage, ConstantBufferList& constantBufferListCopy)
+	void Material::LoadConstantBuffers(ShaderObject &object, ShaderResourceDesc desc, ConstantBufferList& constantBufferStorage, ConstantBufferList& constantBufferListCopy)
 	{
-		const SHADER_TYPE& shaderType = object.Type;
+		const ShaderType& shaderType = object.Type;
 
-		m_ShaderResourceVariables[shaderType].push_back({{shaderType, desc.Name, SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}, true});
-
-		if(desc.Variables != nullptr) {
+		/*if(!desc.Variables.empty()) {
 			const std::vector<ShaderVariable>& variables = *desc.Variables;
 
 			ShaderConstantBuffer shaderConstantBufferInfo = {};
@@ -302,16 +249,16 @@ namespace Aurora
 			constantBufferStorage.emplace_back(shaderConstantBufferInfo);
 		} else {
 			// TODO: throw exception and exit program
-		}
+		}*/
 	}
 
-	void Material::LoadTextureSRV(ShaderObject &object, ShaderResourceDesc desc, std::vector<StateTransitionDesc>& barriers, TextureDefList& textureDefList, TextureDefList& textureDefListOld, SamplerList& samplerList, SamplerList& samplerListOld)
+	void Material::LoadTextureSRV(ShaderObject &object, ShaderResourceDesc desc, TextureDefList& textureDefList, TextureDefList& textureDefListOld, SamplerList& samplerList, SamplerList& samplerListOld)
 	{
-		const SHADER_TYPE& shaderType = object.Type;
+		const ShaderType& shaderType = object.Type;
 
-		m_ShaderResourceVariables[shaderType].push_back({{shaderType, desc.Name, SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}, false});
+		//m_ShaderResourceVariables[shaderType].push_back({{shaderType, desc.Name, SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}, false});
 
-		for(auto& texDefine : textureDefListOld) {
+		/*for(auto& texDefine : textureDefListOld) {
 			if(texDefine.Name == desc.Name) {
 				texDefine.NeedsUpdate = true;
 				textureDefList.push_back(texDefine);
@@ -348,23 +295,23 @@ namespace Aurora
 			TEXTURE_ADDRESS_CLAMP, TEXTURE_ADDRESS_CLAMP, TEXTURE_ADDRESS_CLAMP
 		};
 
-		samplerList.push_back({String(desc.Name), {shaderType, desc.Name, SamLinearClampDesc}});
+		samplerList.push_back({String(desc.Name), {shaderType, desc.Name, SamLinearClampDesc}});*/
 	}
 
-	void Material::DeleteConstantBuffers(const SHADER_TYPE& type)
+	void Material::DeleteConstantBuffers(const ShaderType& type)
 	{
 		m_ShaderConstantBuffers.erase(type);
 	}
 
-	void Material::DeleteTextureSRVs(const SHADER_TYPE &type)
+	void Material::DeleteTextureSRVs(const ShaderType &type)
 	{
 		m_ShaderTextures.erase(type);
 		m_ShaderSamplers.erase(type);
 	}
 
-	void Material::ApplyShaderToPSO(IShader* shader, const SHADER_TYPE& shaderType)
+	void Material::ApplyShaderToPSO(Shader_ptr shader, const ShaderType& shaderType)
 	{
-		switch (shaderType) {
+		/*switch (shaderType) {
 			case SHADER_TYPE_VERTEX:
 				m_PSOCreateInfo.pVS = shader;
 				break;
@@ -383,12 +330,12 @@ namespace Aurora
 			default:
 				// Unsupported shader type
 				break;
-		}
+		}*/
 	}
 
 	void Material::ValidateGraphicsPipelineState()
 	{
-		// Setup PSO vars
+		/*// Setup PSO vars
 		if(m_NeedsRebuildResourceLayout) {
 			m_NeedsRebuildResourceLayout = false;
 
@@ -471,7 +418,7 @@ namespace Aurora
 				//std::cout << shaderConstantBuffer.Name << " - " << m_Name << "(" << GetShaderTypeLiteralName(shaderConstantBuffer.ShaderType) << ") - " << shaderConstantBuffer.Buffer.RawPtr() << std::endl;
 				// TODO: Warn about two different buffers with same name
 			}
-		}
+		}*/
 	}
 
 	std::size_t hashVec(std::vector<uintptr_t> const& vec) {
@@ -484,12 +431,12 @@ namespace Aurora
 
 	void Material::ApplyPipeline()
 	{
-		AuroraEngine::ImmediateContext->SetPipelineState(GetCurrentPipelineState());
+		//AuroraEngine::ImmediateContext->SetPipelineState(GetCurrentPipelineState());
 	}
 
 	void Material::CommitShaderResources()
 	{
-		for (auto& varList : m_ShaderTextures) {
+		/*for (auto& varList : m_ShaderTextures) {
 			for(auto& var : varList.second) {
 				if(!var.NeedsUpdate) continue;
 				if(var.TextureView == nullptr) {
@@ -533,24 +480,24 @@ namespace Aurora
 			}
 		}
 
-		AuroraEngine::ImmediateContext->CommitShaderResources(GetCurrentResourceBinding(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+		AuroraEngine::ImmediateContext->CommitShaderResources(GetCurrentResourceBinding(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);*/
 	}
 
 	void Material::SetSampler(const String &textureName, const SamplerDesc &sampler)
 	{
-		for (auto& samplerList : m_ShaderSamplers) {
+		/*for (auto& samplerList : m_ShaderSamplers) {
 			for(auto& samplerFromList : samplerList.second) {
 				if(textureName == samplerFromList.first) {
 					samplerFromList.second.Desc = sampler;
 					m_NeedsRebuildResourceLayout = true;
 				}
 			}
-		}
+		}*/
 	}
 
-	void Material::SetTexture(const String &name, const RefCntAutoPtr<ITexture> &texture)
+	void Material::SetTexture(const String &name, TextureHandle texture)
 	{
-		if(texture == nullptr) {
+		/*if(texture == nullptr) {
 			for(auto& rvl : m_ShaderResourceVariables) {
 				for(auto& rv : rvl.second) {
 					if(rv.first.Name == name) {
@@ -590,6 +537,6 @@ namespace Aurora
 					break;
 				}
 			}
-		}
+		}*/
 	}
 }

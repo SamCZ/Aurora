@@ -5,17 +5,13 @@
 
 #include <GLFW/glfw3.h>
 
-#include <SwapChain.h>
-#include <RefCntAutoPtr.hpp>
-
 #include "Aurora/Core/Common.hpp"
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Graphics/ISwapChain.hpp"
 
 #include "CursorMode.hpp"
 
 #include "Input/IManager.hpp"
-
-using namespace Diligent;
 
 namespace Aurora
 {
@@ -42,7 +38,7 @@ namespace Aurora
 		Vector2i m_Size{};
 	private:
 		Input::IManager_ptr m_InputManager;
-		RefCntAutoPtr<ISwapChain> m_SwapChain;
+		ISwapChain_ptr m_SwapChain;
 		std::vector<std::function<void(int, int)>> m_ResizeListeners;
 	public:
 		Window();
@@ -127,14 +123,14 @@ namespace Aurora
 		void SetClipboardString(const String& str);
 		String GetClipboardString();
 	public:
-		inline void SetSwapChain(RefCntAutoPtr<ISwapChain> swapChain)
+		inline void SetSwapChain(ISwapChain_ptr swapChain)
 		{
 			if(m_SwapChain != nullptr) return;
 
 			m_SwapChain = std::move(swapChain);
 		}
 
-		inline RefCntAutoPtr<ISwapChain>& GetSwapChain()
+		inline ISwapChain_ptr& GetSwapChain()
 		{
 			return m_SwapChain;
 		}

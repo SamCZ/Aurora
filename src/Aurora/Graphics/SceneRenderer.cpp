@@ -60,9 +60,9 @@ namespace Aurora
 	void SceneRenderer::Render(RenderTargetPack* renderTargetPack, bool apply, bool clear)
 	{
 		if(apply) {
-			renderTargetPack->Apply(clear);
+			//renderTargetPack->Apply(clear);
 		}
-
+/*
 		Mesh *currentAppliedMesh = nullptr;
 
 		for(auto& it2 : m_SortedRenderer) {
@@ -123,6 +123,6 @@ namespace Aurora
 
 			//TODO: Fix render for multiple cameras !
 			return; // This will discard any other cameras to render
-		}
+		}*/
 	}
 }

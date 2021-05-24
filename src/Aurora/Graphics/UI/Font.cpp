@@ -11,9 +11,9 @@ namespace Aurora
 			6, 12, 14, 16, 20, 24, 42, 64, 82, 100, 112
 	};
 
-	Font::Font(String name, RefCntAutoPtr<IDataBlob> &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
+	Font::Font(String name, DataBlob &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
 	{
-		stbtt_InitFont(&m_FontInfo, reinterpret_cast<unsigned char *>(FontData->GetDataPtr()), 0);
+		stbtt_InitFont(&m_FontInfo, reinterpret_cast<unsigned char *>(FontData.data()), 0);
 
 		AU_LOG_INFO("Font loaded: ", name);
 	}
@@ -54,9 +54,9 @@ namespace Aurora
 
 	}
 
-	RefCntAutoPtr<ITexture> CreateTextureFromData(int w, int h, const unsigned char* data)
+	TextureHandle CreateTextureFromData(int w, int h, const unsigned char* data)
 	{
-		TextureDesc TexDesc;
+		/*TextureDesc TexDesc;
 		TexDesc.Name      = "FontTexture";
 		TexDesc.Type      = RESOURCE_DIM_TEX_2D;
 		TexDesc.Width     = w;
@@ -77,9 +77,9 @@ namespace Aurora
 		TexData.NumSubresources = TexDesc.MipLevels;
 
 		RefCntAutoPtr<ITexture> pRTColor;
-		AuroraEngine::RenderDevice->CreateTexture(TexDesc, &TexData, &pRTColor);
+		AuroraEngine::RenderDevice->CreateTexture(TexDesc, &TexData, &pRTColor);*/
 
-		return pRTColor;
+		return nullptr;
 	}
 
 	void FontBitmapPageList::Init(const stbtt_fontinfo &fontInfo)

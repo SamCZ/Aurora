@@ -5,12 +5,6 @@
 #include <iostream>
 #include <thread>
 
-#include <EngineFactory.h>
-#include <RenderDevice.h>
-#include <DeviceContext.h>
-#include <SwapChain.h>
-#include <RefCntAutoPtr.hpp>
-
 #include "App/Window.hpp"
 #include "App/WindowGameContext.hpp"
 
@@ -37,8 +31,7 @@ namespace Aurora
 
 		static std::unique_ptr<Diligent::ImGuiImplDiligent> ImGuiImpl;
 	public:
-		static RefCntAutoPtr<IRenderDevice> RenderDevice;
-		static RefCntAutoPtr<IDeviceContext> ImmediateContext;
+		static IRendererInterface* RenderDevice;
 		static AssetManager_ptr AssetManager;
 #ifdef FMOD_SUPPORTED
 		static SoundSystem_ptr SoundSystem;
@@ -71,7 +64,7 @@ namespace Aurora
 			return AddWindow(std::make_shared<GameContext>(window), window, windowDefinition, showImmediately);
 		}
 	private:
-		static bool CreateSwapChain(const Window_ptr& window, const SwapChainDesc& desc, RefCntAutoPtr<ISwapChain>& swapChain);
+		static bool CreateSwapChain(const Window_ptr& window, const SwapChainDesc& desc, ISwapChain_ptr& swapChain);
 		static void joystick_callback(int jid, int event);
 	public:
 		static void Play2DSound(const String& path, float volume = 1.0f, float pitch = 1.0f);

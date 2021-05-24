@@ -10,13 +10,13 @@ namespace Aurora
 
 	}
 
-	void RenderTargetManager::AddTarget(const String &name, const TEXTURE_FORMAT &format, const Vector4 &clearColor, bool useAsShaderResource, bool useUav, bool autoResize)
+	void RenderTargetManager::AddTarget(const String &name, const Format::Enum&format, const Vector4 &clearColor, bool useAsShaderResource, bool useUav, bool autoResize)
 	{
 		if(m_Targets.contains(name)) {
 			std::cerr << "Target " << name << " already exists !" << std::endl;
 			return;
 		}
-
+/*
 		TextureDesc textureDesc;
 		textureDesc.Name      = name.data();
 		textureDesc.Type      = RESOURCE_DIM_TEX_2D;
@@ -57,7 +57,7 @@ namespace Aurora
 			textureDesc.ClearValue.DepthStencil.Stencil = 0;
 		}
 
-		m_Targets[name] = {Texture_ptr_null, textureDesc, true};
+		m_Targets[name] = {Texture_ptr_null, textureDesc, true};*/
 	}
 
 	Texture_ptr RenderTargetManager::GetTarget(const String &name)
@@ -69,17 +69,6 @@ namespace Aurora
 		AU_LOG_WARNING("Target ", name, " not found !")
 
 		return Texture_ptr_null;
-	}
-
-	ITextureView *RenderTargetManager::GetTargetView(const String &name, const TEXTURE_VIEW_TYPE& viewType)
-	{
-		auto target = GetTarget(name);
-
-		if(target != nullptr) {
-			return target->GetDefaultView(viewType);
-		}
-
-		return nullptr;
 	}
 
 	void RenderTargetManager::Resize(int width, int height)
@@ -94,11 +83,11 @@ namespace Aurora
 		for(auto& it : m_Targets) {
 			auto& info = it.second;
 
-			TextureDesc textureDesc = info.TextureDesc;
+			/*TextureDesc textureDesc = info.TextureDesc;
 			textureDesc.Width = width;
 			textureDesc.Height = height;
 
-			AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr, &info.Texture);
+			AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr, &info.Texture);*/
 		}
 	}
 
@@ -161,44 +150,17 @@ namespace Aurora
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void RenderTargetPack::Apply(bool clear)
+	void RenderTargetPack::Apply(DrawCallState &pipelineDesc)
 	{
-		const float ClearColor[] = {0.0f, 0.0f, 0.0f, 0.0f};
-
-		std::vector<ITextureView*> views(m_Targets.size());
+		pipelineDesc.renderState.targetCount = m_Targets.size();
 		for(const auto& it : m_Targets) {
-			views[it.second.first] = it.second.second->Texture->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
-		}
-
-		ITextureView* depthView = nullptr;
-		if(m_DepthTarget != nullptr) {
-			depthView = m_DepthTarget->Texture->GetDefaultView(TEXTURE_VIEW_DEPTH_STENCIL);
-		}
-
-		AuroraEngine::ImmediateContext->SetRenderTargets(views.size(), views.data(), depthView, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-
-		if(clear) {
-			if(depthView != nullptr) {
-				AuroraEngine::ImmediateContext->ClearDepthStencil(depthView, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-			}
-
-			for(ITextureView* view : views) {
-				AuroraEngine::ImmediateContext->ClearRenderTarget(view, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-			}
-		}
-	}
-
-	void RenderTargetPack::Apply(GraphicsPipelineDesc &pipelineDesc)
-	{
-		pipelineDesc.NumRenderTargets = m_Targets.size();
-		for(const auto& it : m_Targets) {
-			pipelineDesc.RTVFormats[it.second.first] = it.second.second->Texture->GetDesc().Format;
+			pipelineDesc.renderState.targets[it.second.first] = it.second.second->Texture;
 		}
 
 		if(m_DepthTarget != nullptr) {
-			pipelineDesc.DSVFormat = m_DepthTarget->Texture->GetDesc().Format;
+			pipelineDesc.renderState.depthTarget = m_DepthTarget->Texture;
 		} else {
-			pipelineDesc.DSVFormat = TEX_FORMAT_UNKNOWN;
+			pipelineDesc.renderState.depthTarget = nullptr;
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace Aurora
 		const Window_ptr& GetWindow();
 		const Input::IManager_ptr& GetInputManager();
 
-		inline RefCntAutoPtr<ISwapChain>& GetSwapChain()
+		inline ISwapChain_ptr& GetSwapChain()
 		{
 			return GetWindow()->GetSwapChain();
 		}

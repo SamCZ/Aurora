@@ -32,7 +32,7 @@ namespace Aurora
 			return lines;
 		}
 
-		static inline std::vector<String> ReadLines(RefCntAutoPtr<IDataBlob> &blob)
+		/*static inline std::vector<String> ReadLines(RefCntAutoPtr<IDataBlob> &blob)
 		{
 			std::vector<String> lines;
 
@@ -49,7 +49,7 @@ namespace Aurora
 			}
 
 			return lines;
-		}
+		}*/
 
 		static inline DataBlob LoadFile(const Path& path)
 		{
