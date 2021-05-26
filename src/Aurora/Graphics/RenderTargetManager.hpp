@@ -35,7 +35,7 @@ namespace Aurora
 	public:
 		RenderTargetManager();
 	public:
-		void AddTarget(const String& name, const Format::Enum& format, const Vector4& clearColor = Vector4(0, 0, 0, 0), bool useAsShaderResource = true, bool useUav = false, bool autoResize = true);
+		void AddTarget(const String& name, const GraphicsFormat& format, const Vector4& clearColor = Vector4(0, 0, 0, 0), bool useAsShaderResource = true, bool useUav = false, bool autoResize = true);
 
 		Texture_ptr GetTarget(const String& name);
 

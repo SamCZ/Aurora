@@ -10,7 +10,7 @@ namespace Aurora
 
 	}
 
-	void RenderTargetManager::AddTarget(const String &name, const Format::Enum&format, const Vector4 &clearColor, bool useAsShaderResource, bool useUav, bool autoResize)
+	void RenderTargetManager::AddTarget(const String &name, const GraphicsFormat& format, const Vector4 &clearColor, bool useAsShaderResource, bool useUav, bool autoResize)
 	{
 		if(m_Targets.contains(name)) {
 			std::cerr << "Target " << name << " already exists !" << std::endl;

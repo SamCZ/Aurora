@@ -120,7 +120,7 @@ namespace Aurora
 		return pTexArray;
 	}
 
-	TextureHandle GraphicUtilities::CreateRenderTarget2D(const char* name, int width, int height, const Format::Enum& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav)
+	TextureHandle GraphicUtilities::CreateRenderTarget2D(const char* name, int width, int height, const GraphicsFormat& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav)
 	{
 		TextureDesc gBufferDesc;
 		gBufferDesc.Width = width;
@@ -135,10 +135,11 @@ namespace Aurora
 		gBufferDesc.ClearValue = clearColor;
 		gBufferDesc.DebugName = name;
 
-		return AuroraEngine::RenderDevice->createTexture(gBufferDesc, nullptr);
+		//return AuroraEngine::RenderDevice->CreateTexture(gBufferDesc, nullptr);
+		return nullptr;
 	}
 
-	TextureHandle GraphicUtilities::CreateRenderTargetDepth2D(const char* name, int width, int height, const Format::Enum& format, bool useAsShaderResource, bool useUav)
+	TextureHandle GraphicUtilities::CreateRenderTargetDepth2D(const char* name, int width, int height, const GraphicsFormat& format, bool useAsShaderResource, bool useUav)
 	{
 		return CreateRenderTarget2D(name, width, height, format, Vector4(1, 1, 1, 1), useAsShaderResource, useUav);
 	}

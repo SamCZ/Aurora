@@ -118,13 +118,13 @@ namespace Aurora
 				const String& shader_type = it.key();
 				const Path shader_path = it.value().get<String>();
 
-				if(shader_type == "vertex") {
+				/*if(shader_type == "vertex") {
 					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, ShaderType::Vertex));
 				} else if(shader_type == "pixel") {
 					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, ShaderType::Pixel));
 				} else {
 					AU_LOG_ERROR("Unknown shader type ", shader_type, " for material ", path);
-				}
+				}*/
 			}
 		} else {
 			AU_LOG_ERROR("No shaders in ", path, " material file !");

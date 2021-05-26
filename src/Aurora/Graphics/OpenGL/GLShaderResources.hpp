@@ -10,12 +10,11 @@
 
 namespace Aurora
 {
-	class OpenGLShader;
+	class GLSHader;
 
 	struct GLResourceAttribs
 	{
 		const std::string Name;
-		const ShaderType ShaderStage;
 		const ShaderResourceType ResourceType;
 		const uint32_t Binding;
 		uint32_t ArraySize;
@@ -58,7 +57,7 @@ namespace Aurora
 	public:
 		GLShaderResources();
 
-		void LoadUniforms(const ShaderType& shaderType, OpenGLShader* shaderHandle);
+		void LoadUniforms(GLuint program);
 
 		[[nodiscard]] inline const std::vector<UniformBufferInfo>& GetUniformBlocks() const noexcept { return m_UniformBlocks; }
 		[[nodiscard]] inline const std::vector<SamplerInfo>& GetSamplers() const noexcept { return m_Samplers; }

@@ -107,13 +107,13 @@ namespace Aurora
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
-		textureDesc.ImageFormat = Format::RGBA8_UNORM;
+		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
 		textureDesc.DebugName = "Loaded texture";
-		texture = AuroraEngine::RenderDevice->createTexture(textureDesc, nullptr);
+		//texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
-			AuroraEngine::RenderDevice->writeTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
+			//AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
 
 			if (mipLevel < textureDesc.MipLevels - 1u)
 			{
@@ -156,13 +156,13 @@ namespace Aurora
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
-		textureDesc.ImageFormat = Format::RGBA8_UNORM;
+		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
 		textureDesc.DebugName = "Loaded texture";
-		texture = AuroraEngine::RenderDevice->createTexture(textureDesc, nullptr);
+		//texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
-			AuroraEngine::RenderDevice->writeTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
+			//AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
 
 			if (mipLevel < textureDesc.MipLevels - 1u)
 			{
@@ -200,18 +200,6 @@ namespace Aurora
 		return true;
 	}
 
-	const ShaderResourceObject_ptr &AssetManager::LoadShaderResource(const Path &path, const ShaderType& type)
-	{
-		if(m_ShaderResources.find(path) != m_ShaderResources.end()) {
-			return m_ShaderResources[path];
-		} else {
-			m_ShaderResources[path] = ShaderResourceObject_ptr(new ShaderResourceObject(path, type));
-			auto& res = m_ShaderResources[path];
-			res->Load(false);
-			return res;
-		}
-	}
-
 	static std::map<String, ShaderType> ShaderFileTypeNames = { // NOLINT(cert-err58-cpp)
 			{"vertex", ShaderType::Vertex},
 			{"fragment", ShaderType::Pixel},
@@ -221,7 +209,89 @@ namespace Aurora
 			{"compute", ShaderType::Compute}
 	};
 
-	std::vector<ShaderResourceObject_ptr> AssetManager::LoadShaderResourceFolder(const Path &path)
+	Shader_ptr AssetManager::LoadShaderFolder(const Path &path, const ShaderMacros& macros)
+	{
+		auto it = m_ShaderPrograms.find(path);
+
+		if(it != m_ShaderPrograms.end()) {
+			return m_ShaderPrograms[path];
+		}
+
+		ShaderProgramDesc shaderProgramDesc(path.string());
+
+		for(auto& filePath: ListFiles(path)) {
+			auto extension = filePath.extension().string();
+
+			if(extension == ".disabled" || extension != ".glsl") continue;
+
+			// Find shader type by filename
+
+			auto filenameWithoutExtension = filePath.stem().string();
+			auto shaderTypeIter = ShaderFileTypeNames.find(filenameWithoutExtension);
+
+			if(shaderTypeIter == ShaderFileTypeNames.end()) {
+				std::cerr << "Unknown shader type " << filenameWithoutExtension << std::endl;
+				continue;
+			}
+
+			auto shaderType = ShaderFileTypeNames[filenameWithoutExtension];
+
+			if(shaderType == ShaderType::Compute) {
+				AU_LOG_WARNING("In shader pack ", path, " is present compute shader ! Skipping.");
+				continue;
+			}
+
+			String shaderSource = LoadFileToString(filePath);
+
+			shaderProgramDesc.AddShader(shaderType, shaderSource, macros);
+		}
+
+		auto shaderProgram = AuroraEngine::RenderDevice->CreateShaderProgram(shaderProgramDesc);
+
+		if(shaderProgram == nullptr) {
+			return nullptr;
+		}
+
+		m_ShaderPrograms[path] = shaderProgram;
+
+		return shaderProgram;
+	}
+
+	Shader_ptr AssetManager::LoadComputeShader(const Path &path, const ShaderMacros& macros)
+	{
+		auto it = m_ShaderPrograms.find(path);
+
+		if(it != m_ShaderPrograms.end()) {
+			return m_ShaderPrograms[path];
+		}
+
+		ShaderProgramDesc shaderProgramDesc(path.string());
+		shaderProgramDesc.AddShader(ShaderType::Compute, LoadFileToString(path), macros);
+
+		auto shaderProgram = AuroraEngine::RenderDevice->CreateShaderProgram(shaderProgramDesc);
+
+		if(shaderProgram == nullptr) {
+			return nullptr;
+		}
+
+		m_ShaderPrograms[path] = shaderProgram;
+
+		return shaderProgram;
+	}
+
+	/*const ShaderResourceObject_ptr &AssetManager::LoadShaderResource(const Path &path, const ShaderType& type)
+	{
+		if(m_ShaderResources.find(path) != m_ShaderResources.end()) {
+			return m_ShaderResources[path];
+		} else {
+			m_ShaderResources[path] = ShaderResourceObject_ptr(new ShaderResourceObject(path, type));
+			auto& res = m_ShaderResources[path];
+			res->Load(false);
+			return res;
+		}
+	}*/
+
+	/*std::vector<ShaderResourceObject_ptr> AssetManager::LoadShaderResourceFolder(const Path &path)
 	{
 		std::vector<ShaderResourceObject_ptr> shaders;
 
@@ -247,7 +317,7 @@ namespace Aurora
 		}
 
 		return shaders;
-	}
+	}*/
 
 	std::vector<Path> AssetManager::ListFiles(const Path &path)
 	{

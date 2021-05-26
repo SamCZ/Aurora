@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IRenderDevice.hpp"
+#include "IRenderDeviceNV.hpp"
 
 namespace Aurora
 {

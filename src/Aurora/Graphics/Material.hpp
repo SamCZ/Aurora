@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IGraphicsPipeline.hpp"
-#include "IRenderDevice.hpp"
+#include "IRenderDeviceNV.hpp"
 
 #include "ShaderCollection.hpp"
 #include "Aurora/Core/Common.hpp"

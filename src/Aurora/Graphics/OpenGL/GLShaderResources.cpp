@@ -1,7 +1,8 @@
 #include "GLShaderResources.hpp"
 #include <cstring>
+#include <iostream>
 
-#include "OpenGLShader.hpp"
+#include "GLShaderProgram.hpp"
 
 namespace Aurora
 {
@@ -28,12 +29,10 @@ namespace Aurora
 
 	}
 
-	void GLShaderResources::LoadUniforms(const ShaderType &shaderType, OpenGLShader* shaderHandle)
+	void GLShaderResources::LoadUniforms(GLuint program)
 	{
 		std::unordered_set<std::string> NamesPool;
 		std::map<GLuint, BasicUniform> BasicUniforms;
-
-		auto program = shaderHandle->Handle();
 
 		GLint lastUsedProgramID = 0;
 		glGetIntegerv(GL_CURRENT_PROGRAM, &lastUsedProgramID);
@@ -157,8 +156,7 @@ namespace Aurora
 					RemoveArrayBrackets(Name.data());
 
 					m_Samplers.push_back(
-							{NamesPool.emplace(Name.data()).first->c_str(),
-							 shaderType,
+							{*NamesPool.emplace(Name.data()).first,
 							 ResourceType,
 							 m_SamplerBinding,
 							 static_cast<uint32_t>(size),
@@ -226,8 +224,7 @@ namespace Aurora
 
 					m_Images.push_back(
 							{
-									NamesPool.emplace(Name.data()).first->c_str(),
-									shaderType,
+									*NamesPool.emplace(Name.data()).first,
 									ResourceType,
 									m_ImageBinding,
 									static_cast<uint32_t>(size),
@@ -331,6 +328,8 @@ namespace Aurora
 			{
 				GLint dataSize;
 				glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_DATA_SIZE, &dataSize);
+				GLint bindingLocal;
+				glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_BINDING, &bindingLocal);
 				GLint blockUniformCount;
 				glGetActiveUniformBlockiv(program, i, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &blockUniformCount);
 				std::vector<GLint> BlockUniformIndices(blockUniformCount);
@@ -338,14 +337,27 @@ namespace Aurora
 				std::vector<GLint> BlockUniformOffsets(blockUniformCount);
 				glGetActiveUniformsiv(program, blockUniformCount, (GLuint*)BlockUniformIndices.data(), GL_UNIFORM_OFFSET, BlockUniformOffsets.data());
 
+				std::cout << bindingLocal <<std::endl;
+
+				size_t blockSizeFromVars = 0;
+
 				for (GLint j = 0; j < blockUniformCount; ++j) {
 					const BasicUniform& uniform = BasicUniforms[BlockUniformIndices[j]];
 					GLint offset = BlockUniformOffsets[j];
+					blockSizeFromVars += uniform.Size * uniform.ArraySize;
+				}
+
+				std::cout << Name.data() << " : " << dataSize << "(" << blockSizeFromVars << ")" << std::endl;
+
+				for (GLint j = 0; j < blockUniformCount; ++j) {
+					const BasicUniform& uniform = BasicUniforms[BlockUniformIndices[j]];
+					GLint offset = BlockUniformOffsets[j];
+
+					std::cout << " - " << uniform.Name << " - size " << (uniform.Size * uniform.ArraySize) << " - offset " << offset << std::endl;
 				}
 
 				m_UniformBlocks.push_back({
-												NamesPool.emplace(Name.data()).first->c_str(),
-												shaderType,
+												*NamesPool.emplace(Name.data()).first,
 												ShaderResourceType::ConstantBuffer,
 												m_UniformBufferBinding,
 												static_cast<uint32_t>(ArraySize),
@@ -402,8 +414,7 @@ namespace Aurora
 			if (IsNewBlock)
 			{
 				m_StorageBlocks.push_back({
-												NamesPool.emplace(Name.data()).first->c_str(),
-												shaderType,
+												*NamesPool.emplace(Name.data()).first,
 												ShaderResourceType::BufferUAV,
 												m_StorageBufferBinding,
 												static_cast<uint32_t>(ArraySize),

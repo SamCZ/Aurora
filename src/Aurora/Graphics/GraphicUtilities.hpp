@@ -8,7 +8,7 @@
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Core/Common.hpp"
 
-#include "IRenderDevice.hpp"
+#include "IRenderDeviceNV.hpp"
 
 namespace Aurora
 {
@@ -23,8 +23,8 @@ namespace Aurora
 	public:
 		static TextureHandle CreateTextureArray(const std::vector<TextureHandle>& textures);
 		static TextureHandle CreateCubeMap(const std::array<TextureHandle, 6>& textures);
-		static TextureHandle CreateRenderTarget2D(const char* name, int width, int height, const Format::Enum& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav = false);
-		static TextureHandle CreateRenderTargetDepth2D(const char* name, int width, int height, const Format::Enum& format, bool useAsShaderResource, bool useUav = false);
+		static TextureHandle CreateRenderTarget2D(const char* name, int width, int height, const GraphicsFormat& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav = false);
+		static TextureHandle CreateRenderTargetDepth2D(const char* name, int width, int height, const GraphicsFormat& format, bool useAsShaderResource, bool useUav = false);
 
 		static void Blit(TextureHandle src, TextureHandle dest);
 		static void Blit(std::shared_ptr<Material>& material, TextureHandle src, TextureHandle dest);

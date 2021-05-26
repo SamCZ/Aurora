@@ -40,6 +40,7 @@ namespace Aurora
 			Texture_ptr Texture = nullptr;
 			Vector2 CustomUVs[4]{};
 			bool EnabledCustomUVs = false;
+			bool IsFont = false;
 			Material_ptr OverrideMaterial = nullptr;
 		};
 	private:

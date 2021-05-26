@@ -10,12 +10,9 @@
 
 #include "Assets/AssetManager.hpp"
 #include "Sound/SoundSystem.hpp"
-#include "Graphics/UI/UIRenderer.hpp"
 
-namespace Diligent
-{
-	class ImGuiImplDiligent;
-}
+#include "Graphics/Base/IRenderDevice.hpp"
+#include "Graphics/UI/UIRenderer.hpp"
 
 namespace Aurora
 {
@@ -28,10 +25,8 @@ namespace Aurora
 		static bool IsRunning;
 		static std::vector<WindowGameContext_ptr> GameContexts;
 		static std::map<std::thread::id, WindowGameContext_ptr> GameContextsByThread;
-
-		static std::unique_ptr<Diligent::ImGuiImplDiligent> ImGuiImpl;
 	public:
-		static IRendererInterface* RenderDevice;
+		static IRenderDevice* RenderDevice;
 		static AssetManager_ptr AssetManager;
 #ifdef FMOD_SUPPORTED
 		static SoundSystem_ptr SoundSystem;

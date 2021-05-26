@@ -82,8 +82,8 @@ namespace Aurora
 		//throw std::runtime_error("ShaderResourceObject::Compile() not implemented");
 
 		String completeSource;
-		completeSource += "#version 430\n";
-		//completeSource += "#extension GL_EXT_separate_shader_objects : enable\n";
+		completeSource += "#version 430 core\n";
+		completeSource += "#extension GL_EXT_separate_shader_objects : enable\n";
 
 		if(m_Type == ShaderType::Vertex) {
 			//completeSource += "#extension GL_KHR_vulkan_glsl : enable\n";
@@ -93,7 +93,8 @@ namespace Aurora
 
 		completeSource += shaderSource;
 
-		Shader_ptr shaderHandle = AuroraEngine::RenderDevice->createShader(ShaderDesc(m_Type), completeSource.c_str(), 0);
+		ShaderDesc shaderDesc(m_Type, completeSource, macros);
+		Shader_ptr shaderHandle = nullptr;
 
 		if(shaderHandle != nullptr) {
 			compileState.Compiled = true;

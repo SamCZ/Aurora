@@ -6,7 +6,7 @@
 
 #include "Aurora/Core/Common.hpp"
 #include "Aurora/Graphics/ShaderCollection.hpp"
-#include "Aurora/Graphics/IRenderDevice.hpp"
+#include "Aurora/Graphics/IRenderDeviceNV.hpp"
 #include "FilePackager.hpp"
 
 #include "Resources/ShaderResourceObject.hpp"
@@ -23,7 +23,7 @@ namespace Aurora
 		ShaderType ShaderType;
 		Path FilePath;
 		String Source;
-		ShaderMacro Macros;
+		ShaderMacros Macros;
 	};
 
 	AU_CLASS(AssetManager)
@@ -35,6 +35,7 @@ namespace Aurora
 		std::map<Path, TextureHandle> m_LoadedTextures;
 
 		std::map<Path, ShaderResourceObject_ptr> m_ShaderResources;
+		std::map<Path, Shader_ptr> m_ShaderPrograms;
 	public:
 		AssetManager();
 
@@ -44,8 +45,11 @@ namespace Aurora
 
 		void LoadPackageFile(const Path& path);
 
-		const ShaderResourceObject_ptr& LoadShaderResource(const Path& path, const ShaderType& type);
-		std::vector<ShaderResourceObject_ptr> LoadShaderResourceFolder(const Path& path);
+		/*const ShaderResourceObject_ptr& LoadShaderResource(const Path& path, const ShaderType& type);
+		std::vector<ShaderResourceObject_ptr> LoadShaderResourceFolder(const Path& path);*/
+
+		Shader_ptr LoadShaderFolder(const Path& path, const ShaderMacros& macros = {});
+		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
 
 		TextureHandle LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo = {});
 		TextureHandle LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo& textureLoadInfo = {});

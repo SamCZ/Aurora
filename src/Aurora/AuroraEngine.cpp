@@ -5,7 +5,7 @@
 #include <memory>
 #include <thread>
 
-#include "Graphics/OpenGL/RenderDeviceGl4.hpp"
+#include "Graphics/OpenGL/GLRenderDevice.hpp"
 #include "Graphics/OpenGL/SwapChainGL4.hpp"
 #include <GLFW/glfw3.h>
 
@@ -33,16 +33,16 @@ namespace Aurora
 {
 	class PipelineErrorHandler : public IErrorCallback
 	{
-		void signalError(const char* file, int line, const char* errorDesc) override
+		void SignalError(const char* function, const char* file, int line, const char* errorDesc) override
 		{
-			Logger::Log(Logger::Severity::Error, "Unknown", file, line, errorDesc);
+			Logger::Log(Logger::Severity::Error, function, file, line, errorDesc);
 		}
 	};
 
 	bool AuroraEngine::IsInitialized = false;
 	bool AuroraEngine::IsRunning = false;
 
-	IRendererInterface* AuroraEngine::RenderDevice = nullptr;
+	IRenderDevice* AuroraEngine::RenderDevice = nullptr;
 	AssetManager_ptr AuroraEngine::AssetManager = nullptr;
 #ifdef FMOD_SUPPORTED
 	SoundSystem_ptr AuroraEngine::SoundSystem = nullptr;
@@ -231,9 +231,9 @@ namespace Aurora
 		window->Initialize(windowDef, nullptr);
 
 		if(RenderDevice == nullptr) {
-			auto oglRender = new RendererInterfaceOGL(&errorHandler);
+			auto oglRender = new GLRenderDevice();
 			RenderDevice = oglRender;
-			oglRender->init();
+			oglRender->Init();
 		}
 
 		ISwapChain_ptr swapChain;

@@ -15,11 +15,11 @@ namespace Aurora
 	{
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
-		for(const auto& shaderResource : AuroraEngine::AssetManager->LoadShaderResourceFolder(shaderPath)) {
+		/*for(const auto& shaderResource : AuroraEngine::AssetManager->LoadShaderResourceFolder(shaderPath)) {
 			if(shaderResource->GetShaderType() == ShaderType::Compute) continue;
 
 			SetShader(shaderResource);
-		}
+		}*/
 
 		SetCullMode(RasterState::CullMode::Front);
 		SetDepthEnable(true);

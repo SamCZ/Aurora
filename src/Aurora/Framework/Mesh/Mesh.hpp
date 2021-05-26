@@ -4,7 +4,7 @@
 #include <Aurora/Graphics/VertexBuffer.hpp>
 #include <Aurora/Graphics/Material.hpp>
 #include <Aurora/Physics/Bound.hpp>
-#include <Aurora/Graphics/IRenderDevice.hpp>
+#include <Aurora/Graphics/IRenderDeviceNV.hpp>
 
 #include <utility>
 

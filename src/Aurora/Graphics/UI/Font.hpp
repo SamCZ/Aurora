@@ -5,7 +5,7 @@
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/Vector.hpp>
 #include <Aurora/Core/FileSystem.hpp>
-#include <Aurora/Graphics/IRenderDevice.hpp>
+#include <Aurora/Graphics/IRenderDeviceNV.hpp>
 
 namespace Aurora
 {

@@ -9,6 +9,7 @@
 */
 
 #include "RenderDeviceGl4.hpp"
+#include "GLFormatMapping.hpp"
 
 #ifdef _WIN32
 #include <wrl.h>
@@ -18,18 +19,11 @@
 #include <cassert>
 
 //#define CHECK_GL_ERROR() checkGLError(__FILE__, __LINE__)
-#define SIGNAL_ERROR(msg) m_pErrorCallback->signalError(__FILE__, __LINE__, msg)
-#define SIGNAL_ERROR_FMT(...) { char __error_buf[4096]; snprintf(__error_buf, 4096, __VA_ARGS__); m_pErrorCallback->signalError(__FILE__, __LINE__, __error_buf); }
+#define SIGNAL_ERROR(msg) m_pErrorCallback->SignalError(__FUNCTION__, __FILE__, __LINE__, msg)
+#define SIGNAL_ERROR_FMT(...) { char __error_buf[4096]; snprintf(__error_buf, 4096, __VA_ARGS__); m_pErrorCallback->SignalError(__FUNCTION__, __FILE__, __LINE__, __error_buf); }
 
 namespace Aurora
 {
-	const FormatMapping& GetFormatMapping(Format::Enum abstractFormat)
-	{
-		const FormatMapping& mapping = FormatMappings[abstractFormat];
-		assert(mapping.abstractFormat == abstractFormat);
-		return mapping;
-	}
-
 #ifdef _WIN32
     bool GetSSE42Support()
     {
@@ -183,17 +177,17 @@ namespace Aurora
         }
     };
 
-    class ConstantBuffer
+    class UniformBuffer
     {
     public:
-        ConstantBufferDesc desc;
+        UniformBufferDesc desc;
         GLuint handle;
 
-        ConstantBuffer()
+        UniformBuffer()
             : handle(0)
         { }
 
-        ~ConstantBuffer()
+        ~UniformBuffer()
         {
             if (handle)
                 glDeleteBuffers(1, &handle);
@@ -289,7 +283,7 @@ namespace Aurora
         glGenProgramPipelines(1, &m_nComputePipeline);
     }
 
-    bool RendererInterfaceOGL::isOpenGLExtensionSupported(const char* name)
+    bool RendererInterfaceOGL::IsOpenGLExtensionSupported(const char* name)
     {
         int n = 0;
 		int max = 0;
@@ -311,7 +305,7 @@ namespace Aurora
         return bFound;
     }
 
-    void* RendererInterfaceOGL::getOpenGLProcAddress(const char* procname)
+    void* RendererInterfaceOGL::GetOpenGLProcAddress(const char* procname)
     {
     #ifdef _WIN32
        // return wglGetProcAddress((LPCSTR*)procname);
@@ -321,7 +315,7 @@ namespace Aurora
     #endif
     }
 
-    TextureHandle RendererInterfaceOGL::createTexture(const TextureDesc& d, const void* data)
+    TextureHandle RendererInterfaceOGL::CreateTexture(const TextureDesc& d, const void* data)
     {
         const FormatMapping& formatMapping = GetFormatMapping(d.ImageFormat);
 
@@ -340,7 +334,7 @@ namespace Aurora
             glTexStorage2D(
                 texture->bindTarget,
                 d.MipLevels,
-                formatMapping.internalFormat,
+                formatMapping.InternalFormat,
                 d.Width,
                 d.Height);
 
@@ -355,7 +349,7 @@ namespace Aurora
 
             glTexStorage3D(texture->bindTarget,
                 d.MipLevels,
-                formatMapping.internalFormat,
+                formatMapping.InternalFormat,
                 d.Width,
                 d.Height,
                 d.DepthOrArraySize);
@@ -371,7 +365,7 @@ namespace Aurora
 
             glTexStorage3D(texture->bindTarget,
                 d.MipLevels,
-                formatMapping.internalFormat,
+                formatMapping.InternalFormat,
                 d.Width,
                 d.Height,
                 d.DepthOrArraySize);
@@ -385,7 +379,7 @@ namespace Aurora
 
             glTexStorage2DMultisample(texture->bindTarget,
                 d.SampleCount,
-                formatMapping.internalFormat,
+                formatMapping.InternalFormat,
                 d.Width,
                 d.Height,
                 GL_FALSE);
@@ -400,7 +394,7 @@ namespace Aurora
             glTexStorage2D(
                 texture->bindTarget,
                 d.MipLevels,
-                formatMapping.internalFormat,
+                formatMapping.InternalFormat,
                 d.Width,
                 d.Height);
 
@@ -416,7 +410,7 @@ namespace Aurora
 
         glBindTexture(texture->bindTarget, 0);
 
-        if (formatMapping.abstractFormat == Format::SRGBA8_UNORM)
+        if (formatMapping.AbstractFormat == GraphicsFormat::SRGBA8_UNORM)
         {
             glGenTextures(1, &texture->srgbView);
 
@@ -449,13 +443,13 @@ namespace Aurora
             if (d.IsArray || d.IsCubeMap)
                 numSubresources *= texture->desc.DepthOrArraySize;
 
-            uint32_t rowPitch = formatMapping.bytesPerPixel * d.Width;
+            uint32_t rowPitch = formatMapping.BytesPerPixel * d.Width;
             uint32_t slicePitch = rowPitch * d.Height;
             uint32_t subresourcePitch = slicePitch * (d.IsArray ? 1 : d.DepthOrArraySize);
 
             for (uint32_t subresource = 0; subresource < numSubresources; subresource++)
             {
-                writeTexture(texture, subresource, (char*)data + subresourcePitch * subresource, rowPitch, slicePitch);
+				WriteTexture(texture, subresource, (char *) data + subresourcePitch * subresource, rowPitch, slicePitch);
             }
         }
 
@@ -463,7 +457,7 @@ namespace Aurora
     }
 
 
-    TextureDesc RendererInterfaceOGL::describeTexture(TextureHandle t)
+    TextureDesc RendererInterfaceOGL::DescribeTexture(TextureHandle t)
     {
     	if(!t || t == nullptr) {
 			SIGNAL_ERROR("Texture is null !");
@@ -473,29 +467,29 @@ namespace Aurora
     }
 
 
-    void RendererInterfaceOGL::clearTextureFloat(TextureHandle t, const Color& clearColor)
+    void RendererInterfaceOGL::ClearTextureFloat(TextureHandle t, const Color& clearColor)
     {
         for (uint32_t nMipLevel = 0; nMipLevel < t->desc.MipLevels; ++nMipLevel)
         {
-            glClearTexImage(t->handle, nMipLevel, t->formatMapping.baseFormat, GL_FLOAT, &clearColor);
+            glClearTexImage(t->handle, nMipLevel, t->formatMapping.BaseFormat, GL_FLOAT, &clearColor);
             CHECK_GL_ERROR();
         }
     }
 
 
-    void RendererInterfaceOGL::clearTextureUInt(TextureHandle t, const uint32_t clearColor)
+    void RendererInterfaceOGL::ClearTextureUInt(TextureHandle t, uint32_t clearColor)
     {
         uint32_t colors[4] = { clearColor, clearColor, clearColor, clearColor };
 
         for (uint32_t nMipLevel = 0; nMipLevel < t->desc.MipLevels; ++nMipLevel)
         {
-            glClearTexImage(t->handle, nMipLevel, t->formatMapping.baseFormat, GL_UNSIGNED_INT, colors);
+            glClearTexImage(t->handle, nMipLevel, t->formatMapping.BaseFormat, GL_UNSIGNED_INT, colors);
             CHECK_GL_ERROR();
         }
     }
 
 
-    void RendererInterfaceOGL::writeTexture(TextureHandle t, uint32_t subresource, const void* data, uint32_t rowPitch, uint32_t depthPitch)
+    void RendererInterfaceOGL::WriteTexture(TextureHandle t, uint32_t subresource, const void* data, uint32_t rowPitch, uint32_t depthPitch)
     {
         (void)rowPitch;
         (void)depthPitch;
@@ -504,7 +498,7 @@ namespace Aurora
 
         if (t->desc.IsArray || t->desc.DepthOrArraySize > 0)
         {
-            glTexSubImage3D(t->bindTarget, 0, 0, 0, subresource, t->desc.Width, t->desc.Height, 1, t->formatMapping.baseFormat, t->formatMapping.type, data);
+            glTexSubImage3D(t->bindTarget, 0, 0, 0, subresource, t->desc.Width, t->desc.Height, 1, t->formatMapping.BaseFormat, t->formatMapping.Type, data);
             CHECK_GL_ERROR();
 
             if(true) {
@@ -515,7 +509,7 @@ namespace Aurora
         {
             uint32_t width = std::max<uint32_t>(1, t->desc.Width >> subresource);
             uint32_t height = std::max<uint32_t>(1, t->desc.Height >> subresource);
-            glTexSubImage2D(t->bindTarget, subresource, 0, 0, width, height, t->formatMapping.baseFormat, t->formatMapping.type, data);
+            glTexSubImage2D(t->bindTarget, subresource, 0, 0, width, height, t->formatMapping.BaseFormat, t->formatMapping.Type, data);
             CHECK_GL_ERROR();
         }
 
@@ -523,7 +517,7 @@ namespace Aurora
     }
 
 
-    void RendererInterfaceOGL::destroyTexture(TextureHandle t)
+    void RendererInterfaceOGL::DestroyTexture(TextureHandle t)
     {
         if (!t) return;
 
@@ -554,7 +548,7 @@ namespace Aurora
     }
 
 
-    BufferHandle RendererInterfaceOGL::createBuffer(const BufferDesc& d, const void* data)
+    BufferHandle RendererInterfaceOGL::CreateBuffer(const BufferDesc& d, const void* data)
     {
         BufferHandle buffer = new Buffer();
 
@@ -583,12 +577,12 @@ namespace Aurora
         return buffer;
     }
 
-	BufferDesc RendererInterfaceOGL::describeBuffer(BufferHandle b)
+	BufferDesc RendererInterfaceOGL::DescribeBuffer(BufferHandle b)
 	{
     	return b->desc;
 	}
 
-    void RendererInterfaceOGL::writeBuffer(BufferHandle b, const void* data, size_t dataSize)
+    void RendererInterfaceOGL::WriteBuffer(BufferHandle b, const void* data, size_t dataSize)
     {
         glBindBuffer(b->bindTarget, b->bufferHandle);
 
@@ -602,7 +596,7 @@ namespace Aurora
     }
 
 
-    void RendererInterfaceOGL::clearBufferUInt(BufferHandle b, uint32_t clearValue)
+    void RendererInterfaceOGL::ClearBufferUInt(BufferHandle b, uint32_t clearValue)
     {
         glBindBuffer(b->bindTarget, b->bufferHandle);
 
@@ -613,7 +607,7 @@ namespace Aurora
     }
 
 
-    void RendererInterfaceOGL::copyToBuffer(BufferHandle dest, uint32_t destOffsetBytes, BufferHandle src, uint32_t srcOffsetBytes, size_t dataSizeBytes)
+    void RendererInterfaceOGL::CopyToBuffer(BufferHandle dest, uint32_t destOffsetBytes, BufferHandle src, uint32_t srcOffsetBytes, size_t dataSizeBytes)
     {
         glBindBuffer(GL_COPY_WRITE_BUFFER, dest->bufferHandle);
         glBindBuffer(GL_COPY_READ_BUFFER, src->bufferHandle);
@@ -629,9 +623,9 @@ namespace Aurora
 
 
 
-    void RendererInterfaceOGL::readBuffer(BufferHandle b, void* data, size_t* dataSize)
+    void RendererInterfaceOGL::ReadBuffer(BufferHandle b, void* data, size_t* dataSize)
     {
-        uint32_t nBytesToRead = uint32_t(*dataSize);
+        auto nBytesToRead = uint32_t(*dataSize);
         if (nBytesToRead > b->desc.byteSize)
         {
             nBytesToRead = b->desc.byteSize;
@@ -656,52 +650,52 @@ namespace Aurora
 
 
 
-    void RendererInterfaceOGL::destroyBuffer(BufferHandle b)
+    void RendererInterfaceOGL::DestroyBuffer(BufferHandle b)
     {
         if (!b) return;
         delete b;
     }
 
 
-    ConstantBufferHandle RendererInterfaceOGL::createConstantBuffer(const ConstantBufferDesc& d, const void* data)
+    UniformBufferHandle RendererInterfaceOGL::CreateUniformBuffer(const UniformBufferDesc& d, const void* data)
     {
-        ConstantBufferHandle buffer = new ConstantBuffer();
+        auto buffer = new UniformBuffer();
 
         buffer->desc = d;
 
         glGenBuffers(1, &buffer->handle);
         glBindBuffer(GL_UNIFORM_BUFFER, buffer->handle);
-        glBufferData(GL_UNIFORM_BUFFER, d.byteSize, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_UNIFORM_BUFFER, d.ByteSize, nullptr, GL_DYNAMIC_DRAW);
         CHECK_GL_ERROR();
 
         glBindBuffer(GL_UNIFORM_BUFFER, GL_NONE);
 
         if (data)
-            writeConstantBuffer(buffer, data, d.byteSize);
+			WriteUniformBuffer(buffer, data, d.ByteSize, 0);
 
         return buffer;
     }
 
 
-    void RendererInterfaceOGL::writeConstantBuffer(ConstantBufferHandle b, const void* data, size_t dataSize)
+    void RendererInterfaceOGL::WriteUniformBuffer(UniformBufferHandle b, const void* data, size_t dataSize, uint32_t offset)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, b->handle);
 
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, dataSize, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, offset, dataSize, data);
         CHECK_GL_ERROR();
 
         glBindBuffer(GL_UNIFORM_BUFFER, GL_NONE);
     }
 
 
-    void RendererInterfaceOGL::destroyConstantBuffer(ConstantBufferHandle b)
+    void RendererInterfaceOGL::DestroyUniformBuffer(UniformBufferHandle b)
     {
         if (!b) return;
         delete b;
     }
 
 
-	Shader_ptr RendererInterfaceOGL::createShader(const ShaderDesc& desc, const void* binary, const size_t binarySize)
+	Shader_ptr RendererInterfaceOGL::CreateShader(const ShaderDesc& desc, const void* binary, size_t binarySize)
     {
         (void)binarySize;
 
@@ -716,8 +710,7 @@ namespace Aurora
         case ShaderType::Geometry:   programType = GL_GEOMETRY_SHADER; break;
         case ShaderType::Pixel:      programType = GL_FRAGMENT_SHADER; break;
         case ShaderType::Compute:    programType = GL_COMPUTE_SHADER; break;
-        default:
-            SIGNAL_ERROR_FMT("Unrecognized shader type %d", desc.Type);
+        default: SIGNAL_ERROR_FMT("Unrecognized shader type %d", desc.Type);
             return nullptr;
         }
 
@@ -741,13 +734,13 @@ namespace Aurora
                     glGetProgramInfoLog(handle, infoLen, nullptr, infoLog);
 
 					std::cout << infoLog << std::endl;
-                    SIGNAL_ERROR_FMT("Failed to compile shader: %s", infoLog);
+					SIGNAL_ERROR_FMT("Failed to compile shader: %s", infoLog);
 
                     delete[] infoLog;
                 }
                 else
                 {
-                    SIGNAL_ERROR("Failed to compile shader and get the info log");
+					SIGNAL_ERROR("Failed to compile shader and get the info log");
                 }
             }
             else
@@ -761,17 +754,18 @@ namespace Aurora
             return nullptr;
         }
 
-        return std::make_shared<OpenGLShader>(handle, desc);
+        //return std::make_shared<GLShaderProgram>(handle, desc);
+        return nullptr;
     }
 
 
-    void RendererInterfaceOGL::destroyShader(Shader_ptr& s)
+    void RendererInterfaceOGL::DestroyShader(Shader_ptr& s)
     {
 
     }
 
 
-    SamplerHandle RendererInterfaceOGL::createSampler(const SamplerDesc& d)
+    SamplerHandle RendererInterfaceOGL::CreateSampler(const SamplerDesc& d)
     {
         SamplerHandle sampler = new Sampler();
 
@@ -805,13 +799,13 @@ namespace Aurora
     }
 
 
-    void RendererInterfaceOGL::destroySampler(SamplerHandle s)
+    void RendererInterfaceOGL::DestroySampler(SamplerHandle s)
     {
         if (!s) return;
         delete s;
     }
 
-    InputLayoutHandle RendererInterfaceOGL::createInputLayout(const VertexAttributeDesc * d, uint32_t attributeCount, const void * vertexShaderBinary, const size_t binarySize)
+    InputLayoutHandle RendererInterfaceOGL::CreateInputLayout(const VertexAttributeDesc * d, uint32_t attributeCount, const void * vertexShaderBinary, size_t binarySize)
     {
         (void)vertexShaderBinary;
         (void)binarySize;
@@ -826,7 +820,7 @@ namespace Aurora
         return i;
     }
 
-    void RendererInterfaceOGL::destroyInputLayout(InputLayoutHandle i)
+    void RendererInterfaceOGL::CestroyInputLayout(InputLayoutHandle i)
     {
         if (!i) return;
         delete i;
@@ -857,7 +851,7 @@ namespace Aurora
 
                 if (binding == nullptr)
                 {
-                    SIGNAL_ERROR_FMT("Vertex buffer for slot %d is not bound", attr.bufferIndex);
+					SIGNAL_ERROR_FMT("Vertex buffer for slot %d is not bound", attr.bufferIndex);
                     continue;
                 }
 
@@ -865,18 +859,18 @@ namespace Aurora
 
                 const FormatMapping& formatMapping = GetFormatMapping(attr.format);
 
-                if(formatMapping.type == GL_INT || formatMapping.type == GL_UNSIGNED_INT)
+                if(formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT)
                     glVertexAttribIPointer(
                         GLuint(nattr),
-                        GLint(formatMapping.components),
-                        formatMapping.type,
+                        GLint(formatMapping.Components),
+                        formatMapping.Type,
                         GLsizei(binding->stride),
                         (const void*)size_t(binding->offset + attr.offset));
                 else
                     glVertexAttribPointer(
                         GLuint(nattr),
-                        GLint(formatMapping.components),
-                        formatMapping.type,
+                        GLint(formatMapping.Components),
+                        formatMapping.Type,
                         GL_TRUE,
                         GLsizei(binding->stride),
                         (const void*)size_t(binding->offset + attr.offset));
@@ -1029,7 +1023,7 @@ namespace Aurora
         {
             if (renderState.targets[rt] == m_DefaultBackBuffer)
             {
-                SIGNAL_ERROR("Cannot bind the default back buffer unless it's the only render target bound, no depth");
+				SIGNAL_ERROR("Cannot bind the default back buffer unless it's the only render target bound, no depth");
             }
             else if (renderState.targets[rt] != nullptr)
             {
@@ -1053,7 +1047,7 @@ namespace Aurora
 
             GLenum attachment;
 
-            if (renderState.depthTarget->desc.ImageFormat == Format::D24S8)
+            if (renderState.depthTarget->desc.ImageFormat == GraphicsFormat::D24S8)
                 attachment = GL_DEPTH_STENCIL_ATTACHMENT;
             else
                 attachment = GL_DEPTH_ATTACHMENT;
@@ -1068,7 +1062,7 @@ namespace Aurora
 
         uint32_t status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE)
-            SIGNAL_ERROR("Incomplete framebuffer!");
+			SIGNAL_ERROR("Incomplete framebuffer!");
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1082,11 +1076,11 @@ namespace Aurora
     {
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "cppcoreguidelines-pro-type-static-cast-downcast"
-        glUseProgramStages(m_nGraphicsPipeline, GL_VERTEX_SHADER_BIT,           state.VS.shader ? (static_cast<OpenGLShader*>(state.VS.shader.get()))->Handle() : GL_NONE);
-        glUseProgramStages(m_nGraphicsPipeline, GL_TESS_CONTROL_SHADER_BIT,     state.HS.shader ? (static_cast<OpenGLShader*>(state.HS.shader.get()))->Handle() : GL_NONE);
-        glUseProgramStages(m_nGraphicsPipeline, GL_TESS_EVALUATION_SHADER_BIT,  state.DS.shader ? (static_cast<OpenGLShader*>(state.DS.shader.get()))->Handle() : GL_NONE);
-        glUseProgramStages(m_nGraphicsPipeline, GL_GEOMETRY_SHADER_BIT,         state.GS.shader ? (static_cast<OpenGLShader*>(state.GS.shader.get()))->Handle() : GL_NONE);
-        glUseProgramStages(m_nGraphicsPipeline, GL_FRAGMENT_SHADER_BIT,         state.PS.shader ? (static_cast<OpenGLShader*>(state.PS.shader.get()))->Handle() : GL_NONE);
+        glUseProgramStages(m_nGraphicsPipeline, GL_VERTEX_SHADER_BIT,           state.VS.shader ? (static_cast<GLShaderProgram*>(state.VS.shader.get()))->Handle() : GL_NONE);
+        glUseProgramStages(m_nGraphicsPipeline, GL_TESS_CONTROL_SHADER_BIT,     state.HS.shader ? (static_cast<GLShaderProgram*>(state.HS.shader.get()))->Handle() : GL_NONE);
+        glUseProgramStages(m_nGraphicsPipeline, GL_TESS_EVALUATION_SHADER_BIT,  state.DS.shader ? (static_cast<GLShaderProgram*>(state.DS.shader.get()))->Handle() : GL_NONE);
+        glUseProgramStages(m_nGraphicsPipeline, GL_GEOMETRY_SHADER_BIT,         state.GS.shader ? (static_cast<GLShaderProgram*>(state.GS.shader.get()))->Handle() : GL_NONE);
+        glUseProgramStages(m_nGraphicsPipeline, GL_FRAGMENT_SHADER_BIT,         state.PS.shader ? (static_cast<GLShaderProgram*>(state.PS.shader.get()))->Handle() : GL_NONE);
 #pragma clang diagnostic pop
         glBindProgramPipeline(m_nGraphicsPipeline);
     }
@@ -1097,7 +1091,7 @@ namespace Aurora
 
         if(state.shader == nullptr) return;
 
-        auto shader = static_cast<OpenGLShader*>(state.shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+        auto shader = static_cast<GLShaderProgram*>(state.shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
         for(const auto& imageResource : shader->GetGLResource().GetSamplers()) {
         	auto boundTextureIt = state.BoundTextures.find(imageResource.Name);
@@ -1116,19 +1110,19 @@ namespace Aurora
 				continue;
 			}
 
-			const TextureDesc& textureDesc = describeTexture(targetTexture);
+			const TextureDesc& textureDesc = DescribeTexture(targetTexture);
 			bool isWritable = false;
 			// TODO: Complete UAVs writables
 
 			if(textureDesc.IsUAV && isWritable) {
-				GLenum format = targetTexture->formatMapping.internalFormat;
+				GLenum format = targetTexture->formatMapping.InternalFormat;
 				glBindImageTexture(imageResource.Binding, targetTexture->handle, static_cast<GLint>(textureDesc.MipLevels), GL_TRUE, 0, GL_READ_WRITE, format);
 				CHECK_GL_ERROR();
 				m_vecBoundImages.push_back(imageResource.Binding);
 			} else {
 				glActiveTexture(GL_TEXTURE0 + imageResource.Binding);
 
-				if(targetTexture->formatMapping.abstractFormat == Format::SRGBA8_UNORM)
+				if(targetTexture->formatMapping.AbstractFormat == GraphicsFormat::SRGBA8_UNORM)
 					glBindTexture(targetTexture->bindTarget, targetTexture->srgbView);
 				else
 					glBindTexture(targetTexture->bindTarget, targetTexture->handle);
@@ -1152,9 +1146,9 @@ namespace Aurora
             {
                 if (binding.isWritable)
                 {
-                    GLenum format = binding.texture->formatMapping.internalFormat;
+                    GLenum format = binding.texture->formatMapping.InternalFormat;
                     if (binding.format != Format::UNKNOWN)
-                        format = GetFormatMapping(binding.format).internalFormat;
+                        format = GetFormatMapping(binding.format).InternalFormat;
 
                     glBindImageTexture(binding.slot, binding.texture->handle, binding.mipLevel, GL_TRUE, 0, GL_READ_WRITE, format);
                     CHECK_GL_ERROR();
@@ -1165,7 +1159,7 @@ namespace Aurora
                 {
                     glActiveTexture(GL_TEXTURE0 + binding.slot);
 
-                    if(binding.texture->formatMapping.abstractFormat == Format::SRGBA8_UNORM)
+                    if(binding.texture->formatMapping.AbstractFormat == Format::SRGBA8_UNORM)
                         glBindTexture(binding.texture->bindTarget, binding.texture->srgbView);
                     else
                         glBindTexture(binding.texture->bindTarget, binding.texture->handle);
@@ -1207,13 +1201,34 @@ namespace Aurora
         }*/
 
         // binding constant buffers
-        for (uint32_t i = 0; i < state.constantBufferBindingCount; i++)
+		for(const auto& uniformResource : shader->GetGLResource().GetUniformBlocks()) {
+			auto uniformBufferIt = state.BoundUniformBuffers.find(uniformResource.Name);
+
+			UniformBufferHandle uniformBufferHandle = nullptr;
+
+			if(uniformBufferIt == state.BoundUniformBuffers.end()) {
+				// TODO: Set empty buffer
+				continue;
+			}
+
+			uniformBufferHandle = uniformBufferIt->second;
+
+			if(uniformBufferHandle == nullptr) {
+				// TODO: Set empty buffer or throw error
+				continue;
+			}
+
+			glBindBufferBase(GL_UNIFORM_BUFFER, uniformResource.Binding, uniformBufferHandle->handle);
+			m_vecBoundConstantBuffers.push_back(uniformResource.Binding);
+		}
+
+        /*for (uint32_t i = 0; i < state.constantBufferBindingCount; i++)
         {
             const ConstantBufferBinding& binding = state.constantBuffers[i];
 
             glBindBufferBase(GL_UNIFORM_BUFFER, binding.slot, binding.buffer->handle);
             m_vecBoundConstantBuffers.push_back(binding.slot);
-        }
+        }*/
 
         // binding ssbo`s
         for (uint32_t nBuffer = 0; nBuffer < state.bufferBindingCount; ++nBuffer)
@@ -1256,8 +1271,7 @@ namespace Aurora
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             break;
 
-        default:
-            SIGNAL_ERROR_FMT("Unknown fill mode specified %d", rasterState.fillMode);
+        default: SIGNAL_ERROR_FMT("Unknown fill mode specified %d", rasterState.fillMode);
             break;
         }
 
@@ -1274,8 +1288,7 @@ namespace Aurora
         case RasterState::CullMode::None:
             glDisable(GL_CULL_FACE);
             break;
-        default:
-            SIGNAL_ERROR_FMT("Unknown cullMode %d", rasterState.cullMode);
+        default: SIGNAL_ERROR_FMT("Unknown cullMode %d", rasterState.cullMode);
         }
 
         glFrontFace(rasterState.frontCounterClockwise ? GL_CCW : GL_CW);
@@ -1313,7 +1326,7 @@ namespace Aurora
 
         if (rasterState.antialiasedLineEnable)
         {
-            SIGNAL_ERROR("Antialiased line rasterizer state requested");
+			SIGNAL_ERROR("Antialiased line rasterizer state requested");
         }
 
         if (rasterState.conservativeRasterEnable)
@@ -1334,7 +1347,7 @@ namespace Aurora
             }
             else
             {
-                SIGNAL_ERROR("Trying to use forcedSampleCount but glRasterSamplesEXT function is NULL");
+				SIGNAL_ERROR("Trying to use forcedSampleCount but glRasterSamplesEXT function is NULL");
             }
         }
 
@@ -1355,7 +1368,7 @@ namespace Aurora
             }
             else
             {
-                SIGNAL_ERROR("Trying to use programmableSamplePositions but glFramebufferSampleLocationsfvNV function is NULL");
+				SIGNAL_ERROR("Trying to use programmableSamplePositions but glFramebufferSampleLocationsfvNV function is NULL");
             }
         }
     }
@@ -1430,7 +1443,7 @@ namespace Aurora
 
 
 
-    void RendererInterfaceOGL::draw(const DrawCallState& state, const DrawArguments* args, uint32_t numDrawCalls)
+    void RendererInterfaceOGL::Draw(const DrawCallState& state, const DrawArguments* args, uint32_t numDrawCalls)
     {
         ApplyState(state);
 
@@ -1447,7 +1460,7 @@ namespace Aurora
         CHECK_GL_ERROR();
     }
 
-    void RendererInterfaceOGL::drawIndexed(const DrawCallState& state, const DrawArguments* args, uint32_t numDrawCalls)
+    void RendererInterfaceOGL::DrawIndexed(const DrawCallState& state, const DrawArguments* args, uint32_t numDrawCalls)
     {
         ApplyState(state);
 
@@ -1484,7 +1497,7 @@ namespace Aurora
         CHECK_GL_ERROR();
     }
 
-    void RendererInterfaceOGL::drawIndirect(const DrawCallState& state, BufferHandle indirectParams, uint32_t offsetBytes)
+    void RendererInterfaceOGL::DrawIndirect(const DrawCallState& state, BufferHandle indirectParams, uint32_t offsetBytes)
     {
         ApplyState(state);
 
@@ -1499,7 +1512,7 @@ namespace Aurora
         RestoreDefaultState();
     }
 
-    void RendererInterfaceOGL::dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ)
+    void RendererInterfaceOGL::Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ)
     {
         ApplyState(state);
 
@@ -1515,7 +1528,7 @@ namespace Aurora
 
 
 
-    void RendererInterfaceOGL::dispatchIndirect(const DispatchState& state, BufferHandle indirectParams, uint32_t offsetBytes)
+    void RendererInterfaceOGL::DispatchIndirect(const DispatchState& state, BufferHandle indirectParams, uint32_t offsetBytes)
     {
         ApplyState(state);
 
@@ -1535,13 +1548,13 @@ namespace Aurora
 
     void RendererInterfaceOGL::ApplyState(const DispatchState& state)
     {
-        glUseProgramStages(m_nComputePipeline, GL_COMPUTE_SHADER_BIT, ((OpenGLShader*)state.shader.get())->Handle());
+        glUseProgramStages(m_nComputePipeline, GL_COMPUTE_SHADER_BIT, ((GLShaderProgram*)state.shader.get())->Handle());
         glBindProgramPipeline(m_nComputePipeline);
 
         BindShaderResources(state);
     }
 
-    void RendererInterfaceOGL::checkGLError(const char* file, int line)
+    void RendererInterfaceOGL::checkGLError(const char* function, const char* file, int line)
     {
         GLint error = glGetError();
 
@@ -1576,12 +1589,12 @@ namespace Aurora
                 break;
             }
 
-            m_pErrorCallback->signalError(file, line, errorString);
+			m_pErrorCallback->SignalError(function, file, line, errorString);
         }
     }
 
 
-    void RendererInterfaceOGL::executeRenderThreadCommand(IRenderThreadCommand* onCommand)
+    void RendererInterfaceOGL::ExecuteRenderThreadCommand(IRenderThreadCommand* onCommand)
     {
         //we have a simple implementation
         onCommand->executeAndDispose();
@@ -1694,23 +1707,23 @@ namespace Aurora
 
         glBindTexture(target, texture);
 
-        GLenum internalFormat = 0;
-        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, (GLint*)&internalFormat);
+        GLenum InternalFormat = 0;
+        glGetTexLevelParameteriv(target, 0, GL_TEXTURE_INTERNAL_FORMAT, (GLint*)&InternalFormat);
 
         for (uint32_t n = 0; n < _countof(FormatMappings); n++)
         {
             const FormatMapping& formatMapping = FormatMappings[n];
-            if (formatMapping.internalFormat == internalFormat)
+            if (formatMapping.InternalFormat == InternalFormat)
             {
                 t->formatMapping = formatMapping;
-                t->desc.ImageFormat = formatMapping.abstractFormat;
+                t->desc.ImageFormat = formatMapping.AbstractFormat;
                 break;
             }
         }
 
-        if (t->desc.ImageFormat == Format::UNKNOWN)
+        if (t->desc.ImageFormat == GraphicsFormat::Unknown)
         {
-            SIGNAL_ERROR_FMT("Failed to decode GL texture format 0x%04x", internalFormat);
+			SIGNAL_ERROR_FMT("Failed to decode GL texture format 0x%04x", InternalFormat);
             delete t;
             return nullptr;
         }
@@ -1783,8 +1796,7 @@ namespace Aurora
             return GL_INCR;
         case DepthStencilState::STENCIL_OP_DECR:
             return GL_DECR;
-        default:
-            SIGNAL_ERROR_FMT("Unknown stencil op %d", value);
+        default: SIGNAL_ERROR_FMT("Unknown stencil op %d", value);
             return GL_KEEP;
         }
     }
@@ -1809,8 +1821,7 @@ namespace Aurora
             return GL_GEQUAL;
         case DepthStencilState::COMPARISON_ALWAYS:
             return GL_ALWAYS;
-        default:
-            SIGNAL_ERROR_FMT("Unknown comparison func %d", value);
+        default: SIGNAL_ERROR_FMT("Unknown comparison func %d", value);
             return GL_NEVER;
         }
     }
@@ -1825,8 +1836,7 @@ namespace Aurora
             return GL_TRIANGLES;
         case PrimitiveType::TriangleStrip:
             return GL_TRIANGLE_STRIP;
-        default:
-            SIGNAL_ERROR_FMT("Unsupported primitive type %d", pt);
+        default: SIGNAL_ERROR_FMT("Unsupported primitive type %d", pt);
         }
 
         return 0;
@@ -1843,8 +1853,7 @@ namespace Aurora
             return GL_REPEAT;
         case SamplerDesc::WRAP_MODE_BORDER:
             return GL_CLAMP_TO_BORDER;
-        default:
-            SIGNAL_ERROR_FMT("Unknown wrap mode specified %d", in_eMode);
+        default: SIGNAL_ERROR_FMT("Unknown wrap mode specified %d", in_eMode);
             return GL_CLAMP_TO_EDGE;
             break;
         }
@@ -1889,8 +1898,7 @@ namespace Aurora
             return GL_SRC1_ALPHA;
         case BlendState::BLEND_INV_SRC1_ALPHA:
             return GL_ONE_MINUS_SRC1_ALPHA;
-        default:
-            SIGNAL_ERROR_FMT("Unknown blend value %d", value);
+        default: SIGNAL_ERROR_FMT("Unknown blend value %d", value);
             return GL_ZERO;
         }
     }
@@ -1907,13 +1915,12 @@ namespace Aurora
         case BlendState::BLEND_OP_REV_SUBTRACT:
             return GL_FUNC_REVERSE_SUBTRACT;
         case BlendState::BLEND_OP_MIN:
-            SIGNAL_ERROR("BLEND_OP_MIN is not supported");
+			SIGNAL_ERROR("BLEND_OP_MIN is not supported");
             return GL_FUNC_ADD;
         case BlendState::BLEND_OP_MAX:
-            SIGNAL_ERROR("BLEND_OP_MAX is not supported");
+			SIGNAL_ERROR("BLEND_OP_MAX is not supported");
             return GL_FUNC_ADD;
-        default:
-            SIGNAL_ERROR_FMT("Unknown blend op %d", value);
+        default: SIGNAL_ERROR_FMT("Unknown blend op %d", value);
             return GL_FUNC_ADD;
         }
     }
