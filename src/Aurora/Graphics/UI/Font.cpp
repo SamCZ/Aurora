@@ -54,7 +54,7 @@ namespace Aurora
 
 	}
 
-	TextureHandle CreateTextureFromData(int w, int h, const unsigned char* data)
+	Texture_ptr CreateTextureFromData(int w, int h, const unsigned char* data)
 	{
 		TextureDesc textureDesc;
 		textureDesc.Width = w;
@@ -62,9 +62,9 @@ namespace Aurora
 		textureDesc.MipLevels = 1;
 		textureDesc.ImageFormat = GraphicsFormat::R8_UNORM;
 		textureDesc.DebugName = "Font texture";
-		//TextureHandle texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
+		Texture_ptr texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
-		//AuroraEngine::RenderDevice->WriteTexture(texture, 0, data, sizeof(unsigned char) * w, 0);
+		AuroraEngine::RenderDevice->WriteTexture(texture, 0, data);
 
 		return nullptr;
 	}

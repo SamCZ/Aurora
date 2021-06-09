@@ -28,6 +28,7 @@ namespace Aurora
 			}
 
 			//return m_Collider->IntersectsWith(other.m_Collider);
+			return false;
 		}
 
 		void Transform(const Matrix4& matrix)

@@ -1,8 +1,11 @@
 #pragma once
+
+#if GLFW_ENABLED
+
 #include "Aurora/Core/Common.hpp"
 
 #include "../IManager.hpp"
-#include "../../Window.hpp"
+#include "../../GLFWWindow.hpp"
 
 #ifdef AU_DEBUG_INPUT
 #   ifndef AU_DEBUG_COUT_INPUT
@@ -16,9 +19,9 @@ namespace Aurora::Input
 {
     AU_CLASS(Manager) : public IManager
     {
-    	friend class ::Aurora::Window;
+    	friend class ::Aurora::GLFWWindow;
     protected:
-        explicit Manager(Window* window) : IManager(),
+        explicit Manager(GLFWWindow* window) : IManager(),
                   m_GlfwWindow(window)
         {
         }
@@ -27,7 +30,7 @@ namespace Aurora::Input
         /// This pointer is managed by std::shared_ptr
         /// Is always valid as
         /// Do not copy this pointer anywhere
-        Window* m_GlfwWindow;
+		GLFWWindow* m_GlfwWindow;
 
     public:
         static const std::size_t MaxKeyCount = 1024;
@@ -154,3 +157,4 @@ namespace Aurora::Input
 		const std::vector<char8_t>& GetTypedChars() override { return m_TextBuffer; }
     };
 }
+#endif

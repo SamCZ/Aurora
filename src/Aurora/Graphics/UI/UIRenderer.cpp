@@ -1,7 +1,7 @@
 #include "UIRenderer.hpp"
 #include "Aurora/AuroraEngine.hpp"
 
-#include <glad/glad.h>
+#include "Aurora/Graphics/OpenGL/GL.hpp"
 
 namespace Aurora
 {
@@ -50,12 +50,12 @@ namespace Aurora
 	Shader_ptr ui_font_vertex;
 	Shader_ptr ui_font_pixel;
 
-	SamplerHandle sampler;
+	Sampler_ptr sampler;
 
-	UniformBufferHandle vertexUniformBuffer;
-	UniformBufferHandle uvDataUniformBuffer;
-	UniformBufferHandle fragmentUniformUniformBuffer;
-	UniformBufferHandle fontDataUniformBuffer;
+	Buffer_ptr vertexUniformBuffer;
+	Buffer_ptr uvDataUniformBuffer;
+	Buffer_ptr fragmentUniformUniformBuffer;
+	Buffer_ptr fontDataUniformBuffer;
 
 	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts(), m_CurrentFont("Default")
 	{

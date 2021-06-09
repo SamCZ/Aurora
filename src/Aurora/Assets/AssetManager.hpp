@@ -6,7 +6,7 @@
 
 #include "Aurora/Core/Common.hpp"
 #include "Aurora/Graphics/ShaderCollection.hpp"
-#include "Aurora/Graphics/IRenderDeviceNV.hpp"
+#include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "FilePackager.hpp"
 
 #include "Resources/ShaderResourceObject.hpp"
@@ -32,7 +32,7 @@ namespace Aurora
 		std::map<Path, Shader_ptr> m_LoadedShaders;
 		std::map<Path, std::pair<Path, FileHeader>> m_AssetPackageFiles;
 		std::map<Path, std::vector<Path>> m_AssetPackageFolders;
-		std::map<Path, TextureHandle> m_LoadedTextures;
+		std::map<Path, Texture_ptr> m_LoadedTextures;
 
 		std::map<Path, ShaderResourceObject_ptr> m_ShaderResources;
 		std::map<Path, Shader_ptr> m_ShaderPrograms;
@@ -51,8 +51,8 @@ namespace Aurora
 		Shader_ptr LoadShaderFolder(const Path& path, const ShaderMacros& macros = {});
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
 
-		TextureHandle LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo = {});
-		TextureHandle LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo& textureLoadInfo = {});
+		Texture_ptr LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo = {});
+		Texture_ptr LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo& textureLoadInfo = {});
 
 		bool LoadJson(const Path& path, nlohmann::json& json);
 	private:

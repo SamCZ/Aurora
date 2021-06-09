@@ -150,7 +150,7 @@ namespace Aurora
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	void RenderTargetPack::Apply(DrawCallState &pipelineDesc)
+	/*void RenderTargetPack::Apply(DrawCallState &pipelineDesc)
 	{
 		pipelineDesc.renderState.targetCount = m_Targets.size();
 		for(const auto& it : m_Targets) {
@@ -162,5 +162,5 @@ namespace Aurora
 		} else {
 			pipelineDesc.renderState.depthTarget = nullptr;
 		}
-	}
+	}*/
 }

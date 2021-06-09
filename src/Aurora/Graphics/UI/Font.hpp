@@ -5,7 +5,7 @@
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/Vector.hpp>
 #include <Aurora/Core/FileSystem.hpp>
-#include <Aurora/Graphics/IRenderDeviceNV.hpp>
+#include <Aurora/Graphics/Base/IRenderDevice.hpp>
 
 namespace Aurora
 {
@@ -22,7 +22,7 @@ namespace Aurora
 		float Baseline;
 		Vector2 LeftTopUV;
 		Vector2 RightBottomUV;
-		TextureHandle Texture = nullptr;
+		Texture_ptr Texture = nullptr;
 	};
 
 	struct FontGlyph
@@ -43,7 +43,7 @@ namespace Aurora
 	struct FontBitmapPage
 	{
 		FontBitmap Bitmap = {};
-		TextureHandle Texture = nullptr;
+		Texture_ptr Texture = nullptr;
 	};
 
 	AU_CLASS(FontBitmapPageList)

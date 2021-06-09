@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <Aurora/Core/Vector.hpp>
 
 namespace Aurora

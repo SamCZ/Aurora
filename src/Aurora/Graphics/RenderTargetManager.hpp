@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/Vector.hpp>
 #include <Aurora/Graphics/Texture.hpp>
@@ -23,7 +24,7 @@ namespace Aurora
 	public:
 		inline RenderTargetPack() : m_Targets(), m_DepthTarget(nullptr) {}
 
-		void Apply(DrawCallState& pipelineDesc);
+		//void Apply(DrawCallState& pipelineDesc);
 	};
 
 	AU_CLASS(RenderTargetManager)

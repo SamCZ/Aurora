@@ -6,7 +6,7 @@
 
 namespace Aurora
 {
-	template<ComponentType T>
+	template<class T>
 	class ComponentList
 	{
 	private:

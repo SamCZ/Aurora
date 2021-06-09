@@ -17,6 +17,14 @@
 #include "Aurora/Core/Color.hpp"
 
 #include "Base/ShaderBase.hpp"
+#include "Base/Texture.hpp"
+#include "Base/Sampler.hpp"
+#include "Base/Buffer.hpp"
+#include "Base/InputLayout.hpp"
+#include "Base/PrimitiveType.hpp"
+#include "Base/RasterState.hpp"
+#include "Base/DepthStencilState.hpp"
+#include "Base/BlendState.hpp"
 
 namespace Aurora
 {
@@ -67,66 +75,9 @@ namespace Aurora
 	class Texture;
 	typedef Texture* TextureHandle;
 
-	struct TextureDesc
-	{
-		enum EUsage
-		{
-			USAGE_DEFAULT,
-			USAGE_IMMUTABLE,
-			USAGE_DYNAMIC
-		};
-
-		uint32_t Width;
-		uint32_t Height;
-		uint32_t DepthOrArraySize;
-		uint32_t MipLevels;
-		uint32_t SampleCount, SampleQuality;
-		GraphicsFormat ImageFormat;
-		EUsage Usage;
-		std::string DebugName;
-
-		bool IsArray; //3D or array if .z != 0?
-		bool IsCubeMap;
-		bool IsRenderTarget;
-		bool IsUAV;
-		bool IsCPUWritable;
-		bool DisableGPUsSync;
-
-		Color ClearValue;
-		bool UseClearValue;
-
-		TextureDesc() :
-				ImageFormat(GraphicsFormat::Unknown),
-				Width(0),
-				Height(0),
-				DepthOrArraySize(0),
-				MipLevels(1),
-				Usage(USAGE_DEFAULT),
-				SampleCount(1),
-				SampleQuality(0),
-				DebugName(),
-				IsCPUWritable(false),
-				IsUAV(false),
-				IsRenderTarget(false),
-				IsArray(false),
-				IsCubeMap(false),
-				DisableGPUsSync(false),
-				UseClearValue(false), ClearValue(0) { }
-	};
-
 	//////////////////////////////////////////////////////////////////////////
 	// Input Layout
 	//////////////////////////////////////////////////////////////////////////
-
-	struct VertexAttributeDesc
-	{
-		std::string name;
-		GraphicsFormat format;
-		uint32_t bufferIndex;
-		uint32_t offset;
-		bool isInstanced;
-		uint32_t semanticIndex;
-	};
 
 	class InputLayout;
 	typedef InputLayout* InputLayoutHandle;
@@ -137,32 +88,6 @@ namespace Aurora
 
 	class Buffer;
 	typedef Buffer* BufferHandle;
-
-	struct BufferDesc
-	{
-		// Notice that there are no atomic/append/consume buffer-related things here.
-		// We should use another UAV of uints instead since you can do that in both DX and GL
-		uint32_t byteSize;
-		uint32_t structStride; //if non-zero it's structured
-		std::string debugName;
-		bool canHaveUAVs;
-		bool isVertexBuffer;
-		bool isIndexBuffer;
-		bool isCPUWritable;
-		bool isDrawIndirectArgs;
-		bool disableGPUsSync;
-
-		BufferDesc()
-		: byteSize(0),
-		  structStride(0),
-		  debugName(),
-		  canHaveUAVs(false),
-		  isVertexBuffer(false),
-		  isIndexBuffer(false),
-		  isCPUWritable(false),
-		  isDrawIndirectArgs(false),
-		  disableGPUsSync(false) {}
-	};
 
 	//////////////////////////////////////////////////////////////////////////
 	// Constant Buffer
@@ -184,234 +109,12 @@ namespace Aurora
 	// Blend State
 	//////////////////////////////////////////////////////////////////////////
 
-	struct BlendState
-	{
-		enum { MAX_MRT_BLEND_COUNT = 8 };
-
-		enum BlendValue : unsigned char
-		{
-			BLEND_ZERO = 1,
-			BLEND_ONE = 2,
-			BLEND_SRC_COLOR = 3,
-			BLEND_INV_SRC_COLOR = 4,
-			BLEND_SRC_ALPHA = 5,
-			BLEND_INV_SRC_ALPHA = 6,
-			BLEND_DEST_ALPHA = 7,
-			BLEND_INV_DEST_ALPHA = 8,
-			BLEND_DEST_COLOR = 9,
-			BLEND_INV_DEST_COLOR = 10,
-			BLEND_SRC_ALPHA_SAT = 11,
-			BLEND_BLEND_FACTOR = 14,
-			BLEND_INV_BLEND_FACTOR = 15,
-			BLEND_SRC1_COLOR = 16,
-			BLEND_INV_SRC1_COLOR = 17,
-			BLEND_SRC1_ALPHA = 18,
-			BLEND_INV_SRC1_ALPHA = 19
-		};
-
-		enum BlendOp : unsigned char
-		{
-			BLEND_OP_ADD = 1,
-			BLEND_OP_SUBTRACT = 2,
-			BLEND_OP_REV_SUBTRACT = 3,
-			BLEND_OP_MIN = 4,
-			BLEND_OP_MAX = 5
-		};
-
-		enum ColorMask : unsigned char
-		{
-			COLOR_MASK_RED = 1,
-			COLOR_MASK_GREEN = 2,
-			COLOR_MASK_BLUE = 4,
-			COLOR_MASK_ALPHA = 8,
-			COLOR_MASK_ALL = 0xF
-		};
-
-		bool        blendEnable[MAX_MRT_BLEND_COUNT]{};
-		BlendValue  srcBlend[MAX_MRT_BLEND_COUNT]{};
-		BlendValue  destBlend[MAX_MRT_BLEND_COUNT]{};
-		BlendOp     blendOp[MAX_MRT_BLEND_COUNT]{};
-		BlendValue  srcBlendAlpha[MAX_MRT_BLEND_COUNT]{};
-		BlendValue  destBlendAlpha[MAX_MRT_BLEND_COUNT]{};
-		BlendOp     blendOpAlpha[MAX_MRT_BLEND_COUNT]{};
-		ColorMask   colorWriteEnable[MAX_MRT_BLEND_COUNT]{};
-		Color    blendFactor;
-		bool        alphaToCoverage;
-		uint8_t     padding[7]{};
-
-		BlendState() :
-				blendFactor(0, 0, 0, 0),
-				alphaToCoverage(false)
-		{
-			for (uint32_t i = 0; i < MAX_MRT_BLEND_COUNT; i++)
-			{
-				blendEnable[i] = false;
-				colorWriteEnable[i] = COLOR_MASK_ALL;
-				srcBlend[i] = BLEND_ONE;
-				destBlend[i] = BLEND_ZERO;
-				blendOp[i] = BLEND_OP_ADD;
-				srcBlendAlpha[i] = BLEND_ONE;
-				destBlendAlpha[i] = BLEND_ZERO;
-				blendOpAlpha[i] = BLEND_OP_ADD;
-			}
-
-			memset(padding, 0, sizeof(padding));
-		}
-	};
-
-	//////////////////////////////////////////////////////////////////////////
-	// Raster State
-	//////////////////////////////////////////////////////////////////////////
-
-	struct RasterState
-	{
-		enum class FillMode : unsigned char
-		{
-			Solid,
-			Line
-		};
-
-		enum class CullMode : unsigned char
-		{
-			Back,
-			Front,
-			None
-		};
-
-		FillMode    fillMode;
-		CullMode    cullMode;
-		bool frontCounterClockwise{};
-		bool depthClipEnable;
-		bool scissorEnable{};
-		bool multisampleEnable{};
-		bool antialiasedLineEnable{};
-		int depthBias{};
-		float depthBiasClamp{};
-		float slopeScaledDepthBias{};
-
-		// Extended rasterizer state supported by Maxwell
-		// In D3D11, use NvAPI_D3D11_CreateRasterizerState to create such rasterizer state.
-		char forcedSampleCount{};
-		bool programmableSamplePositionsEnable{};
-		bool conservativeRasterEnable{};
-		char samplePositionsX[16]{};
-		char samplePositionsY[16]{};
-
-		RasterState() : fillMode(FillMode::Solid), cullMode(CullMode::Back)
-		{
-			depthClipEnable = true;
-		}
-	};
-
-	//////////////////////////////////////////////////////////////////////////
-	// Depth Stencil State
-	//////////////////////////////////////////////////////////////////////////
-
-	struct DepthStencilState
-	{
-		enum DepthWriteMask : unsigned char
-		{
-			DEPTH_WRITE_MASK_ZERO = 0,
-			DEPTH_WRITE_MASK_ALL = 1
-		};
-
-		enum StencilOp : unsigned char
-		{
-			STENCIL_OP_KEEP = 1,
-			STENCIL_OP_ZERO = 2,
-			STENCIL_OP_REPLACE = 3,
-			STENCIL_OP_INCR_SAT = 4,
-			STENCIL_OP_DECR_SAT = 5,
-			STENCIL_OP_INVERT = 6,
-			STENCIL_OP_INCR = 7,
-			STENCIL_OP_DECR = 8
-		};
-
-		enum ComparisonFunc : unsigned char
-		{
-			COMPARISON_NEVER = 1,
-			COMPARISON_LESS = 2,
-			COMPARISON_EQUAL = 3,
-			COMPARISON_LESS_EQUAL = 4,
-			COMPARISON_GREATER = 5,
-			COMPARISON_NOT_EQUAL = 6,
-			COMPARISON_GREATER_EQUAL = 7,
-			COMPARISON_ALWAYS = 8
-		};
-
-		struct StencilOpDesc
-		{
-			StencilOp stencilFailOp;
-			StencilOp stencilDepthFailOp;
-			StencilOp stencilPassOp;
-			ComparisonFunc stencilFunc;
-		};
-
-		bool            depthEnable;
-		DepthWriteMask  depthWriteMask;
-		ComparisonFunc  depthFunc;
-		bool            stencilEnable;
-		uint8_t         stencilReadMask;
-		uint8_t         stencilWriteMask;
-		uint8_t         stencilRefValue;
-		uint8_t         padding;
-		StencilOpDesc   frontFace{};
-		StencilOpDesc   backFace{};
-
-		DepthStencilState() :
-				stencilRefValue(0),
-				depthEnable(true),
-				depthWriteMask(DEPTH_WRITE_MASK_ALL),
-				depthFunc(COMPARISON_LESS),
-				stencilEnable(false),
-				stencilReadMask(0xff),
-				stencilWriteMask(0xff),
-				padding(0)
-		{
-			StencilOpDesc stencilOpDesc = {};
-			stencilOpDesc.stencilFailOp = STENCIL_OP_KEEP;
-			stencilOpDesc.stencilDepthFailOp = STENCIL_OP_KEEP;
-			stencilOpDesc.stencilPassOp = STENCIL_OP_KEEP;
-			stencilOpDesc.stencilFunc = COMPARISON_ALWAYS;
-			frontFace = stencilOpDesc;
-			backFace = stencilOpDesc;
-		}
-	};
-
 	//////////////////////////////////////////////////////////////////////////
 	// Sampler
 	//////////////////////////////////////////////////////////////////////////
 
 	class Sampler;
 	typedef Sampler* SamplerHandle;
-
-	struct SamplerDesc
-	{
-		enum WrapMode : unsigned char
-		{
-			WRAP_MODE_CLAMP,
-			WRAP_MODE_WRAP,
-			WRAP_MODE_BORDER
-		};
-
-		WrapMode wrapMode[3]{};
-		float mipBias, anisotropy;
-		bool minFilter, magFilter, mipFilter;
-		bool shadowCompare;
-		Color borderColor;
-
-		SamplerDesc() :
-				minFilter(true),
-				magFilter(true),
-				mipFilter(true),
-				mipBias(0),
-				anisotropy(1),
-				shadowCompare(false),
-				borderColor(1, 1, 1, 1)
-		{
-			wrapMode[0] = wrapMode[1] = wrapMode[2] = WRAP_MODE_CLAMP;
-		}
-	};
 
 	//////////////////////////////////////////////////////////////////////////
 	// Render State (used by DrawCallState)
@@ -504,15 +207,6 @@ namespace Aurora
 	//////////////////////////////////////////////////////////////////////////
 	// Draw State
 	//////////////////////////////////////////////////////////////////////////
-
-	enum class PrimitiveType : uint8_t
-	{
-		PointList = 0,
-		TriangleList,
-		TriangleStrip,
-		Patch1ControlPoint,
-		Patch3ControlPoint
-	};
 
 	struct PipelineStageBindings
 	{

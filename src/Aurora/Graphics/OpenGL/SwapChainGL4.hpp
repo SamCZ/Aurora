@@ -1,5 +1,7 @@
 #pragma once
 
+#if GLFW_ENABLED
+
 #include "../ISwapChain.hpp"
 
 #include <GLFW/glfw3.h>
@@ -12,7 +14,7 @@ namespace Aurora
 		GLFWwindow* m_Window;
 		int m_LastSyncInterval;
 	public:
-		inline explicit SwapChainGL4(GLFWwindow* window) : m_Window(window)
+		inline explicit SwapChainGL4(GLFWwindow* window) : m_Window(window), m_LastSyncInterval(-1)
 		{
 
 		}
@@ -39,3 +41,4 @@ namespace Aurora
 		}
 	};
 }
+#endif

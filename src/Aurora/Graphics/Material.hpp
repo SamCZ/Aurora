@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IGraphicsPipeline.hpp"
-#include "IRenderDeviceNV.hpp"
+#include "Base/IRenderDevice.hpp"
 
 #include "ShaderCollection.hpp"
 #include "Aurora/Core/Common.hpp"
@@ -36,7 +36,7 @@ namespace Aurora
 			BufferDesc Desc;
 			bool NeedsUpdate;
 
-			BufferHandle Buffer;
+			Buffer_ptr Buffer;
 			std::vector<uint8_t> BufferData;
 			std::vector<ShaderVariable> Variables;
 		};
@@ -45,7 +45,7 @@ namespace Aurora
 		{
 			String Name;
 			ShaderType ShaderType;
-			TextureHandle TextureRef;
+			Texture_ptr TextureRef;
 			bool NeedsUpdate;
 		};
 
@@ -104,10 +104,10 @@ namespace Aurora
 		inline void SetPrimitiveTopology(const PrimitiveType& primitiveTopology) noexcept {  }
 		inline void SetDepthEnable(bool enabled) noexcept {  }
 		inline void SetDepthWriteEnable(bool enabled) noexcept {  }
-		inline void SetDepthFunc(const DepthStencilState::ComparisonFunc& comparisonFunction) noexcept {  }
+		inline void SetDepthFunc(const EComparisonFunc& comparisonFunction) noexcept {  }
 	public:
 		void SetSampler(const String& textureName, const SamplerDesc& sampler);
-		void SetTexture(const String& name, TextureHandle texture);
+		void SetTexture(const String& name, Texture_ptr texture);
 	public:
 		inline static const std::vector<Material*>& GetAllMaterials() noexcept { return m_CurrentMaterials; }
 	public:

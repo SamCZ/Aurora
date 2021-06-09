@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <vector>
 #include <Aurora/Core/FormatString.hpp>
 
 namespace Aurora

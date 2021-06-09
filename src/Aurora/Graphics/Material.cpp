@@ -21,9 +21,9 @@ namespace Aurora
 			SetShader(shaderResource);
 		}*/
 
-		SetCullMode(RasterState::CullMode::Front);
+		/*SetCullMode(RasterState::CullMode::Front);
 		SetDepthEnable(true);
-		SetPrimitiveTopology(PrimitiveType::TriangleList);
+		SetPrimitiveTopology(PrimitiveType::TriangleList);*/
 
 		m_CurrentMaterials.push_back(this);
 	}
@@ -41,9 +41,9 @@ namespace Aurora
 			SetShader(shaderResource);
 		}
 
-		SetCullMode(RasterState::CullMode::Front);
+		/*SetCullMode(RasterState::CullMode::Front);
 		SetDepthEnable(true);
-		SetPrimitiveTopology(PrimitiveType::TriangleList);
+		SetPrimitiveTopology(PrimitiveType::TriangleList);*/
 
 		m_CurrentMaterials.push_back(this);
 	}
@@ -55,9 +55,9 @@ namespace Aurora
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
 
-		SetCullMode(RasterState::CullMode::Front);
+		/*SetCullMode(RasterState::CullMode::Front);
 		SetDepthEnable(true);
-		SetPrimitiveTopology(PrimitiveType::TriangleList);
+		SetPrimitiveTopology(PrimitiveType::TriangleList);*/
 
 		m_CurrentMaterials.push_back(this);
 	}
@@ -495,7 +495,7 @@ namespace Aurora
 		}*/
 	}
 
-	void Material::SetTexture(const String &name, TextureHandle texture)
+	void Material::SetTexture(const String &name, Texture_ptr texture)
 	{
 		/*if(texture == nullptr) {
 			for(auto& rvl : m_ShaderResourceVariables) {

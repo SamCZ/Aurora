@@ -8,6 +8,8 @@
 * license agreement from NVIDIA CORPORATION is strictly prohibited.
 */
 
+#if 0
+
 #include "RenderDeviceGl4.hpp"
 #include "GLFormatMapping.hpp"
 
@@ -553,14 +555,14 @@ namespace Aurora
         BufferHandle buffer = new Buffer();
 
         buffer->desc = d;
-        buffer->bindTarget = d.canHaveUAVs || d.structStride ? GL_SHADER_STORAGE_BUFFER : GL_TEXTURE_BUFFER;
+        buffer->bindTarget = d.CanHaveUAVs || d.StructStride ? GL_SHADER_STORAGE_BUFFER : GL_TEXTURE_BUFFER;
 
-        GLenum usage = d.canHaveUAVs ? GL_STREAM_COPY : GL_STREAM_DRAW;
+        GLenum usage = d.CanHaveUAVs ? GL_STREAM_COPY : GL_STREAM_DRAW;
 
         glGenBuffers(1, &buffer->bufferHandle);
         glBindBuffer(buffer->bindTarget, buffer->bufferHandle);
 
-        glBufferData(buffer->bindTarget, d.byteSize, data, usage);
+        glBufferData(buffer->bindTarget, d.ByteSize, data, usage);
         CHECK_GL_ERROR();
 
         glBindBuffer(buffer->bindTarget, GL_NONE);
@@ -586,8 +588,8 @@ namespace Aurora
     {
         glBindBuffer(b->bindTarget, b->bufferHandle);
 
-        if (dataSize > b->desc.byteSize)
-            dataSize = b->desc.byteSize;
+        if (dataSize > b->desc.ByteSize)
+            dataSize = b->desc.ByteSize;
 
         glBufferSubData(b->bindTarget, 0, dataSize, data);
         CHECK_GL_ERROR();
@@ -626,9 +628,9 @@ namespace Aurora
     void RendererInterfaceOGL::ReadBuffer(BufferHandle b, void* data, size_t* dataSize)
     {
         auto nBytesToRead = uint32_t(*dataSize);
-        if (nBytesToRead > b->desc.byteSize)
+        if (nBytesToRead > b->desc.ByteSize)
         {
-            nBytesToRead = b->desc.byteSize;
+            nBytesToRead = b->desc.ByteSize;
         }
 
         glBindBuffer(GL_COPY_READ_BUFFER, b->bufferHandle);
@@ -842,7 +844,7 @@ namespace Aurora
 
                 for (uint32_t buf = 0; buf < state.vertexBufferCount; buf++)
                 {
-                    if (state.vertexBuffers[buf].slot == attr.bufferIndex)
+                    if (state.vertexBuffers[buf].slot == attr.BufferIndex)
                     {
                         binding = &state.vertexBuffers[buf];
                         break;
@@ -851,13 +853,13 @@ namespace Aurora
 
                 if (binding == nullptr)
                 {
-					SIGNAL_ERROR_FMT("Vertex buffer for slot %d is not bound", attr.bufferIndex);
+					SIGNAL_ERROR_FMT("Vertex buffer for slot %d is not bound", attr.BufferIndex);
                     continue;
                 }
 
                 glBindBuffer(GL_ARRAY_BUFFER, binding->buffer->bufferHandle);
 
-                const FormatMapping& formatMapping = GetFormatMapping(attr.format);
+                const FormatMapping& formatMapping = GetFormatMapping(attr.Format);
 
                 if(formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT)
                     glVertexAttribIPointer(
@@ -865,7 +867,7 @@ namespace Aurora
                         GLint(formatMapping.Components),
                         formatMapping.Type,
                         GLsizei(binding->stride),
-                        (const void*)size_t(binding->offset + attr.offset));
+                        (const void*)size_t(binding->offset + attr.Offset));
                 else
                     glVertexAttribPointer(
                         GLuint(nattr),
@@ -873,9 +875,9 @@ namespace Aurora
                         formatMapping.Type,
                         GL_TRUE,
                         GLsizei(binding->stride),
-                        (const void*)size_t(binding->offset + attr.offset));
+                        (const void*)size_t(binding->offset + attr.Offset));
 
-                glVertexAttribDivisor(GLuint(nattr), attr.isInstanced ? 1 : 0);
+                glVertexAttribDivisor(GLuint(nattr), attr.IsInstanced ? 1 : 0);
                 glEnableVertexAttribArray(GLuint(nattr));
             }
         }
@@ -1235,7 +1237,7 @@ namespace Aurora
         {
             const BufferBinding& binding = state.buffers[nBuffer];
 
-            if (binding.isWritable || binding.buffer->desc.structStride > 0)
+            if (binding.isWritable || binding.buffer->desc.StructStride > 0)
             {
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding.slot, binding.buffer->bufferHandle);
                 m_vecBoundBuffers.push_back(binding.slot);
@@ -1930,3 +1932,4 @@ namespace Aurora
 		return t->handle;
 	}
 }
+#endif

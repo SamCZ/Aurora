@@ -10,6 +10,8 @@
 
 #pragma once
 
+#if 0
+
 #include "../IRenderDeviceNV.hpp"
 #include "GLFormatMapping.hpp"
 #include "GLShaderProgram.hpp"
@@ -137,3 +139,4 @@ namespace Aurora
 		GLuint getTextureHandle(Texture* t);
     };
 }
+#endif

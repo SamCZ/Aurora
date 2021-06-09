@@ -61,7 +61,7 @@ namespace Aurora
 	{
 		switch (value.size()) {
 			case 6: {
-				std::array<TextureHandle, 6> textures;
+				std::array<Texture_ptr, 6> textures;
 
 				int i = 0;
 				for(auto& it : value) {

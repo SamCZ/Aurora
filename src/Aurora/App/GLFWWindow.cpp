@@ -1,6 +1,8 @@
-#include "Window.hpp"
+#include "GLFWWindow.hpp"
 
 #include <Aurora/Core/UTF8.hpp>
+
+#if GLFW_ENABLED
 
 #if _WIN32
 #include <Windows.h>
@@ -8,16 +10,15 @@
 #include <GLFW/glfw3native.h>
 #endif
 
-#include <glad/glad.h>
-
 #include "Input/GLFW/Manager.hpp"
+
+#include <glad/glad.h>
 
 namespace Aurora
 {
-	Window::Window()
-			: m_WindowHandle(nullptr), m_Focused(false),
-			  m_CursorMode(ECursorMode::Normal), m_InputManager(Input::Manager_ptr(new Input::Manager(this))),
-			  m_SwapChain(nullptr), m_Vsync(true)
+	GLFWWindow::GLFWWindow() : IWindow(), m_WindowHandle(nullptr), m_Focused(false),
+							   m_CursorMode(ECursorMode::Normal), m_InputManager(Input::Manager_ptr(new Input::Manager(this))),
+							   m_SwapChain(nullptr), m_Vsync(true)
 	{
 
 	}
@@ -88,7 +89,7 @@ namespace Aurora
 		AU_LOG_INFO(MessageSS.str());
 	}
 
-	void Window::Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<Window>& parentWindow)
+	void GLFWWindow::Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<IWindow>& parentWindow)
 	{
 		m_Title = windowDefinition.Title;
 
@@ -96,7 +97,7 @@ namespace Aurora
 			//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			//glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 		}
-
+#if GLFW_ENABLED
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
@@ -121,9 +122,8 @@ namespace Aurora
 
 		GLFWmonitor* primary = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vidMode = glfwGetVideoMode(primary);
-
+#endif
 		SetSize(windowDefinition.Width, windowDefinition.Height);
-
 		m_WindowHandle = glfwCreateWindow(GetSize().x, GetSize().y, windowDefinition.Title.c_str(), nullptr, nullptr);
 
 		int width, height;
@@ -148,7 +148,7 @@ namespace Aurora
 		if(parentWindow != nullptr) {
 #if _WIN32
 			HWND hwNative = glfwGetWin32Window(m_WindowHandle);
-			HWND parentHwNative = glfwGetWin32Window(parentWindow->GetWindowHandle());
+			HWND parentHwNative = glfwGetWin32Window(((GLFWWindow*)parentWindow.get())->GetWindowHandle());
 
 			::SetParent(hwNative, parentHwNative);
 #endif
@@ -162,7 +162,6 @@ namespace Aurora
 			printf("Something went wrong!\n");
 			exit(-1);
 		}
-
 		// During init, enable debug output
 		//glEnable              ( GL_DEBUG_OUTPUT );
 		glEnable(GL_DEBUG_OUTPUT);
@@ -182,70 +181,70 @@ namespace Aurora
 
 		glfwSetWindowUserPointer(m_WindowHandle, this);
 
-		glfwSetWindowSizeCallback(m_WindowHandle, Window::OnResizeCallback);
-		glfwSetWindowFocusCallback(m_WindowHandle, Window::OnFocusCallback);
+		glfwSetWindowSizeCallback(m_WindowHandle, GLFWWindow::OnResizeCallback);
+		glfwSetWindowFocusCallback(m_WindowHandle, GLFWWindow::OnFocusCallback);
 
-		glfwSetKeyCallback(m_WindowHandle, Window::OnKeyCallback);
-		glfwSetCursorPosCallback(m_WindowHandle, Window::OnCursorPosCallBack);
-		glfwSetScrollCallback(m_WindowHandle, Window::OnMouseScrollCallback);
-		glfwSetMouseButtonCallback(m_WindowHandle, Window::OnMouseButtonCallback);
+		glfwSetKeyCallback(m_WindowHandle, GLFWWindow::OnKeyCallback);
+		glfwSetCursorPosCallback(m_WindowHandle, GLFWWindow::OnCursorPosCallBack);
+		glfwSetScrollCallback(m_WindowHandle, GLFWWindow::OnMouseScrollCallback);
+		glfwSetMouseButtonCallback(m_WindowHandle, GLFWWindow::OnMouseButtonCallback);
 
-		glfwSetCharModsCallback(m_WindowHandle, Window::CharModsCallback);
+		glfwSetCharModsCallback(m_WindowHandle, GLFWWindow::CharModsCallback);
 	}
 
-	void Window::Show()
+	void GLFWWindow::Show()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwShowWindow(m_WindowHandle);
 	}
 
-	void Window::Hide()
+	void GLFWWindow::Hide()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwHideWindow(m_WindowHandle);
 	}
 
-	void Window::Destroy()
+	void GLFWWindow::Destroy()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwDestroyWindow(m_WindowHandle);
 	}
 
-	void Window::Minimize()
+	void GLFWWindow::Minimize()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwIconifyWindow(m_WindowHandle);
 	}
 
-	void Window::Maximize()
+	void GLFWWindow::Maximize()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwMaximizeWindow(m_WindowHandle);
 	}
 
-	void Window::Restore()
+	void GLFWWindow::Restore()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwRestoreWindow(m_WindowHandle);
 	}
 
-	void Window::Focus()
+	void GLFWWindow::Focus()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwFocusWindow(m_WindowHandle);
 	}
 
-	void Window::SetTitle(const String& title)
+	void GLFWWindow::SetTitle(const String& title)
 	{
 		glfwSetWindowTitle(m_WindowHandle, title.c_str());
 	}
 
-	GLFWwindow* Window::GetWindowHandle()
+	GLFWwindow* GLFWWindow::GetWindowHandle()
 	{
 		return m_WindowHandle;
 	}
 
-	bool Window::IsShouldClose() const
+	bool GLFWWindow::IsShouldClose() const
 	{
 		if(m_WindowHandle == nullptr)
 			return false;
@@ -253,7 +252,7 @@ namespace Aurora
 		return glfwWindowShouldClose(m_WindowHandle);
 	}
 
-	void Window::SetCursorMode(const ECursorMode& mode)
+	void GLFWWindow::SetCursorMode(const ECursorMode& mode)
 	{
 		if(m_WindowHandle == nullptr)
 			return;
@@ -274,22 +273,22 @@ namespace Aurora
 		m_CursorMode = mode;
 	}
 
-	const ECursorMode &Window::GetCursorMode() const
+	const ECursorMode &GLFWWindow::GetCursorMode() const
 	{
 		return m_CursorMode;
 	}
 
-	bool Window::IsFocused() const
+	bool GLFWWindow::IsFocused() const
 	{
 		return m_Focused;
 	}
 
-	bool Window::IsIconified()
+	bool GLFWWindow::IsIconified()
 	{
 		return glfwGetWindowAttrib(m_WindowHandle, GLFW_ICONIFIED) == GLFW_TRUE;
 	}
 
-	Vector2i Window::GetCursorPos()
+	Vector2i GLFWWindow::GetCursorPos()
 	{
 		double x;
 		double y;
@@ -297,17 +296,17 @@ namespace Aurora
 		return Vector2i(static_cast<int>(x), static_cast<int>(y));
 	}
 
-	::Aurora::Input::IManager_ptr& Window::GetInputManager()
+	::Aurora::Input::IManager_ptr& GLFWWindow::GetInputManager()
 	{
 		return m_InputManager;
 	}
 
-	void Aurora::Window::SetClipboardString(const String &str)
+	void Aurora::GLFWWindow::SetClipboardString(const String &str)
 	{
 		glfwSetClipboardString(m_WindowHandle, str.c_str());
 	}
 
-	String Window::GetClipboardString()
+	String GLFWWindow::GetClipboardString()
 	{
 		auto clipboardString = glfwGetClipboardString(m_WindowHandle);
 		if(strlen(clipboardString) > 0) {
@@ -321,11 +320,11 @@ namespace Aurora
 	 * Callbacks
 	 */
 
-	void Window::OnResizeCallback(GLFWwindow* rawWindow, int width, int height)
+	void GLFWWindow::OnResizeCallback(GLFWwindow* rawWindow, int width, int height)
 	{
 		if(width == 0 || height == 0) return;
 
-		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
+		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		window->SetSize(width, height);
 
 		if(window->GetSwapChain() != nullptr) {
@@ -337,16 +336,16 @@ namespace Aurora
 		}
 	}
 
-	void Window::OnFocusCallback(GLFWwindow *rawWindow, int focused)
+	void GLFWWindow::OnFocusCallback(GLFWwindow *rawWindow, int focused)
 	{
-		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
+		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		window->m_Focused = focused;
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnFocusChange(focused != GLFW_FALSE);
 
 		//TODO: Call callbacks
 	}
 
-	void Window::OnKeyCallback(GLFWwindow *rawWindow, int key, int scancode, int action, int mods)
+	void GLFWWindow::OnKeyCallback(GLFWwindow *rawWindow, int key, int scancode, int action, int mods)
 	{
 		bool pressed;
 		switch(action)
@@ -363,25 +362,25 @@ namespace Aurora
 				return; // Unknown key action
 		}
 
-		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
+		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnKeyChange(key, scancode, pressed);
 	}
 
-	void Window::OnCursorPosCallBack(GLFWwindow *rawWindow, double xpos, double ypos)
+	void GLFWWindow::OnCursorPosCallBack(GLFWwindow *rawWindow, double xpos, double ypos)
 	{
 		glm::dvec2 newPosition = {xpos, ypos};
 
-		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
+		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseMove(newPosition);
 	}
 
-	void Window::OnMouseScrollCallback(GLFWwindow *rawWindow, double xoffset, double yoffset)
+	void GLFWWindow::OnMouseScrollCallback(GLFWwindow *rawWindow, double xoffset, double yoffset)
 	{
-		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
+		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseWheel({xoffset, yoffset});
 	}
 
-	void Window::OnMouseButtonCallback(GLFWwindow *rawWindow, int button, int action, int mods)
+	void GLFWWindow::OnMouseButtonCallback(GLFWwindow *rawWindow, int button, int action, int mods)
 	{
 		bool pressed;
 		switch(action)
@@ -398,13 +397,14 @@ namespace Aurora
 				return; // Unknown key action
 		}
 
-		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
+		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseButton(button, pressed);
 	}
 
-	void Window::CharModsCallback(GLFWwindow *rawWindow, uint32_t codepoint, int mods)
+	void GLFWWindow::CharModsCallback(GLFWwindow *rawWindow, uint32_t codepoint, int mods)
 	{
-		auto* window = static_cast<Window*>(glfwGetWindowUserPointer(rawWindow));
+		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnTextInput(CodepointToUtf8(codepoint));
 	}
 }
+#endif

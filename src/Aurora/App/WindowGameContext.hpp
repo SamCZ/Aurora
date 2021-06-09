@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <thread>
-#include "Window.hpp"
+#include "IWindow.hpp"
 
 namespace Aurora
 {
@@ -11,11 +11,11 @@ namespace Aurora
 	public:
 		friend class AuroraEngine;
 	private:
-		std::shared_ptr<Window> m_Window;
+		std::shared_ptr<IWindow> m_Window;
 		Input::IManager_ptr m_InputManager;
 		std::thread::id m_ThreadId;
 	public:
-		explicit WindowGameContext(Window_ptr window);
+		explicit WindowGameContext(IWindow_ptr window);
 		virtual ~WindowGameContext() = default;
 
 		virtual void Init() {}
@@ -25,7 +25,7 @@ namespace Aurora
 		virtual void Resize(int width, int height) {}
 
 	public:
-		const Window_ptr& GetWindow();
+		const IWindow_ptr& GetWindow();
 		const Input::IManager_ptr& GetInputManager();
 
 		inline ISwapChain_ptr& GetSwapChain()

@@ -4,9 +4,10 @@
 #include <Aurora/Graphics/VertexBuffer.hpp>
 #include <Aurora/Graphics/Material.hpp>
 #include <Aurora/Physics/Bound.hpp>
-#include <Aurora/Graphics/IRenderDeviceNV.hpp>
+#include <Aurora/Graphics/Base/IRenderDevice.hpp>
 
 #include <utility>
+#include <unordered_map>
 
 namespace Aurora
 {
@@ -22,7 +23,7 @@ namespace Aurora
 	{
 		Material_ptr Material;
 		String MaterialSlotName;
-		std::map<String, TextureHandle> Textures{};
+		std::map<String, Texture_ptr> Textures{};
 		std::map<String, Vector4> Colors{};
 
 		MaterialSlot() : Material(nullptr), MaterialSlotName(), Textures(), Colors() {}
@@ -57,8 +58,8 @@ namespace Aurora
 		std::vector<Index_t> Indices;
 		std::vector<MeshSection> Sections;
 
-		BufferHandle VertexBuffer;
-		BufferHandle IndexBuffer;
+		Buffer_ptr VertexBuffer;
+		Buffer_ptr IndexBuffer;
 		bool NeedUpdateBuffers;
 	};
 

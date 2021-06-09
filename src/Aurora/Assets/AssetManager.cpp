@@ -76,13 +76,13 @@ namespace Aurora
 
 	unsigned int getMipLevelsNum(unsigned int width, unsigned int height)
 	{
-		unsigned int size = __max(width, height);
+		unsigned int size = std::max<unsigned int>(width, height);
 		unsigned int levelsNum = (unsigned int)(logf((float)size) / logf(2.0f)) + 1;
 
 		return levelsNum;
 	}
 
-	TextureHandle AssetManager::LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo)
+	Texture_ptr AssetManager::LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo)
 	{
 		if(m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
 			return m_LoadedTextures[path];
@@ -94,7 +94,7 @@ namespace Aurora
 			return nullptr;
 		}
 
-		TextureHandle texture = nullptr;
+		Texture_ptr texture = nullptr;
 
 		int width,height,channels_in_file;
 		unsigned char *data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
@@ -109,16 +109,16 @@ namespace Aurora
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
 		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
 		textureDesc.DebugName = "Loaded texture";
-		//texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
+		texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
-			//AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
+			AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data);
 
 			if (mipLevel < textureDesc.MipLevels - 1u)
 			{
-				int newWidth = __max(1, width >> 1);
-				int newHeight = __max(1, height >> 1);
+				int newWidth = std::max<int>(1, width >> 1);
+				int newHeight = std::max<int>(1, height >> 1);
 
 				auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
 				stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);
@@ -137,16 +137,16 @@ namespace Aurora
 		return texture;
 	}
 
-	TextureHandle AssetManager::LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo &textureLoadInfo)
+	Texture_ptr AssetManager::LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo &textureLoadInfo)
 	{
 		if(fileData.empty()) {
 			return nullptr;
 		}
 
-		TextureHandle texture = nullptr;
+		Texture_ptr texture = nullptr;
 
 		int width,height,channels_in_file;
-		unsigned char *data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+		unsigned char *data = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(fileData.data()), (int)fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
 		if(!data) {
 			AU_LOG_ERROR("Cannot load texture !", filename);
 			return nullptr;
@@ -158,16 +158,16 @@ namespace Aurora
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
 		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
 		textureDesc.DebugName = "Loaded texture";
-		//texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
+		texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
-			//AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data, STBI_rgb_alpha * width, 0);
+			AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data);
 
 			if (mipLevel < textureDesc.MipLevels - 1u)
 			{
-				int newWidth = __max(1, width >> 1);
-				int newHeight = __max(1, height >> 1);
+				int newWidth = std::max<int>(1, width >> 1);
+				int newHeight = std::max<int>(1, height >> 1);
 
 				auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
 				stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);

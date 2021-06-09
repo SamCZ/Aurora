@@ -7,37 +7,35 @@
 
 #include "Graphics/OpenGL/GLRenderDevice.hpp"
 #include "Graphics/OpenGL/SwapChainGL4.hpp"
-#include <GLFW/glfw3.h>
 
-#ifdef _WIN32
-#define GLFW_EXPOSE_NATIVE_WIN32
+#if GLFW_ENABLED
+
+	#ifdef _WIN32
+	#define GLFW_EXPOSE_NATIVE_WIN32
+	#endif
+	#ifdef __unix__
+	#include <X11/Xlib-xcb.h>
+		#define GLFW_EXPOSE_NATIVE_X11
+	#endif
+
+	#include <GLFW/glfw3.h>
+	#include <GLFW/glfw3native.h>
+
+	#include "App/Input/GLFW/Manager.hpp"
 #endif
-#ifdef __unix__
-#include <X11/Xlib-xcb.h>
-    #define GLFW_EXPOSE_NATIVE_X11
-#endif
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
-/*#include <imgui.h>
-#include <ImGuiImplDiligent.hpp>
-#include <ImGuiUtils.hpp>*/
-
-#include "App/Input/GLFW/Manager.hpp"
 #include "Graphics/GraphicUtilities.hpp"
 
 #include "Profiler/Profiler.hpp"
 
 namespace Aurora
 {
-	class PipelineErrorHandler : public IErrorCallback
+	/*class PipelineErrorHandler : public IErrorCallback
 	{
 		void SignalError(const char* function, const char* file, int line, const char* errorDesc) override
 		{
 			Logger::Log(Logger::Severity::Error, function, file, line, errorDesc);
 		}
-	};
+	};*/
 
 	bool AuroraEngine::IsInitialized = false;
 	bool AuroraEngine::IsRunning = false;
@@ -54,8 +52,8 @@ namespace Aurora
 	std::vector<WindowGameContext_ptr> AuroraEngine::GameContexts;
 	std::map<std::thread::id, WindowGameContext_ptr> AuroraEngine::GameContextsByThread;
 
-	PipelineErrorHandler errorHandler;
-
+	//PipelineErrorHandler errorHandler;
+#if GLFW_ENABLED
 	void AuroraEngine::joystick_callback(int jid, int event)
 	{
 		for (auto& context : AuroraEngine::GameContexts) {
@@ -63,13 +61,14 @@ namespace Aurora
 			manager->OnJoystickConnectChange(jid, event == GLFW_CONNECTED);
 		}
 	}
-
+#endif
 	void AuroraEngine::Init()
 	{
+#if GLFW_ENABLED
 		glfwInit();
 
 		glfwSetJoystickCallback(joystick_callback);
-
+#endif
 		AuroraEngine::AssetManager = std::make_shared<Aurora::AssetManager>();
 #ifdef FMOD_SUPPORTED
 		AuroraEngine::SoundSystem = std::make_shared<Sound::SoundSystem>();
@@ -91,14 +90,16 @@ namespace Aurora
 
 		const float ClearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
 
-		auto PrevTime = glfwGetTime();
+		//auto PrevTime = glfwGetTime();
+		auto PrevTime = 0;
 		auto lastFpsTime = PrevTime;
 		int frameCount = 0;
 
 		do {
 			Profiler::RestartProfiler();
 
-			auto CurrTime    = glfwGetTime();
+			//auto CurrTime    = glfwGetTime();
+			auto CurrTime    = 0;
 			auto ElapsedTime = CurrTime - PrevTime;
 			PrevTime         = CurrTime;
 
@@ -123,21 +124,23 @@ namespace Aurora
 			//window->GetInputManager()
 
 			for (auto& context : GameContexts) {
-				const std::shared_ptr<Window>& window = context->GetWindow();
+				const std::shared_ptr<IWindow>& window = context->GetWindow();
 
 				if(window->IsShouldClose()) {
 					continue;
 				}
-
+#if GLFW_ENABLED
 				std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->PrePollEvents();
+#endif
 			}
-
+#if GLFW_ENABLED
 			glfwPollEvents();
+#endif
 #ifdef FMOD_SUPPORTED
 			SoundSystem->Update();
 #endif
 			for (auto& context : GameContexts) {
-				const std::shared_ptr<Window>& window = context->GetWindow();
+				const std::shared_ptr<IWindow>& window = context->GetWindow();
 
 				if(window->IsShouldClose()) {
 					window->Destroy();
@@ -147,15 +150,16 @@ namespace Aurora
 				} else {
 					anyWindowRunning = true;
 				}
-
-				glfwMakeContextCurrent(window->GetWindowHandle());
-
+#if GLFW_ENABLED
+				glfwMakeContextCurrent(((GLFWWindow*)window.get())->GetWindowHandle());
+#endif
 				auto& swapChain = window->GetSwapChain();
 				const SwapChainDesc& swapChainDesc = swapChain->GetDesc();
 
 				//window->GetInputManager()->Update();
+#if GLFW_ENABLED
 				std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->Update(ElapsedTime);
-
+#endif
 				//ImGuiImpl->NewFrame(swapChainDesc.Width, swapChainDesc.Height, swapChainDesc.PreTransform);
 
 				Profiler::Begin("WindowGameContext::Update");
@@ -209,14 +213,14 @@ namespace Aurora
 		Profiler::RestartProfiler();
 
 		GraphicUtilities::Destroy();
-
+#if GLFW_ENABLED
 		glfwTerminate();
-
+#endif
 		return 0;
 	}
 
 	std::shared_ptr<WindowGameContext> AuroraEngine::AddWindow(const WindowGameContext_ptr& gameContext,
-															   const Window_ptr& window,
+															   const IWindow_ptr& window,
 															   const WindowDefinition &windowDef, bool showImmediately)
 	{
 		auto thisThreadId = std::this_thread::get_id();
@@ -262,7 +266,7 @@ namespace Aurora
 		return gameContext;
 	}
 
-	bool AuroraEngine::CreateSwapChain(const Window_ptr& window, const SwapChainDesc& desc, ISwapChain_ptr& swapChain)
+	bool AuroraEngine::CreateSwapChain(const IWindow_ptr& window, const SwapChainDesc& desc, ISwapChain_ptr& swapChain)
 	{
 /*#ifdef _WIN32
 		HWND hWnd = glfwGetWin32Window(window->GetWindowHandle());
@@ -289,8 +293,9 @@ namespace Aurora
 
 		// TODO: Comple swap chain
 
-		swapChain = std::make_shared<SwapChainGL4>(window->GetWindowHandle());
-
+#if GLFW_ENABLED
+		swapChain = std::make_shared<SwapChainGL4>(((GLFWWindow*)window.get())->GetWindowHandle());
+#endif
 		return true;
 	}
 

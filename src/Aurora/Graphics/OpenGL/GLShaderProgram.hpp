@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Base/ShaderBase.hpp"
-#include <glad/glad.h>
+#include "GL.hpp"
 #include "GLShaderResources.hpp"
 
 namespace Aurora

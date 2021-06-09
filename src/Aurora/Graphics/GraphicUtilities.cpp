@@ -6,7 +6,7 @@
 namespace Aurora
 {
 	static Material_ptr m_BlitMaterial = nullptr;
-	static TextureHandle m_PlaceholderTexture;
+	static Texture_ptr m_PlaceholderTexture;
 
 	void GraphicUtilities::Init()
 	{
@@ -38,9 +38,9 @@ namespace Aurora
 		//m_PlaceholderTexture.Release();
 	}
 
-	TextureHandle GraphicUtilities::CreateTextureArray(const std::vector<TextureHandle>& textures)
+	Texture_ptr GraphicUtilities::CreateTextureArray(const std::vector<Texture_ptr>& textures)
 	{
-		TextureHandle pTexArray;
+		Texture_ptr pTexArray;
 
 		/*for (int i = 0; i < textures.size(); ++i) {
 			TextureHandle SrcTex = textures[i];
@@ -79,9 +79,9 @@ namespace Aurora
 		return pTexArray;
 	}
 
-	TextureHandle GraphicUtilities::CreateCubeMap(const std::array<TextureHandle, 6>& textures)
+	Texture_ptr GraphicUtilities::CreateCubeMap(const std::array<Texture_ptr, 6>& textures)
 	{
-		TextureHandle pTexArray;
+		Texture_ptr pTexArray;
 
 		/*for (int i = 0; i < 6; ++i) {
 			TextureHandle SrcTex = textures[i];
@@ -120,7 +120,7 @@ namespace Aurora
 		return pTexArray;
 	}
 
-	TextureHandle GraphicUtilities::CreateRenderTarget2D(const char* name, int width, int height, const GraphicsFormat& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav)
+	Texture_ptr GraphicUtilities::CreateRenderTarget2D(const char* name, int width, int height, const GraphicsFormat& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav)
 	{
 		TextureDesc gBufferDesc;
 		gBufferDesc.Width = width;
@@ -135,21 +135,20 @@ namespace Aurora
 		gBufferDesc.ClearValue = clearColor;
 		gBufferDesc.DebugName = name;
 
-		//return AuroraEngine::RenderDevice->CreateTexture(gBufferDesc, nullptr);
-		return nullptr;
+		return AuroraEngine::RenderDevice->CreateTexture(gBufferDesc, nullptr);
 	}
 
-	TextureHandle GraphicUtilities::CreateRenderTargetDepth2D(const char* name, int width, int height, const GraphicsFormat& format, bool useAsShaderResource, bool useUav)
+	Texture_ptr GraphicUtilities::CreateRenderTargetDepth2D(const char* name, int width, int height, const GraphicsFormat& format, bool useAsShaderResource, bool useUav)
 	{
 		return CreateRenderTarget2D(name, width, height, format, Vector4(1, 1, 1, 1), useAsShaderResource, useUav);
 	}
 
-	void GraphicUtilities::Blit(TextureHandle src, TextureHandle dest)
+	void GraphicUtilities::Blit(Texture_ptr src, Texture_ptr dest)
 	{
 		Blit(m_BlitMaterial, src, dest);
 	}
 
-	void GraphicUtilities::Blit(std::shared_ptr<Material>& material, TextureHandle src, TextureHandle dest)
+	void GraphicUtilities::Blit(std::shared_ptr<Material>& material, Texture_ptr src, Texture_ptr dest)
 	{
 		/*ITextureView* view = dest->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
 		AuroraEngine::ImmediateContext->SetRenderTargets(1, &view, nullptr, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
@@ -171,17 +170,17 @@ namespace Aurora
 		AuroraEngine::ImmediateContext->Draw(drawAttrs);*/
 	}
 
-	TextureHandle GraphicUtilities::GetPlaceholderTexture()
+	Texture_ptr GraphicUtilities::GetPlaceholderTexture()
 	{
 		return m_PlaceholderTexture;
 	}
 
-	void GraphicUtilities::SetPlaceholderTexture(TextureHandle texture)
+	void GraphicUtilities::SetPlaceholderTexture(Texture_ptr texture)
 	{
 		m_PlaceholderTexture = texture;
 	}
 
-	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, const std::map<String, TextureHandle> &srcTextures, TextureHandle dest)
+	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, const std::map<String, Texture_ptr> &srcTextures, Texture_ptr dest)
 	{
 		/*AuroraEngine::ImmediateContext->SetRenderTargets(1, &dest, nullptr, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
@@ -206,7 +205,7 @@ namespace Aurora
 
 	std::shared_ptr<Material> GraphicUtilities::Setup2DMaterial(std::shared_ptr<Material> material, bool useBlending)
 	{
-		material->SetCullMode(RasterState::CullMode::None);
+		/*material->SetCullMode(RasterState::CullMode::None);
 		material->SetDepthEnable(false);
 		material->SetPrimitiveTopology(PrimitiveType::TriangleStrip);
 
@@ -229,7 +228,7 @@ namespace Aurora
 			}
 
 			material->SetBlendState(blendState);
-		}
+		}*/
 
 		return material;
 	}

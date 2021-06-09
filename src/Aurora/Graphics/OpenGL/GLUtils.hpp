@@ -2,8 +2,9 @@
 
 #include "Aurora/Logger/Logger.hpp"
 #include <glm/glm.hpp>
-#include <glad/glad.h>
 #include <cstring>
+
+#include "GL.hpp"
 
 #include "../Base/Format.hpp"
 

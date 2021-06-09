@@ -1,3 +1,5 @@
+#if GLFW_ENABLED
+
 #include "Manager.hpp"
 
 #include <iostream>
@@ -907,4 +909,4 @@ namespace Aurora::Input
 	}
 
 }
-
+#endif

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Base/Format.hpp"
-#include <glad/glad.h>
+#include "GL.hpp"
 
 namespace Aurora
 {
@@ -55,7 +55,7 @@ namespace Aurora
 	static const FormatMapping& GetFormatMapping(const GraphicsFormat& abstractFormat)
 	{
 		const FormatMapping& mapping = FormatMappings[(uint8_t)abstractFormat];
-		assert(mapping.AbstractFormat == AbstractFormat);
+		assert(mapping.AbstractFormat == abstractFormat);
 		return mapping;
 	}
 }
