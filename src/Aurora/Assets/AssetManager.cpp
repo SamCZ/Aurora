@@ -200,13 +200,13 @@ namespace Aurora
 		return true;
 	}
 
-	static std::map<String, ShaderType> ShaderFileTypeNames = { // NOLINT(cert-err58-cpp)
-			{"vertex", ShaderType::Vertex},
-			{"fragment", ShaderType::Pixel},
-			{"geometry", ShaderType::Geometry},
-			{"hull", ShaderType::Hull},
-			{"domain", ShaderType::Domain},
-			{"compute", ShaderType::Compute}
+	static std::map<String, EShaderType> ShaderFileTypeNames = { // NOLINT(cert-err58-cpp)
+			{"vertex",   EShaderType::Vertex},
+			{"fragment", EShaderType::Pixel},
+			{"geometry", EShaderType::Geometry},
+			{"hull",     EShaderType::Hull},
+			{"domain",   EShaderType::Domain},
+			{"compute",  EShaderType::Compute}
 	};
 
 	Shader_ptr AssetManager::LoadShaderFolder(const Path &path, const ShaderMacros& macros)
@@ -236,12 +236,37 @@ namespace Aurora
 
 			auto shaderType = ShaderFileTypeNames[filenameWithoutExtension];
 
-			if(shaderType == ShaderType::Compute) {
+			if(shaderType == EShaderType::Compute) {
 				AU_LOG_WARNING("In shader pack ", path, " is present compute shader ! Skipping.");
 				continue;
 			}
 
 			String shaderSource = LoadFileToString(filePath);
+
+			/*{
+				static const std::regex re("^[ ]*#[ ]*include[ ]+[\"<](.*)[\">].*");
+
+				std::stringstream input;
+				std::stringstream output;
+				input << shaderSource;
+
+				std::smatch matches;
+
+				std::string line;
+				while(std::getline(input,line))
+				{
+					if (std::regex_search(line, matches, re))
+					{
+						std::string include_file = matches[1];
+
+						AU_LOG_INFO(include_file);
+					} else {
+						output << line;
+					}
+				}
+
+				shaderSource = output.str();
+			}*/
 
 			shaderProgramDesc.AddShader(shaderType, shaderSource, macros);
 		}
@@ -266,7 +291,7 @@ namespace Aurora
 		}
 
 		ShaderProgramDesc shaderProgramDesc(path.string());
-		shaderProgramDesc.AddShader(ShaderType::Compute, LoadFileToString(path), macros);
+		shaderProgramDesc.AddShader(EShaderType::Compute, LoadFileToString(path), macros);
 
 		auto shaderProgram = AuroraEngine::RenderDevice->CreateShaderProgram(shaderProgramDesc);
 

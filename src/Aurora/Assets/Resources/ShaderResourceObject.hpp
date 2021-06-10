@@ -20,10 +20,10 @@ namespace Aurora
 		friend class AssetManager;
 	private:
 		String m_ShaderSource;
-		ShaderType m_Type;
+		EShaderType m_Type;
 		Shader_ptr m_Shader;
 	private:
-		ShaderResourceObject(const Path& path, const ShaderType& type);
+		ShaderResourceObject(const Path& path, const EShaderType& type);
 	public:
 		bool Load(bool forceReload) override;
 		bool Save() override;
@@ -44,6 +44,6 @@ namespace Aurora
 		}
 
 		[[nodiscard]] Shader_ptr GetShader() const noexcept { return m_Shader; }
-		[[nodiscard]] const ShaderType& GetShaderType() const { return m_Type; }
+		[[nodiscard]] const EShaderType& GetShaderType() const { return m_Type; }
 	};
 }

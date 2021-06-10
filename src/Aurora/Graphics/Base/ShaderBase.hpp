@@ -42,7 +42,7 @@ namespace Aurora
 		AccelStruct,
 	};
 
-	enum class ShaderType : uint8_t
+	enum class EShaderType : uint8_t
 	{
 		Vertex = 0,
 		Hull,
@@ -52,7 +52,7 @@ namespace Aurora
 		Compute,
 		Unknown
 	};
-	static std::string ShaderType_ToString(const ShaderType& shaderType)
+	static std::string ShaderType_ToString(const EShaderType& shaderType)
 	{
 		static std::string types[] = {
 				"Vertex", "Hull", "Domain", "Geometry", "Pixel", "Compute", "Unknown"
@@ -104,16 +104,16 @@ namespace Aurora
 
 	struct ShaderDesc
 	{
-		ShaderType Type;
+		EShaderType Type;
 		std::string Source;
 		ShaderMacros Macros;
 
-		ShaderDesc() : Type(ShaderType::Unknown), Source(), Macros()
+		ShaderDesc() : Type(EShaderType::Unknown), Source(), Macros()
 		{
 
 		}
 
-		explicit ShaderDesc(ShaderType type, std::string source, ShaderMacros macros)
+		explicit ShaderDesc(EShaderType type, std::string source, ShaderMacros macros)
 				: Type(type), Source(std::move(source)), Macros(std::move(macros)) { }
 	};
 
@@ -123,7 +123,7 @@ namespace Aurora
 		typedef std::function<void(const std::string&)> ErrorFnc;
 	private:
 		std::string Name;
-		std::map<ShaderType, ShaderDesc> ShaderDescriptions;
+		std::map<EShaderType, ShaderDesc> ShaderDescriptions;
 		ErrorFnc ErrorOutput;
 	public:
 		explicit ShaderProgramDesc(std::string name) : Name(std::move(name)), ShaderDescriptions(), ErrorOutput(nullptr) {}
@@ -138,7 +138,7 @@ namespace Aurora
 	public:
 		inline void AddShader(const ShaderDesc& shaderDesc)
 		{
-			if(shaderDesc.Type == ShaderType::Unknown)
+			if(shaderDesc.Type == EShaderType::Unknown)
 			{
 				AU_LOG_WARNING("Cannot add Unknown shader type to ", Name, " ! Skipping...")
 				return;
@@ -152,14 +152,14 @@ namespace Aurora
 			ShaderDescriptions[shaderDesc.Type] = shaderDesc;
 		}
 
-		inline void AddShader(const ShaderType& shaderType, const std::string& source, const ShaderMacros& macros = {})
+		inline void AddShader(const EShaderType& shaderType, const std::string& source, const ShaderMacros& macros = {})
 		{
 			AddShader(ShaderDesc(shaderType, source, macros));
 		}
 
-		[[nodiscard]] inline bool HasShader(const ShaderType& shaderType) const noexcept { return ShaderDescriptions.contains(shaderType); }
+		[[nodiscard]] inline bool HasShader(const EShaderType& shaderType) const noexcept { return ShaderDescriptions.contains(shaderType); }
 		[[nodiscard]] inline const std::string& GetName() const noexcept { return Name; }
-		[[nodiscard]] inline const std::map<ShaderType, ShaderDesc>& GetShaderDescriptions() const noexcept { return ShaderDescriptions; }
+		[[nodiscard]] inline const std::map<EShaderType, ShaderDesc>& GetShaderDescriptions() const noexcept { return ShaderDescriptions; }
 	};
 
 	class IShaderProgram

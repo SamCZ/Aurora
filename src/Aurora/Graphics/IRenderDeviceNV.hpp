@@ -213,7 +213,7 @@ namespace Aurora
 		enum { MAX_TEXTURE_BINDINGS = 128, MAX_SAMPLER_BINDINGS = 16, MAX_BUFFER_BINDINGS = 128, MAX_CB_BINDINGS = 15 };
 
 		// This field helps other code identify which stage the binding set is intended for
-		ShaderType stage;
+		EShaderType stage;
 
 		Shader_ptr shader;
 
@@ -236,7 +236,7 @@ namespace Aurora
 		uint32_t constantBufferBindingCount;
 
 		PipelineStageBindings()
-				: stage(ShaderType::Pixel)
+				: stage(EShaderType::Pixel)
 				, textureBindingCount(0)
 				, textureSamplerBindingCount(0)
 				, bufferBindingCount(0)
@@ -247,7 +247,7 @@ namespace Aurora
 
 		}
 
-		explicit PipelineStageBindings(ShaderType _stage)
+		explicit PipelineStageBindings(EShaderType _stage)
 				: stage(_stage)
 				, textureBindingCount(0)
 				, textureSamplerBindingCount(0)
@@ -283,11 +283,11 @@ namespace Aurora
 		RenderState renderState;
 
 		DrawCallState()
-				: VS(ShaderType::Vertex)
-				, HS(ShaderType::Hull)
-				, DS(ShaderType::Domain)
-				, GS(ShaderType::Geometry)
-				, PS(ShaderType::Pixel)
+				: VS(EShaderType::Vertex)
+				, HS(EShaderType::Hull)
+				, DS(EShaderType::Domain)
+				, GS(EShaderType::Geometry)
+				, PS(EShaderType::Pixel)
 				, primType(PrimitiveType::TriangleList)
 				, inputLayout(nullptr)
 				, indexBuffer(nullptr)
@@ -301,7 +301,7 @@ namespace Aurora
 
 	struct DispatchState : PipelineStageBindings
 	{
-		DispatchState() : PipelineStageBindings(ShaderType::Compute) {}
+		DispatchState() : PipelineStageBindings(EShaderType::Compute) {}
 	};
 
 	//////////////////////////////////////////////////////////////////////////

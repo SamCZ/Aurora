@@ -111,10 +111,11 @@ namespace Aurora::Input
         }
 
 #ifdef DEBUG
-        if(connected)
-            AU_LOG_INFO("Joystick ", joyIndex, " ", "connected and ", (glfwJoystickIsGamepad(joyIndex) ? "has a mapping" : "is not a valid gamepad"));
-        else
-            AU_LOG_INFO("Joystick ", joyIndex, " ", "disconnected");
+        if(connected) {
+			AU_LOG_INFO("Joystick ", joyIndex, " ", "connected and ", (glfwJoystickIsGamepad(joyIndex) ? "has a mapping" : "is not a valid gamepad"));
+        } else {
+			AU_LOG_INFO("Joystick ", joyIndex, " ", "disconnected");
+        }
 #endif
 
         if(connected)
@@ -859,7 +860,7 @@ namespace Aurora::Input
             throw std::runtime_error("File Not Found (or is not a file)");
 #ifdef DEBUG
         if(mappingFile.filename() != "gamecontrollerdb.txt")
-            AU_DEBUG_CERR("Requested loading of Gamepad Config from file '" << mappingFile.filename() << "' but the file should be named 'gamecontrollerdb.txt'");
+            AU_LOG_WARNING("Requested loading of Gamepad Config from file '", mappingFile.filename(), "' but the file should be named 'gamecontrollerdb.txt'");
 #endif
 
         std::fstream in(mappingFile, std::ios_base::in);

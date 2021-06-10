@@ -10,7 +10,7 @@ namespace Aurora
 	struct TargetInfo
 	{
 		Texture_ptr Texture{};
-		TextureDesc TextureDesc{};
+		TextureDesc Desc{};
 		bool AutoResize{};
 	};
 

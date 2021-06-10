@@ -12,7 +12,7 @@ namespace Aurora
 {
 	struct ShaderObject
 	{
-		ShaderType Type;
+		EShaderType Type;
 		ShaderResourceObject_ptr ResourceObject;
 		Shader_ptr Shader;
 		int ResourceEventId;
@@ -23,7 +23,7 @@ namespace Aurora
 
 	};
 
-	typedef std::map<ShaderType, ShaderObject> ShaderList;
+	typedef std::map<EShaderType, ShaderObject> ShaderList;
 
 	AU_CLASS(Material) : public IGraphicsPipeline
 	{
@@ -31,7 +31,7 @@ namespace Aurora
 		struct ShaderConstantBuffer
 		{
 			String Name;
-			ShaderType ShaderType;
+			EShaderType ShaderType;
 			uint32_t Size;
 			BufferDesc Desc;
 			bool NeedsUpdate;
@@ -44,7 +44,7 @@ namespace Aurora
 		struct ShaderTextureDef
 		{
 			String Name;
-			ShaderType ShaderType;
+			EShaderType ShaderType;
 			Texture_ptr TextureRef;
 			bool NeedsUpdate;
 		};
@@ -61,9 +61,9 @@ namespace Aurora
 		ShaderList m_Shaders;
 		std::shared_ptr<ResourceObject::ResourceChangedEvent> m_OnShaderResourceChangeEvent;
 	private:
-		std::map<ShaderType, ConstantBufferList> m_ShaderConstantBuffers;
-		std::map<ShaderType, TextureDefList> m_ShaderTextures;
-		std::map<ShaderType, SamplerList> m_ShaderSamplers;
+		std::map<EShaderType, ConstantBufferList> m_ShaderConstantBuffers;
+		std::map<EShaderType, TextureDefList> m_ShaderTextures;
+		std::map<EShaderType, SamplerList> m_ShaderSamplers;
 	private:
 
 	public:
@@ -73,18 +73,18 @@ namespace Aurora
 		~Material() override;
 
 		void SetShader(const ShaderResourceObject_ptr &sharedPtr);
-		void RemoveShader(const ShaderType& shaderType);
-		ShaderResourceObject_ptr GetShader(const ShaderType& shaderType);
+		void RemoveShader(const EShaderType& shaderType);
+		ShaderResourceObject_ptr GetShader(const EShaderType& shaderType);
 	public:
 		[[nodiscard]] inline const String& GetName() const noexcept { return m_Name; }
 	private:
 		void OnShaderResourceUpdate(ResourceObject* obj);
 		void LoadConstantBuffers(ShaderObject &object, ShaderResourceDesc desc, ConstantBufferList& constantBufferStorage, ConstantBufferList& constantBufferListCopy);
 		void LoadTextureSRV(ShaderObject &object, ShaderResourceDesc desc, TextureDefList& textureDefList, TextureDefList& textureDefListOld, SamplerList& samplerList, SamplerList& samplerListOld);
-		void DeleteConstantBuffers(const ShaderType& type);
-		void DeleteTextureSRVs(const ShaderType &type);
+		void DeleteConstantBuffers(const EShaderType& type);
+		void DeleteTextureSRVs(const EShaderType &type);
 	private:
-		void ApplyShaderToPSO(Shader_ptr shader, const ShaderType& shaderType);
+		void ApplyShaderToPSO(Shader_ptr shader, const EShaderType& shaderType);
 	public:
 		[[nodiscard]] const ShaderList& GetShaders() const noexcept { return m_Shaders; }
 		[[nodiscard]] const ShaderMacros_t& GetMacros() const noexcept { return m_Macros; }

@@ -38,7 +38,8 @@ namespace Aurora
 	class ISampler
 	{
 	public:
-		virtual const SamplerDesc& GetDesc() = 0;
+		virtual ~ISampler() = default;
+		virtual const SamplerDesc& GetDesc() const noexcept = 0;
 	};
 
 	typedef std::shared_ptr<ISampler> Sampler_ptr;

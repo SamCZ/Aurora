@@ -8,7 +8,7 @@
 
 namespace Aurora
 {
-	ShaderResourceObject::ShaderResourceObject(const Path &path, const ShaderType &type)
+	ShaderResourceObject::ShaderResourceObject(const Path &path, const EShaderType &type)
 	: ResourceObject(path, false), m_Type(type), m_Shader(nullptr)
 	{
 
@@ -85,7 +85,7 @@ namespace Aurora
 		completeSource += "#version 430 core\n";
 		completeSource += "#extension GL_EXT_separate_shader_objects : enable\n";
 
-		if(m_Type == ShaderType::Vertex) {
+		if(m_Type == EShaderType::Vertex) {
 			//completeSource += "#extension GL_KHR_vulkan_glsl : enable\n";
 			//completeSource += "#define gl_VertexID gl_VertexIndex\n";
 			//completeSource += "#define gl_InstanceID gl_InstanceIndex\n";

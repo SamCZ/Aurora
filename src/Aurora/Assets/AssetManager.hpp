@@ -20,7 +20,7 @@ namespace Aurora
 
 	struct ShaderLoadDesc
 	{
-		ShaderType ShaderType;
+		EShaderType ShaderType;
 		Path FilePath;
 		String Source;
 		ShaderMacros Macros;

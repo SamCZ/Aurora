@@ -13,38 +13,54 @@ namespace Aurora
 		Uint32
 	};
 
+	enum class EBufferType : uint8_t
+	{
+		VertexBuffer,
+		IndexBuffer,
+		UniformBuffer,
+		ShaderStorageBuffer,
+		TextureBuffer,
+		Unknown
+	};
+
+	enum class EBufferUsage : uint8_t
+	{
+		StreamDraw,
+		StreamRead,
+		StreamCopy,
+
+		StaticDraw,
+		StaticRead,
+		StaticCopy,
+
+		DynamicDraw,
+		DynamicRead,
+		DynamicCopy,
+
+		Unknown
+	};
+
+	enum class EBufferOp : uint8_t
+	{
+		Draw,
+		Read,
+		Copy
+	};
+
 	struct BufferDesc
 	{
-		enum class EUsage : uint8_t
-		{
-			Stream,
-			Static,
-			Dynamic
-		};
-
-		// Notice that there are no atomic/append/consume buffer-related things here.
-		// We should use another UAV of uints instead since you can do that in both DX and GL
+		std::string Name;
 		uint32_t ByteSize;
 		uint32_t StructStride; //if non-zero it's structured
-		std::string DebugName;
-		bool CanHaveUAVs;
-		bool IsVertexBuffer;
-		bool IsIndexBuffer;
-		bool IsCPUWritable;
-		bool IsDrawIndirectArgs;
-		bool DisableGPUsSync;
-		EUsage Usage;
+		EBufferType Type;
+		EBufferUsage Usage;
 
 		BufferDesc()
 				: ByteSize(0),
 				  StructStride(0),
-				  DebugName(),
-				  CanHaveUAVs(false),
-				  IsVertexBuffer(false),
-				  IsIndexBuffer(false),
-				  IsCPUWritable(false),
-				  IsDrawIndirectArgs(false),
-				  DisableGPUsSync(false) {}
+				  Name("Undefined"),
+				  Type(EBufferType::Unknown),
+				  Usage(EBufferUsage::Unknown) {}
 	};
 
 	class IBuffer

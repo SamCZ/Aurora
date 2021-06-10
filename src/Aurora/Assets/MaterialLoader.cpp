@@ -34,7 +34,7 @@ namespace Aurora
 	{
 		std::shared_ptr<ShaderCollection> shaderCollection = nullptr;
 
-		std::map<ShaderType, Shader_ptr> shaders;
+		std::map<EShaderType, Shader_ptr> shaders;
 
 		switch (m_LoadType) {
 			case LoadType::MaterialFile: {

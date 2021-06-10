@@ -7,13 +7,16 @@
 #include "../Base/PrimitiveType.hpp"
 #include "../Base/RasterState.hpp"
 #include "../Base/Sampler.hpp"
+#include "../Base/Buffer.hpp"
 
 namespace Aurora
 {
-	static GLenum ConvertStencilOp(EStencilOp value);
-	static GLenum ConvertComparisonFunc(EComparisonFunc value);
-	static GLenum ConvertPrimType(PrimitiveType primType);
-	static GLenum ConvertWrapMode(EWrapMode wrapMode);
-	static GLenum ConvertBlendValue(EBlendValue value);
-	static GLenum ConvertBlendOp(EBlendOp value);
+	GLenum ConvertStencilOp(EStencilOp value);
+	GLenum ConvertComparisonFunc(EComparisonFunc value);
+	GLenum ConvertPrimType(PrimitiveType primType);
+	GLint ConvertWrapMode(EWrapMode wrapMode);
+	GLenum ConvertBlendValue(EBlendValue value);
+	GLenum ConvertBlendOp(EBlendOp value);
+	GLenum ConvertBufferType(EBufferType bufferType);
+	GLenum ConvertUsage(EBufferUsage usage);
 }

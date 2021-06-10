@@ -75,4 +75,5 @@ namespace Aurora
 	};
 
 #define ASM AuroraEngine::AssetManager
+#define RD AuroraEngine::RenderDevice
 }

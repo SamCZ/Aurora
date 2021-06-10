@@ -1,5 +1,9 @@
 #pragma once
 
+#include <utility>
+
+#include "RenderBase.hpp"
+
 #include "ShaderBase.hpp"
 #include "Texture.hpp"
 #include "Sampler.hpp"
@@ -16,7 +20,119 @@ namespace Aurora
 {
 	typedef const void* TextureData;
 
+	struct TextureBinding
+	{
+		enum class EAccess : uint8_t
+		{
+			Read,
+			Write,
+			ReadAndWrite
+		};
 
+		Texture_ptr Texture;
+		bool IsUAV;
+		EAccess Access;
+		TextureBinding() : Texture(nullptr), IsUAV(false), Access(EAccess::Write) {}
+		explicit TextureBinding(Texture_ptr texture) : Texture(std::move(texture)), IsUAV(false), Access(EAccess::Write) {}
+		TextureBinding(Texture_ptr texture, bool isUAV) : Texture(std::move(texture)), IsUAV(isUAV), Access(EAccess::Write) {}
+		TextureBinding(Texture_ptr texture, bool isUAV, EAccess access) : Texture(std::move(texture)), IsUAV(isUAV), Access(access) {}
+	};
+
+	struct TargetBinding
+	{
+		Texture_ptr Texture;
+		uint32_t Index; // This values is for texture arrays / cubemaps. TODO: Rename this var to something better.
+		uint32_t MipSlice;
+
+		TargetBinding() : Texture(nullptr), Index(0), MipSlice(0) {}
+		explicit TargetBinding(Texture_ptr texture) : Texture(std::move(texture)), Index(0), MipSlice(0) {}
+		TargetBinding(Texture_ptr texture, uint32_t index) : Texture(std::move(texture)), Index(index), MipSlice(0) {}
+		TargetBinding(Texture_ptr texture, uint32_t index, uint32_t mipSlice) : Texture(std::move(texture)), Index(index), MipSlice(mipSlice) {}
+	};
+
+	struct StateResources
+	{
+		static constexpr uint8_t MaxBoundTextures = 8;
+
+		std::map<std::string, TextureBinding> BoundTextures;
+		std::map<std::string, Sampler_ptr> BoundSamplers;
+		std::map<std::string, Buffer_ptr> BoundUniformBuffers;
+		std::map<std::string, Buffer_ptr> SSBOBuffers;
+
+		virtual void ResetResources()
+		{
+			BoundTextures.clear();
+			BoundSamplers.clear();
+			BoundUniformBuffers.clear();
+			SSBOBuffers.clear();
+		}
+
+		inline void BindTexture(const std::string& name, const Texture_ptr& texture, bool isUAV = false, TextureBinding::EAccess access = TextureBinding::EAccess::Write)
+		{
+			BoundTextures[name] = TextureBinding(texture, isUAV, access);
+		}
+	};
+
+	struct BaseState : StateResources
+	{
+		Shader_ptr Shader;
+
+		BaseState() : StateResources(), Shader(nullptr)
+		{
+
+		}
+	};
+
+	struct DispatchState : BaseState
+	{
+		DispatchState() : BaseState() {}
+	};
+
+	struct DrawCallState : BaseState
+	{
+		static constexpr int MaxRenderTargets = 8;
+		std::array<TargetBinding, MaxRenderTargets> RenderTargets;
+		Texture_ptr DepthTarget;
+		std::vector<Buffer_ptr> VertexBuffers;
+
+		DrawCallState() : BaseState(), DepthTarget(nullptr) { }
+
+		inline void ResetTargets()
+		{
+			for (int i = 0; i < MaxRenderTargets; ++i) {
+				RenderTargets[i] = TargetBinding();
+			}
+		}
+
+		inline void BindTarget(uint16_t slot, Texture_ptr texture, uint32_t index = 0, uint32_t mipSlice = 0)
+		{
+			assert(slot < MaxRenderTargets);
+			RenderTargets[slot] = TargetBinding(std::move(texture), index, mipSlice);
+		}
+
+		inline void UnboundTarget(uint16_t slot)
+		{
+			assert(slot < MaxRenderTargets);
+			RenderTargets[slot] = TargetBinding();
+		}
+	};
+
+	struct DrawArguments
+	{
+		uint32_t VertexCount;
+		uint32_t InstanceCount;
+		uint32_t StartIndexLocation;
+		uint32_t StartVertexLocation;
+		uint32_t StartInstanceLocation;
+
+		DrawArguments()
+				: VertexCount(0)
+				, InstanceCount(1)
+				, StartIndexLocation(0)
+				, StartVertexLocation(0)
+				, StartInstanceLocation(0)
+		{ }
+	};
 
 	class IRenderDevice
 	{
@@ -37,10 +153,19 @@ namespace Aurora
 		inline Texture_ptr CreateTexture(const TextureDesc& desc) { return CreateTexture(desc, nullptr); }
 		// Buffers
 		virtual Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) = 0;
-		/*virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) = 0;
+		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) = 0;
 		virtual void ClearBufferUInt(const Buffer_ptr& buffer, uint32_t clearValue) = 0;
 		virtual void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) = 0;
-		virtual void ReadBuffer(const Buffer_ptr& buffer, void* data, size_t* dataSize) = 0; // for debugging purposes only
-		inline Buffer_ptr CreateBuffer(const BufferDesc& desc) { return CreateBuffer(desc, nullptr); }*/
+		virtual void ReadBuffer(const Buffer_ptr& buffer, void* data, size_t* dataSize) = 0; // for debugging purposes only*/
+		inline Buffer_ptr CreateBuffer(const BufferDesc& desc) { return CreateBuffer(desc, nullptr); }
+		// Samplers
+		virtual Sampler_ptr CreateSampler(const SamplerDesc& desc) = 0;
+		// Drawing
+		virtual void Draw(const DrawCallState& state) = 0;
+		virtual void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
+		virtual void DrawIndirect(const DrawCallState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
+
+		virtual void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) = 0;
+		virtual void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
 	};
 }

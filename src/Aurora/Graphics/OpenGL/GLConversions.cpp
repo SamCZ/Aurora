@@ -70,7 +70,7 @@ namespace Aurora
 		return GL_NONE;
 	}
 
-	GLenum ConvertWrapMode(EWrapMode wrapMode)
+	GLint ConvertWrapMode(EWrapMode wrapMode)
 	{
 		switch (wrapMode)
 		{
@@ -151,6 +151,47 @@ namespace Aurora
 				return GL_MAX;
 			default: AU_LOG_FATAL("Unknown blend op %d", (int)value);
 				return GL_FUNC_ADD;
+		}
+	}
+
+	GLenum ConvertBufferType(EBufferType bufferType)
+	{
+		switch (bufferType) {
+
+			case EBufferType::VertexBuffer: return GL_ARRAY_BUFFER;
+			case EBufferType::IndexBuffer: return GL_ELEMENT_ARRAY_BUFFER;
+			case EBufferType::UniformBuffer: return GL_UNIFORM_BUFFER;
+			case EBufferType::ShaderStorageBuffer: return GL_SHADER_STORAGE_BUFFER;
+			case EBufferType::TextureBuffer: return GL_TEXTURE_BUFFER;
+			default:
+			case EBufferType::Unknown: {
+				AU_LOG_WARNING("Unknown buffer type !");
+				throw;
+				return GL_NONE;
+			}
+		}
+	}
+
+	GLenum ConvertUsage(EBufferUsage usage)
+	{
+		switch(usage) {
+			case EBufferUsage::StreamDraw: return GL_STREAM_DRAW;
+			case EBufferUsage::StreamRead: return GL_STREAM_READ;
+			case EBufferUsage::StreamCopy: return GL_STREAM_COPY;
+
+			case EBufferUsage::StaticDraw: return GL_STATIC_DRAW;
+			case EBufferUsage::StaticRead: return GL_STATIC_READ;
+			case EBufferUsage::StaticCopy: return GL_STATIC_COPY;
+
+			case EBufferUsage::DynamicDraw: return GL_DYNAMIC_DRAW;
+			case EBufferUsage::DynamicRead: return GL_DYNAMIC_READ;
+			case EBufferUsage::DynamicCopy: return GL_DYNAMIC_COPY;
+			default:
+			case EBufferUsage::Unknown: {
+				AU_LOG_WARNING("Unknown usage type !");
+				throw;
+				return GL_NONE;
+			}
 		}
 	}
 }

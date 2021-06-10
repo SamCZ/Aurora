@@ -9,7 +9,7 @@ namespace Aurora
 	{
 		m_Resources.LoadUniforms(m_Handle);
 
-		if(m_Desc.HasShader(ShaderType::Vertex)) { // Get input attributes
+		if(m_Desc.HasShader(EShaderType::Vertex)) { // Get input attributes
 			GLint attributeCount;
 			glGetProgramiv(m_Handle, GL_ACTIVE_ATTRIBUTES, &attributeCount);
 

@@ -36,7 +36,7 @@ namespace Aurora
 		m_OnShaderResourceChangeEvent = std::make_shared<ResourceObject::ResourceChangedEvent>([this](ResourceObject* obj) { OnShaderResourceUpdate(obj); });
 
 		for(const auto& shaderResource : shaders) {
-			if(shaderResource->GetShaderType() == ShaderType::Compute) continue;
+			if(shaderResource->GetShaderType() == EShaderType::Compute) continue;
 
 			SetShader(shaderResource);
 		}
@@ -79,7 +79,7 @@ namespace Aurora
 		OnShaderResourceUpdate(sharedPtr.get());
 	}
 
-	void Material::RemoveShader(const ShaderType &shaderType)
+	void Material::RemoveShader(const EShaderType &shaderType)
 	{
 		auto findShaderObjIter = m_Shaders.find(shaderType);
 
@@ -94,7 +94,7 @@ namespace Aurora
 		ApplyShaderToPSO(nullptr, shaderType);
 	}
 
-	ShaderResourceObject_ptr Material::GetShader(const ShaderType &shaderType)
+	ShaderResourceObject_ptr Material::GetShader(const EShaderType &shaderType)
 	{
 		auto findShaderObjIter = m_Shaders.find(shaderType);
 
@@ -203,7 +203,7 @@ namespace Aurora
 
 	void Material::LoadConstantBuffers(ShaderObject &object, ShaderResourceDesc desc, ConstantBufferList& constantBufferStorage, ConstantBufferList& constantBufferListCopy)
 	{
-		const ShaderType& shaderType = object.Type;
+		const EShaderType& shaderType = object.Type;
 
 		/*if(!desc.Variables.empty()) {
 			const std::vector<ShaderVariable>& variables = *desc.Variables;
@@ -254,7 +254,7 @@ namespace Aurora
 
 	void Material::LoadTextureSRV(ShaderObject &object, ShaderResourceDesc desc, TextureDefList& textureDefList, TextureDefList& textureDefListOld, SamplerList& samplerList, SamplerList& samplerListOld)
 	{
-		const ShaderType& shaderType = object.Type;
+		const EShaderType& shaderType = object.Type;
 
 		//m_ShaderResourceVariables[shaderType].push_back({{shaderType, desc.Name, SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}, false});
 
@@ -298,18 +298,18 @@ namespace Aurora
 		samplerList.push_back({String(desc.Name), {shaderType, desc.Name, SamLinearClampDesc}});*/
 	}
 
-	void Material::DeleteConstantBuffers(const ShaderType& type)
+	void Material::DeleteConstantBuffers(const EShaderType& type)
 	{
 		m_ShaderConstantBuffers.erase(type);
 	}
 
-	void Material::DeleteTextureSRVs(const ShaderType &type)
+	void Material::DeleteTextureSRVs(const EShaderType &type)
 	{
 		m_ShaderTextures.erase(type);
 		m_ShaderSamplers.erase(type);
 	}
 
-	void Material::ApplyShaderToPSO(Shader_ptr shader, const ShaderType& shaderType)
+	void Material::ApplyShaderToPSO(Shader_ptr shader, const EShaderType& shaderType)
 	{
 		/*switch (shaderType) {
 			case SHADER_TYPE_VERTEX:
