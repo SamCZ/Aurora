@@ -66,7 +66,7 @@ namespace Aurora
 
 		AuroraEngine::RenderDevice->WriteTexture(texture, 0, data);
 
-		return nullptr;
+		return texture;
 	}
 
 	void FontBitmapPageList::Init(const stbtt_fontinfo &fontInfo)

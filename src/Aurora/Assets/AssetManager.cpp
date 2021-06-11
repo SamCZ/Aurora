@@ -108,7 +108,7 @@ namespace Aurora
 		textureDesc.Height = height;
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
 		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
-		textureDesc.DebugName = "Loaded texture";
+		textureDesc.DebugName = path.string();
 		texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)

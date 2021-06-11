@@ -1,3 +1,4 @@
+#include <Aurora/Core/Crc.hpp>
 #include "GLRenderDevice.hpp"
 
 #include "GLConversions.hpp"
@@ -570,8 +571,6 @@ namespace Aurora
 		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
 
 		for(const auto& drawArg : args) {
-			//glDrawElements(primitiveType, drawArg.VertexCount, ibFormat, (const void*)size_t(0));
-
 			uint32_t indexOffset = drawArg.StartIndexLocation * 4 + state.IndexBufferOffset;
 
 			if(drawArg.InstanceCount > 0) {
@@ -597,11 +596,10 @@ namespace Aurora
 		BindShaderInputs(state);
 		BindShaderResources(state);
 
+		BindRenderTargets(state);
 
-
-		// TODO: Frame buffers
-		// TODO: Blend states
-		// TODO: Raster states
+		SetBlendState(state);
+		SetRasterState(state.RasterState);
 	}
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
@@ -609,8 +607,13 @@ namespace Aurora
 		size_t currentUsedAttribs = 0;
 
 		auto glShader = GetShader(state.Shader);
+		const auto& inputVars = glShader->GetInputVariables();
 
-		for(const auto& var : glShader->GetInputVariables()) {
+		if(inputVars.empty()) {
+			return;
+		}
+
+		for(const auto& var : inputVars) {
 			uint8_t location = var.first;
 			const ShaderInputVariable& inputVariable = var.second;
 			const VertexAttributeDesc& layoutAttribute = state.InputLayout.find(inputVariable.Name)->second;
@@ -712,6 +715,11 @@ namespace Aurora
 			}
 
 			auto* glTexture = GetTexture(targetTextureBinding->Texture);
+
+			if(glTexture == nullptr) {
+				// TODO: Set placeholder texture or throw error
+				continue;
+			}
 
 			const TextureDesc& textureDesc = glTexture->GetDesc();
 
@@ -843,5 +851,206 @@ namespace Aurora
 				m_vecBoundTextures.push_back(std::make_pair(binding.slot, GL_TEXTURE_BUFFER));
 			}
 		}*/
+	}
+
+	void GLRenderDevice::BindRenderTargets(const DrawCallState &state)
+	{
+		FrameBuffer_ptr framebuffer = GetCachedFrameBuffer(state);
+
+		if (framebuffer != m_CurrentFrameBuffer)
+		{
+			if (framebuffer)
+			{
+				glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->Handle);
+				glDrawBuffers(GLsizei(framebuffer->NumBuffers), framebuffer->DrawBuffers);
+			}
+			else
+			{
+				glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
+			}
+
+			m_CurrentFrameBuffer = framebuffer;
+		}
+	}
+
+	FrameBuffer_ptr GLRenderDevice::GetCachedFrameBuffer(const DrawCallState &state)
+	{
+		if(!state.HasAnyRenderTarget) {
+			return nullptr;
+		}
+
+		CrcHash hasher;
+		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
+		{
+			if(state.RenderTargets[rt].Texture != nullptr) {
+				hasher.Add(state.RenderTargets[rt]);
+			}
+		}
+		hasher.Add(state.DepthTarget);
+		hasher.Add(state.DepthIndex);
+		hasher.Add(state.DepthMipSlice);
+		uint32_t hash = hasher.Get();
+
+		auto it = m_CachedFrameBuffers.find(hash);
+		if (it != m_CachedFrameBuffers.end())
+			return it->second;
+
+		auto framebuffer = std::make_shared<FrameBuffer>();
+
+		glGenFramebuffers(1, &framebuffer->Handle);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->Handle);
+
+		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
+		{
+			const auto& targetBinding = state.RenderTargets[rt];
+
+			if(targetBinding.Texture == nullptr) {
+				continue;
+			}
+
+			auto glTex = GetTexture(state.RenderTargets[rt].Texture);
+
+			framebuffer->RenderTargets[rt] = state.RenderTargets[rt].Texture.get();
+			glTex->m_UsedInFrameBuffers = true;
+
+			if (targetBinding.Index == ~0u || glTex->GetDesc().DepthOrArraySize == 0)
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, glTex->BindTarget(), glTex->Handle(), GLint(targetBinding.MipSlice));
+			else
+				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, GL_TEXTURE_CUBE_MAP_POSITIVE_X + targetBinding.Index, glTex->Handle(), GLint(targetBinding.MipSlice));
+			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, renderState.targets[rt]->handle, renderState.targetMipSlices[rt], renderState.targetIndicies[rt]);
+
+			framebuffer->DrawBuffers[(framebuffer->NumBuffers)++] = GL_COLOR_ATTACHMENT0 + rt;
+		}
+
+		if (state.DepthTarget)
+		{
+			auto glDepthTex = static_cast<GLTexture*>(framebuffer->DepthTarget); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+
+			framebuffer->DepthTarget = state.DepthTarget.get();
+			glDepthTex->m_UsedInFrameBuffers = true;
+
+			GLenum attachment;
+
+			if (state.DepthTarget->GetDesc().ImageFormat == GraphicsFormat::D24S8)
+				attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+			else
+				attachment = GL_DEPTH_ATTACHMENT;
+
+			if (state.DepthIndex == ~0u || state.DepthTarget->GetDesc().DepthOrArraySize == 0)
+				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, glDepthTex->BindTarget(), glDepthTex->Handle(), GLint(state.DepthMipSlice));
+			else
+				glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, glDepthTex->Handle(), GLint(state.DepthMipSlice), GLint(state.DepthIndex));
+		}
+
+		CHECK_GL_ERROR();
+
+		uint32_t status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE) {
+			AU_LOG_ERROR("Incomplete framebuffer!");
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		m_CachedFrameBuffers[hash] = framebuffer;
+
+		return framebuffer;
+	}
+
+	void GLRenderDevice::NotifyTextureDestroy(GLTexture* texture)
+	{
+		std::vector<uint32_t> frameBuffersToRemove;
+
+		for(const auto& it : m_CachedFrameBuffers) {
+			for(const auto& rt : it.second->RenderTargets) {
+				if(texture != rt) {
+					continue;
+				}
+
+				if(m_CurrentFrameBuffer == it.second) {
+					m_CurrentFrameBuffer = nullptr;
+				}
+
+				frameBuffersToRemove.push_back(it.first);
+				break;
+			}
+		}
+
+		for(auto rt_id : frameBuffersToRemove) {
+			m_CachedFrameBuffers.erase(rt_id);
+		}
+	}
+
+	void GLRenderDevice::SetBlendState(const DrawCallState &state)
+	{
+		// TODO: Blend state
+	}
+
+	void GLRenderDevice::SetRasterState(const FRasterState& rasterState)
+	{
+		// TODO: Call gl commands only on change of values !
+
+		switch (rasterState.FillMode)
+		{
+			case FillMode::Line:
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				break;
+			case FillMode::Solid:
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				break;
+
+			default:
+				AU_LOG_WARNING("Unknown fill mode specified");
+				break;
+		}
+
+		switch (rasterState.CullMode)
+		{
+			case CullMode::Back:
+				glCullFace(GL_BACK);
+				glEnable(GL_CULL_FACE);
+				break;
+			case CullMode::Front:
+				glCullFace(GL_FRONT);
+				glEnable(GL_CULL_FACE);
+				break;
+			case CullMode::None:
+				glDisable(GL_CULL_FACE);
+				break;
+			default:
+				AU_LOG_WARNING("Unknown cullMode");
+		}
+
+		glFrontFace(rasterState.FrontCounterClockwise ? GL_CCW : GL_CW);
+
+		if (rasterState.DepthClipEnable)
+		{
+			glEnable(GL_DEPTH_CLAMP);
+		}
+
+		if (rasterState.ScissorEnable)
+		{
+			glEnable(GL_SCISSOR_TEST);
+		}
+		else
+		{
+			glDisable(GL_SCISSOR_TEST);
+		}
+
+		if (rasterState.DepthBias != 0 || rasterState.SlopeScaledDepthBias != 0.f)
+		{
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(rasterState.SlopeScaledDepthBias, float(rasterState.DepthBias));
+		}
+
+		if (rasterState.MultisampleEnable)
+		{
+			glEnable(GL_MULTISAMPLE);
+			glSampleMaski(0, ~0u);
+			CHECK_GL_ERROR();
+		}
+		else
+		{
+			glDisable(GL_MULTISAMPLE);
+		}
 	}
 }

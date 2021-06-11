@@ -97,8 +97,8 @@ namespace Aurora
 		void ApplyPipeline();
 		void CommitShaderResources();
 	public:
-		inline void SetFillMode(const RasterState::FillMode& fillMode) noexcept { }
-		inline void SetCullMode(const RasterState::CullMode& cullMode) noexcept {  }
+		inline void SetFillMode(const FillMode& fillMode) noexcept { }
+		inline void SetCullMode(const CullMode& cullMode) noexcept {  }
 		inline void SetBlendState(const BlendState& blendDesc) {  }
 		inline void SetIndependentBlend(bool flag) noexcept {  }
 		inline void SetPrimitiveTopology(const EPrimitiveType& primitiveTopology) noexcept {  }

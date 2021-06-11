@@ -63,7 +63,7 @@ namespace Aurora
 		void DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius = 0.0f, float rotation = 0.0f);
 		void DrawRect(const Vector2& position, const Vector2& size, const Vector4& color, float strokeSize, float radius = 0.0f, float rotation = 0.0f);
 
-		void DrawImage(float x, float y, float w, float h, Texture_ptr texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
+		void DrawImage(float x, float y, float w, float h, const Texture_ptr& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
 		void DrawImage(const Vector2& position, const Vector2& size, Texture_ptr texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
 		void SetImageEdgeDetection(bool enabled, int thickness = 3, const Vector4& edgeColor = Vector4(1.0));
 	public:

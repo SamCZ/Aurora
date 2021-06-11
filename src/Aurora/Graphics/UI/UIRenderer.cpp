@@ -44,11 +44,8 @@ namespace Aurora
 		vec4 Color;
 	};
 
-	Shader_ptr ui_vertex;
-	Shader_ptr ui_pixel;
-
-	Shader_ptr ui_font_vertex;
-	Shader_ptr ui_font_pixel;
+	Shader_ptr baseUIShader;
+	Shader_ptr fontShader;
 
 	Sampler_ptr sampler;
 
@@ -59,21 +56,17 @@ namespace Aurora
 
 	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts(), m_CurrentFont("Default")
 	{
-		LoadFont("Default", "Assets/Fonts/GROBOLD.ttf");
+		LoadFont("Default", "Assets/Fonts/troika.otf");
 
-		/*ui_vertex = ASM->LoadShaderResource("Assets/Shaders/UI/vertex.glsl", ShaderType::Vertex)->GetOrCompile().Shader;
-		ui_pixel = ASM->LoadShaderResource("Assets/Shaders/UI/fragment.glsl", ShaderType::Pixel)->GetOrCompile().Shader;
+		baseUIShader = ASM->LoadShaderFolder("Assets/Shaders/UI");
+		fontShader = ASM->LoadShaderFolder("Assets/Shaders/UI_Font");
 
-		ui_font_vertex = ASM->LoadShaderResource("Assets/Shaders/UI_Font/vertex.glsl", ShaderType::Vertex)->GetOrCompile().Shader;
-		ui_font_pixel = ASM->LoadShaderResource("Assets/Shaders/UI_Font/fragment.glsl", ShaderType::Pixel)->GetOrCompile().Shader;
+		vertexUniformBuffer = RD->CreateBuffer(BufferDesc("VertexUniform", sizeof(VertexUniform), 0, EBufferType::UniformBuffer));
+		uvDataUniformBuffer = RD->CreateBuffer(BufferDesc("UVData", sizeof(UVData), 0, EBufferType::UniformBuffer));
+		fragmentUniformUniformBuffer = RD->CreateBuffer(BufferDesc("FragmentUniform", sizeof(FragmentUniform), 0, EBufferType::UniformBuffer));
+		fontDataUniformBuffer = RD->CreateBuffer(BufferDesc("FontData", sizeof(FontData), 0, EBufferType::UniformBuffer));
 
-		SamplerDesc samplerDesc;
-		sampler = AuroraEngine::RenderDevice->CreateSampler(samplerDesc);
-
-		vertexUniformBuffer = AuroraEngine::RenderDevice->CreateUniformBuffer(UniformBufferDesc(sizeof(VertexUniform), "VertexUniform"), nullptr);
-		uvDataUniformBuffer = AuroraEngine::RenderDevice->CreateUniformBuffer(UniformBufferDesc(sizeof(UVData), "UVData"), nullptr);
-		fragmentUniformUniformBuffer = AuroraEngine::RenderDevice->CreateUniformBuffer(UniformBufferDesc(sizeof(FragmentUniform), "FragmentUniform"), nullptr);
-		fontDataUniformBuffer = AuroraEngine::RenderDevice->CreateUniformBuffer(UniformBufferDesc(sizeof(FontData), "FontData"), nullptr);*/
+		sampler = RD->CreateSampler(SamplerDesc());
 	}
 
 	void UIRenderer::Begin(const Vector2i& size)
@@ -121,7 +114,7 @@ namespace Aurora
 
 	void UIRenderer::Draw(float x, float y, float w, float h, const DrawArgs& drawArgs)
 	{
-		/*if(!drawArgs.Fill) {
+		if(!drawArgs.Fill) {
 			float strokeHalf = drawArgs.StrokeSize / 2.0f;
 			if(strokeHalf < 1.0) strokeHalf = 1.0f;
 			x -= strokeHalf;
@@ -135,7 +128,7 @@ namespace Aurora
 			vertexUniform.Projection = m_ProjectionMatrix;
 			vertexUniform.ModelMat = glm::translate(Vector3(x + w / 2.0f, y + h / 2.0f, 0)) * glm::rotate(glm::radians(drawArgs.Rotation), Vector3(0, 0, 1)) * glm::scale(Vector3(w, h, 1));
 
-			AuroraEngine::RenderDevice->WriteUniformBuffer(vertexUniformBuffer, &vertexUniform, sizeof(VertexUniform), 0);
+			RD->WriteBuffer(vertexUniformBuffer, &vertexUniform, sizeof(VertexUniform));
 		}
 
 		{ // UV data
@@ -154,7 +147,7 @@ namespace Aurora
 
 			uvData.FirstData.z = 0;
 
-			AuroraEngine::RenderDevice->WriteUniformBuffer(uvDataUniformBuffer, &uvData, sizeof(UVData), 0);
+			RD->WriteBuffer(uvDataUniformBuffer, &uvData, sizeof(UVData));
 		}
 
 		if (!drawArgs.IsFont) { // Fragment data
@@ -178,140 +171,48 @@ namespace Aurora
 			fragmentUniform.Radius = drawArgs.Radius;
 			fragmentUniform.GrayScale = 0.0f;
 
-			AuroraEngine::RenderDevice->WriteUniformBuffer(fragmentUniformUniformBuffer, &fragmentUniform, sizeof(FragmentUniform), 0);
+			RD->WriteBuffer(fragmentUniformUniformBuffer, &fragmentUniform, sizeof(FragmentUniform));
 		} else {
 			FontData fontData = {};
-			fontData.Color = drawArgs.Color;
+			fontData.Color = drawArgs.Tint;
 
-			AuroraEngine::RenderDevice->WriteUniformBuffer(fontDataUniformBuffer, &fontData, sizeof(FontData), 0);
+			RD->WriteBuffer(fontDataUniformBuffer, &fontData, sizeof(FontData));
 		}
 
 		DrawCallState state;
-		state.primType = PrimitiveType::TriangleStrip;
+		state.PrimitiveType = EPrimitiveType::TriangleStrip;
 
 		if(!drawArgs.IsFont) {
-			state.VS.shader = ui_vertex;
-			state.PS.shader = ui_pixel;
+			state.Shader = baseUIShader;
 		} else {
-			state.VS.shader = ui_font_vertex;
-			state.PS.shader = ui_font_pixel;
+			state.Shader = fontShader;
 		}
 
-		state.PS.BoundTextures["Texture"] = drawArgs.Texture;
-		state.PS.BoundSamplers["Texture"] = sampler;
+		state.BindTexture("Texture", drawArgs.Texture);
+		state.BoundSamplers["Texture"] = sampler;
+
 		if(!drawArgs.IsFont) {
-			state.PS.BoundUniformBuffers["FragmentUniform"] = fragmentUniformUniformBuffer;
+			state.BoundUniformBuffers["FragmentUniform"] = fragmentUniformUniformBuffer;
 		} else {
-			state.PS.BoundUniformBuffers["FontData"] = fontDataUniformBuffer;
+			state.BoundUniformBuffers["FontData"] = fontDataUniformBuffer;
 		}
 
-		state.VS.BoundUniformBuffers["VertexUniform"] = vertexUniformBuffer;
-		state.VS.BoundUniformBuffers["UVData"] = uvDataUniformBuffer;
+		state.BoundUniformBuffers["VertexUniform"] = vertexUniformBuffer;
+		state.BoundUniformBuffers["UVData"] = uvDataUniformBuffer;
 
-		state.renderState.targetCount = 0;
-		state.renderState.targets[0] = nullptr;
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		state.renderState.depthStencilState.depthEnable = false;
-		state.renderState.rasterState.cullMode = RasterState::CullMode::None;
-
-		state.renderState.clearColorTarget = false;
-		state.renderState.clearDepthTarget = false;
-		state.renderState.clearStencilTarget = false;
-
-		if(state.renderState.targetCount > 0) {
-			BlendState blendState;
-
-			for (uint32_t i = 0; i < BlendState::MAX_MRT_BLEND_COUNT; i++)
-			{
-				blendState.blendEnable[i] = true;
-				blendState.colorWriteEnable[i] = BlendState::COLOR_MASK_ALL;
-
-				// TODO: Check if this right settings for alpha
-				blendState.blendOpAlpha[i] = BlendState::BlendOp::BLEND_OP_ADD;
-				blendState.srcBlendAlpha[i] = BlendState::BlendValue::BLEND_SRC_ALPHA;
-				blendState.destBlendAlpha[i] = BlendState::BlendValue::BLEND_INV_SRC_ALPHA;
-
-				blendState.blendOp[i] = BlendState::BlendOp::BLEND_OP_ADD;
-				blendState.srcBlend[i] = BlendState::BlendValue::BLEND_SRC_ALPHA;
-				blendState.destBlend[i] = BlendState::BlendValue::BLEND_INV_SRC_ALPHA;
-			}
-
-			state.renderState.blendState = blendState;
-		} else {
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		}
-
-		DrawArguments args;
-		args.instanceCount = 1;
-		args.vertexCount = 4;
-		AuroraEngine::RenderDevice->Draw(state, &args, 1);*/
-
-		/*Material_ptr material = drawArgs.OverrideMaterial == nullptr ? m_Material : drawArgs.OverrideMaterial;
-
-		if(m_LastMaterial != material) {
-			m_LastMaterial = material;
-			//material->ValidateGraphicsPipelineState();
-
-		}
-
-		material->ApplyPipeline();
-
-		if(!drawArgs.Fill) {
-			float strokeHalf = drawArgs.StrokeSize / 2.0f;
-			if(strokeHalf < 1.0) strokeHalf = 1.0f;
-			x -= strokeHalf;
-			y -= strokeHalf;
-			w += strokeHalf * 2.0f;
-			h += strokeHalf * 2.0f;
-		}
-
-		material->SetVariable<Matrix4>("Projection", m_ProjectionMatrix);
-		material->SetVariable<Matrix4>("ModelMat", glm::translate(Vector3(x + w / 2.0f, y + h / 2.0f, 0)) * glm::rotate(glm::radians(drawArgs.Rotation), Vector3(0, 0, 1)) * glm::scale(Vector3(w, h, 1)));
-
-		if(drawArgs.EnabledCustomUVs) {
-			static Vector4 cacheUvVal[4];
-
-			for (int i = 0; i < 4; ++i) {
-				cacheUvVal[i].x = drawArgs.CustomUVs[i].x;
-				cacheUvVal[i].y = drawArgs.CustomUVs[i].y;
-			}
-
-			material->SetArray("UVs", cacheUvVal, sizeof(Vector4) * 4);
-			material->SetVariable<int>("CustomUVsEnabled", true);
-		} else {
-			material->SetVariable<int>("CustomUVsEnabled", false);
-		}
-
-		if(drawArgs.Texture != nullptr) {
-			material->SetVariable<uint32_t>("Type", 0);
-			material->SetTexture("Texture", drawArgs.Texture);
-			material->SetVariable<Vector4>("Color", drawArgs.Tint);
-		} else {
-			if(drawArgs.Fill) {
-				material->SetVariable<uint32_t>("Type", 1);
-			} else {
-				material->SetVariable<uint32_t>("Type", 2);
-				material->SetVariable<float>("StrokeSize", drawArgs.StrokeSize / 2.0f);
-			}
-
-			material->SetVariable<Vector4>("Color", drawArgs.Color);
-		}
-
-		material->SetVariable<Vector2>("Size", Vector2(w, h));
-		material->SetVariable<float>("Radius", drawArgs.Radius);
-		material->SetVariable<float>("GrayScale", 0.0f); // TODO: Add this as setting
-
-		material->CommitShaderResources();*/
-
-		/*DrawAttribs drawAttrs;
-		drawAttrs.Flags = DRAW_FLAG_VERIFY_ALL;
-		drawAttrs.NumVertices = 4;
-		AuroraEngine::ImmediateContext->Draw(drawAttrs);*/
+		RD->Draw(state, {DrawArguments(4)});
 	}
 
-	void UIRenderer::DrawImage(float x, float y, float w, float h, Texture_ptr texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)
+	void UIRenderer::DrawImage(float x, float y, float w, float h, const Texture_ptr& texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)
 	{
+		if(texture == nullptr) {
+			AU_LOG_WARNING("Texture is null !");
+			return;
+		}
+
 		switch (imageDrawMode) {
 			case ImageDrawMode::Simple: {
 				DrawArgs drawArgs;
@@ -330,9 +231,7 @@ namespace Aurora
 				drawArgs.EnabledCustomUVs = true;
 				drawArgs.Tint = tint;
 
-				TextureDesc textureDesc;
-				//TextureDesc textureDesc = AuroraEngine::RenderDevice->DescribeTexture(texture);
-
+				TextureDesc textureDesc = texture->GetDesc();
 				auto realW = static_cast<float>(textureDesc.Width);
 				auto realH = static_cast<float>(textureDesc.Height);
 

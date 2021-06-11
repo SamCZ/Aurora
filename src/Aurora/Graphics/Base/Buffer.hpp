@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <utility>
 
 namespace Aurora
 {
@@ -61,6 +62,13 @@ namespace Aurora
 				  Name("Undefined"),
 				  Type(EBufferType::Unknown),
 				  Usage(EBufferUsage::Unknown) {}
+
+		BufferDesc(std::string name, uint32_t size, uint32_t stride, EBufferType type, EBufferUsage usage = EBufferUsage::DynamicDraw)
+				: ByteSize(size),
+				  Stride(stride),
+				  Name(std::move(name)),
+				  Type(type),
+				  Usage(usage) {}
 	};
 
 	class IBuffer

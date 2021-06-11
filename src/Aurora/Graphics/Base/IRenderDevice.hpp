@@ -103,22 +103,38 @@ namespace Aurora
 		static constexpr int MaxRenderTargets = 8;
 		std::array<TargetBinding, MaxRenderTargets> RenderTargets;
 		Texture_ptr DepthTarget;
+		uint32_t DepthIndex;
+		uint32_t DepthMipSlice;
 
 		std::map<std::string, VertexAttributeDesc> InputLayout;
 		std::map<uint8_t, Buffer_ptr> VertexBuffers;
+		bool HasAnyRenderTarget;
 
 		IndexBufferBinding IndexBuffer;
 		uint32_t IndexBufferOffset;
 
 		EPrimitiveType PrimitiveType;
 
-		DrawCallState() : BaseState(), DepthTarget(nullptr), IndexBuffer(), PrimitiveType(EPrimitiveType::TriangleList), IndexBufferOffset(0) { }
+		FRasterState RasterState;
+
+		DrawCallState()
+		: BaseState(),
+		  DepthTarget(nullptr),
+		  DepthIndex(0),
+		  DepthMipSlice(0),
+		  IndexBuffer(),
+		  PrimitiveType(EPrimitiveType::TriangleList),
+		  IndexBufferOffset(0),
+		  HasAnyRenderTarget(false),
+		  RasterState() { }
 
 		inline void ResetTargets()
 		{
 			for (int i = 0; i < MaxRenderTargets; ++i) {
 				RenderTargets[i] = TargetBinding();
 			}
+
+			HasAnyRenderTarget = false;
 		}
 
 		inline void ResetVertexBuffers()
@@ -144,6 +160,11 @@ namespace Aurora
 		inline void BindTarget(uint16_t slot, Texture_ptr texture, uint32_t index = 0, uint32_t mipSlice = 0)
 		{
 			assert(slot < MaxRenderTargets);
+
+			if(texture != nullptr) {
+				HasAnyRenderTarget = true;
+			}
+
 			RenderTargets[slot] = TargetBinding(std::move(texture), index, mipSlice);
 		}
 

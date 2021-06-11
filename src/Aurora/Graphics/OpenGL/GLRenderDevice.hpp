@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Aurora/Core/Common.hpp"
 #include "../Base/IRenderDevice.hpp"
 #include "GL.hpp"
 
@@ -10,11 +11,36 @@ namespace Aurora
 		GLuint LastShaderHandle;
 	};
 
+	AU_CLASS(FrameBuffer)
+	{
+	public:
+		GLuint Handle;
+		GLenum DrawBuffers[8]{};
+		uint32_t NumBuffers;
+		ITexture* DepthTarget;
+		ITexture* RenderTargets[8]{};
+
+		FrameBuffer()
+				: Handle(0)
+				, NumBuffers(0)
+				, DepthTarget(nullptr) { }
+
+		~FrameBuffer()
+		{
+			if (Handle)
+				glDeleteFramebuffers(1, &Handle);
+		}
+	};
+
 	class GLRenderDevice : public IRenderDevice
 	{
+	public:
+		friend class GLTexture;
 	private:
 		GLPipelineState m_PipelineState;
 		GLuint m_nVAO;
+		FrameBuffer_ptr m_CurrentFrameBuffer = nullptr;
+		std::map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
@@ -51,5 +77,14 @@ namespace Aurora
 		void ApplyDrawCallState(const DrawCallState& state);
 
 		void BindShaderInputs(const DrawCallState &state);
+
+		void BindRenderTargets(const DrawCallState &state);
+
+		FrameBuffer_ptr GetCachedFrameBuffer(const DrawCallState &state);
+		void NotifyTextureDestroy(class GLTexture* texture);
+
+		void SetBlendState(const DrawCallState &state);
+
+		void SetRasterState(const FRasterState& rasterState);
 	};
 }
