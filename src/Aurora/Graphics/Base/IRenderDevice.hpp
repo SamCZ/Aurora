@@ -205,7 +205,7 @@ namespace Aurora
 		// Samplers
 		virtual Sampler_ptr CreateSampler(const SamplerDesc& desc) = 0;
 		// Drawing
-		virtual void Draw(const DrawCallState& state) = 0;
+		virtual void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
 		virtual void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
 		virtual void DrawIndirect(const DrawCallState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
 

@@ -38,7 +38,7 @@ namespace Aurora
 		// Samplers
 		Sampler_ptr CreateSampler(const SamplerDesc& desc) override;
 		// Drawing
-		void Draw(const DrawCallState& state) override;
+		void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) override;
 		void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) override;
 		void DrawIndirect(const DrawCallState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 

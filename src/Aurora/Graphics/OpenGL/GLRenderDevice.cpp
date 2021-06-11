@@ -534,9 +534,22 @@ namespace Aurora
 		return nullptr;
 	}
 
-	void GLRenderDevice::Draw(const DrawCallState &state)
+	void GLRenderDevice::Draw(const DrawCallState &state, const std::vector<DrawArguments>& args)
 	{
+		if(state.Shader == nullptr) {
+			AU_LOG_ERROR("Cannot draw without shader !");
+			throw;
+			return;
+		}
 
+		ApplyDrawCallState(state);
+
+		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
+
+		for(const auto& drawArg : args) {
+			glDrawArraysInstanced(primitiveType, GLint(drawArg.StartVertexLocation), GLint(drawArg.VertexCount), GLint(drawArg.InstanceCount));
+			CHECK_GL_ERROR();
+		}
 	}
 
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
@@ -562,9 +575,9 @@ namespace Aurora
 			uint32_t indexOffset = drawArg.StartIndexLocation * 4 + state.IndexBufferOffset;
 
 			if(drawArg.InstanceCount > 0) {
-				glDrawElementsInstancedBaseVertex(primitiveType, drawArg.VertexCount, ibFormat, (const void*)size_t(indexOffset), drawArg.InstanceCount, drawArg.StartVertexLocation);
+				glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
 			} else {
-				glDrawElementsBaseVertex(primitiveType, drawArg.VertexCount, ibFormat, (const void*)size_t(indexOffset), drawArg.StartVertexLocation);
+				glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLint(drawArg.StartVertexLocation));
 			}
 		}
 
@@ -703,18 +716,7 @@ namespace Aurora
 			const TextureDesc& textureDesc = glTexture->GetDesc();
 
 			if(textureDesc.IsUAV && targetTextureBinding->IsUAV) {
-				GLenum format = glTexture->Format().InternalFormat;
-				GLenum access = GL_WRITE_ONLY;
 
-				switch (targetTextureBinding->Access) {
-					case TextureBinding::EAccess::Read: access = GL_READ_ONLY; break;
-					case TextureBinding::EAccess::Write: access = GL_WRITE_ONLY; break;
-					case TextureBinding::EAccess::ReadAndWrite: access = GL_READ_WRITE; break;
-				}
-
-				glBindImageTexture(imageResource.Binding, glTexture->Handle(), 0, GL_TRUE, 0, access, format);
-				CHECK_GL_ERROR();
-				//m_vecBoundImages.push_back(imageResource.Binding);
 			} else {
 				glActiveTexture(GL_TEXTURE0 + imageResource.Binding);
 
@@ -768,16 +770,6 @@ namespace Aurora
 				CHECK_GL_ERROR();
 				//m_vecBoundImages.push_back(imageResource.Binding);
 			} else {
-				/*glActiveTexture(GL_TEXTURE0 + imageResource.Binding);
-
-				if(glTexture->Format().AbstractFormat == GraphicsFormat::SRGBA8_UNORM)
-					glBindTexture(glTexture->BindTarget(), glTexture->SRGBView());
-				else
-					glBindTexture(glTexture->BindTarget(), glTexture->Handle());
-
-				CHECK_GL_ERROR();*/
-
-				//m_vecBoundTextures.emplace_back(imageResource.Binding, targetTexture->bindTarget);
 			}
 		}
 
@@ -829,9 +821,11 @@ namespace Aurora
 
 		// binding ssbo`s
 		// TODO: Complete SSBO
-		/*for(const auto& uniformResource : shader->GetGLResource().GetStorageBlocks()) {
+		for(const auto& uniformResource : shader->GetGLResource().GetStorageBlocks()) {
 
 		}
+
+		/*
 		for (uint32_t nBuffer = 0; nBuffer < state.bufferBindingCount; ++nBuffer)
 		{
 			const BufferBinding& binding = state.buffers[nBuffer];
