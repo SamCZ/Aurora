@@ -6,7 +6,7 @@
 
 namespace Aurora
 {
-	enum class IndexBufferFormat : uint8_t
+	enum class EIndexBufferFormat : uint8_t
 	{
 		Uint8,
 		Uint16,
@@ -51,13 +51,13 @@ namespace Aurora
 	{
 		std::string Name;
 		uint32_t ByteSize;
-		uint32_t StructStride; //if non-zero it's structured
+		uint32_t Stride; //if non-zero it's structured
 		EBufferType Type;
 		EBufferUsage Usage;
 
 		BufferDesc()
 				: ByteSize(0),
-				  StructStride(0),
+				  Stride(0),
 				  Name("Undefined"),
 				  Type(EBufferType::Unknown),
 				  Usage(EBufferUsage::Unknown) {}

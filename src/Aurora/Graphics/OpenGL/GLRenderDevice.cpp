@@ -24,6 +24,11 @@ namespace Aurora
 		return static_cast<GLSampler*>(sampler.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 	}
 
+	GLShaderProgram* GetShader(const Shader_ptr& shader)
+	{
+		return static_cast<GLShaderProgram*>(shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+	}
+
 	GLRenderDevice::GLRenderDevice() : IRenderDevice(), m_PipelineState(), m_nVAO(0)
 	{
 
@@ -536,12 +541,107 @@ namespace Aurora
 
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
 	{
+		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
+			AU_LOG_ERROR("Cannot draw with these arguments !");
+			throw;
+			return;
+		}
 
+		ApplyDrawCallState(state);
+
+		CHECK_GL_ERROR();
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GetBuffer(state.IndexBuffer.Buffer)->Handle());
+
+		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
+		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
+
+		for(const auto& drawArg : args) {
+			//glDrawElements(primitiveType, drawArg.VertexCount, ibFormat, (const void*)size_t(0));
+
+			uint32_t indexOffset = drawArg.StartIndexLocation * 4 + state.IndexBufferOffset;
+
+			if(drawArg.InstanceCount > 0) {
+				glDrawElementsInstancedBaseVertex(primitiveType, drawArg.VertexCount, ibFormat, (const void*)size_t(indexOffset), drawArg.InstanceCount, drawArg.StartVertexLocation);
+			} else {
+				glDrawElementsBaseVertex(primitiveType, drawArg.VertexCount, ibFormat, (const void*)size_t(indexOffset), drawArg.StartVertexLocation);
+			}
+		}
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_NONE);
+		glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
 	}
 
 	void GLRenderDevice::DrawIndirect(const DrawCallState &state, const Buffer_ptr &indirectParams, uint32_t offsetBytes)
 	{
 
+	}
+
+	void GLRenderDevice::ApplyDrawCallState(const DrawCallState &state)
+	{
+		ApplyShader(state.Shader);
+
+		BindShaderInputs(state);
+		BindShaderResources(state);
+
+
+
+		// TODO: Frame buffers
+		// TODO: Blend states
+		// TODO: Raster states
+	}
+
+	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
+	{
+		size_t currentUsedAttribs = 0;
+
+		auto glShader = GetShader(state.Shader);
+
+		for(const auto& var : glShader->GetInputVariables()) {
+			uint8_t location = var.first;
+			const ShaderInputVariable& inputVariable = var.second;
+			const VertexAttributeDesc& layoutAttribute = state.InputLayout.find(inputVariable.Name)->second;
+
+			const FormatMapping& formatMapping = GetFormatMapping(layoutAttribute.Format);
+
+			//glBindBuffer(GL_ARRAY_BUFFER, vertexBufferHandle);
+
+			auto vertexBufferIt = state.VertexBuffers.find(layoutAttribute.BufferIndex);
+			auto glBuffer = GetBuffer(vertexBufferIt->second);
+			glBindBuffer(GL_ARRAY_BUFFER, glBuffer->Handle());
+
+			glEnableVertexAttribArray(GLuint(location));
+
+			if(formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT) {
+				glVertexAttribIPointer(
+						GLuint(location),
+						GLint(formatMapping.Components),
+						formatMapping.Type,
+						GLsizei(glBuffer->GetDesc().Stride),
+						(const void*)size_t(layoutAttribute.Offset));
+			} else {
+				glVertexAttribPointer(
+						GLuint(location), // location
+						GLint(formatMapping.Components),
+						formatMapping.Type,
+						GL_FALSE,// Is normalized
+						GLsizei(glBuffer->GetDesc().Stride),
+						(const void*)size_t(layoutAttribute.Offset));
+			}
+
+			glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
+
+			currentUsedAttribs++;
+		}
+
+		//glBindBuffer(GL_ARRAY_BUFFER, GL_NONE); Do not do this, android render will fail !
+
+		static GLint nMaxVertexAttrs = 0;
+		if(nMaxVertexAttrs == 0)
+			glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nMaxVertexAttrs);
+
+		for (; int(currentUsedAttribs) < nMaxVertexAttrs; currentUsedAttribs++)
+			glDisableVertexAttribArray(GLuint(currentUsedAttribs));
 	}
 
 	void GLRenderDevice::Dispatch(const DispatchState &state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ)
@@ -612,16 +712,17 @@ namespace Aurora
 					case TextureBinding::EAccess::ReadAndWrite: access = GL_READ_WRITE; break;
 				}
 
-				glBindImageTexture(imageResource.Binding, glTexture->Handle(), static_cast<GLint>(textureDesc.MipLevels), GL_TRUE, 0, access, format);
+				glBindImageTexture(imageResource.Binding, glTexture->Handle(), 0, GL_TRUE, 0, access, format);
 				CHECK_GL_ERROR();
 				//m_vecBoundImages.push_back(imageResource.Binding);
 			} else {
 				glActiveTexture(GL_TEXTURE0 + imageResource.Binding);
 
-				if(glTexture->Format().AbstractFormat == GraphicsFormat::SRGBA8_UNORM)
+				if(glTexture->Format().AbstractFormat == GraphicsFormat::SRGBA8_UNORM) {
 					glBindTexture(glTexture->BindTarget(), glTexture->SRGBView());
-				else
+				} else {
 					glBindTexture(glTexture->BindTarget(), glTexture->Handle());
+				}
 
 				CHECK_GL_ERROR();
 
@@ -667,14 +768,14 @@ namespace Aurora
 				CHECK_GL_ERROR();
 				//m_vecBoundImages.push_back(imageResource.Binding);
 			} else {
-				glActiveTexture(GL_TEXTURE0 + imageResource.Binding);
+				/*glActiveTexture(GL_TEXTURE0 + imageResource.Binding);
 
 				if(glTexture->Format().AbstractFormat == GraphicsFormat::SRGBA8_UNORM)
 					glBindTexture(glTexture->BindTarget(), glTexture->SRGBView());
 				else
 					glBindTexture(glTexture->BindTarget(), glTexture->Handle());
 
-				CHECK_GL_ERROR();
+				CHECK_GL_ERROR();*/
 
 				//m_vecBoundTextures.emplace_back(imageResource.Binding, targetTexture->bindTarget);
 			}

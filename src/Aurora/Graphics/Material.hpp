@@ -101,7 +101,7 @@ namespace Aurora
 		inline void SetCullMode(const RasterState::CullMode& cullMode) noexcept {  }
 		inline void SetBlendState(const BlendState& blendDesc) {  }
 		inline void SetIndependentBlend(bool flag) noexcept {  }
-		inline void SetPrimitiveTopology(const PrimitiveType& primitiveTopology) noexcept {  }
+		inline void SetPrimitiveTopology(const EPrimitiveType& primitiveTopology) noexcept {  }
 		inline void SetDepthEnable(bool enabled) noexcept {  }
 		inline void SetDepthWriteEnable(bool enabled) noexcept {  }
 		inline void SetDepthFunc(const EComparisonFunc& comparisonFunction) noexcept {  }

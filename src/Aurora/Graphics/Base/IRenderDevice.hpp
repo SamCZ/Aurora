@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <map>
 
 #include "RenderBase.hpp"
 
@@ -50,6 +51,15 @@ namespace Aurora
 		TargetBinding(Texture_ptr texture, uint32_t index, uint32_t mipSlice) : Texture(std::move(texture)), Index(index), MipSlice(mipSlice) {}
 	};
 
+	struct IndexBufferBinding
+	{
+		Buffer_ptr Buffer;
+		EIndexBufferFormat Format;
+
+		IndexBufferBinding() : Buffer(nullptr), Format(EIndexBufferFormat::Uint32) {}
+		IndexBufferBinding(Buffer_ptr buffer, EIndexBufferFormat format) : Buffer(std::move(buffer)), Format(format) {}
+	};
+
 	struct StateResources
 	{
 		static constexpr uint8_t MaxBoundTextures = 8;
@@ -93,15 +103,42 @@ namespace Aurora
 		static constexpr int MaxRenderTargets = 8;
 		std::array<TargetBinding, MaxRenderTargets> RenderTargets;
 		Texture_ptr DepthTarget;
-		std::vector<Buffer_ptr> VertexBuffers;
 
-		DrawCallState() : BaseState(), DepthTarget(nullptr) { }
+		std::map<std::string, VertexAttributeDesc> InputLayout;
+		std::map<uint8_t, Buffer_ptr> VertexBuffers;
+
+		IndexBufferBinding IndexBuffer;
+		uint32_t IndexBufferOffset;
+
+		EPrimitiveType PrimitiveType;
+
+		DrawCallState() : BaseState(), DepthTarget(nullptr), IndexBuffer(), PrimitiveType(EPrimitiveType::TriangleList), IndexBufferOffset(0) { }
 
 		inline void ResetTargets()
 		{
 			for (int i = 0; i < MaxRenderTargets; ++i) {
 				RenderTargets[i] = TargetBinding();
 			}
+		}
+
+		inline void ResetVertexBuffers()
+		{
+			VertexBuffers.clear();
+		}
+
+		inline void ResetIndexBuffer()
+		{
+			IndexBuffer = IndexBufferBinding();
+		}
+
+		inline void SetIndexBuffer(Buffer_ptr buffer, EIndexBufferFormat format = EIndexBufferFormat::Uint32)
+		{
+			IndexBuffer = IndexBufferBinding(std::move(buffer), format);
+		}
+
+		inline void SetVertexBuffer(uint8_t slot, Buffer_ptr buffer)
+		{
+			VertexBuffers[slot] = std::move(buffer);
 		}
 
 		inline void BindTarget(uint16_t slot, Texture_ptr texture, uint32_t index = 0, uint32_t mipSlice = 0)
@@ -132,6 +169,13 @@ namespace Aurora
 				, StartVertexLocation(0)
 				, StartInstanceLocation(0)
 		{ }
+
+		explicit DrawArguments(uint32_t vertexCount)
+				: VertexCount(vertexCount)
+				, InstanceCount(1)
+				, StartIndexLocation(0)
+				, StartVertexLocation(0)
+				, StartInstanceLocation(0) {}
 	};
 
 	class IRenderDevice

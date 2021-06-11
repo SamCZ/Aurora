@@ -54,15 +54,15 @@ namespace Aurora
 		}
 	}
 
-	GLenum ConvertPrimType(PrimitiveType primType)
+	GLenum ConvertPrimType(EPrimitiveType primType)
 	{
 		switch (primType)
 		{
-			case PrimitiveType::PointList:
+			case EPrimitiveType::PointList:
 				return GL_POINTS;
-			case PrimitiveType::TriangleList:
+			case EPrimitiveType::TriangleList:
 				return GL_TRIANGLES;
-			case PrimitiveType::TriangleStrip:
+			case EPrimitiveType::TriangleStrip:
 				return GL_TRIANGLE_STRIP;
 			default: AU_LOG_FATAL("Unsupported primitive type %d", (int)primType);
 		}
@@ -191,6 +191,19 @@ namespace Aurora
 				AU_LOG_WARNING("Unknown usage type !");
 				throw;
 				return GL_NONE;
+			}
+		}
+	}
+
+	GLenum ConvertIndexBufferFormat(EIndexBufferFormat format)
+	{
+		switch (format) {
+			case EIndexBufferFormat::Uint8: return GL_UNSIGNED_BYTE;
+			case EIndexBufferFormat::Uint16: return GL_UNSIGNED_SHORT;
+			case EIndexBufferFormat::Uint32: return GL_UNSIGNED_INT;
+			default: {
+				AU_LOG_FATAL("Unknown index buffer format !");
+				throw;
 			}
 		}
 	}

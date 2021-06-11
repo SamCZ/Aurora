@@ -45,7 +45,11 @@ namespace Aurora
 		void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) override;
 		void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 	private:
-		void ApplyDispatchState(const DispatchState& state);
 		static void BindShaderResources(const BaseState& state);
+
+		void ApplyDispatchState(const DispatchState& state);
+		void ApplyDrawCallState(const DrawCallState& state);
+
+		void BindShaderInputs(const DrawCallState &state);
 	};
 }

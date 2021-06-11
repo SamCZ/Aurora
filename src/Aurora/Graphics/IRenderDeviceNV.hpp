@@ -265,7 +265,7 @@ namespace Aurora
 	{
 		enum { MAX_VERTEX_ATTRIBUTE_COUNT = 16 };
 
-		PrimitiveType primType;
+		EPrimitiveType primType;
 		InputLayoutHandle inputLayout;
 		BufferHandle indexBuffer;
 		GraphicsFormat indexBufferFormat;
@@ -288,7 +288,7 @@ namespace Aurora
 				, DS(EShaderType::Domain)
 				, GS(EShaderType::Geometry)
 				, PS(EShaderType::Pixel)
-				, primType(PrimitiveType::TriangleList)
+				, primType(EPrimitiveType::TriangleList)
 				, inputLayout(nullptr)
 				, indexBuffer(nullptr)
 				, indexBufferFormat(GraphicsFormat::R32_UINT)

@@ -2,7 +2,7 @@
 
 namespace Aurora
 {
-	enum class PrimitiveType : uint8_t
+	enum class EPrimitiveType : uint8_t
 	{
 		PointList = 0,
 		TriangleList,
