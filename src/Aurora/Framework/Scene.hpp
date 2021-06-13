@@ -171,6 +171,8 @@ namespace Aurora
 			m_GameMode = newGamemode;
 			return newGamemode;
 		}
+
+		inline GameModeBase* GetGameMode() { return m_GameMode; }
 	public:
 		inline void Update(double delta)
 		{

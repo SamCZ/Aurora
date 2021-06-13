@@ -3,14 +3,10 @@
 #include "Aurora/Core/Common.hpp"
 #include "../Base/IRenderDevice.hpp"
 #include "GL.hpp"
+#include "GLContextState.hpp"
 
 namespace Aurora
 {
-	struct GLPipelineState
-	{
-		GLuint LastShaderHandle;
-	};
-
 	AU_CLASS(FrameBuffer)
 	{
 	public:
@@ -37,10 +33,13 @@ namespace Aurora
 	public:
 		friend class GLTexture;
 	private:
-		GLPipelineState m_PipelineState;
 		GLuint m_nVAO;
+		GLuint m_nVAOEmpty;
+		GLuint m_LastVao;
 		FrameBuffer_ptr m_CurrentFrameBuffer = nullptr;
 		std::map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
+
+		GLContextState m_ContextState;
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
@@ -49,7 +48,7 @@ namespace Aurora
 		// Shaders
 		Shader_ptr CreateShaderProgram(const ShaderProgramDesc& desc) override;
 		static GLuint CompileShaderRaw(const std::string& sourceString, const EShaderType& shaderType, std::string* errorOutput);
-		void ApplyShader(const Shader_ptr& shader) override;
+		void SetShader(const Shader_ptr& shader) override;
 		// Textures
 		Texture_ptr CreateTexture(const TextureDesc& desc, TextureData textureData) override;
 		void WriteTexture(const Texture_ptr& texture, uint32_t subresource, const void* data) override;
@@ -63,6 +62,8 @@ namespace Aurora
 		void ReadBuffer(const Buffer_ptr& buffer, void* data, size_t* dataSize) override;
 		// Samplers
 		Sampler_ptr CreateSampler(const SamplerDesc& desc) override;
+		// InputLayout
+		InputLayout_ptr CreateInputLayout(const std::vector<VertexAttributeDesc>& desc) override;
 		// Drawing
 		void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) override;
 		void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) override;
@@ -71,7 +72,7 @@ namespace Aurora
 		void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) override;
 		void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 	private:
-		static void BindShaderResources(const BaseState& state);
+		void BindShaderResources(const BaseState& state);
 
 		void ApplyDispatchState(const DispatchState& state);
 		void ApplyDrawCallState(const DrawCallState& state);

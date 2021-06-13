@@ -1,7 +1,12 @@
 #include "GLContextState.hpp"
+#include "GLUtils.hpp"
 
 namespace Aurora
 {
+	GLContextState::GLContextState() : m_ActiveTexture(-1), m_LastShaderHandle(0)
+	{
+
+	}
 
 	void GLContextState::Invalidate()
 	{
@@ -21,7 +26,120 @@ namespace Aurora
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
+		m_ActiveTexture = -1;
+	}
 
+	template <typename ObjectType>
+	bool UpdateBoundObject(UniqueIdentifier& CurrentObjectID, const ObjectType& NewObject, GLuint& NewGLHandle)
+	{
+		if(NewObject == nullptr) {
+			bool state = CurrentObjectID != 0;
+			CurrentObjectID = 0;
+			return state;
+		}
+
+		NewGLHandle = NewObject->Handle();
+		// Only ask for the ID if the object handle is non-zero
+		// to avoid ID generation for null objects
+		UniqueIdentifier NewObjectID = (NewGLHandle != 0) ? NewObject->GetUniqueID() : 0;
+
+		// It is unsafe to use GL handle to keep track of bound textures
+		// When a texture is released, GL is free to reuse its handle for
+		// the new created textures
+		if (CurrentObjectID != NewObjectID)
+		{
+			CurrentObjectID = NewObjectID;
+			return true;
+		}
+		return false;
+	}
+
+	template <class ObjectType>
+	bool UpdateBoundObjectsArr(std::vector<UniqueIdentifier>& BoundObjectIDs, uint32_t Index, const ObjectType& NewObject, GLuint& NewGLHandle)
+	{
+		if (Index >= BoundObjectIDs.size())
+			BoundObjectIDs.resize(Index + 1, -1);
+
+		return UpdateBoundObject(BoundObjectIDs[Index], NewObject, NewGLHandle);
+	}
+
+	void GLContextState::SetShader(GLShaderProgram* shader)
+	{
+		GLuint GLProgHandle = 0;
+		if (UpdateBoundObject(m_LastShaderHandle, shader, GLProgHandle))
+		{
+			glUseProgram(GLProgHandle);
+			CHECK_GL_ERROR("Failed to set GL program");
+		}
+	}
+
+	void GLContextState::SetActiveTexture(GLContextState::BindIndex index)
+	{
+		if(m_ActiveTexture != index) {
+			glActiveTexture(GL_TEXTURE0 + index);
+			CHECK_GL_ERROR("Failed to activate texture slot ", Index);
+			m_ActiveTexture = index;
+		}
+	}
+
+	void GLContextState::BindTexture(GLContextState::BindIndex index, GLTexture* texture)
+	{
+		SetActiveTexture(index);
+
+		GLuint GLTexHandle = 0;
+		if (UpdateBoundObjectsArr(m_BoundTextures, index, texture, GLTexHandle))
+		{
+			if(texture != nullptr) {
+				glBindTexture(texture->BindTarget(), GLTexHandle);
+			} else {
+				glBindTexture(GL_TEXTURE_2D, GLTexHandle);
+			}
+			CHECK_GL_ERROR("Failed to bind texture to slot ", index);
+		}
+	}
+
+	void GLContextState::BindSampler(GLContextState::BindIndex index, GLSampler* sampler)
+	{
+		GLuint GLSamplerHandle = 0;
+		if (UpdateBoundObjectsArr(m_BoundSamplers, index, sampler, GLSamplerHandle))
+		{
+			glBindSampler(index, GLSamplerHandle);
+			CHECK_GL_ERROR("Failed to bind sampler to slot ", index);
+		}
+	}
+
+	void GLContextState::BindImage(GLContextState::BindIndex index, GLTexture *texture, GLint mipLevel, GLboolean isLayered, GLint layer, GLenum access, GLenum format)
+	{
+#if GL_ARB_shader_image_load_store
+		GLuint GLTexHandle = 0;
+		if (UpdateBoundObjectsArr(m_BoundImages, index, texture, GLTexHandle))
+		{
+			glBindImageTexture(index, GLTexHandle, mipLevel, isLayered, layer, access, format);
+			CHECK_GL_ERROR("glBindImageTexture() failed");
+		}
+#else
+		AU_LOG_ERROR("GL_ARB_shader_image_load_store is not supported");
+#endif
+	}
+
+	void GLContextState::BindUniformBuffer(GLContextState::BindIndex index, GLBuffer *buffer)
+	{
+		GLuint GLBufferHandle = 0;
+		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle))
+		{
+			glBindBufferBase(GL_UNIFORM_BUFFER, index, GLBufferHandle);
+			CHECK_GL_ERROR("Failed to bind uniform buffer to slot ", index);
+		}
+	}
+
+	void GLContextState::BindStorageBlock(GLContextState::BindIndex index, GLBuffer *buffer)
+	{
+		GLuint GLBufferHandle = 0;
+		if (UpdateBoundObjectsArr(m_BoundStorageBlocks, index, buffer, GLBufferHandle))
+		{
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, GLBufferHandle);
+			CHECK_GL_ERROR("Failed to bind shader storage block to slot ", index);
+		}
 	}
 
 

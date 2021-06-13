@@ -90,16 +90,14 @@ namespace Aurora
 
 		const float ClearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
 
-		//auto PrevTime = glfwGetTime();
-		auto PrevTime = 0;
+		auto PrevTime = glfwGetTime();
 		auto lastFpsTime = PrevTime;
 		int frameCount = 0;
 
 		do {
 			Profiler::RestartProfiler();
 
-			//auto CurrTime    = glfwGetTime();
-			auto CurrTime    = 0;
+			auto CurrTime    = glfwGetTime();
 			auto ElapsedTime = CurrTime - PrevTime;
 			PrevTime         = CurrTime;
 

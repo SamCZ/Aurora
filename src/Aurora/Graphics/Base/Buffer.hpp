@@ -5,6 +5,8 @@
 #include <memory>
 #include <utility>
 
+#include "TypeBase.hpp"
+
 namespace Aurora
 {
 	enum class EIndexBufferFormat : uint8_t
@@ -71,7 +73,7 @@ namespace Aurora
 				  Usage(usage) {}
 	};
 
-	class IBuffer
+	class IBuffer : public TypeBase<IBuffer>
 	{
 	public:
 		virtual ~IBuffer() = default;

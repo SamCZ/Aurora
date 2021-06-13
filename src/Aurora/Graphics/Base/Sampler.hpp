@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Aurora/Core/Color.hpp"
+#include "TypeBase.hpp"
 
 namespace Aurora
 {
@@ -35,7 +36,7 @@ namespace Aurora
 		}
 	};
 
-	class ISampler
+	class ISampler : public TypeBase<ISampler>
 	{
 	public:
 		virtual ~ISampler() = default;

@@ -828,7 +828,7 @@ namespace Aurora
         delete i;
     }
 
-    void RendererInterfaceOGL::ApplyState(const DrawCallState& state)
+    void RendererInterfaceOGL::;const DrawCallState& state)
     {
         CHECK_GL_ERROR();
 

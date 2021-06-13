@@ -30,7 +30,7 @@ namespace Aurora
 		return static_cast<GLShaderProgram*>(shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 	}
 
-	GLRenderDevice::GLRenderDevice() : IRenderDevice(), m_PipelineState(), m_nVAO(0)
+	GLRenderDevice::GLRenderDevice() : IRenderDevice(), m_nVAO(0), m_ContextState()
 	{
 
 	}
@@ -38,11 +38,13 @@ namespace Aurora
 	GLRenderDevice::~GLRenderDevice()
 	{
 		glDeleteVertexArrays(1, &m_nVAO);
+		glDeleteVertexArrays(1, &m_nVAOEmpty);
 	}
 
 	void GLRenderDevice::Init()
 	{
 		glGenVertexArrays(1,&m_nVAO);
+		glGenVertexArrays(1,&m_nVAOEmpty);
 		glBindVertexArray(m_nVAO);
 	}
 
@@ -195,19 +197,9 @@ namespace Aurora
 		return shaderID;
 	}
 
-	void GLRenderDevice::ApplyShader(const Shader_ptr &shader)
+	void GLRenderDevice::SetShader(const Shader_ptr &shader)
 	{
-		if(shader == nullptr && m_PipelineState.LastShaderHandle != 0) {
-			m_PipelineState.LastShaderHandle = 0;
-			glUseProgram(0);
-		}
-
-		auto handle = static_cast<GLShaderProgram*>(shader.get())->Handle(); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
-
-		if(handle != m_PipelineState.LastShaderHandle) {
-			m_PipelineState.LastShaderHandle = handle;
-			glUseProgram(handle);
-		}
+		m_ContextState.SetShader(GetShader(shader));
 	}
 
 	Texture_ptr GLRenderDevice::CreateTexture(const TextureDesc &desc, TextureData textureData)
@@ -304,7 +296,7 @@ namespace Aurora
 
 		glBindTexture(bindTarget, 0);
 
-		GLuint srgbView = GL_NONE;
+		/*GLuint srgbView = GL_NONE;
 
 		if (formatMapping.AbstractFormat == GraphicsFormat::SRGBA8_UNORM)
 		{
@@ -318,7 +310,7 @@ namespace Aurora
 					0,
 					desc.MipLevels,
 					0,
-					numLayers);*/
+					numLayers);*//*
 
 			CHECK_GL_ERROR();
 
@@ -330,11 +322,11 @@ namespace Aurora
 				glBindTexture(bindTarget, 0);
 				CHECK_GL_ERROR();
 			}
-		}
+		}*/
 
 		// TODO: Write @textureData
 
-		return std::make_shared<GLTexture>(desc, formatMapping, handle, srgbView, bindTarget);
+		return std::make_shared<GLTexture>(desc, formatMapping, handle, bindTarget);
 	}
 
 	void GLRenderDevice::WriteTexture(const Texture_ptr &texture, uint32_t subresource, const void *data)
@@ -535,6 +527,11 @@ namespace Aurora
 		return nullptr;
 	}
 
+	InputLayout_ptr GLRenderDevice::CreateInputLayout(const std::vector<VertexAttributeDesc> &desc)
+	{
+		return std::make_shared<BasicInputLayout>(desc);
+	}
+
 	void GLRenderDevice::Draw(const DrawCallState &state, const std::vector<DrawArguments>& args)
 	{
 		if(state.Shader == nullptr) {
@@ -586,12 +583,12 @@ namespace Aurora
 
 	void GLRenderDevice::DrawIndirect(const DrawCallState &state, const Buffer_ptr &indirectParams, uint32_t offsetBytes)
 	{
-
+		// TODO: Indirect render
 	}
 
 	void GLRenderDevice::ApplyDrawCallState(const DrawCallState &state)
 	{
-		ApplyShader(state.Shader);
+		SetShader(state.Shader);
 
 		BindShaderInputs(state);
 		BindShaderResources(state);
@@ -609,18 +606,35 @@ namespace Aurora
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
 
-		if(inputVars.empty()) {
+		if(inputVars.empty() || state.InputLayoutHandle == nullptr) {
+			if(m_LastVao != m_nVAOEmpty) {
+				m_LastVao = m_nVAOEmpty;
+				glBindVertexArray(m_nVAOEmpty);
+			}
 			return;
+		}
+
+		if(m_LastVao != m_nVAO) {
+			m_LastVao = m_nVAO;
+			glBindVertexArray(m_nVAO);
 		}
 
 		for(const auto& var : inputVars) {
 			uint8_t location = var.first;
 			const ShaderInputVariable& inputVariable = var.second;
-			const VertexAttributeDesc& layoutAttribute = state.InputLayout.find(inputVariable.Name)->second;
+			VertexAttributeDesc layoutAttribute;
+
+			if(!state.InputLayoutHandle->GetDescriptorBySemanticID(location, layoutAttribute)) {
+				AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader !");
+				continue;
+			}
+
+			if(inputVariable.Format != layoutAttribute.Format) {
+				AU_LOG_FATAL("Input descriptor format is not the same !");
+				throw;
+			};
 
 			const FormatMapping& formatMapping = GetFormatMapping(layoutAttribute.Format);
-
-			//glBindBuffer(GL_ARRAY_BUFFER, vertexBufferHandle);
 
 			auto vertexBufferIt = state.VertexBuffers.find(layoutAttribute.BufferIndex);
 			auto glBuffer = GetBuffer(vertexBufferIt->second);
@@ -685,7 +699,7 @@ namespace Aurora
 
 	void GLRenderDevice::ApplyDispatchState(const DispatchState &state)
 	{
-		ApplyShader(state.Shader);
+		SetShader(state.Shader);
 		BindShaderResources(state);
 	}
 
@@ -703,13 +717,14 @@ namespace Aurora
 			const TextureBinding* targetTextureBinding = nullptr;
 
 			if(boundTextureIt == state.BoundTextures.end()) {
-				// TODO: Set placeholder texture
+				m_ContextState.BindTexture(imageResource.Binding, nullptr);
 				continue;
 			}
 
 			targetTextureBinding = &boundTextureIt->second;
 
 			if(targetTextureBinding == nullptr) {
+				m_ContextState.BindTexture(imageResource.Binding, nullptr);
 				// TODO: Set placeholder texture or throw error
 				continue;
 			}
@@ -717,27 +732,14 @@ namespace Aurora
 			auto* glTexture = GetTexture(targetTextureBinding->Texture);
 
 			if(glTexture == nullptr) {
+				m_ContextState.BindTexture(imageResource.Binding, nullptr);
 				// TODO: Set placeholder texture or throw error
 				continue;
 			}
 
 			const TextureDesc& textureDesc = glTexture->GetDesc();
 
-			if(textureDesc.IsUAV && targetTextureBinding->IsUAV) {
-
-			} else {
-				glActiveTexture(GL_TEXTURE0 + imageResource.Binding);
-
-				if(glTexture->Format().AbstractFormat == GraphicsFormat::SRGBA8_UNORM) {
-					glBindTexture(glTexture->BindTarget(), glTexture->SRGBView());
-				} else {
-					glBindTexture(glTexture->BindTarget(), glTexture->Handle());
-				}
-
-				CHECK_GL_ERROR();
-
-				//m_vecBoundTextures.emplace_back(imageResource.Binding, targetTexture->bindTarget);
-			}
+			m_ContextState.BindTexture(imageResource.Binding, glTexture);
 		}
 
 		for(const auto& imageResource : shader->GetGLResource().GetImages()) {
@@ -746,7 +748,7 @@ namespace Aurora
 			const TextureBinding* targetTextureBinding = nullptr;
 
 			if(boundTextureIt == state.BoundTextures.end()) {
-				// TODO: Set placeholder texture
+				m_ContextState.BindImage(imageResource.Binding, nullptr, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16F);
 				continue;
 			}
 
@@ -774,10 +776,9 @@ namespace Aurora
 					case TextureBinding::EAccess::ReadAndWrite: access = GL_READ_WRITE; break;
 				}
 
-				glBindImageTexture(imageResource.Binding, glTexture->Handle(), level, layered ? GL_TRUE : GL_FALSE, layer, access, format);
-				CHECK_GL_ERROR();
-				//m_vecBoundImages.push_back(imageResource.Binding);
+				m_ContextState.BindImage(imageResource.Binding, glTexture, level, layered, layer, access, format);
 			} else {
+				AU_LOG_WARNING("Trying to bind image as UAV but somewhere the texture is not marked as UAV");
 			}
 		}
 
@@ -788,20 +789,11 @@ namespace Aurora
 
 			Sampler_ptr targetSampler = nullptr;
 
-			if(boundSamplerIt == state.BoundSamplers.end()) {
-				// TODO: Set placeholder sampler
-				continue;
+			if(boundSamplerIt != state.BoundSamplers.end()) {
+				targetSampler = boundSamplerIt->second;
 			}
 
-			targetSampler = boundSamplerIt->second;
-
-			if(targetSampler == nullptr) {
-				// TODO: Set placeholder sampler or throw error
-				continue;
-			}
-
-			glBindSampler(samplerResource.Binding, GetSampler(targetSampler)->Handle());
-			//m_vecBoundSamplers.push_back(samplerResource.Binding);
+			m_ContextState.BindSampler(samplerResource.Binding, GetSampler(targetSampler));
 		}
 
 		// binding constant buffers
@@ -810,20 +802,11 @@ namespace Aurora
 
 			Buffer_ptr uniformBufferHandle = nullptr;
 
-			if(uniformBufferIt == state.BoundUniformBuffers.end()) {
-				// TODO: Set empty buffer
-				continue;
+			if(uniformBufferIt != state.BoundUniformBuffers.end()) {
+				uniformBufferHandle = uniformBufferIt->second;
 			}
 
-			uniformBufferHandle = uniformBufferIt->second;
-
-			if(uniformBufferHandle == nullptr) {
-				// TODO: Set empty buffer or throw error
-				continue;
-			}
-
-			glBindBufferBase(GL_UNIFORM_BUFFER, uniformResource.Binding, GetBuffer(uniformBufferHandle)->Handle());
-			//m_vecBoundConstantBuffers.push_back(uniformResource.Binding);
+			m_ContextState.BindUniformBuffer(uniformResource.Binding, GetBuffer(uniformBufferHandle));
 		}
 
 

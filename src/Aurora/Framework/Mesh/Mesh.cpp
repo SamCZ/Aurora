@@ -1,4 +1,5 @@
 #include "Mesh.hpp"
+#include "Aurora/AuroraEngine.hpp"
 
 namespace Aurora
 {
@@ -12,8 +13,6 @@ namespace Aurora
 	// TODO: Move this method to render interface
 	void Mesh::UpdateBuffers()
 	{
-		/*std::vector<StateTransitionDesc> barriers;
-
 		for(auto& it : LODResources) {
 			MeshLodResource& resource = it.second;
 
@@ -22,19 +21,15 @@ namespace Aurora
 			}
 
 			if(resource.VertexBuffer == nullptr) {
-				BufferDesc VertBuffDesc;
-				VertBuffDesc.Name          = "Mesh vertex buffer";
-				VertBuffDesc.Usage         = USAGE_IMMUTABLE;
-				VertBuffDesc.BindFlags     = BIND_VERTEX_BUFFER;
-				VertBuffDesc.uiSizeInBytes = resource.Vertices->GetSize();
-				BufferData VBData;
-				VBData.pData    = resource.Vertices->GetData();
-				VBData.DataSize = resource.Vertices->GetSize();
-				renderDevice->CreateBuffer(VertBuffDesc, &VBData, &resource.VertexBuffer);
-				//Log("Buffer created", std::to_string(resource.Vertices->GetCount()));
+				BufferDesc desc;
+				desc.Name = "Mesh Buffer";
+				desc.Usage = EBufferUsage::StaticDraw;
+				desc.Stride = resource.Vertices->GetStride();
+				desc.ByteSize = resource.Vertices->GetSize();
+				desc.Type = EBufferType::VertexBuffer;
+				resource.VertexBuffer = RD->CreateBuffer(desc);
 			} else {
-				immediateContext->UpdateBuffer(resource.VertexBuffer, 0, resource.Vertices->GetSize(), resource.Vertices->GetData(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-				barriers.emplace_back(resource.VertexBuffer, RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_VERTEX_BUFFER, true);
+				// TODO: Updated vertex buffer
 			}
 
 			if(resource.Indices.empty()) {
@@ -42,22 +37,16 @@ namespace Aurora
 			}
 
 			if(resource.IndexBuffer == nullptr) {
-				BufferDesc IndBuffDesc;
-				IndBuffDesc.Name          = "Mesh index buffer";
-				IndBuffDesc.Usage         = USAGE_IMMUTABLE;
-				IndBuffDesc.BindFlags     = BIND_INDEX_BUFFER;
-				IndBuffDesc.uiSizeInBytes = resource.Indices.size() * sizeof(uint32_t);
-				BufferData IBData;
-				IBData.pData    = resource.Indices.data();
-				IBData.DataSize = resource.Indices.size() * sizeof(uint32_t);
-				renderDevice->CreateBuffer(IndBuffDesc, &IBData, &resource.IndexBuffer);
-				//Log("Buffer created", ToString(resource.Indices.size()));
+				BufferDesc desc;
+				desc.Name = "Mesh Index Buffer";
+				desc.Usage = EBufferUsage::StaticDraw;
+				desc.Stride = sizeof(Index_t);
+				desc.ByteSize = resource.Indices.size() * sizeof(Index_t);
+				desc.Type = EBufferType::IndexBuffer;
+				resource.VertexBuffer = RD->CreateBuffer(desc);
 			} else {
-				immediateContext->UpdateBuffer(resource.IndexBuffer, 0, resource.Indices.size() * sizeof(uint32_t), resource.Indices.data(), RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-				barriers.emplace_back(resource.IndexBuffer,  RESOURCE_STATE_UNKNOWN, RESOURCE_STATE_INDEX_BUFFER,  true);
+				// TODO: Updated index buffer
 			}
 		}
-
-		immediateContext->TransitionResourceStates(barriers.size(), barriers.data());*/
 	}
 }

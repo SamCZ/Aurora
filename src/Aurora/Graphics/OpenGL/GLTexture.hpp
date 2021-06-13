@@ -15,17 +15,15 @@ namespace Aurora
 		TextureDesc m_Desc;
 		FormatMapping m_FormatMapping;
 		GLuint m_Handle;
-		GLuint m_SrgbView;
 
 		GLenum m_BindTarget;
 		bool m_UsedInFrameBuffers;
 	public:
-		GLTexture(TextureDesc desc, FormatMapping formatMapping, GLuint handle, GLuint srgbView, GLenum bindTarget);
+		GLTexture(TextureDesc desc, FormatMapping formatMapping, GLuint handle, GLenum bindTarget);
 		~GLTexture() override;
 
 		[[nodiscard]] inline const FormatMapping& Format() const noexcept { return m_FormatMapping; }
 		[[nodiscard]] inline GLuint Handle() const noexcept { return m_Handle; }
-		[[nodiscard]] inline GLuint SRGBView() const noexcept { return m_SrgbView; }
 		[[nodiscard]] inline GLenum BindTarget() const noexcept { return m_BindTarget; }
 	public:
 		[[nodiscard]] inline const TextureDesc& GetDesc() const override { return m_Desc; }

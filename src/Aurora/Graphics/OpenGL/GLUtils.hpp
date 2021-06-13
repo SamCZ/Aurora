@@ -18,7 +18,7 @@
         	AU_LOG_ERROR(__VA_ARGS__, "\nGL Error Code: ", err);                                                         \
         }                                                                                                                \
     } while (false);
-#define CHECK_GL_ERROR()                                                                                                 \
+#define CHECK_GL_ERROR(...)                                                                                                 \
     do                                                                                                                   \
     {                                                                                                                    \
         auto err = glGetError();                                                                                         \

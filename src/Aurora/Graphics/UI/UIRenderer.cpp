@@ -44,6 +44,8 @@ namespace Aurora
 		vec4 Color;
 	};
 
+	int drawCount = 0;
+
 	Shader_ptr baseUIShader;
 	Shader_ptr fontShader;
 
@@ -61,10 +63,10 @@ namespace Aurora
 		baseUIShader = ASM->LoadShaderFolder("Assets/Shaders/UI");
 		fontShader = ASM->LoadShaderFolder("Assets/Shaders/UI_Font");
 
-		vertexUniformBuffer = RD->CreateBuffer(BufferDesc("VertexUniform", sizeof(VertexUniform), 0, EBufferType::UniformBuffer));
-		uvDataUniformBuffer = RD->CreateBuffer(BufferDesc("UVData", sizeof(UVData), 0, EBufferType::UniformBuffer));
-		fragmentUniformUniformBuffer = RD->CreateBuffer(BufferDesc("FragmentUniform", sizeof(FragmentUniform), 0, EBufferType::UniformBuffer));
-		fontDataUniformBuffer = RD->CreateBuffer(BufferDesc("FontData", sizeof(FontData), 0, EBufferType::UniformBuffer));
+		vertexUniformBuffer = RD->CreateBuffer(BufferDesc("VertexUniform", sizeof(VertexUniform), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
+		uvDataUniformBuffer = RD->CreateBuffer(BufferDesc("UVData", sizeof(UVData), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
+		fragmentUniformUniformBuffer = RD->CreateBuffer(BufferDesc("FragmentUniform", sizeof(FragmentUniform), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
+		fontDataUniformBuffer = RD->CreateBuffer(BufferDesc("FontData", sizeof(FontData), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
 
 		sampler = RD->CreateSampler(SamplerDesc());
 	}
@@ -75,11 +77,26 @@ namespace Aurora
 			m_ProjectionMatrix = glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f, -1.0f, 1.0f);
 		}
 		SetImageEdgeDetection(false, 3);
+
+		m_DrawState = DrawCallState();
+
+
+		m_DrawState.PrimitiveType = EPrimitiveType::TriangleStrip;
+
+		m_DrawState.BoundSamplers["Texture"] = sampler;
+
+		m_DrawState.BoundUniformBuffers["FragmentUniform"] = fragmentUniformUniformBuffer;
+		m_DrawState.BoundUniformBuffers["FontData"] = fontDataUniformBuffer;
+
+		m_DrawState.BoundUniformBuffers["VertexUniform"] = vertexUniformBuffer;
+		m_DrawState.BoundUniformBuffers["UVData"] = uvDataUniformBuffer;
+
+		drawCount = 0;
 	}
 
 	void UIRenderer::End()
 	{
-
+		//std::cout << drawCount << std::endl;
 	}
 
 	void UIRenderer::FillRect(float x, float y, float w, float h, const Vector4 &color, float radius, float rotation)
@@ -114,6 +131,8 @@ namespace Aurora
 
 	void UIRenderer::Draw(float x, float y, float w, float h, const DrawArgs& drawArgs)
 	{
+		drawCount++;
+
 		if(!drawArgs.Fill) {
 			float strokeHalf = drawArgs.StrokeSize / 2.0f;
 			if(strokeHalf < 1.0) strokeHalf = 1.0f;
@@ -179,31 +198,19 @@ namespace Aurora
 			RD->WriteBuffer(fontDataUniformBuffer, &fontData, sizeof(FontData));
 		}
 
-		DrawCallState state;
-		state.PrimitiveType = EPrimitiveType::TriangleStrip;
-
 		if(!drawArgs.IsFont) {
-			state.Shader = baseUIShader;
+			m_DrawState.Shader = baseUIShader;
 		} else {
-			state.Shader = fontShader;
+			m_DrawState.Shader = fontShader;
 		}
 
-		state.BindTexture("Texture", drawArgs.Texture);
-		state.BoundSamplers["Texture"] = sampler;
+		m_DrawState.BindTexture("Texture", drawArgs.Texture);
 
-		if(!drawArgs.IsFont) {
-			state.BoundUniformBuffers["FragmentUniform"] = fragmentUniformUniformBuffer;
-		} else {
-			state.BoundUniformBuffers["FontData"] = fontDataUniformBuffer;
-		}
-
-		state.BoundUniformBuffers["VertexUniform"] = vertexUniformBuffer;
-		state.BoundUniformBuffers["UVData"] = uvDataUniformBuffer;
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		RD->Draw(state, {DrawArguments(4)});
+		RD->Draw(m_DrawState, {DrawArguments(4)});
 	}
 
 	void UIRenderer::DrawImage(float x, float y, float w, float h, const Texture_ptr& texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)

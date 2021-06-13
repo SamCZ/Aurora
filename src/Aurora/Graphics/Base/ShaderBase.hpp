@@ -9,6 +9,7 @@
 #include "Aurora/Logger/Logger.hpp"
 
 #include "InputLayout.hpp"
+#include "TypeBase.hpp"
 
 namespace Aurora
 {
@@ -162,7 +163,7 @@ namespace Aurora
 		[[nodiscard]] inline const std::map<EShaderType, ShaderDesc>& GetShaderDescriptions() const noexcept { return ShaderDescriptions; }
 	};
 
-	class IShaderProgram
+	class IShaderProgram : public TypeBase<IShaderProgram>
 	{
 	public:
 		[[nodiscard]] virtual const ShaderProgramDesc& GetDesc() const = 0;

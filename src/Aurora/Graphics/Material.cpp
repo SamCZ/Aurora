@@ -431,7 +431,7 @@ namespace Aurora
 
 	void Material::ApplyPipeline()
 	{
-		//AuroraEngine::ImmediateContext->SetPipelineState(GetCurrentPipelineState());
+
 	}
 
 	void Material::CommitShaderResources()

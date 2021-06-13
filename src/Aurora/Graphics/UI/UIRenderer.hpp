@@ -51,6 +51,8 @@ namespace Aurora
 
 		std::map<String, Font_ptr> m_Fonts;
 		String m_CurrentFont;
+
+		DrawCallState m_DrawState;
 	public:
 		UIRenderer();
 	public:

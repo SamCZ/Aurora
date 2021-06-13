@@ -106,6 +106,8 @@ namespace Aurora
 		uint32_t DepthIndex;
 		uint32_t DepthMipSlice;
 
+		InputLayout_ptr InputLayoutHandle;
+
 		std::map<std::string, VertexAttributeDesc> InputLayout;
 		std::map<uint8_t, Buffer_ptr> VertexBuffers;
 		bool HasAnyRenderTarget;
@@ -126,7 +128,8 @@ namespace Aurora
 		  PrimitiveType(EPrimitiveType::TriangleList),
 		  IndexBufferOffset(0),
 		  HasAnyRenderTarget(false),
-		  RasterState() { }
+		  RasterState(),
+		  InputLayoutHandle(nullptr) { }
 
 		inline void ResetTargets()
 		{
@@ -209,7 +212,7 @@ namespace Aurora
 		virtual void Init() = 0;
 		// Shaders
 		virtual Shader_ptr CreateShaderProgram(const ShaderProgramDesc& desc) = 0;
-		virtual void ApplyShader(const Shader_ptr& shader) = 0;
+		virtual void SetShader(const Shader_ptr& shader) = 0;
 		// Textures
 		virtual Texture_ptr CreateTexture(const TextureDesc& desc, TextureData textureData) = 0;
 		virtual void WriteTexture(const Texture_ptr& texture, uint32_t subresource, const void* data) = 0;
@@ -225,6 +228,8 @@ namespace Aurora
 		inline Buffer_ptr CreateBuffer(const BufferDesc& desc) { return CreateBuffer(desc, nullptr); }
 		// Samplers
 		virtual Sampler_ptr CreateSampler(const SamplerDesc& desc) = 0;
+		// InputLayout
+		virtual InputLayout_ptr CreateInputLayout(const std::vector<VertexAttributeDesc>& desc) = 0;
 		// Drawing
 		virtual void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
 		virtual void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
@@ -232,5 +237,6 @@ namespace Aurora
 
 		virtual void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) = 0;
 		virtual void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
+
 	};
 }

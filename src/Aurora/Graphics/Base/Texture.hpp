@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Format.hpp"
+#include "TypeBase.hpp"
 #include "Aurora/Core/Color.hpp"
 
 namespace Aurora
@@ -56,7 +57,7 @@ namespace Aurora
 				UseClearValue(false), ClearValue(0) { }
 	};
 
-	class ITexture
+	class ITexture : public TypeBase<ITexture>
 	{
 	public:
 		virtual ~ITexture() = default;
