@@ -5,6 +5,7 @@
 #include <Aurora/Graphics/Material.hpp>
 #include <Aurora/Physics/Bound.hpp>
 #include <Aurora/Graphics/Base/IRenderDevice.hpp>
+#include <Aurora/Graphics/Base/InputLayout.hpp>
 
 #include <utility>
 #include <unordered_map>
@@ -74,8 +75,7 @@ namespace Aurora
 		std::unordered_map<uint8_t, MaterialSlot> MaterialSlots;
 		std::unique_ptr<Bound> m_Bounds;
 	public:
-		[[nodiscard]] virtual LayoutElement* GetLayout() const = 0;
-		[[nodiscard]] virtual int GetLayoutElementCount() const = 0;
+		virtual const InputLayout_ptr& GetInputLayout() const = 0;
 
 		void UpdateBuffers();
 

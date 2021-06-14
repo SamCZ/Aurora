@@ -597,6 +597,13 @@ namespace Aurora
 
 		SetBlendState(state);
 		SetRasterState(state.RasterState);
+
+		if(state.HasAnyRenderTarget) {
+			glClearDepthf(0.0f);
+			//glClearColor(0, 0, 0, 1);
+
+			glClear(GL_DEPTH_BUFFER_BIT);
+		}
 	}
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
@@ -907,9 +914,9 @@ namespace Aurora
 
 		if (state.DepthTarget)
 		{
-			auto glDepthTex = static_cast<GLTexture*>(framebuffer->DepthTarget); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+			auto glDepthTex = GetTexture(state.DepthTarget);
 
-			framebuffer->DepthTarget = state.DepthTarget.get();
+			framebuffer->DepthTarget = glDepthTex;
 			glDepthTex->m_UsedInFrameBuffers = true;
 
 			GLenum attachment;

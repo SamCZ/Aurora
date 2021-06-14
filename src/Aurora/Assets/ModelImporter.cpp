@@ -74,6 +74,7 @@ namespace Aurora
 		ProcessNodes(&ProcessStaticMesh, mesh.get(), scene, scene->mRootNode, materialSlotIndex, boundingBox, embeddedTextures);
 
 		mesh->SetBounds(boundingBox);
+		mesh->UpdateBuffers();
 
 		return mesh;
 	}

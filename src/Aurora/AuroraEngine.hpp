@@ -74,6 +74,6 @@ namespace Aurora
 		static void Play2DSound(const String& path, float volume = 1.0f, float pitch = 1.0f);
 	};
 
-#define ASM AuroraEngine::AssetManager
-#define RD AuroraEngine::RenderDevice
+#define ASM ::Aurora::AuroraEngine::AssetManager
+#define RD ::Aurora::AuroraEngine::RenderDevice
 }
