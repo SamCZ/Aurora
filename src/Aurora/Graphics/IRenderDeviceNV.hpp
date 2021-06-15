@@ -23,7 +23,7 @@
 #include "Base/InputLayout.hpp"
 #include "Base/PrimitiveType.hpp"
 #include "Base/RasterState.hpp"
-#include "Base/DepthStencilState.hpp"
+#include "Base/FDepthStencilState.hpp"
 #include "Base/BlendState.hpp"
 
 namespace Aurora
@@ -149,7 +149,7 @@ namespace Aurora
 		bool setupExtraVoxelizationState;
 
 		BlendState blendState;
-		DepthStencilState depthStencilState;
+		FDepthStencilState depthStencilState;
 		RasterState rasterState;
 
 		RenderState() : targetCount(0), viewportCount(0), clearColor(0, 0, 0, 0), clearDepth(1.0f), clearStencil(0),

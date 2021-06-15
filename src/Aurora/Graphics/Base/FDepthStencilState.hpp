@@ -34,7 +34,7 @@ namespace Aurora
 		Always = 8
 	};
 
-	struct DepthStencilState
+	struct FDepthStencilState
 	{
 		struct StencilOpDesc
 		{
@@ -55,7 +55,7 @@ namespace Aurora
 		StencilOpDesc   FrontFace{};
 		StencilOpDesc   BackFace{};
 
-		DepthStencilState() :
+		FDepthStencilState() :
 				StencilRefValue(0),
 				DepthEnable(true),
 				DepthWriteMask(EDepthWriteMask::All),

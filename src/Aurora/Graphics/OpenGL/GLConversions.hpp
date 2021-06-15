@@ -3,7 +3,7 @@
 #include "GL.hpp"
 
 #include "../Base/BlendState.hpp"
-#include "../Base/DepthStencilState.hpp"
+#include "../Base/FDepthStencilState.hpp"
 #include "../Base/PrimitiveType.hpp"
 #include "../Base/RasterState.hpp"
 #include "../Base/Sampler.hpp"

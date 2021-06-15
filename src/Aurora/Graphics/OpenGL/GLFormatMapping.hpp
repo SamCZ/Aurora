@@ -54,7 +54,8 @@ namespace Aurora
 
 	static const FormatMapping& GetFormatMapping(const GraphicsFormat& abstractFormat)
 	{
-		const FormatMapping& mapping = FormatMappings[(uint8_t)abstractFormat];
+		auto index = (uint8_t)abstractFormat;
+		const FormatMapping& mapping = FormatMappings[index];
 		assert(mapping.AbstractFormat == abstractFormat);
 		return mapping;
 	}

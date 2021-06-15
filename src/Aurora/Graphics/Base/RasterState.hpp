@@ -29,8 +29,8 @@ namespace Aurora
 
 		FRasterState()
 		: FillMode(FillMode::Solid),
-		  CullMode(CullMode::Back),
-		  FrontCounterClockwise(true),
+		  CullMode(CullMode::Front),
+		  FrontCounterClockwise(false),
 		  DepthClipEnable(true),
 		  ScissorEnable(false),
 		  MultisampleEnable(false),

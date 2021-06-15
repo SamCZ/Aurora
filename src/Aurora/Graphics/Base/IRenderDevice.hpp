@@ -15,7 +15,7 @@
 #include "PrimitiveType.hpp"
 #include "BlendState.hpp"
 #include "RasterState.hpp"
-#include "DepthStencilState.hpp"
+#include "FDepthStencilState.hpp"
 
 namespace Aurora
 {
@@ -111,6 +111,14 @@ namespace Aurora
 		std::map<std::string, VertexAttributeDesc> InputLayout;
 		std::map<uint8_t, Buffer_ptr> VertexBuffers;
 		bool HasAnyRenderTarget;
+		FDepthStencilState DepthStencilState;
+
+		bool ClearColorTarget;
+		bool ClearDepthTarget;
+		bool ClearStencilTarget;
+		Color ClearColor;
+		float ClearDepth;
+		int ClearStencil;
 
 		IndexBufferBinding IndexBuffer;
 		uint32_t IndexBufferOffset;
@@ -129,7 +137,14 @@ namespace Aurora
 		  IndexBufferOffset(0),
 		  HasAnyRenderTarget(false),
 		  RasterState(),
-		  InputLayoutHandle(nullptr) { }
+		  InputLayoutHandle(nullptr),
+		  ClearColorTarget(true),
+		  ClearDepthTarget(true),
+		  ClearStencilTarget(false),
+		  ClearDepth(1.0f),
+		  ClearStencil(0),
+		  ClearColor(0, 0, 0, 0),
+		  DepthStencilState() { }
 
 		inline void ResetTargets()
 		{

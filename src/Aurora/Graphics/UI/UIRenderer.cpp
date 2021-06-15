@@ -80,6 +80,8 @@ namespace Aurora
 
 		m_DrawState = DrawCallState();
 
+		m_DrawState.DepthStencilState.DepthEnable = false;
+
 
 		m_DrawState.PrimitiveType = EPrimitiveType::TriangleStrip;
 
@@ -211,6 +213,9 @@ namespace Aurora
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		RD->Draw(m_DrawState, {DrawArguments(4)});
+
+		m_DrawState.ClearColorTarget = false;
+		m_DrawState.ClearDepthTarget = false;
 	}
 
 	void UIRenderer::DrawImage(float x, float y, float w, float h, const Texture_ptr& texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)

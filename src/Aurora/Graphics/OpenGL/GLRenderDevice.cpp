@@ -577,8 +577,8 @@ namespace Aurora
 			}
 		}
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_NONE);
-		glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
+		/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_NONE);
+		glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);*/
 	}
 
 	void GLRenderDevice::DrawIndirect(const DrawCallState &state, const Buffer_ptr &indirectParams, uint32_t offsetBytes)
@@ -598,12 +598,9 @@ namespace Aurora
 		SetBlendState(state);
 		SetRasterState(state.RasterState);
 
-		if(state.HasAnyRenderTarget) {
-			glClearDepthf(0.0f);
-			//glClearColor(0, 0, 0, 1);
+		SetDepthStencilState(state.DepthStencilState);
 
-			glClear(GL_DEPTH_BUFFER_BIT);
-		}
+		ClearRenderTargets(state);
 	}
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
@@ -926,10 +923,11 @@ namespace Aurora
 			else
 				attachment = GL_DEPTH_ATTACHMENT;
 
-			if (state.DepthIndex == ~0u || state.DepthTarget->GetDesc().DepthOrArraySize == 0)
+			if (state.DepthIndex == ~0u || state.DepthTarget->GetDesc().DepthOrArraySize == 0) {
 				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, glDepthTex->BindTarget(), glDepthTex->Handle(), GLint(state.DepthMipSlice));
-			else
+			} else {
 				glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, glDepthTex->Handle(), GLint(state.DepthMipSlice), GLint(state.DepthIndex));
+			}
 		}
 
 		CHECK_GL_ERROR();
@@ -1041,6 +1039,68 @@ namespace Aurora
 		else
 		{
 			glDisable(GL_MULTISAMPLE);
+		}
+	}
+
+	void GLRenderDevice::ClearRenderTargets(const DrawCallState &renderState)
+	{
+		uint32_t nClearBitField = 0;
+		if (renderState.ClearColorTarget)
+		{
+			nClearBitField = GL_COLOR_BUFFER_BIT;
+			glClearColor(renderState.ClearColor.r, renderState.ClearColor.g, renderState.ClearColor.b, renderState.ClearColor.a);
+		}
+
+		if (renderState.ClearDepthTarget)
+		{
+			nClearBitField |= GL_DEPTH_BUFFER_BIT;
+			glClearDepthf(renderState.ClearDepth);
+		}
+
+		if (renderState.ClearStencilTarget)
+		{
+			nClearBitField |= GL_STENCIL_BUFFER_BIT;
+			glClearStencil(renderState.ClearStencil);
+		}
+
+		if (nClearBitField)
+		{
+			glClear(nClearBitField);
+		}
+	}
+
+	void GLRenderDevice::SetDepthStencilState(FDepthStencilState depthState)
+	{
+		if (depthState.DepthEnable)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask((depthState.DepthWriteMask == EDepthWriteMask::All) ? GL_TRUE : GL_FALSE);
+			glDepthFunc(ConvertComparisonFunc(depthState.DepthFunc));
+		}
+		else
+		{
+			glDisable(GL_DEPTH_TEST);
+		}
+
+		if (depthState.StencilEnable)
+		{
+			glEnable(GL_STENCIL_TEST);
+
+			glStencilFuncSeparate(GL_FRONT, ConvertComparisonFunc(depthState.FrontFace.StencilFunc), depthState.StencilRefValue, depthState.StencilReadMask);
+			glStencilOpSeparate(GL_FRONT, ConvertStencilOp(depthState.FrontFace.StencilFailOp),
+								ConvertStencilOp(depthState.FrontFace.StencilDepthFailOp),
+								ConvertStencilOp(depthState.FrontFace.StencilPassOp));
+
+			glStencilFuncSeparate(GL_BACK, ConvertComparisonFunc(depthState.BackFace.StencilFunc), depthState.StencilRefValue, depthState.StencilReadMask);
+			glStencilOpSeparate(GL_BACK, ConvertStencilOp(depthState.BackFace.StencilFailOp),
+								ConvertStencilOp(depthState.BackFace.StencilDepthFailOp),
+								ConvertStencilOp(depthState.BackFace.StencilPassOp));
+
+			glStencilMask(depthState.StencilWriteMask);
+		}
+		else
+		{
+			glDisable(GL_STENCIL_TEST);
 		}
 	}
 }

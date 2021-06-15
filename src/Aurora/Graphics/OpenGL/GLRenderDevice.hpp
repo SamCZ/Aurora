@@ -87,5 +87,9 @@ namespace Aurora
 		void SetBlendState(const DrawCallState &state);
 
 		void SetRasterState(const FRasterState& rasterState);
+
+		void ClearRenderTargets(const DrawCallState &state);
+
+		static void SetDepthStencilState(FDepthStencilState state);
 	};
 }
