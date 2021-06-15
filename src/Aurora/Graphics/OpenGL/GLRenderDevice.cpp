@@ -46,6 +46,9 @@ namespace Aurora
 		glGenVertexArrays(1,&m_nVAO);
 		glGenVertexArrays(1,&m_nVAOEmpty);
 		glBindVertexArray(m_nVAO);
+
+
+		glDepthRangef(0.0f, 1.0f);
 	}
 
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
