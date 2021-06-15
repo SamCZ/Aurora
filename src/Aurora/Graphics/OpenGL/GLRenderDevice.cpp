@@ -30,7 +30,7 @@ namespace Aurora
 		return static_cast<GLShaderProgram*>(shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 	}
 
-	GLRenderDevice::GLRenderDevice() : IRenderDevice(), m_nVAO(0), m_ContextState()
+	GLRenderDevice::GLRenderDevice() : IRenderDevice(), m_nVAO(0), m_nVAOEmpty(0), m_LastVao(0), m_ContextState()
 	{
 
 	}
