@@ -44,7 +44,7 @@ namespace Aurora
 		All = 0xF
 	};
 
-	struct BlendState
+	struct FBlendState
 	{
 		bool Enabled;
 		EBlendValue SrcBlend;
@@ -58,7 +58,7 @@ namespace Aurora
 		Color BlendFactor;
 		bool AlphaToCoverage;
 
-		BlendState()
+		FBlendState()
 		: Enabled(false),
 		  SrcBlend(EBlendValue::One),
 		  DestBlend(EBlendValue::One),

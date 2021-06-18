@@ -80,6 +80,9 @@ namespace Aurora
 
 		m_DrawState = DrawCallState();
 
+		m_DrawState.ClearColorTarget = false;
+		m_DrawState.ClearDepthTarget = false;
+
 		m_DrawState.DepthStencilState.DepthEnable = false;
 
 

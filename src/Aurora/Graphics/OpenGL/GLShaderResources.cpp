@@ -337,7 +337,32 @@ namespace Aurora
 				std::vector<GLint> BlockUniformOffsets(blockUniformCount);
 				glGetActiveUniformsiv(program, blockUniformCount, (GLuint*)BlockUniformIndices.data(), GL_UNIFORM_OFFSET, BlockUniformOffsets.data());
 
-				std::cout << bindingLocal <<std::endl;
+				static GLuint shaderReferences[6] = {
+						GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER,
+						GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER,
+						GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_CONTROL_SHADER,
+						GL_UNIFORM_BLOCK_REFERENCED_BY_TESS_EVALUATION_SHADER,
+						GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER,
+						GL_UNIFORM_BLOCK_REFERENCED_BY_COMPUTE_SHADER
+				};
+
+				static EShaderType eShaderTypes[6] = {
+						EShaderType::Vertex,
+						EShaderType::Geometry,
+						EShaderType::Hull,
+						EShaderType::Domain,
+						EShaderType::Pixel,
+						EShaderType::Compute
+				};
+
+				EShaderType shaderType = EShaderType::Unknown;
+
+				for (int j = 0; j < 6; ++j) {
+					GLint isReferenced = 0;
+					glGetActiveUniformBlockiv(program, i, shaderReferences[j], &isReferenced);
+
+					if(isReferenced) shaderType |= eShaderTypes[j];
+				}
 
 				size_t blockSizeFromVars = 0;
 
@@ -349,9 +374,18 @@ namespace Aurora
 
 				std::cout << Name.data() << " : " << dataSize << "(" << blockSizeFromVars << ")" << std::endl;
 
+				std::vector<ShaderVariable> shaderVariables;
+
 				for (GLint j = 0; j < blockUniformCount; ++j) {
 					const BasicUniform& uniform = BasicUniforms[BlockUniformIndices[j]];
 					GLint offset = BlockUniformOffsets[j];
+
+					ShaderVariable variable = {};
+					variable.Name = uniform.Name;
+					variable.Size = uniform.Size;
+					variable.Offset = offset;
+
+					shaderVariables.emplace_back(variable);
 
 					std::cout << " - " << uniform.Name << " - size " << (uniform.Size * uniform.ArraySize) << " - offset " << offset << std::endl;
 				}
@@ -361,7 +395,10 @@ namespace Aurora
 												ShaderResourceType::ConstantBuffer,
 												m_UniformBufferBinding,
 												static_cast<uint32_t>(ArraySize),
-												UniformBlockIndex
+												UniformBlockIndex,
+												shaderType,
+												blockSizeFromVars,
+												shaderVariables
 										});
 			}
 

@@ -102,7 +102,7 @@ namespace Aurora
 			AU_LOG_ERROR("Cannot load ", path);
 		}
 
-		std::vector<ShaderResourceObject_ptr> shaderCollection;
+		Shader_ptr shaderProgram = nullptr;
 
 		if(json.find("shader_macros") != json.end()) {
 			auto& shader_macros = json["shader_macros"];
@@ -112,25 +112,13 @@ namespace Aurora
 			}
 		}
 
-		if(json.find("shaders") != json.end()) {
-			auto& shaders = json["shaders"];
-			for(nlohmann::json::iterator it = shaders.begin(); it != shaders.end(); ++it) {
-				const String& shader_type = it.key();
-				const Path shader_path = it.value().get<String>();
-
-				/*if(shader_type == "vertex") {
-					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, ShaderType::Vertex));
-				} else if(shader_type == "pixel") {
-					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, ShaderType::Pixel));
-				} else {
-					AU_LOG_ERROR("Unknown shader type ", shader_type, " for material ", path);
-				}*/
-			}
+		if(json.find("shaderFolder") != json.end()) {
+			shaderProgram = ASM->LoadShaderFolder(json["shaderFolder"].get<std::string>());
 		} else {
 			AU_LOG_ERROR("No shaders in ", path, " material file !");
 		}
 
-		auto material = std::make_shared<Material>(path.filename().string(), shaderCollection, macros);
+		auto material = std::make_shared<Material>(path.filename().string(), shaderProgram);
 
 		if(json.find("variables") != json.end()) {
 			auto& variables = json["variables"];

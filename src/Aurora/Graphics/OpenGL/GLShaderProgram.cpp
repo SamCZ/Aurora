@@ -52,7 +52,7 @@ namespace Aurora
 						inputVariable.Format = GraphicsFormat::RGBA32_UINT;
 						break;
 					case GL_UNSIGNED_INT:
-						inputVariable.Format = GraphicsFormat::R8_UINT;
+						inputVariable.Format = GraphicsFormat::R32_UINT;
 						break;
 					case GL_FLOAT_MAT4:
 					{
@@ -89,6 +89,58 @@ namespace Aurora
 
 	std::vector<ShaderResourceDesc> GLShaderProgram::GetResources(const ShaderResourceType& resourceType)
 	{
+		switch (resourceType) {
+
+			case ShaderResourceType::Unknown:
+				break;
+			case ShaderResourceType::ConstantBuffer:
+			{
+				std::vector<ShaderResourceDesc> descriptors;
+
+				for(const auto& ub : m_Resources.GetUniformBlocks()) {
+					ShaderResourceDesc resourceDesc = {};
+					resourceDesc.Name = ub.Name;
+					resourceDesc.Size = ub.Size;
+					resourceDesc.Type = resourceType;
+					resourceDesc.ArraySize = ub.ArraySize;
+					resourceDesc.ShadersIn = ub.ShadersIn;
+					resourceDesc.Variables = ub.Variables;
+
+					descriptors.emplace_back(resourceDesc);
+				}
+
+				return descriptors;
+			}
+			case ShaderResourceType::Sampler:
+			case ShaderResourceType::TextureSRV:
+			{
+				std::vector<ShaderResourceDesc> descriptors;
+
+				for(const auto& ub : m_Resources.GetSamplers()) {
+					ShaderResourceDesc resourceDesc = {};
+					resourceDesc.Name = ub.Name;
+					resourceDesc.Size = 0;
+					resourceDesc.Type = resourceType;
+					resourceDesc.ArraySize = ub.ArraySize;
+					resourceDesc.ShadersIn = EShaderType::Unknown;
+
+					descriptors.emplace_back(resourceDesc);
+				}
+
+				return descriptors;
+			}
+			case ShaderResourceType::BufferSRV:
+				break;
+			case ShaderResourceType::TextureUAV:
+				break;
+			case ShaderResourceType::BufferUAV:
+				break;
+			case ShaderResourceType::InputAttachment:
+				break;
+			case ShaderResourceType::AccelStruct:
+				break;
+		}
+
 		return std::vector<ShaderResourceDesc>();
 	}
 }

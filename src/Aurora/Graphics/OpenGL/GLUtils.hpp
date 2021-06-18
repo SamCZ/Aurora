@@ -24,7 +24,8 @@
         auto err = glGetError();                                                                                         \
         if (err != GL_NO_ERROR)                                                                                          \
         {                                                                                                                \
-        	AU_LOG_ERROR("\nGL Error Code: ", err);                                                                      \
+        	AU_LOG_ERROR("\nGL Error Code: ", err);                                                                            \
+        	throw std::runtime_error("OpenGL Error !");                                                                 \
         }                                                                                                                \
     } while (false);
 #endif

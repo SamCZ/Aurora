@@ -81,6 +81,21 @@ namespace Aurora
 		{
 			BoundTextures[name] = TextureBinding(texture, isUAV, access);
 		}
+
+		inline void BindSampler(const std::string& name, const Sampler_ptr& sampler)
+		{
+			BoundSamplers[name] = sampler;
+		}
+
+		inline void BindUniformBuffer(const std::string& name, const Buffer_ptr& uniformBuffer)
+		{
+			BoundUniformBuffers[name] = uniformBuffer;
+		}
+
+		inline void BindSSBOBuffer(const std::string& name, const Buffer_ptr& ssbo)
+		{
+			SSBOBuffers[name] = ssbo;
+		}
 	};
 
 	struct BaseState : StateResources
@@ -108,7 +123,6 @@ namespace Aurora
 
 		InputLayout_ptr InputLayoutHandle;
 
-		std::map<std::string, VertexAttributeDesc> InputLayout;
 		std::map<uint8_t, Buffer_ptr> VertexBuffers;
 		bool HasAnyRenderTarget;
 		FDepthStencilState DepthStencilState;
@@ -151,6 +165,8 @@ namespace Aurora
 			for (int i = 0; i < MaxRenderTargets; ++i) {
 				RenderTargets[i] = TargetBinding();
 			}
+
+			DepthTarget = nullptr;
 
 			HasAnyRenderTarget = false;
 		}

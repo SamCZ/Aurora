@@ -7,6 +7,7 @@
 #include <map>
 
 #include "Aurora/Logger/Logger.hpp"
+#include "Aurora/Core/Common.hpp"
 
 #include "InputLayout.hpp"
 #include "TypeBase.hpp"
@@ -43,23 +44,30 @@ namespace Aurora
 		AccelStruct,
 	};
 
-	enum class EShaderType : uint8_t
+	AU_ENUM_FLAGS(EShaderType, uint8_t)
 	{
-		Vertex = 0,
-		Hull,
-		Domain,
-		Geometry,
-		Pixel,
-		Compute,
-		Unknown
+		Unknown  = 0,
+		Vertex   = BITF(0),
+		Hull     = BITF(1),
+		Domain   = BITF(2),
+		Geometry = BITF(3),
+		Pixel    = BITF(4),
+		Compute  = BITF(5),
 	};
+
 	static std::string ShaderType_ToString(const EShaderType& shaderType)
 	{
-		static std::string types[] = {
-				"Vertex", "Hull", "Domain", "Geometry", "Pixel", "Compute", "Unknown"
-		};
+		switch (shaderType) {
 
-		return types[static_cast<uint8_t>(shaderType)];
+			case EShaderType::Unknown: return "Unknown";
+			case EShaderType::Vertex: return "Vertex";
+			case EShaderType::Hull: return "Hull";
+			case EShaderType::Domain: return "Domain";
+			case EShaderType::Geometry: return "Geometry";
+			case EShaderType::Pixel: return "Pixel";
+			case EShaderType::Compute: return "Compute";
+			default: return "Unknown";
+		}
 	}
 
 	struct ShaderVariable
@@ -97,6 +105,9 @@ namespace Aurora
 
 		/// Size of resource
 		uint32_t Size = 0;
+
+		/// Shaders in
+		EShaderType ShadersIn = EShaderType::Unknown;
 
 		std::vector<ShaderVariable> Variables{};
 	};

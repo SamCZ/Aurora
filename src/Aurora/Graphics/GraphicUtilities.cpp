@@ -42,6 +42,8 @@ namespace Aurora
 	{
 		Texture_ptr pTexArray;
 
+		
+
 		/*for (int i = 0; i < textures.size(); ++i) {
 			TextureHandle SrcTex = textures[i];
 			const auto& TexDesc  = SrcTex->GetDesc();

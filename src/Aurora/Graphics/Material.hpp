@@ -1,31 +1,19 @@
 #pragma once
 
-#include "IGraphicsPipeline.hpp"
-#include "Base/IRenderDevice.hpp"
-
-#include "ShaderCollection.hpp"
 #include "Aurora/Core/Common.hpp"
-
-#include "Aurora/Assets/Resources/ShaderResourceObject.hpp"
+#include "Base/RasterState.hpp"
+#include "Base/PrimitiveType.hpp"
+#include "Base/BlendState.hpp"
+#include "Base/FDepthStencilState.hpp"
+#include "Base/Texture.hpp"
+#include "Base/ShaderBase.hpp"
+#include "Base/Buffer.hpp"
+#include "Base/Sampler.hpp"
+#include "Base/IRenderDevice.hpp"
 
 namespace Aurora
 {
-	struct ShaderObject
-	{
-		EShaderType Type;
-		ShaderResourceObject_ptr ResourceObject;
-		Shader_ptr Shader;
-		int ResourceEventId;
-	};
-
-	struct ImmutableSamplerDesc
-	{
-
-	};
-
-	typedef std::map<EShaderType, ShaderObject> ShaderList;
-
-	AU_CLASS(Material) : public IGraphicsPipeline
+	AU_CLASS(Material)
 	{
 	private:
 		struct ShaderConstantBuffer
@@ -51,143 +39,54 @@ namespace Aurora
 
 		typedef std::vector<ShaderConstantBuffer> ConstantBufferList;
 		typedef std::vector<ShaderTextureDef> TextureDefList;
-		typedef std::vector<std::pair<String, ImmutableSamplerDesc>> SamplerList;
+		typedef std::vector<std::pair<String, Sampler_ptr>> SamplerList;
 	private:
-		static std::vector<Material*> m_CurrentMaterials;
+		const String m_Name;
+		Shader_ptr m_Shader;
 	private:
-		String m_Name;
-		ShaderMacros_t m_Macros;
+		ConstantBufferList m_ShaderConstantBuffers;
+		TextureDefList m_ShaderTextures;
+		SamplerList m_ShaderSamplers;
+	private:
+		FRasterState m_RasterState;
+		FDepthStencilState m_DepthStencilState;
+		FBlendState m_BlendState;
+		EPrimitiveType m_PrimitiveType = EPrimitiveType::TriangleList;
+	public:
+		Material(String  name, const Path& shaderPath, const ShaderMacros& macros = {});
+		Material(String  name, Shader_ptr shader);
 
-		ShaderList m_Shaders;
-		std::shared_ptr<ResourceObject::ResourceChangedEvent> m_OnShaderResourceChangeEvent;
-	private:
-		std::map<EShaderType, ConstantBufferList> m_ShaderConstantBuffers;
-		std::map<EShaderType, TextureDefList> m_ShaderTextures;
-		std::map<EShaderType, SamplerList> m_ShaderSamplers;
-	private:
-
+		void LoadShaderResources(const Shader_ptr& shader);
+		void UpdateResources();
+		void Apply(DrawCallState& state);
+		void Apply(DispatchState& state);
 	public:
-		Material(String name, const Path& shaderPath, ShaderMacros_t macros = {});
-		Material(String name, const std::vector<ShaderResourceObject_ptr>& shaders, ShaderMacros_t macros = {});
-		explicit Material(String name, ShaderMacros_t macros = {});
-		~Material() override;
-
-		void SetShader(const ShaderResourceObject_ptr &sharedPtr);
-		void RemoveShader(const EShaderType& shaderType);
-		ShaderResourceObject_ptr GetShader(const EShaderType& shaderType);
-	public:
-		[[nodiscard]] inline const String& GetName() const noexcept { return m_Name; }
-	private:
-		void OnShaderResourceUpdate(ResourceObject* obj);
-		void LoadConstantBuffers(ShaderObject &object, ShaderResourceDesc desc, ConstantBufferList& constantBufferStorage, ConstantBufferList& constantBufferListCopy);
-		void LoadTextureSRV(ShaderObject &object, ShaderResourceDesc desc, TextureDefList& textureDefList, TextureDefList& textureDefListOld, SamplerList& samplerList, SamplerList& samplerListOld);
-		void DeleteConstantBuffers(const EShaderType& type);
-		void DeleteTextureSRVs(const EShaderType &type);
-	private:
-		void ApplyShaderToPSO(Shader_ptr shader, const EShaderType& shaderType);
-	public:
-		[[nodiscard]] const ShaderList& GetShaders() const noexcept { return m_Shaders; }
-		[[nodiscard]] const ShaderMacros_t& GetMacros() const noexcept { return m_Macros; }
-
-	public:
-		void ValidateGraphicsPipelineState();
-	public:
-
-	public:
-		void ApplyPipeline();
-		void CommitShaderResources();
-	public:
-		inline void SetFillMode(const FillMode& fillMode) noexcept { }
-		inline void SetCullMode(const CullMode& cullMode) noexcept {  }
-		inline void SetBlendState(const BlendState& blendDesc) {  }
+		inline void SetFillMode(const FillMode& fillMode) noexcept { m_RasterState.FillMode = fillMode; }
+		inline void SetCullMode(const CullMode& cullMode) noexcept { m_RasterState.CullMode = cullMode; }
+		inline void SetBlendState(const FBlendState& blendDesc) { m_BlendState = blendDesc; }
 		inline void SetIndependentBlend(bool flag) noexcept {  }
-		inline void SetPrimitiveTopology(const EPrimitiveType& primitiveTopology) noexcept {  }
-		inline void SetDepthEnable(bool enabled) noexcept {  }
-		inline void SetDepthWriteEnable(bool enabled) noexcept {  }
-		inline void SetDepthFunc(const EComparisonFunc& comparisonFunction) noexcept {  }
+		inline void SetPrimitiveTopology(const EPrimitiveType& primitiveTopology) noexcept { m_PrimitiveType = primitiveTopology; }
+		inline void SetDepthEnable(bool enabled) noexcept { m_DepthStencilState.DepthEnable = enabled; }
+		inline void SetDepthWriteEnable(bool enabled) noexcept { m_DepthStencilState.DepthWriteMask = enabled ? EDepthWriteMask::All : EDepthWriteMask::Zero; }
+		inline void SetDepthFunc(const EComparisonFunc& comparisonFunction) noexcept { m_DepthStencilState.DepthFunc = comparisonFunction; }
+
+		inline FRasterState& RasterState() noexcept { return m_RasterState; }
+		inline FDepthStencilState& DepthStencilState() noexcept { return m_DepthStencilState; }
+		inline FBlendState& BlendState() noexcept { return m_BlendState; }
+		inline const EPrimitiveType& PrimitiveType() const noexcept { return m_PrimitiveType; }
 	public:
-		void SetSampler(const String& textureName, const SamplerDesc& sampler);
-		void SetTexture(const String& name, Texture_ptr texture);
-	public:
-		inline static const std::vector<Material*>& GetAllMaterials() noexcept { return m_CurrentMaterials; }
-	public:
-		template <typename T>
-		inline bool SetVariable(const String& name, T data, uint32_t customSize = 0)
+		bool SetVariable(const String& name, void* data, size_t size);
+
+		template<typename Type>
+		bool SetVariable(const String& name, Type var)
 		{
-			void* rawData = (void*)(&data);
-			size_t size = sizeof(data);
+			void* rawData = (void*)(&var);
+			size_t size = sizeof(var);
 
-			if(customSize > 0) {
-				size = customSize;
-			}
-
-			for(auto& it : m_ShaderConstantBuffers) {
-				for(auto& buffer : it.second) {
-					for(auto& var : buffer.Variables) {
-						if(var.Name == name) {
-							if(var.Size == size) {
-								memcpy(buffer.BufferData.data() + var.Offset, rawData, size);
-								buffer.NeedsUpdate = true;
-							} else {
-								AU_LOG_ERROR("Size is not exact ! ", var.Name, " - ", var.Size, " - ", var.ArrayStride, " - ", size);
-							}
-						}
-					}
-				}
-			}
-
-			return false;
+			return SetVariable(name, rawData, size);
 		}
 
-		template <typename T>
-		inline bool SetArray(const String& name, T* data, uint32_t customSize = 0)
-		{
-			size_t size = sizeof(data);
-
-			if(customSize > 0) {
-				size = customSize;
-			}
-
-			for(auto& it : m_ShaderConstantBuffers) {
-				for(auto& buffer : it.second) {
-					for(auto& var : buffer.Variables) {
-						if(var.Name == name) {
-							if(var.Size == size) {
-								memcpy(buffer.BufferData.data() + var.Offset, data, size);
-								buffer.NeedsUpdate = true;
-							} else {
-								AU_LOG_ERROR("Size is not exact ! ", var.Name, " - ", var.Size, " - ", var.ArrayStride, " - ", size);
-							}
-						}
-					}
-				}
-			}
-
-			return false;
-		}
-
-		template <typename T>
-		inline bool GetVariable(const String& name, T* outData, bool autoSize = true, size_t customSize = 0)
-		{
-			size_t size = sizeof(T);
-
-			if (!autoSize)
-			{
-				size = customSize;
-			}
-
-			for(auto& it : m_ShaderConstantBuffers) {
-				for(auto& buffer : it.second) {
-					for(auto& var : buffer.Variables) {
-						if(var.Name == name) {
-							memcpy(outData, buffer.BufferData.data(), size);
-							return true;
-						}
-					}
-				}
-			}
-
-			return false;
-		}
+		void SetTexture(const String& name, const Texture_ptr& texture);
+		void SetSampler(const String& name, const Sampler_ptr& sampler);
 	};
 }

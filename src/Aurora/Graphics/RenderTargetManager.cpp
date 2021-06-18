@@ -16,6 +16,15 @@ namespace Aurora
 			std::cerr << "Target " << name << " already exists !" << std::endl;
 			return;
 		}
+
+		TextureDesc textureDesc;
+		textureDesc.DebugName = name;
+		textureDesc.Width = 0;
+		textureDesc.Height = 0;
+		textureDesc.MipLevels = 1;
+		textureDesc.ImageFormat = format;
+
+		m_Targets[name] = {Texture_ptr_null, textureDesc, true};
 /*
 		TextureDesc textureDesc;
 		textureDesc.Name      = name.data();
@@ -83,11 +92,10 @@ namespace Aurora
 		for(auto& it : m_Targets) {
 			auto& info = it.second;
 
-			/*TextureDesc textureDesc = info.TextureDesc;
+			TextureDesc textureDesc = info.Desc;
 			textureDesc.Width = width;
 			textureDesc.Height = height;
-
-			AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr, &info.Texture);*/
+			info.Texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 		}
 	}
 
@@ -150,9 +158,18 @@ namespace Aurora
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/*void RenderTargetPack::Apply(DrawCallState &pipelineDesc)
+	void RenderTargetPack::Apply(DrawCallState &state)
 	{
-		pipelineDesc.renderState.targetCount = m_Targets.size();
+		state.ResetTargets();
+
+		for(const auto& it : m_Targets) {
+			state.BindTarget(it.second.first, it.second.second->Texture, 0, 0); // TODO: slice and index for cubemaps / texture arrays
+		}
+
+		if(m_DepthTarget != nullptr)
+			state.DepthTarget = m_DepthTarget->Texture;
+
+		/*pipelineDesc.renderState.targetCount = m_Targets.size();
 		for(const auto& it : m_Targets) {
 			pipelineDesc.renderState.targets[it.second.first] = it.second.second->Texture;
 		}
@@ -161,6 +178,6 @@ namespace Aurora
 			pipelineDesc.renderState.depthTarget = m_DepthTarget->Texture;
 		} else {
 			pipelineDesc.renderState.depthTarget = nullptr;
-		}
-	}*/
+		}*/
+	}
 }

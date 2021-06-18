@@ -59,8 +59,49 @@ namespace Aurora
 
 	void SceneRenderer::Render(RenderTargetPack* renderTargetPack, bool apply, bool clear)
 	{
+		DrawCallState drawCallState;
+
 		if(apply) {
-			//renderTargetPack->Apply(clear);
+			//renderTargetPack->Apply(drawCallState);
+		}
+
+		for(auto& it2 : m_SortedRenderer) {
+			CameraComponent *cameraComponent = it2.first;
+			for (const auto &it : it2.second) {
+				Material *material = it.first;
+
+				material->SetVariable("ProjectionViewMatrix", cameraComponent->GetProjectionViewMatrix());
+				material->SetVariable("ViewMatrix", cameraComponent->GetViewMatrix());
+				material->SetVariable<float>("g_Time", static_cast<float>(glfwGetTime()));
+
+				for (const auto& renderData : it.second) {
+					Mesh *mesh = std::get<0>(renderData);
+					uint32_t sectionIndex = std::get<1>(renderData);
+					const Matrix4 &modelMatrix = std::get<2>(renderData);
+
+					drawCallState.InputLayoutHandle = mesh->GetInputLayout();
+
+					drawCallState.SetVertexBuffer(0, mesh->LODResources[0].VertexBuffer);
+					drawCallState.SetIndexBuffer(mesh->LODResources[0].IndexBuffer);
+
+					material->SetVariable("ModelMatrix", modelMatrix);
+
+					std::get<3>(renderData)->OnPreRender(material);
+
+					material->Apply(drawCallState);
+
+					auto &section = mesh->LODResources[0].Sections[sectionIndex];
+
+					DrawArguments drawArguments;
+					drawArguments.VertexCount = section.NumTriangles;
+					drawArguments.StartIndexLocation = section.FirstIndex;
+					drawArguments.InstanceCount = 1;
+					RD->DrawIndexed(drawCallState, {drawArguments});
+
+					drawCallState.ClearColorTarget = false;
+					drawCallState.ClearDepthTarget = false;
+				}
+			}
 		}
 /*
 		Mesh *currentAppliedMesh = nullptr;

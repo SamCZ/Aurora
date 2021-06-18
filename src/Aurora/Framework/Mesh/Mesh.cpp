@@ -21,6 +21,8 @@ namespace Aurora
 			}
 
 			if(resource.VertexBuffer == nullptr) {
+				assert(resource.Vertices->GetSize() > 0);
+
 				BufferDesc desc;
 				desc.Name = "Mesh Buffer";
 				desc.Usage = EBufferUsage::StaticDraw;
@@ -37,6 +39,7 @@ namespace Aurora
 			}
 
 			if(resource.IndexBuffer == nullptr) {
+				assert(resource.Indices.size() > 0);
 				BufferDesc desc;
 				desc.Name = "Mesh Index Buffer";
 				desc.Usage = EBufferUsage::StaticDraw;

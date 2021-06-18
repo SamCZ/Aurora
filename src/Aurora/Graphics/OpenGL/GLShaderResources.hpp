@@ -23,6 +23,9 @@ namespace Aurora
 	struct UniformBufferInfo final : GLResourceAttribs
 	{
 		const GLuint UBIndex = 0;
+		const EShaderType ShadersIn = EShaderType::Unknown;
+		const size_t Size = 0;
+		const std::vector<ShaderVariable> Variables = {};
 	};
 
 	struct SamplerInfo final : GLResourceAttribs

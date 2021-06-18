@@ -148,7 +148,7 @@ namespace Aurora
 		// IGlobalIllumination::setupExtraVoxelizationState() when applying this render state.
 		bool setupExtraVoxelizationState;
 
-		BlendState blendState;
+		FBlendState blendState;
 		FDepthStencilState depthStencilState;
 		RasterState rasterState;
 
