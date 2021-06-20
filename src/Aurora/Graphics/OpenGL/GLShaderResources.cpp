@@ -372,7 +372,7 @@ namespace Aurora
 					blockSizeFromVars += uniform.Size * uniform.ArraySize;
 				}
 
-				//std::cout << Name.data() << " : " << dataSize << "(" << blockSizeFromVars << ")" << std::endl;
+				std::cout << Name.data() << " : " << dataSize << "(" << blockSizeFromVars << ")" << std::endl;
 
 				std::vector<ShaderVariable> shaderVariables;
 
@@ -393,7 +393,7 @@ namespace Aurora
 
 					shaderVariables.emplace_back(variable);
 
-					//std::cout << " - " << uniform.Name << " - size " << (uniform.Size * uniform.ArraySize) << " - offset " << offset << std::endl;
+					std::cout << " - " << uniform.Name << " - size " << (uniform.Size * uniform.ArraySize) << " - offset " << offset << std::endl;
 				}
 
 				m_UniformBlocks.push_back({

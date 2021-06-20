@@ -80,6 +80,7 @@ namespace Aurora
 			std::string source;
 
 			source += "#version 430 core\n";
+			source += "layout(std140) uniform;\n";
 
 			if(type == EShaderType::Vertex) {
 				//source += "#extension GL_KHR_vulkan_glsl : enable\n";
