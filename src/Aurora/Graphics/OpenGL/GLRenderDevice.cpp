@@ -992,10 +992,10 @@ namespace Aurora
 
 		switch (rasterState.FillMode)
 		{
-			case FillMode::Line:
+			case EFillMode::Line:
 				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 				break;
-			case FillMode::Solid:
+			case EFillMode::Solid:
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				break;
 
@@ -1006,15 +1006,15 @@ namespace Aurora
 
 		switch (rasterState.CullMode)
 		{
-			case CullMode::Back:
+			case ECullMode::Back:
 				glCullFace(GL_BACK);
 				glEnable(GL_CULL_FACE);
 				break;
-			case CullMode::Front:
+			case ECullMode::Front:
 				glCullFace(GL_FRONT);
 				glEnable(GL_CULL_FACE);
 				break;
-			case CullMode::None:
+			case ECullMode::None:
 				glDisable(GL_CULL_FACE);
 				break;
 			default:

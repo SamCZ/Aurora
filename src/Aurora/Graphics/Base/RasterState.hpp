@@ -2,13 +2,13 @@
 
 namespace Aurora
 {
-	enum class FillMode : unsigned char
+	enum class EFillMode : unsigned char
 	{
 		Solid,
 		Line
 	};
 
-	enum class CullMode : unsigned char
+	enum class ECullMode : unsigned char
 	{
 		Back,
 		Front,
@@ -17,8 +17,8 @@ namespace Aurora
 
 	struct FRasterState
 	{
-		FillMode    FillMode;
-		CullMode    CullMode;
+		EFillMode    FillMode;
+		ECullMode    CullMode;
 		bool FrontCounterClockwise{};
 		bool DepthClipEnable;
 		bool ScissorEnable{};
@@ -28,8 +28,8 @@ namespace Aurora
 		float SlopeScaledDepthBias{};
 
 		FRasterState()
-		: FillMode(FillMode::Solid),
-		  CullMode(CullMode::Front),
+		: FillMode(EFillMode::Solid),
+		  CullMode(ECullMode::Front),
 		  FrontCounterClockwise(false),
 		  DepthClipEnable(true),
 		  ScissorEnable(false),

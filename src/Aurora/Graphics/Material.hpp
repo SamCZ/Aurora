@@ -61,8 +61,8 @@ namespace Aurora
 		void Apply(DrawCallState& state);
 		void Apply(DispatchState& state);
 	public:
-		inline void SetFillMode(const FillMode& fillMode) noexcept { m_RasterState.FillMode = fillMode; }
-		inline void SetCullMode(const CullMode& cullMode) noexcept { m_RasterState.CullMode = cullMode; }
+		inline void SetFillMode(const EFillMode& fillMode) noexcept { m_RasterState.FillMode = fillMode; }
+		inline void SetCullMode(const ECullMode& cullMode) noexcept { m_RasterState.CullMode = cullMode; }
 		inline void SetBlendState(const FBlendState& blendDesc) { m_BlendState = blendDesc; }
 		inline void SetIndependentBlend(bool flag) noexcept {  }
 		inline void SetPrimitiveTopology(const EPrimitiveType& primitiveTopology) noexcept { m_PrimitiveType = primitiveTopology; }
