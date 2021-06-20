@@ -54,6 +54,7 @@ namespace Aurora
 		void WriteTexture(const Texture_ptr& texture, uint32_t subresource, const void* data) override;
 		void ClearTextureFloat(const Texture_ptr& texture, const Color& clearColor) override;
 		void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) override;
+		void GenerateMipmaps(const Texture_ptr& texture) override;
 		// Buffers
 		Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) override;
 		void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) override;

@@ -383,6 +383,15 @@ namespace Aurora
 		}
 	}
 
+	void GLRenderDevice::GenerateMipmaps(const Texture_ptr &texture)
+	{
+		auto* glTexture = static_cast<GLTexture*>(texture.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+
+		glBindTexture(glTexture->BindTarget(), glTexture->Handle());
+		glGenerateMipmap(glTexture->BindTarget());
+		glBindTexture(glTexture->BindTarget(), 0);
+	}
+
 	Buffer_ptr GLRenderDevice::CreateBuffer(const BufferDesc &desc, const void *data)
 	{
 		GLuint handle = 0;

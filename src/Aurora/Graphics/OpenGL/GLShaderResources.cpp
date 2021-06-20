@@ -372,7 +372,7 @@ namespace Aurora
 					blockSizeFromVars += uniform.Size * uniform.ArraySize;
 				}
 
-				std::cout << Name.data() << " : " << dataSize << "(" << blockSizeFromVars << ")" << std::endl;
+				//std::cout << Name.data() << " : " << dataSize << "(" << blockSizeFromVars << ")" << std::endl;
 
 				std::vector<ShaderVariable> shaderVariables;
 
@@ -382,12 +382,18 @@ namespace Aurora
 
 					ShaderVariable variable = {};
 					variable.Name = uniform.Name;
-					variable.Size = uniform.Size;
+
+					auto arrCharPos = variable.Name.find('[');
+					if(arrCharPos != std::string::npos) {
+						variable.Name = variable.Name.substr(0, arrCharPos);
+					}
+
+					variable.Size = uniform.Size * uniform.ArraySize;
 					variable.Offset = offset;
 
 					shaderVariables.emplace_back(variable);
 
-					std::cout << " - " << uniform.Name << " - size " << (uniform.Size * uniform.ArraySize) << " - offset " << offset << std::endl;
+					//std::cout << " - " << uniform.Name << " - size " << (uniform.Size * uniform.ArraySize) << " - offset " << offset << std::endl;
 				}
 
 				m_UniformBlocks.push_back({

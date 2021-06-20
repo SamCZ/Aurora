@@ -249,6 +249,7 @@ namespace Aurora
 		virtual void WriteTexture(const Texture_ptr& texture, uint32_t subresource, const void* data) = 0;
 		virtual void ClearTextureFloat(const Texture_ptr& texture, const Color& clearColor) = 0;
 		virtual void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) = 0;
+		virtual void GenerateMipmaps(const Texture_ptr& texture) = 0;
 		inline Texture_ptr CreateTexture(const TextureDesc& desc) { return CreateTexture(desc, nullptr); }
 		// Buffers
 		virtual Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) = 0;

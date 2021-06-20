@@ -3,6 +3,9 @@
 
 #include "Material.hpp"
 
+#include "Aurora/Assets/Tools/stb_image.h"
+#include "Aurora/Assets/Tools/stb_image_resize.h"
+
 namespace Aurora
 {
 	static Material_ptr m_BlitMaterial = nullptr;
@@ -38,11 +41,77 @@ namespace Aurora
 		//m_PlaceholderTexture.Release();
 	}
 
-	Texture_ptr GraphicUtilities::CreateTextureArray(const std::vector<Texture_ptr>& textures)
+	unsigned int GetMipLevelsNum(unsigned int width, unsigned int height)
 	{
-		Texture_ptr pTexArray;
+		unsigned int size = std::max<unsigned int>(width, height);
+		unsigned int levelsNum = (unsigned int)(logf((float)size) / logf(2.0f)) + 1;
 
-		
+		return levelsNum;
+	}
+
+	Texture_ptr GraphicUtilities::CreateTextureArray(const std::vector<Path>& textures)
+	{
+		if(textures.empty()) {
+			AU_LOG_WARNING("Provided empty list of textures");
+			return nullptr;
+		}
+
+		Texture_ptr pTexArray = nullptr;
+
+		int targetWidth = 0;
+		int targetHeight = 0;
+		bool targetSizeInitialized = false;
+
+		for (int i = 0; i < textures.size(); ++i) {
+			const Path& path = textures[i];
+
+			auto fileData = ASM->LoadFile(path);
+
+			if(fileData.empty()) {
+				AU_LOG_FATAL("Could not load ", path);
+			}
+
+			int width,height,channels_in_file;
+			unsigned char *data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+			if(!data) {
+				AU_LOG_ERROR("Cannot load texture !", path.string());
+				return nullptr;
+			}
+
+			if(!targetSizeInitialized) {
+				targetSizeInitialized = true;
+				targetWidth = width;
+				targetHeight = height;
+
+				TextureDesc textureDesc;
+				textureDesc.DebugName = "TextureArray";
+				textureDesc.Width = targetWidth;
+				textureDesc.Height = targetHeight;
+				textureDesc.MipLevels = GetMipLevelsNum(targetWidth, targetHeight);
+				textureDesc.IsArray = true;
+				textureDesc.DepthOrArraySize = textures.size();
+				textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+
+				pTexArray = RD->CreateTexture(textureDesc);
+			}
+
+			if(width != targetWidth || height != targetHeight) {
+				auto* resizedData = new uint8_t[targetWidth * targetHeight * STBI_rgb_alpha];
+				stbir_resize_uint8(data, width, height, 0, resizedData, targetWidth, targetHeight, 0, STBI_rgb_alpha);
+				stbi_image_free(data);
+				data = resizedData;
+				width = targetWidth;
+				height = targetHeight;
+			}
+
+			RD->WriteTexture(pTexArray, i, data);
+
+
+			stbi_image_free(data);
+		}
+
+		RD->GenerateMipmaps(pTexArray);
+
 
 		/*for (int i = 0; i < textures.size(); ++i) {
 			TextureHandle SrcTex = textures[i];

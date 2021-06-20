@@ -21,7 +21,7 @@ namespace Aurora
 		static void Init();
 		static void Destroy();
 	public:
-		static Texture_ptr CreateTextureArray(const std::vector<Texture_ptr>& textures);
+		static Texture_ptr CreateTextureArray(const std::vector<Path>& textures);
 		static Texture_ptr CreateCubeMap(const std::array<Texture_ptr, 6>& textures);
 		static Texture_ptr CreateRenderTarget2D(const char* name, int width, int height, const GraphicsFormat& format, const Vector4& clearColor, bool useAsShaderResource, bool useUav = false);
 		static Texture_ptr CreateRenderTargetDepth2D(const char* name, int width, int height, const GraphicsFormat& format, bool useAsShaderResource, bool useUav = false);
