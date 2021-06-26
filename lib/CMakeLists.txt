@@ -76,10 +76,17 @@ if(NOT TARGET assimp)
     add_subdirectory(assimp)
 
     if(BUILD_SHARED_LIBS)
-        set(AURORA_DLL_TO_COPY
-                ${AURORA_DLL_TO_COPY}
-                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll
-                CACHE INTERNAL "AURORA_DLL_TO_COPY")
+        if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+            set(AURORA_DLL_TO_COPY
+                    ${AURORA_DLL_TO_COPY}
+                    ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll
+                    CACHE INTERNAL "AURORA_DLL_TO_COPY")
+        else()
+            set(AURORA_DLL_TO_COPY
+                    ${AURORA_DLL_TO_COPY}
+                    ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.dll
+                    CACHE INTERNAL "AURORA_DLL_TO_COPY")
+        endif()
     endif()
 
     set(BUILD_SHARED_LIBS OFF)

@@ -15,6 +15,8 @@ add_subdirectory(lib)
 
 if(FMod_NotFound)
     set(FMOD_SUPPORTED OFF)
+else()
+    message("FMod successfully loaded.")
 endif()
 
 file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
@@ -27,7 +29,7 @@ target_include_directories(Aurora PUBLIC src)
 
 if(FMOD_SUPPORTED)
     target_link_libraries(Aurora PUBLIC FMod)
-    add_compile_definitions(FMOD_SUPPORTED=1)
+    target_compile_definitions(Aurora PUBLIC FMOD_SUPPORTED=1)
 endif()
 
 target_link_libraries(Aurora PUBLIC glfw glm nlohmann_json assimp)
