@@ -1,3 +1,4 @@
+#ifdef IMGUI_ENABLED
 #include "MaterialEditorWindow.hpp"
 
 #include <GraphicsAccessories.hpp>
@@ -213,3 +214,4 @@ namespace Aurora::Editor
 		m_SelectedShader = nullptr;
 	}
 }
+#endif

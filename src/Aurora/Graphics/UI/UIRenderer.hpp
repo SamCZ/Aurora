@@ -2,6 +2,7 @@
 
 #include "Font.hpp"
 #include "Aurora/Core/Color.hpp"
+#include "../Texture.hpp"
 #include "../Material.hpp"
 
 namespace Aurora
@@ -36,9 +37,10 @@ namespace Aurora
 			bool Fill = true;
 			Vector4 Color = Vector4(1, 1, 1, 1);
 			Vector4 Tint = Vector4(1, 1, 1, 1);
-			RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
+			Texture_ptr Texture = nullptr;
 			Vector2 CustomUVs[4]{};
 			bool EnabledCustomUVs = false;
+			bool IsFont = false;
 			Material_ptr OverrideMaterial = nullptr;
 		};
 	private:
@@ -49,10 +51,12 @@ namespace Aurora
 
 		std::map<String, Font_ptr> m_Fonts;
 		String m_CurrentFont;
+
+		DrawCallState m_DrawState;
 	public:
 		UIRenderer();
 	public:
-		void Begin(const Vector2i& size, const TEXTURE_FORMAT& textureFormat, const TEXTURE_FORMAT& depthFormat);
+		void Begin(const Vector2i& size);
 		void End();
 	public:
 		void FillRect(float x, float y, float w, float h, const Vector4& color, float radius = 0.0f, float rotation = 0.0f);
@@ -61,8 +65,8 @@ namespace Aurora
 		void DrawRect(float x, float y, float w, float h, const Vector4& color, float strokeSize, float radius = 0.0f, float rotation = 0.0f);
 		void DrawRect(const Vector2& position, const Vector2& size, const Vector4& color, float strokeSize, float radius = 0.0f, float rotation = 0.0f);
 
-		void DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
-		void DrawImage(const Vector2& position, const Vector2& size, const RefCntAutoPtr<ITexture>& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
+		void DrawImage(float x, float y, float w, float h, const Texture_ptr& texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
+		void DrawImage(const Vector2& position, const Vector2& size, Texture_ptr texture, float radius = 0.0f, const ImageDrawMode& imageDrawMode = ImageDrawMode::Simple, const SpriteBorder& spriteBorder = SpriteBorder(), const Color& tint = Color(1.0f));
 		void SetImageEdgeDetection(bool enabled, int thickness = 3, const Vector4& edgeColor = Vector4(1.0));
 	public:
 		Font_ptr FindFont(const String& name);

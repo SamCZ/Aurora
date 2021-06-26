@@ -1,68 +1,107 @@
 #include "UIRenderer.hpp"
 #include "Aurora/AuroraEngine.hpp"
 
+#include "Aurora/Graphics/OpenGL/GL.hpp"
+
 namespace Aurora
 {
+	using namespace glm;
+
+	// Vertex uniform blocks
+
+	struct VertexUniform
+	{
+		mat4 Projection;
+		mat4  ModelMat;
+	};
+
+	struct UVData
+	{
+		vec4 FirstData;
+		vec2 UV0;
+		vec2 UV1;
+		vec2 UV2;
+		vec2 UV3;
+	};
+
+	// Fragment uniform blocks
+
+	struct FragmentUniform
+	{
+		uint Type;
+		float StrokeSize;
+		float Radius;
+		int EdgeThickness;
+		vec4 Color;
+		vec2 Size;
+		float GrayScale;
+		int ImageEdgeDetectionEnabled = 0;
+		vec4 EdgeColor;
+	};
+
+	struct FontData
+	{
+		vec4 Color;
+	};
+
+	int drawCount = 0;
+
+	Shader_ptr baseUIShader;
+	Shader_ptr fontShader;
+
+	Sampler_ptr sampler;
+
+	Buffer_ptr vertexUniformBuffer;
+	Buffer_ptr uvDataUniformBuffer;
+	Buffer_ptr fragmentUniformUniformBuffer;
+	Buffer_ptr fontDataUniformBuffer;
+
 	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts(), m_CurrentFont("Default")
 	{
-		{
-			m_Material = std::make_shared<Material>("UI", "Assets/Shaders/UI");
-			m_Material->SetCullMode(CULL_MODE_NONE);
-			m_Material->SetDepthEnable(false);
-			m_Material->SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP);
-			RenderTargetBlendDesc blendDesc;
-			blendDesc.BlendEnable = true;
-			blendDesc.SrcBlend = BLEND_FACTOR_SRC_ALPHA;
-			blendDesc.DestBlend = BLEND_FACTOR_INV_SRC_ALPHA;
-			m_Material->SetBlendState(blendDesc);
-			//m_Material->SetFillMode(FILL_MODE_WIREFRAME);
-		}
+		LoadFont("Default", "Assets/Fonts/troika.otf");
 
-		{
-			m_FontMaterial = std::make_shared<Material>("UI", "Assets/Shaders/UI_Font");
-			m_FontMaterial->SetCullMode(CULL_MODE_NONE);
-			m_FontMaterial->SetDepthEnable(false);
-			m_FontMaterial->SetPrimitiveTopology(PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP);
-			RenderTargetBlendDesc blendDesc;
-			blendDesc.BlendEnable = true;
-			blendDesc.SrcBlend = BLEND_FACTOR_SRC_ALPHA;
-			blendDesc.DestBlend = BLEND_FACTOR_INV_SRC_ALPHA;
-			m_FontMaterial->SetBlendState(blendDesc);
-			//m_FontMaterial->SetFillMode(FILL_MODE_WIREFRAME);
-		}
+		baseUIShader = ASM->LoadShaderFolder("Assets/Shaders/UI");
+		fontShader = ASM->LoadShaderFolder("Assets/Shaders/UI_Font");
 
-		LoadFont("Default", "Assets/Fonts/GROBOLD.ttf");
+		vertexUniformBuffer = RD->CreateBuffer(BufferDesc("VertexUniform", sizeof(VertexUniform), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
+		uvDataUniformBuffer = RD->CreateBuffer(BufferDesc("UVData", sizeof(UVData), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
+		fragmentUniformUniformBuffer = RD->CreateBuffer(BufferDesc("FragmentUniform", sizeof(FragmentUniform), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
+		fontDataUniformBuffer = RD->CreateBuffer(BufferDesc("FontData", sizeof(FontData), 0, EBufferType::UniformBuffer, EBufferUsage::StreamDraw));
+
+		sampler = RD->CreateSampler(SamplerDesc());
 	}
 
-	void UIRenderer::Begin(const Vector2i& size, const TEXTURE_FORMAT& textureFormat, const TEXTURE_FORMAT& depthFormat)
+	void UIRenderer::Begin(const Vector2i& size)
 	{
 		if(size.x > 0 && size.y > 0) {
 			m_ProjectionMatrix = glm::ortho(0.0f, (float)size.x, (float)size.y, 0.0f, -1.0f, 1.0f);
 		}
-
-		{
-			GraphicsPipelineDesc& graphicsPipelineDesc = m_Material->GetPipelineDesc();
-			graphicsPipelineDesc.NumRenderTargets = 1;
-			graphicsPipelineDesc.RTVFormats[0] = textureFormat;
-			graphicsPipelineDesc.DSVFormat = depthFormat;
-			m_Material->ValidateGraphicsPipelineState();
-			//m_Material->ApplyPipeline();
-		}
-
-		{
-			GraphicsPipelineDesc& graphicsPipelineDesc = m_FontMaterial->GetPipelineDesc();
-			graphicsPipelineDesc.NumRenderTargets = 1;
-			graphicsPipelineDesc.RTVFormats[0] = textureFormat;
-			graphicsPipelineDesc.DSVFormat = depthFormat;
-			m_FontMaterial->ValidateGraphicsPipelineState();
-		}
-
 		SetImageEdgeDetection(false, 3);
+
+		m_DrawState = DrawCallState();
+
+		m_DrawState.ClearColorTarget = false;
+		m_DrawState.ClearDepthTarget = false;
+
+		m_DrawState.DepthStencilState.DepthEnable = false;
+
+
+		m_DrawState.PrimitiveType = EPrimitiveType::TriangleStrip;
+
+		m_DrawState.BoundSamplers["Texture"] = sampler;
+
+		m_DrawState.BoundUniformBuffers["FragmentUniform"] = fragmentUniformUniformBuffer;
+		m_DrawState.BoundUniformBuffers["FontData"] = fontDataUniformBuffer;
+
+		m_DrawState.BoundUniformBuffers["VertexUniform"] = vertexUniformBuffer;
+		m_DrawState.BoundUniformBuffers["UVData"] = uvDataUniformBuffer;
+
+		drawCount = 0;
 	}
 
 	void UIRenderer::End()
 	{
-
+		//std::cout << drawCount << std::endl;
 	}
 
 	void UIRenderer::FillRect(float x, float y, float w, float h, const Vector4 &color, float radius, float rotation)
@@ -97,15 +136,7 @@ namespace Aurora
 
 	void UIRenderer::Draw(float x, float y, float w, float h, const DrawArgs& drawArgs)
 	{
-		Material_ptr material = drawArgs.OverrideMaterial == nullptr ? m_Material : drawArgs.OverrideMaterial;
-
-		if(m_LastMaterial != material) {
-			m_LastMaterial = material;
-			//material->ValidateGraphicsPipelineState();
-
-		}
-
-		material->ApplyPipeline();
+		drawCount++;
 
 		if(!drawArgs.Fill) {
 			float strokeHalf = drawArgs.StrokeSize / 2.0f;
@@ -116,52 +147,87 @@ namespace Aurora
 			h += strokeHalf * 2.0f;
 		}
 
-		material->SetVariable<Matrix4>("Projection", m_ProjectionMatrix);
-		material->SetVariable<Matrix4>("ModelMat", glm::translate(Vector3(x + w / 2.0f, y + h / 2.0f, 0)) * glm::rotate(glm::radians(drawArgs.Rotation), Vector3(0, 0, 1)) * glm::scale(Vector3(w, h, 1)));
+		{ // Set matrices
+			VertexUniform vertexUniform = {};
+			vertexUniform.Projection = m_ProjectionMatrix;
+			vertexUniform.ModelMat = glm::translate(Vector3(x + w / 2.0f, y + h / 2.0f, 0)) * glm::rotate(glm::radians(drawArgs.Rotation), Vector3(0, 0, 1)) * glm::scale(Vector3(w, h, 1));
 
-		if(drawArgs.EnabledCustomUVs) {
-			static Vector4 cacheUvVal[4];
-
-			for (int i = 0; i < 4; ++i) {
-				cacheUvVal[i].x = drawArgs.CustomUVs[i].x;
-				cacheUvVal[i].y = drawArgs.CustomUVs[i].y;
-			}
-
-			material->SetArray("UVs", cacheUvVal, sizeof(Vector4) * 4);
-			material->SetVariable<int>("CustomUVsEnabled", true);
-		} else {
-			material->SetVariable<int>("CustomUVsEnabled", false);
+			RD->WriteBuffer(vertexUniformBuffer, &vertexUniform, sizeof(VertexUniform));
 		}
 
-		if(drawArgs.Texture != nullptr) {
-			material->SetVariable<uint32_t>("Type", 0);
-			material->SetTexture("Texture", drawArgs.Texture);
-			material->SetVariable<Vector4>("Color", drawArgs.Tint);
-		} else {
-			if(drawArgs.Fill) {
-				material->SetVariable<uint32_t>("Type", 1);
+		{ // UV data
+			UVData uvData = {};
+			if(drawArgs.EnabledCustomUVs) {
+				uvData.FirstData.x = 1;
+
+				uvData.UV0 = drawArgs.CustomUVs[0];
+				uvData.UV1 = drawArgs.CustomUVs[1];
+				uvData.UV2 = drawArgs.CustomUVs[2];
+				uvData.UV3 = drawArgs.CustomUVs[3];
+
 			} else {
-				material->SetVariable<uint32_t>("Type", 2);
-				material->SetVariable<float>("StrokeSize", drawArgs.StrokeSize / 2.0f);
+				uvData.FirstData.x = 0;
 			}
 
-			material->SetVariable<Vector4>("Color", drawArgs.Color);
+			uvData.FirstData.z = 0;
+
+			RD->WriteBuffer(uvDataUniformBuffer, &uvData, sizeof(UVData));
 		}
 
-		material->SetVariable<Vector2>("Size", Vector2(w, h));
-		material->SetVariable<float>("Radius", drawArgs.Radius);
-		material->SetVariable<float>("GrayScale", 0.0f); // TODO: Add this as setting
+		if (!drawArgs.IsFont) { // Fragment data
+			FragmentUniform fragmentUniform = {};
 
-		material->CommitShaderResources();
+			if(drawArgs.Texture != nullptr) {
+				fragmentUniform.Type = 0;
+				fragmentUniform.Color = drawArgs.Tint;
+			} else {
+				if(drawArgs.Fill) {
+					fragmentUniform.Type = 1;
+				} else {
+					fragmentUniform.Type = 2;
+					fragmentUniform.StrokeSize = drawArgs.StrokeSize / 2.0f;
+				}
 
-		DrawAttribs drawAttrs;
-		drawAttrs.Flags = DRAW_FLAG_VERIFY_ALL;
-		drawAttrs.NumVertices = 4;
-		AuroraEngine::ImmediateContext->Draw(drawAttrs);
+				fragmentUniform.Color = drawArgs.Color;
+			}
+
+			fragmentUniform.Size = Vector2(w, h);
+			fragmentUniform.Radius = drawArgs.Radius;
+			fragmentUniform.GrayScale = 0.0f;
+
+			RD->WriteBuffer(fragmentUniformUniformBuffer, &fragmentUniform, sizeof(FragmentUniform));
+		} else {
+			FontData fontData = {};
+			fontData.Color = drawArgs.Tint;
+
+			RD->WriteBuffer(fontDataUniformBuffer, &fontData, sizeof(FontData));
+		}
+
+		if(!drawArgs.IsFont) {
+			m_DrawState.Shader = baseUIShader;
+		} else {
+			m_DrawState.Shader = fontShader;
+		}
+
+		m_DrawState.BindTexture("Texture", drawArgs.Texture);
+
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		RD->Draw(m_DrawState, {DrawArguments(4)});
+
+		m_DrawState.ClearColorTarget = false;
+		m_DrawState.ClearDepthTarget = false;
 	}
 
-	void UIRenderer::DrawImage(float x, float y, float w, float h, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)
+	void UIRenderer::DrawImage(float x, float y, float w, float h, const Texture_ptr& texture, float radius, const ImageDrawMode& imageDrawMode, const SpriteBorder& spriteBorder, const Color& tint)
 	{
+		if(texture == nullptr) {
+			AU_LOG_WARNING("Texture is null !");
+			return;
+		}
+
 		switch (imageDrawMode) {
 			case ImageDrawMode::Simple: {
 				DrawArgs drawArgs;
@@ -180,8 +246,9 @@ namespace Aurora
 				drawArgs.EnabledCustomUVs = true;
 				drawArgs.Tint = tint;
 
-				auto realW = static_cast<float>(texture->GetDesc().Width);
-				auto realH = static_cast<float>(texture->GetDesc().Height);
+				TextureDesc textureDesc = texture->GetDesc();
+				auto realW = static_cast<float>(textureDesc.Width);
+				auto realH = static_cast<float>(textureDesc.Height);
 
 				float borderLeftPercent = spriteBorder.Left / realW;
 				float borderRightPercent = spriteBorder.Right / realW;
@@ -285,18 +352,18 @@ namespace Aurora
 		}
 	}
 
-	void UIRenderer::DrawImage(const Vector2 &position, const Vector2 &size, const RefCntAutoPtr<ITexture> &texture, float radius, const ImageDrawMode &imageDrawMode, const SpriteBorder &spriteBorder, const Color& tint)
+	void UIRenderer::DrawImage(const Vector2 &position, const Vector2 &size, Texture_ptr texture, float radius, const ImageDrawMode &imageDrawMode, const SpriteBorder &spriteBorder, const Color& tint)
 	{
 		DrawImage(position.x, position.y, size.x, size.y, texture, radius, imageDrawMode, spriteBorder, tint);
 	}
 
 	void UIRenderer::SetImageEdgeDetection(bool enabled, int thickness, const Vector4& edgeColor)
 	{
-		m_Material->SetVariable<int>("ImageEdgeDetectionEnabled", enabled);
+		/*m_Material->SetVariable<int>("ImageEdgeDetectionEnabled", enabled);
 		if(enabled) {
 			m_Material->SetVariable<int>("EdgeThickness", thickness);
 			m_Material->SetVariable<Vector4>("EdgeColor", edgeColor);
-		}
+		}*/
 	}
 
 	Font_ptr UIRenderer::FindFont(const String &name)
@@ -313,7 +380,7 @@ namespace Aurora
 	bool UIRenderer::LoadFont(const String &name, const Path &path)
 	{
 		auto fontData = AuroraEngine::AssetManager->LoadFile(path);
-		if(fontData == nullptr) {
+		if(fontData.empty()) {
 			return false;
 		}
 
@@ -341,6 +408,7 @@ namespace Aurora
 		drawArgs.Fill = true;
 		drawArgs.EnabledCustomUVs = true;
 		drawArgs.OverrideMaterial = m_FontMaterial;
+		drawArgs.IsFont = true;
 
 		float fontScale = fontSize / static_cast<float>(optimalFontSize);
 

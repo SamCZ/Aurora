@@ -1,0 +1,20 @@
+[submodule "glm"]
+	path = lib/glm
+	url = git@github.com:g-truc/glm.git
+	branch = master
+[submodule "glfw"]
+	path = lib/glfw
+	url = git@github.com:glfw/glfw.git
+	branch = master
+[submodule "assimp"]
+	path = lib/assimp
+	url = git@github.com:assimp/assimp.git
+	branch = master
+[submodule "nlohmann_json"]
+	path = lib/nlohmann_json
+	url = git@github.com:nlohmann/json.git
+	branch = master
+[submodule "imgui"]
+	path = lib/imgui
+	url = git@github.com:ocornut/imgui.git
+	branch = master

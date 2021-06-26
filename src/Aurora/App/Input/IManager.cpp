@@ -113,7 +113,7 @@ namespace Aurora::Input
                         }
                     }
 #ifdef DEBUG
-					AU_LOG_INFO("\t", itCategory.key(), ": " << actionCount, " actions with ", inputSourceCount, " input sources total")
+					AU_LOG_INFO("\t", itCategory.key(), ": ", actionCount, " actions with ", inputSourceCount, " input sources total")
 #endif
                 }
                 return;
@@ -175,10 +175,11 @@ namespace Aurora::Input
         m_LockedInputType = value;
 
 #ifdef DEBUG
-        if(value.has_value())
+        if(value.has_value()) {
             AU_LOG_INFO("Changed Locked Input Type to ", to_string(value.value()));
-        else
+        } else {
             AU_LOG_INFO("Cleared Locked Input Type");
+        }
 #endif
     }
 }

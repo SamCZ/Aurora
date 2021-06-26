@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef IMGUI_ENABLED
 #include <Aurora/App/ImGuiHelper.hpp>
 
 #include <Aurora/Graphics/Material.hpp>
@@ -21,3 +21,4 @@ namespace Aurora::Editor
 		void SetMaterial(Material*& material, bool showWindow = true);
 	};
 }
+#endif

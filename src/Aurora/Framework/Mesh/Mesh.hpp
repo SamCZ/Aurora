@@ -4,22 +4,28 @@
 #include <Aurora/Graphics/VertexBuffer.hpp>
 #include <Aurora/Graphics/Material.hpp>
 #include <Aurora/Physics/Bound.hpp>
+#include <Aurora/Graphics/Base/IRenderDevice.hpp>
+#include <Aurora/Graphics/Base/InputLayout.hpp>
 
-#include <Buffer.h>
-#include <RenderDevice.h>
-#include <RefCntAutoPtr.hpp>
 #include <utility>
+#include <unordered_map>
 
 namespace Aurora
 {
+	struct LayoutElement
+	{
+		String Name;
+		uint8_t Offset;
+	};
+
 	typedef uint32_t Index_t;
 
 	struct MaterialSlot
 	{
 		Material_ptr Material;
 		String MaterialSlotName;
-		std::map<String, RefCntAutoPtr<ITexture>> Textures;
-		std::map<String, Vector4> Colors;
+		std::map<String, Texture_ptr> Textures{};
+		std::map<String, Vector4> Colors{};
 
 		MaterialSlot() : Material(nullptr), MaterialSlotName(), Textures(), Colors() {}
 		MaterialSlot(Material_ptr Material, String  materialSlotName) : Material(std::move(Material)), MaterialSlotName(std::move(materialSlotName)), Textures(), Colors() {}
@@ -53,8 +59,8 @@ namespace Aurora
 		std::vector<Index_t> Indices;
 		std::vector<MeshSection> Sections;
 
-		Diligent::RefCntAutoPtr<Diligent::IBuffer> VertexBuffer;
-		Diligent::RefCntAutoPtr<Diligent::IBuffer> IndexBuffer;
+		Buffer_ptr VertexBuffer;
+		Buffer_ptr IndexBuffer;
 		bool NeedUpdateBuffers;
 	};
 
@@ -69,10 +75,9 @@ namespace Aurora
 		std::unordered_map<uint8_t, MaterialSlot> MaterialSlots;
 		std::unique_ptr<Bound> m_Bounds;
 	public:
-		virtual LayoutElement* GetLayout() const = 0;
-		virtual int GetLayoutElementCount() const = 0;
+		virtual const InputLayout_ptr& GetInputLayout() const = 0;
 
-		void UpdateBuffers(Diligent::RefCntAutoPtr<Diligent::IRenderDevice>& renderDevice, Diligent::RefCntAutoPtr<Diligent::IDeviceContext>& immediateContext);
+		void UpdateBuffers();
 
 	public:
 		template<class T>
@@ -81,7 +86,7 @@ namespace Aurora
 			m_Bounds = std::make_unique<T>(bound);
 		}
 
-		const std::unique_ptr<Bound>& GetBounds() const
+		[[nodiscard]] const std::unique_ptr<Bound>& GetBounds() const
 		{
 			return m_Bounds;
 		}

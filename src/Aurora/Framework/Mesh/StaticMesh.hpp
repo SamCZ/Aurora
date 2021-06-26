@@ -25,14 +25,6 @@ namespace Aurora
 		}
 	};
 
-	static LayoutElement StaticMeshLayout[5] {
-			LayoutElement{0, 0, 3, VT_FLOAT32, false}, // Position
-			LayoutElement{1, 0, 2, VT_FLOAT32, false}, // TexCoord
-			LayoutElement{2, 0, 3, VT_FLOAT32, true}, // Normal
-			LayoutElement{3, 0, 3, VT_FLOAT32, true}, // Tangent
-			LayoutElement{4, 0, 3, VT_FLOAT32, true}, // BiTangent
-	};
-
 	AU_CLASS(StaticMesh) : public Mesh, public MeshBufferHelper<StaticMesh, StaticMeshVertexBufferEntry>
 	{
 	public:
@@ -41,13 +33,6 @@ namespace Aurora
 
 		}
 
-		[[nodiscard]] LayoutElement* GetLayout() const override
-		{
-			return StaticMeshLayout;
-		}
-		int GetLayoutElementCount() const override
-		{
-			return 5;
-		}
+		const InputLayout_ptr& GetInputLayout() const override;
 	};
 }

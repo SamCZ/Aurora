@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef IMGUI_ENABLED
 #include <string>
 #include <vector>
 #include <array>
@@ -387,3 +387,4 @@ private:
 
 	float mLastClick;
 };
+#endif

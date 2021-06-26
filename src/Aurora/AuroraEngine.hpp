@@ -5,27 +5,24 @@
 #include <iostream>
 #include <thread>
 
-#include <EngineFactory.h>
-#include <RenderDevice.h>
-#include <DeviceContext.h>
-#include <SwapChain.h>
-#include <RefCntAutoPtr.hpp>
-
-#include "App/Window.hpp"
+#include "App/IWindow.hpp"
 #include "App/WindowGameContext.hpp"
 
 #include "Assets/AssetManager.hpp"
 #include "Sound/SoundSystem.hpp"
+
+#include "Graphics/Base/IRenderDevice.hpp"
 #include "Graphics/UI/UIRenderer.hpp"
 
-namespace Diligent
-{
-	class ImGuiImplDiligent;
-}
+#if GLFW_ENABLED
+#include "App/GLFWWindow.hpp"
+#endif
 
 namespace Aurora
 {
+#ifdef FMOD_SUPPORTED
 	using namespace Sound;
+#endif
 
 	class AuroraEngine
 	{
@@ -34,11 +31,8 @@ namespace Aurora
 		static bool IsRunning;
 		static std::vector<WindowGameContext_ptr> GameContexts;
 		static std::map<std::thread::id, WindowGameContext_ptr> GameContextsByThread;
-
-		static std::unique_ptr<Diligent::ImGuiImplDiligent> ImGuiImpl;
 	public:
-		static RefCntAutoPtr<IRenderDevice> RenderDevice;
-		static RefCntAutoPtr<IDeviceContext> ImmediateContext;
+		static IRenderDevice* RenderDevice;
 		static AssetManager_ptr AssetManager;
 #ifdef FMOD_SUPPORTED
 		static SoundSystem_ptr SoundSystem;
@@ -48,7 +42,7 @@ namespace Aurora
 		static void Init();
 		static int Run();
 
-		static WindowGameContext_ptr AddWindow(const WindowGameContext_ptr& gameContext, const Window_ptr & window, const WindowDefinition& windowDef, bool showImmediately = true);
+		static WindowGameContext_ptr AddWindow(const WindowGameContext_ptr& gameContext, const IWindow_ptr & window, const WindowDefinition& windowDef, bool showImmediately = true);
 		static const std::vector<WindowGameContext_ptr>& GetGameContexts();
 		static WindowGameContext_ptr GetCurrentThreadContext();
 	public:
@@ -66,16 +60,20 @@ namespace Aurora
 			windowDefinition.HasOSWindowBorder = true;
 			windowDefinition.Title = title;
 			windowDefinition.Maximized = true;
-
-			Window_ptr window = std::make_shared<Window>();
+#if GLFW_ENABLED
+			IWindow_ptr window = std::make_shared<GLFWWindow>();
+#else
+			IWindow_ptr window = nullptr;
+#endif
 			return AddWindow(std::make_shared<GameContext>(window), window, windowDefinition, showImmediately);
 		}
 	private:
-		static bool CreateSwapChain(const Window_ptr& window, const SwapChainDesc& desc, RefCntAutoPtr<ISwapChain>& swapChain);
+		static bool CreateSwapChain(const IWindow_ptr& window, const SwapChainDesc& desc, ISwapChain_ptr& swapChain);
 		static void joystick_callback(int jid, int event);
 	public:
 		static void Play2DSound(const String& path, float volume = 1.0f, float pitch = 1.0f);
 	};
 
-#define ASM AuroraEngine::AssetManager
+#define ASM ::Aurora::AuroraEngine::AssetManager
+#define RD ::Aurora::AuroraEngine::RenderDevice
 }

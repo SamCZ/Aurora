@@ -39,15 +39,15 @@ namespace Aurora::Sound
     {
         auto fileData = AuroraEngine::AssetManager->LoadFile(path);
 
-        if(fileData == nullptr)
+        if(fileData.empty())
 			return false;
 
         FMOD_STUDIO_BANK* bank = nullptr;
 
         bool status = ERRCHECK(FMOD_Studio_System_LoadBankMemory(
         		m_FModStudioSystem,
-        		reinterpret_cast<const char*>(fileData->GetDataPtr()),
-        		static_cast<int>(fileData->GetSize()),
+        		reinterpret_cast<const char*>(fileData.data()),
+        		static_cast<int>(fileData.size()),
         		FMOD_STUDIO_LOAD_MEMORY,
         		FMOD_STUDIO_LOAD_BANK_NORMAL,
         		&bank));

@@ -45,10 +45,10 @@ namespace Aurora
 
 	static void ProcessStaticMesh(aiMesh* mesh, aiNode* node, StaticMesh* staticMesh, int materialSlotIndex, BoundingBox& boundingBox);
 
-	StaticMesh_ptr ModelImporter::LoadMesh(const RefCntAutoPtr<IDataBlob>& dataBlob)
+	StaticMesh_ptr ModelImporter::LoadMesh(const DataBlob& dataBlob)
 	{
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFileFromMemory(dataBlob->GetConstDataPtr(), dataBlob->GetSize(), MESH_PROCESS_FLAGS | aiProcess_PreTransformVertices | aiProcess_EmbedTextures);
+		const aiScene* scene = importer.ReadFileFromMemory(dataBlob.data(), dataBlob.size(), MESH_PROCESS_FLAGS | aiProcess_PreTransformVertices | aiProcess_EmbedTextures);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -74,6 +74,7 @@ namespace Aurora
 		ProcessNodes(&ProcessStaticMesh, mesh.get(), scene, scene->mRootNode, materialSlotIndex, boundingBox, embeddedTextures);
 
 		mesh->SetBounds(boundingBox);
+		mesh->UpdateBuffers();
 
 		return mesh;
 	}
@@ -143,11 +144,11 @@ namespace Aurora
 
 						//aiTexel* aiData = tex->pcData;
 						//std::cout << tex->achFormatHint << std::endl;
-						RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(dataSize));
+						DataBlob fileData(dataSize);
 
-						memcpy(pFileData->GetDataPtr(), aiData, pFileData->GetSize());
+						memcpy(fileData.data(), aiData, fileData.size());
 
-						auto texture = AuroraEngine::AssetManager->LoadTexture(filePath.string(), pFileData);
+						auto texture = AuroraEngine::AssetManager->LoadTexture(filePath.string(), fileData);
 						materialSlot.Textures[TextureTypeEnumToShaderNameString[texType]] = texture;
 						//std::cout << "TEXXX: " << TextureTypeEnumToShaderNameString[texType] << " - " << filePath.string() << std::endl;
 					} else {

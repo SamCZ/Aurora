@@ -2,14 +2,14 @@
 
 namespace Aurora
 {
-	WindowGameContext::WindowGameContext(Window_ptr window) : m_Window(std::move(window)), m_InputManager(m_Window->GetInputManager())
+	WindowGameContext::WindowGameContext(IWindow_ptr window) : m_Window(std::move(window)), m_InputManager(m_Window->GetInputManager())
 	{
 		m_Window->AddResizeListener([this](int width, int height) -> void {
 			Resize(width, height);
 		});
 	}
 
-	const Window_ptr& WindowGameContext::GetWindow()
+	const IWindow_ptr& WindowGameContext::GetWindow()
 	{
 		return m_Window;
 	}

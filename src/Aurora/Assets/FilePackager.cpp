@@ -2,12 +2,8 @@
 
 #include <iostream>
 #include <cstring>
+#include <fstream>
 #include <map>
-
-#include <BasicFileSystem.hpp>
-#include <BasicFileStream.hpp>
-
-#include "Aurora/Core/FileSystem.hpp"
 
 namespace Aurora
 {
@@ -46,16 +42,11 @@ namespace Aurora
 			// TODO: Compression
 			// https://github.com/lz4/lz4
 
-			RefCntAutoPtr<BasicFileStream> pFileStream(MakeNewRCObj<BasicFileStream>()((const Char*)filePath.string().c_str(), EFileAccessMode::Read));
-			if (!pFileStream->IsValid())
-				LOG_ERROR_AND_THROW("Failed to open image file \"", filePath, '\"');
+			auto fileData = FS::LoadFile(filePath);
 
-			RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(0));
-			pFileStream->ReadBlob(pFileData);
-
-			header.Size = pFileData->GetSize();
-			fileStream.write(reinterpret_cast<char*>(pFileData->GetDataPtr()), pFileData->GetSize());
-			currentOffset += pFileData->GetSize();
+			header.Size = fileData.size();
+			fileStream.write(reinterpret_cast<char*>(fileData.data()), fileData.size());
+			currentOffset += fileData.size();
 		}
 
 		fileStream.seekp(headerBeginPos, std::ios::beg);
@@ -87,26 +78,26 @@ namespace Aurora
 		return fileHeaders;
 	}
 
-	RefCntAutoPtr<IDataBlob> FilePackager::ReadFileFromPackage(const Path &packageFile, const FileHeader &header)
+	DataBlob FilePackager::ReadFileFromPackage(const Path &packageFile, const FileHeader &header)
 	{
 		std::ifstream file(packageFile, std::ios::in | std::ios::binary);
 
 		if (file.is_open()) {
-			RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(header.CompressedSize > 0 ? header.CompressedSize : header.Size));
+			DataBlob fileData(header.CompressedSize > 0 ? header.CompressedSize : header.Size);
 
 			file.seekg(header.Offset, std::ios::beg);
-			file.read(reinterpret_cast<char*>(pFileData->GetDataPtr()), pFileData->GetSize());
+			file.read(reinterpret_cast<char*>(fileData.data()), fileData.size());
 
 			file.close();
-			return pFileData;
+			return fileData;
 		}
 
-		return RefCntAutoPtr<IDataBlob>(nullptr);
+		return {};
 	}
 
-	std::map<Path, RefCntAutoPtr<IDataBlob>> FilePackager::ReadAllFilesFromPackage(const Path &packageFile)
+	std::map<Path, DataBlob> FilePackager::ReadAllFilesFromPackage(const Path &packageFile)
 	{
-		std::map<Path, RefCntAutoPtr<IDataBlob>> fileMap;
+		std::map<Path, DataBlob> fileMap;
 
 		std::ifstream file(packageFile, std::ios::in | std::ios::binary);
 
@@ -122,10 +113,10 @@ namespace Aurora
 			}
 
 			for(const FileHeader& header : headers) {
-				RefCntAutoPtr<IDataBlob> pFileData(MakeNewRCObj<DataBlobImpl>()(header.CompressedSize > 0 ? header.CompressedSize : header.Size));
+				DataBlob fileData(header.CompressedSize > 0 ? header.CompressedSize : header.Size);
 				file.seekg(header.Offset, std::ios::beg);
-				file.read(reinterpret_cast<char*>(pFileData->GetDataPtr()), pFileData->GetSize());
-				fileMap[String(header.Filename)] = pFileData;
+				file.read(reinterpret_cast<char*>(fileData.data()), fileData.size());
+				fileMap[String(header.Filename)] = fileData;
 			}
 
 			file.close();

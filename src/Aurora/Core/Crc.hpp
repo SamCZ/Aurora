@@ -5,6 +5,8 @@
 #include <wrl.h>
 #endif
 
+#include <cstdint>
+
 namespace Aurora
 {
 #ifdef _WIN32
@@ -27,13 +29,13 @@ namespace Aurora
 	public:
 		inline CrcHash() : m_crc(0)
 		{
-			UINT64 poly = 0xC96C5795D7870F42;
+			uint64_t poly = 0xC96C5795D7870F42;
 
 			for(int i=0; i<256; ++i)
 			{
-				UINT64 crc = i;
+				uint64_t crc = i;
 
-				for(UINT j=0; j<8; ++j)
+				for(uint32_t j=0; j<8; ++j)
 				{
 					// is current coefficient set?
 					if(crc & 1)
@@ -77,8 +79,8 @@ namespace Aurora
 		{
 			for (uint64_t idx = 0; idx < size; idx++)
 			{
-				BYTE index = p[idx] ^ m_crc;
-				UINT64 lookup = CrcTable[index];
+				uint8_t index = p[idx] ^ m_crc;
+				uint64_t lookup = CrcTable[index];
 
 				m_crc >>= 8;
 				m_crc ^= lookup;

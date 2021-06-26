@@ -11,7 +11,7 @@
 #include "Binding.hpp"
 
 #include <filesystem>
-#include <Aurora/App/Window.hpp>
+#include <Aurora/App/IWindow.hpp>
 
 
 namespace Aurora::Input

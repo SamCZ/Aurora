@@ -1,11 +1,8 @@
 #pragma once
 
-#include <DataBlobImpl.hpp>
-#include <RefCntAutoPtr.hpp>
-
 #include "Aurora/Core/Common.hpp"
-
-using namespace Diligent;
+#include "Aurora/Core/DataBlob.hpp"
+#include "Aurora/Core/FileSystem.hpp"
 
 namespace Aurora
 {
@@ -22,7 +19,7 @@ namespace Aurora
 	public:
 		static bool CreatePackage(const Path& baseFolderPath, const Path& outputFilePath);
 		static std::map<Path, FileHeader> ReadHeadersFromPackage(const Path& packageFile);
-		static RefCntAutoPtr<IDataBlob> ReadFileFromPackage(const Path& packageFile, const FileHeader& header);
-		static std::map<Path, RefCntAutoPtr<IDataBlob>> ReadAllFilesFromPackage(const Path& packageFile);
+		static DataBlob ReadFileFromPackage(const Path& packageFile, const FileHeader& header);
+		static std::map<Path, DataBlob> ReadAllFilesFromPackage(const Path& packageFile);
 	};
 }

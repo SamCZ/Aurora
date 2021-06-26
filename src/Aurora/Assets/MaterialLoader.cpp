@@ -34,7 +34,7 @@ namespace Aurora
 	{
 		std::shared_ptr<ShaderCollection> shaderCollection = nullptr;
 
-		std::map<SHADER_TYPE, RefCntAutoPtr<IShader>> shaders;
+		std::map<EShaderType, Shader_ptr> shaders;
 
 		switch (m_LoadType) {
 			case LoadType::MaterialFile: {
@@ -61,18 +61,16 @@ namespace Aurora
 	{
 		switch (value.size()) {
 			case 6: {
-				std::array<RefCntAutoPtr<ITexture>, 6> textures;
+				std::array<Path, 6> textures;
 
 				int i = 0;
 				for(auto& it : value) {
 					auto path = it.get<String>();
-					auto texture = AuroraEngine::AssetManager->LoadTexture(path);
-
-					if(texture == nullptr) {
+					if(!ASM->FileExists(path)) {
 						AU_LOG_ERROR("Cannot find texture ", path, " !");
 					}
 
-					textures[i++] = texture;
+					textures[i++] = path;
 				}
 
 				auto texture = GraphicUtilities::CreateCubeMap(textures);
@@ -102,7 +100,7 @@ namespace Aurora
 			AU_LOG_ERROR("Cannot load ", path);
 		}
 
-		std::vector<ShaderResourceObject_ptr> shaderCollection;
+		Shader_ptr shaderProgram = nullptr;
 
 		if(json.find("shader_macros") != json.end()) {
 			auto& shader_macros = json["shader_macros"];
@@ -112,25 +110,13 @@ namespace Aurora
 			}
 		}
 
-		if(json.find("shaders") != json.end()) {
-			auto& shaders = json["shaders"];
-			for(nlohmann::json::iterator it = shaders.begin(); it != shaders.end(); ++it) {
-				const String& shader_type = it.key();
-				const Path shader_path = it.value().get<String>();
-
-				if(shader_type == "vertex") {
-					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, SHADER_SOURCE_LANGUAGE_GLSL, SHADER_TYPE_VERTEX));
-				} else if(shader_type == "pixel") {
-					shaderCollection.push_back(AuroraEngine::AssetManager->LoadShaderResource(shader_path, SHADER_SOURCE_LANGUAGE_GLSL, SHADER_TYPE_PIXEL));
-				} else {
-					AU_LOG_ERROR("Unknown shader type ", shader_type, " for material ", path);
-				}
-			}
+		if(json.find("shaderFolder") != json.end()) {
+			shaderProgram = ASM->LoadShaderFolder(json["shaderFolder"].get<std::string>());
 		} else {
 			AU_LOG_ERROR("No shaders in ", path, " material file !");
 		}
 
-		auto material = std::make_shared<Material>(path.filename().string(), shaderCollection, macros);
+		auto material = std::make_shared<Material>(path.filename().string(), shaderProgram);
 
 		if(json.find("variables") != json.end()) {
 			auto& variables = json["variables"];

@@ -1,3 +1,4 @@
+#ifdef IMGUI_ENABLED
 #include <algorithm>
 #include <chrono>
 #include <string>
@@ -3158,3 +3159,4 @@ const TextEditor::LanguageDefinition& TextEditor::LanguageDefinition::Lua()
 	}
 	return langDef;
 }
+#endif

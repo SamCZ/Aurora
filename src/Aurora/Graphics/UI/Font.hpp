@@ -2,16 +2,13 @@
 
 #include "stb_truetype.h"
 
-#include <RefCntAutoPtr.hpp>
-#include <DataBlob.h>
-#include <Texture.h>
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/Vector.hpp>
+#include <Aurora/Core/FileSystem.hpp>
+#include <Aurora/Graphics/Base/IRenderDevice.hpp>
 
 namespace Aurora
 {
-	using namespace Diligent;
-
 	typedef uint32_t FontSize_t;
 	typedef int32_t Codepoint_t;
 	typedef std::vector<uint8_t> FontBitmap;
@@ -25,7 +22,7 @@ namespace Aurora
 		float Baseline;
 		Vector2 LeftTopUV;
 		Vector2 RightBottomUV;
-		RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
+		Texture_ptr Texture = nullptr;
 	};
 
 	struct FontGlyph
@@ -46,7 +43,7 @@ namespace Aurora
 	struct FontBitmapPage
 	{
 		FontBitmap Bitmap = {};
-		RefCntAutoPtr<ITexture> Texture = RefCntAutoPtr<ITexture>(nullptr);
+		Texture_ptr Texture = nullptr;
 	};
 
 	AU_CLASS(FontBitmapPageList)
@@ -77,13 +74,13 @@ namespace Aurora
 		static std::vector<int> FontSizesDefs;
 	private:
 		String m_Name;
-		RefCntAutoPtr<IDataBlob> FontData;
+		DataBlob FontData{};
 		stbtt_fontinfo m_FontInfo;
 		std::map<FontSize_t, FontBitmapPageList_ptr> m_FontContainers;
 
 		int m_FallbackFontSize;
 	public:
-		Font(String name, RefCntAutoPtr<IDataBlob>& data);
+		Font(String name, DataBlob& data);
 		FontBitmapPageList_ptr FindOrCreatePageList(FontSize_t fontSize);
 	public:
 		[[nodiscard]] FontSize_t FindSuitableSize(float fontSize) const;

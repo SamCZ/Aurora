@@ -1,6 +1,6 @@
 #include "PhysicsSystem.hpp"
 #include "Aurora/Physics/MotionIntegrators.hpp"
-#include <GLFW/glfw3.h>
+//#include <GLFW/glfw3.h>
 
 namespace Aurora
 {
@@ -56,7 +56,7 @@ namespace Aurora
 		};
 
 		int count = 0;
-		auto start = glfwGetTime();
+		//auto start = glfwGetTime();
 
 		size_t componentCount = components.size();
 
@@ -179,8 +179,8 @@ namespace Aurora
 			//component->SetAcceleration(Vector3D(0, 0, 0));
 		}
 
-		auto end = glfwGetTime();
-		auto time = (end - start) * 1000;
+		//auto end = glfwGetTime();
+		//auto time = (end - start) * 1000;
 
 		//std::cout << "physics: " << components.size() << ", " << count << ", " << time << "ms" << std::endl;
 	}

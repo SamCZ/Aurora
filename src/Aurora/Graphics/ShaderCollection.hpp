@@ -1,36 +1,33 @@
 #pragma once
 
-#include <Shader.h>
-#include <RefCntAutoPtr.hpp>
-
 #include "Aurora/Core/Common.hpp"
-
-using namespace Diligent;
 
 namespace Aurora
 {
+	class Shader;
+
 	AU_STRUCT(ShaderCollection)
 	{
 		/// Vertex shader to be used with the pipeline.
-		RefCntAutoPtr<IShader> Vertex;
+		std::shared_ptr<Shader> Vertex = nullptr;
 
 		/// Pixel shader to be used with the pipeline.
-		RefCntAutoPtr<IShader> Pixel;
+		std::shared_ptr<Shader> Pixel = nullptr;
 
 		/// Domain shader to be used with the pipeline.
-		RefCntAutoPtr<IShader> Domain;
+		std::shared_ptr<Shader> Domain = nullptr;
 
 		/// Hull shader to be used with the pipeline.
-		RefCntAutoPtr<IShader> Hull;
+		std::shared_ptr<Shader> Hull = nullptr;
 
 		/// Geometry shader to be used with the pipeline.
-		RefCntAutoPtr<IShader> Geometry;
+		std::shared_ptr<Shader> Geometry = nullptr;
 
 		/// Amplification shader to be used with the pipeline.
-		RefCntAutoPtr<IShader> Amplification;
+		std::shared_ptr<Shader> Amplification = nullptr;
 
 		/// Mesh shader to be used with the pipeline.
-		RefCntAutoPtr<IShader> Mesh;
+		std::shared_ptr<Shader> Mesh = nullptr;
 
 		ShaderCollection() = default;
 	};

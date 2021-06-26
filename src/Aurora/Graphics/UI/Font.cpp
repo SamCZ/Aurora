@@ -11,11 +11,11 @@ namespace Aurora
 			6, 12, 14, 16, 20, 24, 42, 64, 82, 100, 112
 	};
 
-	Font::Font(String name, RefCntAutoPtr<IDataBlob> &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
+	Font::Font(String name, DataBlob &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
 	{
-		stbtt_InitFont(&m_FontInfo, reinterpret_cast<unsigned char *>(FontData->GetDataPtr()), 0);
+		stbtt_InitFont(&m_FontInfo, reinterpret_cast<unsigned char *>(FontData.data()), 0);
 
-		AU_LOG_INFO("Font loaded: ", name);
+		AU_LOG_INFO("Font loaded: ", m_Name);
 	}
 
 	FontBitmapPageList_ptr Font::FindOrCreatePageList(FontSize_t fontSize)
@@ -54,32 +54,19 @@ namespace Aurora
 
 	}
 
-	RefCntAutoPtr<ITexture> CreateTextureFromData(int w, int h, const unsigned char* data)
+	Texture_ptr CreateTextureFromData(int w, int h, const unsigned char* data)
 	{
-		TextureDesc TexDesc;
-		TexDesc.Name      = "FontTexture";
-		TexDesc.Type      = RESOURCE_DIM_TEX_2D;
-		TexDesc.Width     = w;
-		TexDesc.Height    = h;
-		TexDesc.MipLevels = 1;
-		TexDesc.Format    = TEX_FORMAT_R8_UNORM;
-		// The render target can be bound as a shader resource and as a render target
-		TexDesc.BindFlags = BIND_RENDER_TARGET;
+		TextureDesc textureDesc;
+		textureDesc.Width = w;
+		textureDesc.Height = h;
+		textureDesc.MipLevels = 1;
+		textureDesc.ImageFormat = GraphicsFormat::R8_UNORM;
+		textureDesc.DebugName = "Font texture";
+		Texture_ptr texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
-		TexDesc.BindFlags |= BIND_SHADER_RESOURCE;
+		AuroraEngine::RenderDevice->WriteTexture(texture, 0, 0, data);
 
-		std::vector<TextureSubResData>  pSubResources(TexDesc.MipLevels);
-		pSubResources[0].pData  = data;
-		pSubResources[0].Stride = sizeof(unsigned char) * w;
-
-		TextureData TexData;
-		TexData.pSubResources   = pSubResources.data();
-		TexData.NumSubresources = TexDesc.MipLevels;
-
-		RefCntAutoPtr<ITexture> pRTColor;
-		AuroraEngine::RenderDevice->CreateTexture(TexDesc, &TexData, &pRTColor);
-
-		return pRTColor;
+		return texture;
 	}
 
 	void FontBitmapPageList::Init(const stbtt_fontinfo &fontInfo)
@@ -108,7 +95,7 @@ namespace Aurora
 
 		const int surface_sqrt = (int)glm::sqrt((float)total_surface) + 1;
 		const auto surface_sqrt_f = static_cast<float>(surface_sqrt);
-		int textureSize = (surface_sqrt_f >= 4096 * 0.7f) ? 4096 : (surface_sqrt_f >= 2048 * 0.7f) ? 2048 : (surface_sqrt_f >= 1024 * 0.7f) ? 1024 : 512;
+		int textureSize = (surface_sqrt_f >= 4096 * 0.7f) ? 4096 : (surface_sqrt_f >= 2048 * 0.7f) ? 2048 : (surface_sqrt_f >= 1024 * 0.7f) ? 1024 : (surface_sqrt_f >= 512 * 0.7f) ? 512 : 256;
 
 		{
 			FontBitmap bitmap(textureSize * textureSize);

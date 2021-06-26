@@ -5,7 +5,9 @@
 #include <vector>
 #include <map>
 
-#include <GLFW/glfw3.h>
+#if GLFW_ENABLED
+	#include <GLFW/glfw3.h>
+#endif
 
 #define AU_PROFILER_ENABLED
 
@@ -48,12 +50,16 @@ namespace Aurora
 
 			inline void Begin()
 			{
+#if GLFW_ENABLED
 				BeginTime = glfwGetTime();
+#endif
 			}
 
 			inline void End()
 			{
+#if GLFW_ENABLED
 				EndTime = glfwGetTime();
+#endif
 			}
 
 			inline void Clear()

@@ -1,10 +1,7 @@
 #pragma once
 
-#include <Shader.h>
-#include <RefCntAutoPtr.hpp>
+#include "Aurora/Graphics/Base/ShaderBase.hpp"
 #include "ResourceObject.hpp"
-
-using namespace Diligent;
 
 namespace Aurora
 {
@@ -14,7 +11,7 @@ namespace Aurora
 	{
 		bool Compiled;
 		std::vector<std::pair<int, String>> LineErrors;
-		RefCntAutoPtr<IShader> Shader;
+		Shader_ptr Shader;
 	};
 
 	AU_CLASS(ShaderResourceObject) : public ResourceObject
@@ -23,11 +20,10 @@ namespace Aurora
 		friend class AssetManager;
 	private:
 		String m_ShaderSource;
-		SHADER_SOURCE_LANGUAGE m_SourceLanguage;
-		SHADER_TYPE m_Type;
-		RefCntAutoPtr<IShader> m_Shader;
+		EShaderType m_Type;
+		Shader_ptr m_Shader;
 	private:
-		ShaderResourceObject(const Path& path, const SHADER_SOURCE_LANGUAGE& shaderSourceLanguage, const SHADER_TYPE& type);
+		ShaderResourceObject(const Path& path, const EShaderType& type);
 	public:
 		bool Load(bool forceReload) override;
 		bool Save() override;
@@ -47,7 +43,7 @@ namespace Aurora
 			}
 		}
 
-		[[nodiscard]] const RefCntAutoPtr<IShader>& GetShader() const noexcept { return m_Shader; }
-		[[nodiscard]] const SHADER_TYPE& GetShaderType() const { return m_Type; }
+		[[nodiscard]] Shader_ptr GetShader() const noexcept { return m_Shader; }
+		[[nodiscard]] const EShaderType& GetShaderType() const { return m_Type; }
 	};
 }
