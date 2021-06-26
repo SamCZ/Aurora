@@ -104,13 +104,32 @@ namespace Aurora
 				height = targetHeight;
 			}
 
-			RD->WriteTexture(pTexArray, i, data);
+			for (unsigned int mipLevel = 0; mipLevel < pTexArray->GetDesc().MipLevels; mipLevel++)
+			{
+				AuroraEngine::RenderDevice->WriteTexture(pTexArray, mipLevel, i, data);
 
+				if (mipLevel < pTexArray->GetDesc().MipLevels - 1u)
+				{
+					int newWidth = std::max<int>(1, width >> 1);
+					int newHeight = std::max<int>(1, height >> 1);
+
+					auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
+					stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);
+
+					stbi_image_free(data);
+					data = resizedData;
+					width = newWidth;
+					height = newHeight;
+				}
+			}
 
 			stbi_image_free(data);
+
+			/*RD->WriteTexture(pTexArray, 0, i, data);
+			stbi_image_free(data);*/
 		}
 
-		RD->GenerateMipmaps(pTexArray);
+		//RD->GenerateMipmaps(pTexArray);
 
 
 		/*for (int i = 0; i < textures.size(); ++i) {
@@ -150,9 +169,80 @@ namespace Aurora
 		return pTexArray;
 	}
 
-	Texture_ptr GraphicUtilities::CreateCubeMap(const std::array<Texture_ptr, 6>& textures)
+	Texture_ptr GraphicUtilities::CreateCubeMap(const std::array<Path, 6>& textures)
 	{
-		Texture_ptr pTexArray;
+		Texture_ptr pTexArray = nullptr;
+
+		int targetWidth = 0;
+		int targetHeight = 0;
+		bool targetSizeInitialized = false;
+
+		for (int i = 0; i < textures.size(); ++i) {
+			const Path& path = textures[i];
+
+			auto fileData = ASM->LoadFile(path);
+
+			if(fileData.empty()) {
+				AU_LOG_FATAL("Could not load ", path);
+			}
+
+			int width,height,channels_in_file;
+			unsigned char *data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+			if(!data) {
+				AU_LOG_ERROR("Cannot load texture !", path.string());
+				return nullptr;
+			}
+
+			if(!targetSizeInitialized) {
+				targetSizeInitialized = true;
+				targetWidth = width;
+				targetHeight = height;
+
+				TextureDesc textureDesc;
+				textureDesc.DebugName = "CubeMap";
+				textureDesc.Width = targetWidth;
+				textureDesc.Height = targetHeight;
+				textureDesc.MipLevels = 1;
+				textureDesc.IsCubeMap = true;
+				textureDesc.DepthOrArraySize = 6;
+				textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+
+				pTexArray = RD->CreateTexture(textureDesc);
+			}
+
+			if(width != targetWidth || height != targetHeight) {
+				auto* resizedData = new uint8_t[targetWidth * targetHeight * STBI_rgb_alpha];
+				stbir_resize_uint8(data, width, height, 0, resizedData, targetWidth, targetHeight, 0, STBI_rgb_alpha);
+				stbi_image_free(data);
+				data = resizedData;
+				width = targetWidth;
+				height = targetHeight;
+			}
+
+			for (unsigned int mipLevel = 0; mipLevel < pTexArray->GetDesc().MipLevels; mipLevel++)
+			{
+				AuroraEngine::RenderDevice->WriteTexture(pTexArray, mipLevel, i, data);
+
+				if (mipLevel < pTexArray->GetDesc().MipLevels - 1u)
+				{
+					int newWidth = std::max<int>(1, width >> 1);
+					int newHeight = std::max<int>(1, height >> 1);
+
+					auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
+					stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);
+
+					stbi_image_free(data);
+					data = resizedData;
+					width = newWidth;
+					height = newHeight;
+				}
+			}
+
+			stbi_image_free(data);
+
+			/*RD->WriteTexture(pTexArray, 0, i, data);
+			stbi_image_free(data);*/
+		}
 
 		/*for (int i = 0; i < 6; ++i) {
 			TextureHandle SrcTex = textures[i];
@@ -251,31 +341,29 @@ namespace Aurora
 		m_PlaceholderTexture = texture;
 	}
 
-	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, const std::map<String, Texture_ptr> &srcTextures, Texture_ptr dest)
+	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, const std::map<String, Texture_ptr> &srcTextures, const Texture_ptr& dest)
 	{
-		/*AuroraEngine::ImmediateContext->SetRenderTargets(1, &dest, nullptr, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+		DrawCallState drawCallState;
 
-		GraphicsPipelineDesc& graphicsPipelineDesc = material->GetPipelineDesc();
-		graphicsPipelineDesc.NumRenderTargets = 1;
-		graphicsPipelineDesc.RTVFormats[0] = dest->GetDesc().Format;
-
-		for(auto& it : srcTextures) {
-			material->SetTexture(it.first, it.second);
+		if(dest != nullptr) {
+			drawCallState.BindTarget(0, dest);
 		}
 
-		material->ValidateGraphicsPipelineState();
-		material->ApplyPipeline();
+		material->Apply(drawCallState);
 
-		material->CommitShaderResources();
+		for (const auto &item : srcTextures) {
+			drawCallState.BindTexture(item.first, item.second);
+		}
 
-		DrawAttribs drawAttrs;
-		drawAttrs.Flags = DRAW_FLAG_VERIFY_ALL;
-		drawAttrs.NumVertices = 4;
-		AuroraEngine::ImmediateContext->Draw(drawAttrs);*/
+		RD->Draw(drawCallState, {DrawArguments(4)});
 	}
 
 	std::shared_ptr<Material> GraphicUtilities::Setup2DMaterial(std::shared_ptr<Material> material, bool useBlending)
 	{
+		material->SetCullMode(ECullMode::None);
+		material->SetDepthEnable(false);
+		material->SetPrimitiveTopology(EPrimitiveType::TriangleStrip);
+
 		/*material->SetCullMode(RasterState::CullMode::None);
 		material->SetDepthEnable(false);
 		material->SetPrimitiveTopology(PrimitiveType::TriangleStrip);

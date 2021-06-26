@@ -388,12 +388,27 @@ namespace Aurora
 						variable.Name = variable.Name.substr(0, arrCharPos);
 					}
 
-					variable.Size = uniform.Size * uniform.ArraySize;
-					variable.Offset = offset;
+					bool foundDuplicate = false;
+					for (auto& storedVar : shaderVariables)
+					{
+						if(storedVar.Name == variable.Name) {
+							storedVar.Size += uniform.Size;
+							storedVar.Offset = std::min<size_t>(storedVar.Offset, offset);
+							foundDuplicate = true;
+							break;
+						}
+					}
 
-					shaderVariables.emplace_back(variable);
+					if(!foundDuplicate) {
+						variable.Size = uniform.Size * uniform.ArraySize;
+						variable.Offset = offset;
+						shaderVariables.emplace_back(variable);
+					}
+				}
 
-					std::cout << " - " << uniform.Name << " - size " << (uniform.Size * uniform.ArraySize) << " - offset " << offset << std::endl;
+				for (const auto& storedVar : shaderVariables)
+				{
+					std::cout << " - " << storedVar.Name << " - size " << storedVar.Size << " - offset " << storedVar.Offset << std::endl;
 				}
 
 				m_UniformBlocks.push_back({

@@ -49,6 +49,9 @@ namespace Aurora
 
 
 		glDepthRangef(0.0f, 1.0f);
+		// Enable depth remapping to [0, 1] interval
+		glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+
 	}
 
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
@@ -333,7 +336,7 @@ namespace Aurora
 		return std::make_shared<GLTexture>(desc, formatMapping, handle, bindTarget);
 	}
 
-	void GLRenderDevice::WriteTexture(const Texture_ptr &texture, uint32_t subresource, const void *data)
+	void GLRenderDevice::WriteTexture(const Texture_ptr &texture, uint32_t mipLevel, uint32_t subresource, const void *data)
 	{
 		auto* glTexture = static_cast<GLTexture*>(texture.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
@@ -341,9 +344,16 @@ namespace Aurora
 
 		const auto& desc = texture->GetDesc();
 
-		if (desc.IsArray || desc.DepthOrArraySize > 0)
+		uint32_t width = std::max<uint32_t>(1, desc.Width >> mipLevel);
+		uint32_t height = std::max<uint32_t>(1, desc.Height >> mipLevel);
+
+		if(desc.IsCubeMap)
 		{
-			glTexSubImage3D(glTexture->BindTarget(), 0/*level*/, 0, 0, (GLint)subresource, (GLsizei)desc.Width, (GLsizei)desc.Height, 1/*depth*/, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
+			glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + subresource, (GLint)mipLevel, 0, 0, (GLsizei)width, (GLsizei)height, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
+			CHECK_GL_ERROR();
+		} else if (desc.IsArray || desc.DepthOrArraySize > 0)
+		{
+			glTexSubImage3D(glTexture->BindTarget(), GLint(mipLevel), 0, 0, (GLint)subresource, (GLsizei)width, (GLsizei)height, 1/*depth*/, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
 			CHECK_GL_ERROR();
 			if(true) {
 				glGenerateMipmap( GL_TEXTURE_2D_ARRAY );
@@ -351,9 +361,7 @@ namespace Aurora
 		}
 		else
 		{
-			uint32_t width = std::max<uint32_t>(1, desc.Width >> subresource);
-			uint32_t height = std::max<uint32_t>(1, desc.Height >> subresource);
-			glTexSubImage2D(glTexture->BindTarget(), (GLint)subresource, 0, 0, (GLsizei)width, (GLsizei)height, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
+			glTexSubImage2D(glTexture->BindTarget(), (GLint)mipLevel, 0, 0, (GLsizei)width, (GLsizei)height, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
 			CHECK_GL_ERROR();
 		}
 
@@ -537,7 +545,7 @@ namespace Aurora
 			glSamplerParameteri(handle, GL_TEXTURE_MAG_FILTER, desc.MagFilter ? GL_LINEAR : GL_NEAREST);
 		}
 
-		return nullptr;
+		return std::make_shared<GLSampler>(desc, handle);
 	}
 
 	InputLayout_ptr GLRenderDevice::CreateInputLayout(const std::vector<VertexAttributeDesc> &desc)
@@ -618,8 +626,6 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
 	{
-		size_t currentUsedAttribs = 0;
-
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
 
@@ -677,8 +683,6 @@ namespace Aurora
 			}
 
 			glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
-
-			currentUsedAttribs++;
 		}
 
 		//glBindBuffer(GL_ARRAY_BUFFER, GL_NONE); Do not do this, android render will fail !
@@ -687,8 +691,20 @@ namespace Aurora
 		if(nMaxVertexAttrs == 0)
 			glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nMaxVertexAttrs);
 
-		for (; int(currentUsedAttribs) < nMaxVertexAttrs; currentUsedAttribs++)
-			glDisableVertexAttribArray(GLuint(currentUsedAttribs));
+		for (auto semanticIndex = 0; semanticIndex < nMaxVertexAttrs; semanticIndex++)
+		{
+			bool foundSemantic = false;
+			for(const auto& var : inputVars)
+			{
+				if(semanticIndex == var.first) {
+					foundSemantic = true;
+					break;
+				}
+			}
+			if(!foundSemantic) {
+				glDisableVertexAttribArray(GLuint(semanticIndex));
+			}
+		}
 	}
 
 	void GLRenderDevice::Dispatch(const DispatchState &state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ)

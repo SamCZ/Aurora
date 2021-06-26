@@ -64,7 +64,7 @@ namespace Aurora
 		textureDesc.DebugName = "Font texture";
 		Texture_ptr texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
-		AuroraEngine::RenderDevice->WriteTexture(texture, 0, data);
+		AuroraEngine::RenderDevice->WriteTexture(texture, 0, 0, data);
 
 		return texture;
 	}

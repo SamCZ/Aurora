@@ -62,7 +62,7 @@ namespace Aurora
 		DrawCallState drawCallState;
 
 		if(apply) {
-			//renderTargetPack->Apply(drawCallState);
+			renderTargetPack->Apply(drawCallState);
 		}
 
 		for(auto& it2 : m_SortedRenderer) {

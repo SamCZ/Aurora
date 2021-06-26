@@ -24,7 +24,8 @@ namespace Aurora
 			ShaderConstantBuffer constantBuffer = {};
 			constantBuffer.Name = res.Name;
 			constantBuffer.BufferData.resize(res.Size);
-			constantBuffer.Buffer = RD->CreateBuffer(BufferDesc(res.Name, res.Size, 0, EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+			constantBuffer.Desc = BufferDesc(res.Name, res.Size, 0, EBufferType::UniformBuffer, EBufferUsage::DynamicDraw);
+			constantBuffer.Buffer = RD->CreateBuffer(constantBuffer.Desc);
 			constantBuffer.Variables = res.Variables;
 			constantBuffer.NeedsUpdate = false;
 			constantBuffer.Size = res.Size;
@@ -33,17 +34,23 @@ namespace Aurora
 			m_ShaderConstantBuffers.push_back(constantBuffer);
 		}
 
+		static Sampler_ptr baseSampler = RD->CreateSampler(SamplerDesc());
+
 		for(const auto& res : shader->GetResources(ShaderResourceType::TextureSRV)) {
 			ShaderTextureDef shaderTextureDef = {};
 			shaderTextureDef.Name = res.Name;
 			shaderTextureDef.TextureRef = nullptr;
 			shaderTextureDef.NeedsUpdate = true;
 			m_ShaderTextures.emplace_back(shaderTextureDef);
+
+			m_ShaderSamplers.emplace_back(res.Name, baseSampler);
 		}
 
-		for(const auto& res : shader->GetResources(ShaderResourceType::Sampler)) {
-			m_ShaderSamplers.emplace_back(res.Name, nullptr);
-		}
+
+
+		/*for(const auto& res : shader->GetResources(ShaderResourceType::Sampler)) {
+			m_ShaderSamplers.emplace_back(res.Name, baseSampler);
+		}*/
 	}
 
 	void Material::UpdateResources()
@@ -108,7 +115,7 @@ namespace Aurora
 			for(const auto& cb_var : cb.Variables) {
 				if(cb_var.Name == name) {
 					assert(cb_var.Size == size);
-					memcpy(cb.BufferData.data() + cb_var.Offset, data, std::min(cb_var.Size, size));
+					memcpy(cb.BufferData.data() + cb_var.Offset, data, size);
 					cb.NeedsUpdate = true;
 					return true;
 				}
@@ -130,7 +137,7 @@ namespace Aurora
 			}
 		}
 
-		//AU_LOG_WARNING("Texture ", name, " in material ", m_Name, " was not found !");
+		AU_LOG_WARNING("Texture ", name, " in material ", m_Name, " was not found !");
 	}
 
 	void Material::SetSampler(const String &name, const Sampler_ptr &sampler)

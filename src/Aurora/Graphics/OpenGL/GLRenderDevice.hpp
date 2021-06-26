@@ -51,7 +51,7 @@ namespace Aurora
 		void SetShader(const Shader_ptr& shader) override;
 		// Textures
 		Texture_ptr CreateTexture(const TextureDesc& desc, TextureData textureData) override;
-		void WriteTexture(const Texture_ptr& texture, uint32_t subresource, const void* data) override;
+		void WriteTexture(const Texture_ptr &texture, uint32_t mipLevel, uint32_t subresource, const void *data) override;
 		void ClearTextureFloat(const Texture_ptr& texture, const Color& clearColor) override;
 		void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) override;
 		void GenerateMipmaps(const Texture_ptr& texture) override;

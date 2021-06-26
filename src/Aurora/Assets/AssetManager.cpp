@@ -113,7 +113,7 @@ namespace Aurora
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
-			AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data);
+			AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, 0, data);
 
 			if (mipLevel < textureDesc.MipLevels - 1u)
 			{
@@ -162,7 +162,7 @@ namespace Aurora
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
-			AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, data);
+			AuroraEngine::RenderDevice->WriteTexture(texture, mipLevel, 0, data);
 
 			if (mipLevel < textureDesc.MipLevels - 1u)
 			{

@@ -5,7 +5,7 @@ namespace Aurora
 	CameraComponent::CameraComponent(int width, int height)
 			: SceneComponent(), m_Width(width), m_Height(height), m_LastViewMode(EViewMode::Orthographic),
 			  m_ViewMode(EViewMode::Perspective),
-			  m_zNear(0.05f), m_zFar(2000.0f), m_FOV(75.0f), m_Frustum(glm::identity<Matrix4>()),
+			  m_zNear(0.05f), m_zFar(2000.0f), m_FOV(80.0f), m_Frustum(glm::identity<Matrix4>()),
 			  m_ProjectionMatrix(),
 			  m_ViewMatrix(),
 			  m_ProjectionViewMatrix(),

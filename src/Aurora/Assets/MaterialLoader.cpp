@@ -61,18 +61,16 @@ namespace Aurora
 	{
 		switch (value.size()) {
 			case 6: {
-				std::array<Texture_ptr, 6> textures;
+				std::array<Path, 6> textures;
 
 				int i = 0;
 				for(auto& it : value) {
 					auto path = it.get<String>();
-					auto texture = AuroraEngine::AssetManager->LoadTexture(path);
-
-					if(texture == nullptr) {
+					if(!ASM->FileExists(path)) {
 						AU_LOG_ERROR("Cannot find texture ", path, " !");
 					}
 
-					textures[i++] = texture;
+					textures[i++] = path;
 				}
 
 				auto texture = GraphicUtilities::CreateCubeMap(textures);

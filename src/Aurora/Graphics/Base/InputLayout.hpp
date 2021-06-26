@@ -28,7 +28,7 @@ namespace Aurora
 		uint32_t SemanticIndex;
 	};
 
-	typedef std::map<uint8_t, ShaderInputVariable> ShaderInputVariables_t;
+	typedef std::map<uint32_t, ShaderInputVariable> ShaderInputVariables_t;
 
 	class IInputLayout : public TypeBase<IInputLayout>
 	{
