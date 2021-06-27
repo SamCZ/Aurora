@@ -22,19 +22,25 @@ namespace Aurora
 
 		glUseProgram(0);
 		//glBindProgramPipeline(0);
-		glBindVertexArray(0);
+		//glBindVertexArray(0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 		m_ActiveTexture = -1;
+
+		m_BoundTextures.clear();
+		m_BoundSamplers.clear();
+		m_BoundImages.clear();
+		m_BoundUniformBuffers.clear();
+		m_BoundStorageBlocks.clear();
 	}
 
 	template <typename ObjectType>
 	bool UpdateBoundObject(UniqueIdentifier& CurrentObjectID, const ObjectType& NewObject, GLuint& NewGLHandle)
 	{
 		if(NewObject == nullptr) {
-			bool state = CurrentObjectID != 0;
-			CurrentObjectID = 0;
+			bool state = CurrentObjectID != -1;
+			CurrentObjectID = -1;
 			return state;
 		}
 
@@ -87,12 +93,13 @@ namespace Aurora
 		SetActiveTexture(index);
 
 		GLuint GLTexHandle = 0;
+
 		if (UpdateBoundObjectsArr(m_BoundTextures, index, texture, GLTexHandle))
 		{
 			if(texture != nullptr) {
 				glBindTexture(texture->BindTarget(), GLTexHandle);
 			} else {
-				glBindTexture(GL_TEXTURE_2D, GLTexHandle);
+				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 			CHECK_GL_ERROR("Failed to bind texture to slot ", index);
 		}

@@ -1,8 +1,10 @@
 #pragma once
 
+#include "Object.hpp"
+
 namespace Aurora
 {
-	class GameModeBase
+	class GameModeBase : public Object
 	{
 	public:
 		friend class Scene;

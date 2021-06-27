@@ -23,6 +23,7 @@ namespace Aurora
 		textureDesc.Height = 0;
 		textureDesc.MipLevels = 1;
 		textureDesc.ImageFormat = format;
+		textureDesc.IsRenderTarget = true;
 
 		m_Targets[name] = {Texture_ptr_null, textureDesc, true};
 /*
@@ -92,9 +93,12 @@ namespace Aurora
 		for(auto& it : m_Targets) {
 			auto& info = it.second;
 
-			TextureDesc textureDesc = info.Desc;
+			TextureDesc& textureDesc = info.Desc;
 			textureDesc.Width = width;
 			textureDesc.Height = height;
+
+			AU_LOG_INFO("RT ", it.first," RESIZED ", width, "x", height);
+
 			info.Texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 		}
 	}

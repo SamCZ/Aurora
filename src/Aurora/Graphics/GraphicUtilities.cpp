@@ -352,10 +352,11 @@ namespace Aurora
 		material->Apply(drawCallState);
 
 		for (const auto &item : srcTextures) {
-			drawCallState.BindTexture(item.first, item.second);
+			drawCallState.BindTexture(item.first, item.second, false, TextureBinding::EAccess::Read);
 		}
 
 		RD->Draw(drawCallState, {DrawArguments(4)});
+		RD->InvalidateState();
 	}
 
 	std::shared_ptr<Material> GraphicUtilities::Setup2DMaterial(std::shared_ptr<Material> material, bool useBlending)

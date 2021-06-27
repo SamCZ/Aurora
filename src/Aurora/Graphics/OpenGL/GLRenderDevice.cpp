@@ -730,6 +730,11 @@ namespace Aurora
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
 	}
 
+	void GLRenderDevice::InvalidateState()
+	{
+		m_ContextState.Invalidate();
+	}
+
 	void GLRenderDevice::ApplyDispatchState(const DispatchState &state)
 	{
 		SetShader(state.Shader);
@@ -923,6 +928,8 @@ namespace Aurora
 			if(targetBinding.Texture == nullptr) {
 				continue;
 			}
+
+			AU_LOG_INFO("RT to FB created ", rt, " ", targetBinding.Texture->GetDesc().DebugName)
 
 			auto glTex = GetTexture(state.RenderTargets[rt].Texture);
 

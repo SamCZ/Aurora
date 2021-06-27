@@ -72,6 +72,8 @@ namespace Aurora
 
 		void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) override;
 		void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
+
+		void InvalidateState() override;
 	private:
 		void BindShaderResources(const BaseState& state);
 

@@ -103,6 +103,8 @@ namespace Aurora
 				}
 			}
 		}
+
+		RD->InvalidateState();
 /*
 		Mesh *currentAppliedMesh = nullptr;
 

@@ -76,7 +76,7 @@ if(NOT TARGET assimp)
     add_subdirectory(assimp)
 
     if(BUILD_SHARED_LIBS)
-        if(CMAKE_BUILD_TYPE EQUAL "DEBUG")
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             set(AURORA_DLL_TO_COPY
                     ${AURORA_DLL_TO_COPY}
                     ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll

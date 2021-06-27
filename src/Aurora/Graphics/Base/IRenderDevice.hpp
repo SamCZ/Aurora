@@ -270,5 +270,6 @@ namespace Aurora
 		virtual void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) = 0;
 		virtual void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
 
+		virtual void InvalidateState() = 0;
 	};
 }
