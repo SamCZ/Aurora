@@ -90,7 +90,7 @@ namespace Aurora
 				textureDesc.MipLevels = GetMipLevelsNum(targetWidth, targetHeight);
 				textureDesc.IsArray = true;
 				textureDesc.DepthOrArraySize = textures.size();
-				textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+				textureDesc.ImageFormat = GraphicsFormat::SRGBA8_UNORM;
 
 				pTexArray = RD->CreateTexture(textureDesc);
 			}
@@ -205,7 +205,7 @@ namespace Aurora
 				textureDesc.MipLevels = 1;
 				textureDesc.IsCubeMap = true;
 				textureDesc.DepthOrArraySize = 6;
-				textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+				textureDesc.ImageFormat = GraphicsFormat::SRGBA8_UNORM;
 
 				pTexArray = RD->CreateTexture(textureDesc);
 			}

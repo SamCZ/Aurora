@@ -36,7 +36,7 @@ namespace Aurora
 	}
 
 	template <typename ObjectType>
-	bool UpdateBoundObject(UniqueIdentifier& CurrentObjectID, const ObjectType& NewObject, GLuint& NewGLHandle)
+	bool UpdateBoundObject(UniqueIdentifier& CurrentObjectID, ObjectType* NewObject, GLuint& NewGLHandle)
 	{
 		if(NewObject == nullptr) {
 			bool state = CurrentObjectID != -1;
@@ -45,6 +45,36 @@ namespace Aurora
 		}
 
 		NewGLHandle = NewObject->Handle();
+		// Only ask for the ID if the object handle is non-zero
+		// to avoid ID generation for null objects
+		UniqueIdentifier NewObjectID = (NewGLHandle != 0) ? NewObject->GetUniqueID() : 0;
+
+		// It is unsafe to use GL handle to keep track of bound textures
+		// When a texture is released, GL is free to reuse its handle for
+		// the new created textures
+		if (CurrentObjectID != NewObjectID)
+		{
+			CurrentObjectID = NewObjectID;
+			return true;
+		}
+		return false;
+	}
+
+	template <>
+	bool UpdateBoundObject(UniqueIdentifier& CurrentObjectID, GLTexture* NewObject, GLuint& NewGLHandle)
+	{
+		if(NewObject == nullptr) {
+			bool state = CurrentObjectID != -1;
+			CurrentObjectID = -1;
+			return state;
+		}
+
+		NewGLHandle = NewObject->Handle();
+
+		if(NewObject->Format().AbstractFormat == GraphicsFormat::SRGBA8_UNORM && NewObject->EnabledBindSRGB) {
+			NewGLHandle = NewObject->SRGBHandle();
+		}
+
 		// Only ask for the ID if the object handle is non-zero
 		// to avoid ID generation for null objects
 		UniqueIdentifier NewObjectID = (NewGLHandle != 0) ? NewObject->GetUniqueID() : 0;

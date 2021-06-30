@@ -52,6 +52,7 @@ namespace Aurora
 		// Enable depth remapping to [0, 1] interval
 		glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
+		glEnable(GL_FRAMEBUFFER_SRGB);
 	}
 
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
@@ -303,13 +304,13 @@ namespace Aurora
 
 		glBindTexture(bindTarget, 0);
 
-		/*GLuint srgbView = GL_NONE;
+		GLuint srgbView = GL_NONE;
 
 		if (formatMapping.AbstractFormat == GraphicsFormat::SRGBA8_UNORM)
 		{
 			glGenTextures(1, &srgbView);
 
-			/*glTextureView(
+			glTextureView(
 					srgbView,
 					bindTarget,
 					handle,
@@ -317,7 +318,7 @@ namespace Aurora
 					0,
 					desc.MipLevels,
 					0,
-					numLayers);*//*
+					numLayers);
 
 			CHECK_GL_ERROR();
 
@@ -329,11 +330,11 @@ namespace Aurora
 				glBindTexture(bindTarget, 0);
 				CHECK_GL_ERROR();
 			}
-		}*/
+		}
 
 		// TODO: Write @textureData
 
-		return std::make_shared<GLTexture>(desc, formatMapping, handle, bindTarget);
+		return std::make_shared<GLTexture>(desc, formatMapping, handle, srgbView, bindTarget);
 	}
 
 	void GLRenderDevice::WriteTexture(const Texture_ptr &texture, uint32_t mipLevel, uint32_t subresource, const void *data)
@@ -936,10 +937,11 @@ namespace Aurora
 			framebuffer->RenderTargets[rt] = state.RenderTargets[rt].Texture.get();
 			glTex->m_UsedInFrameBuffers = true;
 
-			if (targetBinding.Index == ~0u || glTex->GetDesc().DepthOrArraySize == 0)
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, glTex->BindTarget(), glTex->Handle(), GLint(targetBinding.MipSlice));
-			else
+			if (targetBinding.Index == ~0u || glTex->GetDesc().DepthOrArraySize == 0) {
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, glTex->BindTarget(), (glTex->EnabledBindSRGB && glTex->GetDesc().ImageFormat == GraphicsFormat::SRGBA8_UNORM) ? glTex->SRGBHandle() : glTex->Handle(), GLint(targetBinding.MipSlice));
+			} else {
 				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, GL_TEXTURE_CUBE_MAP_POSITIVE_X + targetBinding.Index, glTex->Handle(), GLint(targetBinding.MipSlice));
+			}
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, renderState.targets[rt]->handle, renderState.targetMipSlices[rt], renderState.targetIndicies[rt]);
 
 			framebuffer->DrawBuffers[(framebuffer->NumBuffers)++] = GL_COLOR_ATTACHMENT0 + rt;

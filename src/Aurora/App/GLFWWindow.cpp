@@ -190,12 +190,19 @@ namespace Aurora
 		glfwSetMouseButtonCallback(m_WindowHandle, GLFWWindow::OnMouseButtonCallback);
 
 		glfwSetCharModsCallback(m_WindowHandle, GLFWWindow::CharModsCallback);
+
+
+
+
 	}
 
 	void GLFWWindow::Show()
 	{
 		if(m_WindowHandle != nullptr)
 			glfwShowWindow(m_WindowHandle);
+
+		glfwSwapBuffers(m_WindowHandle);
+		glfwWaitEvents();
 	}
 
 	void GLFWWindow::Hide()

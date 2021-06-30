@@ -60,6 +60,8 @@ namespace Aurora
 	class ITexture : public TypeBase<ITexture>
 	{
 	public:
+		bool EnabledBindSRGB = true;
+	public:
 		virtual ~ITexture() = default;
 		[[nodiscard]] virtual const TextureDesc& GetDesc() const = 0;
 	};

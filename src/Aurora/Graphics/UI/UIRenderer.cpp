@@ -3,6 +3,8 @@
 
 #include "Aurora/Graphics/OpenGL/GL.hpp"
 
+#include "Default/default_font.hpp"
+
 namespace Aurora
 {
 	using namespace glm;
@@ -58,7 +60,7 @@ namespace Aurora
 
 	UIRenderer::UIRenderer() : m_Material(nullptr), m_ProjectionMatrix(), m_LastMaterial(nullptr), m_Fonts(), m_CurrentFont("Default")
 	{
-		LoadFont("Default", "Assets/Fonts/troika.otf");
+		LoadFont("Default", DefaultFont_GROBOLD);
 
 		baseUIShader = ASM->LoadShaderFolder("Assets/Shaders/UI");
 		fontShader = ASM->LoadShaderFolder("Assets/Shaders/UI_Font");
@@ -170,6 +172,10 @@ namespace Aurora
 			}
 
 			uvData.FirstData.z = 0;
+
+			if(drawArgs.Texture != nullptr && drawArgs.Texture->GetDesc().IsRenderTarget) {
+				uvData.FirstData.y = 1.0f;
+			}
 
 			RD->WriteBuffer(uvDataUniformBuffer, &uvData, sizeof(UVData));
 		}
@@ -379,7 +385,11 @@ namespace Aurora
 
 	bool UIRenderer::LoadFont(const String &name, const Path &path)
 	{
-		auto fontData = AuroraEngine::AssetManager->LoadFile(path);
+		return LoadFont(name, AuroraEngine::AssetManager->LoadFile(path));
+	}
+
+	bool UIRenderer::LoadFont(const String &name, const DataBlob &fontData)
+	{
 		if(fontData.empty()) {
 			return false;
 		}

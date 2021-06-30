@@ -11,7 +11,7 @@ namespace Aurora
 			6, 12, 14, 16, 20, 24, 42, 64, 82, 100, 112
 	};
 
-	Font::Font(String name, DataBlob &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
+	Font::Font(String name, const DataBlob &data) : m_Name(std::move(name)), FontData(data), m_FontInfo(), m_FontContainers(), m_FallbackFontSize(16)
 	{
 		stbtt_InitFont(&m_FontInfo, reinterpret_cast<unsigned char *>(FontData.data()), 0);
 

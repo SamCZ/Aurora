@@ -71,6 +71,7 @@ namespace Aurora
 	public:
 		Font_ptr FindFont(const String& name);
 		bool LoadFont(const String& name, const Path& path);
+		bool LoadFont(const String& name, const DataBlob& fontData);
 		void Text(const String& text, float x, float y, float fontSize, const Vector4& color, const String& fontName = "Default");
 		void Text(const String& text, const Vector2& position, float fontSize, const Vector4& color, const String& fontName = "Default");
 		Vector2 GetTextSize(const String& text, float fontSize, const String& fontName = "Default");

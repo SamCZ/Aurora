@@ -80,7 +80,7 @@ namespace Aurora
 
 		int m_FallbackFontSize;
 	public:
-		Font(String name, DataBlob& data);
+		Font(String name, const DataBlob& data);
 		FontBitmapPageList_ptr FindOrCreatePageList(FontSize_t fontSize);
 	public:
 		[[nodiscard]] FontSize_t FindSuitableSize(float fontSize) const;
