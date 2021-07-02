@@ -27,6 +27,12 @@
 
 #include "Profiler/Profiler.hpp"
 
+#include "Graphics/OpenGL/GL.hpp"
+
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+
 namespace Aurora
 {
 	/*class PipelineErrorHandler : public IErrorCallback
@@ -94,6 +100,8 @@ namespace Aurora
 		auto lastFpsTime = PrevTime;
 		int frameCount = 0;
 
+		bool show_demo_window = true;
+
 		do {
 			Profiler::RestartProfiler();
 
@@ -159,6 +167,15 @@ namespace Aurora
 				std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->Update(ElapsedTime);
 #endif
 				//ImGuiImpl->NewFrame(swapChainDesc.Width, swapChainDesc.Height, swapChainDesc.PreTransform);
+				// Start the Dear ImGui frame
+				ImGui_ImplOpenGL3_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
+
+				{
+					if (show_demo_window)
+						ImGui::ShowDemoWindow(&show_demo_window);
+				}
 
 				Profiler::Begin("WindowGameContext::Update");
 				context->Update(ElapsedTime, CurrTime);
@@ -186,6 +203,11 @@ namespace Aurora
 
 					/*ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 					ImGuiImpl->Render(ImmediateContext);*/
+					glDisable(GL_FRAMEBUFFER_SRGB);
+					ImGui::Render();
+					glViewport(0, 0, window->GetWidth(), window->GetHeight());
+					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+					glEnable(GL_FRAMEBUFFER_SRGB);
 
 					Profiler::Begin("SwapChain()->Present");
 					window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
@@ -261,6 +283,21 @@ namespace Aurora
 		/*if(ImGuiImpl == nullptr) {
 			ImGuiImpl = std::make_unique<ImGuiImplGLFW>(window->GetWindowHandle(), RenderDevice, swapChainDesc.ColorBufferFormat, swapChainDesc.DepthBufferFormat);
 		}*/
+
+		// Setup Dear ImGui context
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+		// Setup Dear ImGui style
+		ImGui::StyleColorsDark();
+		//ImGui::StyleColorsClassic();
+
+		// Setup Platform/Renderer backends
+		ImGui_ImplGlfw_InitForOpenGL(static_cast<GLFWWindow*>(window.get())->GetWindowHandle(), true);
+		ImGui_ImplOpenGL3_Init("#version 330 core");
 
 		gameContext->Init();
 

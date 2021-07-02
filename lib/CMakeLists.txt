@@ -92,3 +92,10 @@ if(NOT TARGET assimp)
     set(BUILD_SHARED_LIBS OFF)
 endif()
 
+#------------------------------
+# ImGui
+# Debug window render lib
+#------------------------------
+if(NOT TARGET ImGui)
+    add_subdirectory(imgui)
+endif()

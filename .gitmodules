@@ -15,6 +15,6 @@
 	url = git@github.com:nlohmann/json.git
 	branch = master
 [submodule "imgui"]
-	path = lib/imgui
+	path = lib/imgui/imgui
 	url = git@github.com:ocornut/imgui.git
 	branch = master
