@@ -14,6 +14,7 @@ namespace Aurora
 		(void) delta;
 		m_SortedRenderer.clear();
 
+        Profiler::Begin("Prepare renderers");
 		for(auto* cameraComponent : m_Scene->GetCameraComponents()) {
 			for(auto* meshComponent : m_Scene->GetMeshComponents())
 			{
@@ -55,6 +56,7 @@ namespace Aurora
 				}
 			}
 		}
+        Profiler::End("Prepare renderers");
 	}
 
 	void SceneRenderer::Render(RenderTargetPack* renderTargetPack, bool apply, bool clear)
@@ -105,67 +107,5 @@ namespace Aurora
 		}
 
 		RD->InvalidateState();
-/*
-		Mesh *currentAppliedMesh = nullptr;
-
-		for(auto& it2 : m_SortedRenderer) {
-			CameraComponent* cameraComponent = it2.first;
-			for (const auto &it : it2.second) {
-				Material *material = it.first;
-
-				//TODO: Multi-thread rendering
-				//TRender every material in thread queue ?
-
-				if (!it.second.empty()) {
-					GraphicsPipelineDesc &graphicsPipelineDesc = material->GetPipelineDesc();
-					graphicsPipelineDesc.InputLayout.LayoutElements = std::get<0>(it.second[0])->GetLayout();
-					graphicsPipelineDesc.InputLayout.NumElements = std::get<0>(it.second[0])->GetLayoutElementCount();
-				}
-
-				renderTargetPack->Apply(material->GetPipelineDesc());
-
-				material->ValidateGraphicsPipelineState();
-				material->ApplyPipeline();
-
-				material->SetVariable("ProjectionViewMatrix", cameraComponent->GetProjectionViewMatrix());
-				material->SetVariable("ViewMatrix", cameraComponent->GetViewMatrix());
-				material->SetVariable<float>("g_Time", static_cast<float>(glfwGetTime()));
-
-				for (const auto& renderData : it.second) {
-					Mesh *mesh = std::get<0>(renderData);
-					uint32_t sectionIndex = std::get<1>(renderData);
-					const Matrix4 &modelMatrix = std::get<2>(renderData);
-
-					if (currentAppliedMesh != mesh) {
-						currentAppliedMesh = mesh;
-
-						uint32_t offset = 0;
-						AuroraEngine::ImmediateContext->SetVertexBuffers(0, 1, &mesh->LODResources[0].VertexBuffer, &offset,
-																		 RESOURCE_STATE_TRANSITION_MODE_TRANSITION,
-																		 SET_VERTEX_BUFFERS_FLAG_NONE);
-						AuroraEngine::ImmediateContext->SetIndexBuffer(mesh->LODResources[0].IndexBuffer, 0,
-																	   RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-					}
-
-					material->SetVariable("ModelMatrix", modelMatrix);
-
-					std::get<3>(renderData)->OnPreRender(material);
-
-					material->CommitShaderResources();
-
-					auto &section = mesh->LODResources[0].Sections[sectionIndex];
-
-					DrawIndexedAttribs drawAttrs;
-					drawAttrs.IndexType = VT_UINT32;
-					drawAttrs.Flags = DRAW_FLAG_VERIFY_STATES;
-					drawAttrs.FirstIndexLocation = section.FirstIndex;
-					drawAttrs.NumIndices = section.NumTriangles;
-					AuroraEngine::ImmediateContext->DrawIndexed(drawAttrs);
-				}
-			}
-
-			//TODO: Fix render for multiple cameras !
-			return; // This will discard any other cameras to render
-		}*/
 	}
 }

@@ -201,8 +201,8 @@ namespace Aurora
 					context->Render();
 					Profiler::End("WindowGameContext::Render");
 
-					/*ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-					ImGuiImpl->Render(ImmediateContext);*/
+					Profiler::DrawWithImGui(true);
+
 					glDisable(GL_FRAMEBUFFER_SRGB);
 					ImGui::Render();
 					glViewport(0, 0, window->GetWidth(), window->GetHeight());
