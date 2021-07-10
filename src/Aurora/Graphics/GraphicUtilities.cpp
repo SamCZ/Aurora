@@ -291,6 +291,7 @@ namespace Aurora
 		gBufferDesc.SampleCount = 1;
 		gBufferDesc.DisableGPUsSync = true;
 		gBufferDesc.IsUAV = useUav;
+		gBufferDesc.MipLevels = 1;
 
 		gBufferDesc.ImageFormat = format;
 		gBufferDesc.ClearValue = clearColor;

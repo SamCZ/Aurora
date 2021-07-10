@@ -500,9 +500,9 @@ namespace Aurora
 			nBytesToRead = glBuffer->GetDesc().ByteSize;
 		}
 
-		glBindBuffer(GL_COPY_READ_BUFFER, glBuffer->Handle());
+		/*glBindBuffer(GL_SHADER_STORAGE_BUFFER, glBuffer->Handle());
 
-		void* pMappedData = glMapBufferRange(GL_COPY_READ_BUFFER, 0, nBytesToRead, GL_MAP_READ_BIT);
+		void* pMappedData = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, nBytesToRead, GL_MAP_READ_BIT);
 		if (pMappedData)
 		{
 			memcpy(data, pMappedData, nBytesToRead);
@@ -513,8 +513,13 @@ namespace Aurora
 			*dataSize = 0;
 		}
 
-		glUnmapBuffer(GL_COPY_READ_BUFFER);
-		glBindBuffer(GL_COPY_READ_BUFFER, GL_NONE);
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, GL_NONE);*/
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, glBuffer->Handle());
+		GLvoid* pMappedData = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+		memcpy(data, pMappedData, nBytesToRead);
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	}
 
 	Sampler_ptr GLRenderDevice::CreateSampler(const SamplerDesc &desc)
@@ -715,7 +720,7 @@ namespace Aurora
 		glDispatchCompute(GLuint(groupsX), GLuint(groupsY), GLuint(groupsZ));
 
 		//GL_SHADER_IMAGE_ACCESS_BARRIER_BIT, GL_SHADER_IMAGE_ACCESS_BARRIER_BIT, GL_BUFFER_UPDATE_BARRIER_BIT
-		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
 	}
 
 	void GLRenderDevice::DispatchIndirect(const DispatchState &state, const Buffer_ptr &indirectParams, uint32_t offsetBytes)
@@ -787,7 +792,7 @@ namespace Aurora
 			const TextureBinding* targetTextureBinding = nullptr;
 
 			if(boundTextureIt == state.BoundTextures.end()) {
-				m_ContextState.BindImage(imageResource.Binding, nullptr, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R16F);
+				m_ContextState.BindImage(imageResource.Binding, nullptr, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGB16F);
 				continue;
 			}
 
@@ -851,8 +856,18 @@ namespace Aurora
 
 		// binding ssbo`s
 		// TODO: Complete SSBO
-		for(const auto& uniformResource : shader->GetGLResource().GetStorageBlocks()) {
+		for(const auto& uniformResource : shader->GetGLResource().GetStorageBlocks())
+		{
+			auto ssboIt = state.SSBOBuffers.find(uniformResource.Name);
 
+			Buffer_ptr ssboBufferHandle = nullptr;
+
+			if(ssboIt != state.SSBOBuffers.end())
+			{
+				ssboBufferHandle = ssboIt->second;
+			}
+
+			m_ContextState.BindStorageBlock(uniformResource.Binding, GetBuffer(ssboBufferHandle));
 		}
 
 		/*

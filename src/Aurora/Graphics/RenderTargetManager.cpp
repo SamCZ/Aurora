@@ -25,6 +25,8 @@ namespace Aurora
 		textureDesc.ImageFormat = format;
 		textureDesc.IsRenderTarget = true;
 
+		textureDesc.IsUAV = useUav;
+
 		m_Targets[name] = {Texture_ptr_null, textureDesc, true};
 /*
 		TextureDesc textureDesc;

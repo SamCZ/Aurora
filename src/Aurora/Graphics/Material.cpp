@@ -107,6 +107,14 @@ namespace Aurora
 		for(auto& cb : m_ShaderConstantBuffers) {
 			state.BindUniformBuffer(cb.Name, cb.Buffer);
 		}
+
+		for(auto& tb : m_ShaderTextures) {
+			if(tb.TextureRef == nullptr) {
+				continue;
+			}
+
+			state.BindTexture(tb.Name, tb.TextureRef, false, TextureBinding::EAccess::Read);
+		}
 	}
 
 	bool Material::SetVariable(const String &name, void* data, size_t size)

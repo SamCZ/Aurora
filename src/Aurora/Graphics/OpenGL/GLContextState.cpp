@@ -175,6 +175,7 @@ namespace Aurora
 		if (UpdateBoundObjectsArr(m_BoundStorageBlocks, index, buffer, GLBufferHandle))
 		{
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, GLBufferHandle);
+			//glBindBufferRange(GL_SHADER_STORAGE_BUFFER, index, GLBufferHandle, 0, buffer->GetDesc().ByteSize);
 			CHECK_GL_ERROR("Failed to bind shader storage block to slot ", index);
 		}
 	}

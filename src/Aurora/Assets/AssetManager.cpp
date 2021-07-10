@@ -282,6 +282,38 @@ namespace Aurora
 		return shaderProgram;
 	}
 
+	String AssetManager::ReadShaderSource(const Path& path)
+	{
+		String shaderSource = LoadFileToString(path);
+		{
+			static const std::regex re("^[ ]*#[ ]*include[ ]+[\"<](.*)[\">].*");
+
+			std::stringstream input;
+			std::stringstream output;
+			input << shaderSource;
+
+			std::smatch matches;
+
+			std::string line;
+			while(std::getline(input,line))
+			{
+				if (std::regex_search(line, matches, re))
+				{
+					std::string include_file = matches[1];
+
+
+					output << ReadShaderSource(Path("Assets/Shaders/") / include_file) << std::endl;
+				} else {
+					output << line << std::endl;
+				}
+			}
+
+			shaderSource = output.str();
+		}
+
+		return shaderSource;
+	}
+
 	Shader_ptr AssetManager::LoadComputeShader(const Path &path, const ShaderMacros& macros)
 	{
 		auto it = m_ShaderPrograms.find(path);
@@ -290,8 +322,9 @@ namespace Aurora
 			return m_ShaderPrograms[path];
 		}
 
+		String shaderSource = ReadShaderSource(path);
 		ShaderProgramDesc shaderProgramDesc(path.string());
-		shaderProgramDesc.AddShader(EShaderType::Compute, LoadFileToString(path), macros);
+		shaderProgramDesc.AddShader(EShaderType::Compute, shaderSource, macros);
 
 		auto shaderProgram = AuroraEngine::RenderDevice->CreateShaderProgram(shaderProgramDesc);
 

@@ -43,6 +43,8 @@ namespace Aurora
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
+
+		inline GLContextState& GetContextState() { return m_ContextState; }
 	public:
 		void Init() override;
 		// Shaders

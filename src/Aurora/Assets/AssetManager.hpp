@@ -48,6 +48,7 @@ namespace Aurora
 		/*const ShaderResourceObject_ptr& LoadShaderResource(const Path& path, const ShaderType& type);
 		std::vector<ShaderResourceObject_ptr> LoadShaderResourceFolder(const Path& path);*/
 
+		String ReadShaderSource(const Path& path);
 		Shader_ptr LoadShaderFolder(const Path& path, const ShaderMacros& macros = {});
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
 

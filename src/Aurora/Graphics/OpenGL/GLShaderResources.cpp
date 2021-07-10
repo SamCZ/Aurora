@@ -222,6 +222,8 @@ namespace Aurora
 
 					RemoveArrayBrackets(Name.data());
 
+					std::cout << "Image: " << Name.data() << std::endl;
+
 					m_Images.push_back(
 							{
 									*NamesPool.emplace(Name.data()).first,
@@ -438,7 +440,7 @@ namespace Aurora
 			auto SBIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, Name.data());
 			CHECK_GL_ERROR_AND_THROW("Unable to get shader storage block index\n");
 
-			//std::cout << "Storage block: " << Name.data() << std::endl;
+			std::cout << "Storage block: " << Name.data() << std::endl;
 
 			bool  IsNewBlock    = true;
 			int32_t ArraySize     = 1;
