@@ -14,7 +14,7 @@ namespace Aurora
 
 	GLTexture::~GLTexture()
 	{
-		if(m_UsedInFrameBuffers) {
+		if(m_UsedInFrameBuffers && RD != nullptr) {
 			static_cast<GLRenderDevice*>(RD)->NotifyTextureDestroy(this); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 		}
 

@@ -107,6 +107,6 @@ namespace Aurora
 		}
 
 		// This adds 2.5ms to render on
-		//RD->InvalidateState();
+		RD->InvalidateState();
 	}
 }

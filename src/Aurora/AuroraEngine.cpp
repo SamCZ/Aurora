@@ -232,6 +232,7 @@ namespace Aurora
 		AuroraEngine::AssetManager.reset(); // This resolves that resources are destroyed before render device is deleted
 
 		delete RenderDevice;
+        RenderDevice = nullptr;
 
 		Profiler::RestartProfiler();
 
