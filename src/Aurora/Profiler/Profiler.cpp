@@ -107,7 +107,7 @@ namespace Aurora
 			average /= (float)IM_ARRAYSIZE(values);
 			char overlay[32];
 			sprintf(overlay, "avg %f", average);
-			ImGui::PlotHistogram("###FrameTimeGraph", values, IM_ARRAYSIZE(values), values_offset, overlay, 0.0f, 10.0, ImVec2(0, 80.0f));
+			ImGui::PlotHistogram("###FrameTimeGraph", values, IM_ARRAYSIZE(values), values_offset, overlay, 0.0f, average + 10.0f, ImVec2(0, 80.0f));
 		}
 
 		if(createWindow) {

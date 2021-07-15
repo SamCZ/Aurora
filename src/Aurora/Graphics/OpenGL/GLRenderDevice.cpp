@@ -53,6 +53,12 @@ namespace Aurora
 		glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
 		glEnable(GL_FRAMEBUFFER_SRGB);
+
+        const GLubyte* vendor = glGetString(GL_VENDOR); // Returns the vendor
+        const GLubyte* renderer = glGetString(GL_RENDERER); // Returns a hint to the model
+
+        AU_LOG_INFO("GPU Vendor: ", vendor);
+        AU_LOG_INFO("GPU Renderer: ", renderer);
 	}
 
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
