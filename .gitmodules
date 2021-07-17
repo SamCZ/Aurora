@@ -18,3 +18,7 @@
 	path = lib/imgui/imgui
 	url = git@github.com:ocornut/imgui.git
 	branch = master
+[submodule "RmlUI"]
+	path = lib/RmlUI
+	url = git@github.com:SamCZ/RmlUi.git
+	branch = 4.1

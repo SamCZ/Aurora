@@ -32,6 +32,7 @@ namespace Aurora
 	{
 	public:
 		friend class GLTexture;
+		friend class ShellRenderInterfaceOpenGL;
 	private:
 		GLuint m_nVAO;
 		GLuint m_nVAOEmpty;

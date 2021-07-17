@@ -99,3 +99,32 @@ endif()
 if(NOT TARGET ImGui)
     add_subdirectory(imgui)
 endif()
+
+#------------------------------
+# FreeType
+# Font library
+#------------------------------
+if(NOT TARGET freetype)
+    set(FT_WITH_BROTLI OFF)
+    set(FT_WITH_HARFBUZZ OFF)
+    set(BUILD_SHARED_LIBS OFF)
+    set(CMAKE_DISABLE_FIND_PACKAGE_ZLIB ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_BZip2 ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_PNG ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_BrotliDec ON)
+    add_subdirectory(freetype)
+endif()
+
+#------------------------------
+# RmlUI
+# UI render library
+#------------------------------
+if(NOT TARGET RmlUI)
+    set(BUILD_SAMPLES ON)
+    set(NO_FONT_INTERFACE_DEFAULT OFF)
+    set(BUILD_SHARED_LIBS OFF)
+    set(CUSTOM_CONFIGURATION ON)
+    set(CUSTOM_LINK_LIBRARIES freetype)
+    add_subdirectory(RmlUI)
+endif()

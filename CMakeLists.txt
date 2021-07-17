@@ -24,6 +24,7 @@ add_library(Aurora STATIC ${PROJECT_SOURCE})
 
 target_compile_definitions(Aurora PUBLIC GLFW_INCLUDE_NONE=1)
 target_compile_definitions(Aurora PUBLIC GLFW_ENABLED=1)
+target_compile_definitions(Aurora PUBLIC RMLUI_STATIC_LIB=1)
 
 target_include_directories(Aurora PUBLIC src)
 
@@ -35,6 +36,7 @@ endif()
 target_link_libraries(Aurora PUBLIC glfw glm nlohmann_json assimp)
 target_link_libraries(Aurora PUBLIC glad opengl32 gdi32)
 target_link_libraries(Aurora PUBLIC ImGui)
+target_link_libraries(Aurora PUBLIC RmlCore)
 
 function(link_aurora TARGET_NAME)
     target_link_libraries(${TARGET_NAME} PUBLIC Aurora)

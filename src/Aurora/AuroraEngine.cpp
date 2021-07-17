@@ -33,6 +33,10 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include <RmlUi/Core.h>
+#include "RmlUI/ShellSystemInterface.hpp"
+#include "RmlUI/ShellRenderInterfaceOpenGL.hpp"
+
 namespace Aurora
 {
 	/*class PipelineErrorHandler : public IErrorCallback
@@ -101,6 +105,26 @@ namespace Aurora
 		int frameCount = 0;
 
 		bool show_demo_window = true;
+
+		ShellRenderInterfaceOpenGL shellRenderInterfaceOpenGl;
+		ShellSystemInterface shellSystemInterface;
+
+		Rml::SetRenderInterface(&shellRenderInterfaceOpenGl);
+		Rml::SetSystemInterface(&shellSystemInterface);
+
+		Rml::Initialise();
+
+		Rml::LoadFontFace("Assets/Fonts/canada1500-rg.ttf");
+		Rml::LoadFontFace("Assets/UI/NotoEmoji-Regular.ttf");
+		Rml::LoadFontFace("Assets/UI/LatoLatin-Regular.ttf");
+		Rml::LoadFontFace("Assets/UI/LatoLatin-Italic.ttf");
+		Rml::LoadFontFace("Assets/UI/LatoLatin-BoldItalic.ttf");
+		Rml::LoadFontFace("Assets/UI/LatoLatin-Bold.ttf");
+
+		Rml::Context* rmlContext = Rml::CreateContext("main", Rml::Vector2i(1920, 1080));
+
+		Rml::ElementDocument* document = rmlContext->LoadDocument("Assets/UI/animation.rml");
+		document->Show();
 
 		do {
 			Profiler::RestartProfiler();
@@ -177,9 +201,20 @@ namespace Aurora
 						ImGui::ShowDemoWindow(&show_demo_window);
 				}
 
+				rmlContext->SetDimensions({context->GetWindow()->GetSize().x, context->GetWindow()->GetSize().y});
+
+				auto mousePos = context->GetInputManager()->CursorPosition_Pixels();
+				if(mousePos.has_value()) {
+					rmlContext->ProcessMouseMove(mousePos.value().x, mousePos.value().y, 0);
+				}
+
 				Profiler::Begin("WindowGameContext::Update");
 				context->Update(ElapsedTime, CurrTime);
 				Profiler::End("WindowGameContext::Update");
+
+				Profiler::Begin("RmlContext::Update");
+				rmlContext->Update();
+				Profiler::End("RmlContext::Update");
 
 				if(!window->IsIconified()) {
 					Profiler::Begin("Render");
@@ -204,8 +239,16 @@ namespace Aurora
 					Profiler::DrawWithImGui(true);
 
 					glDisable(GL_FRAMEBUFFER_SRGB);
-					ImGui::Render();
 					glViewport(0, 0, window->GetWidth(), window->GetHeight());
+
+					Profiler::Begin("RmlContext::Render");
+					shellRenderInterfaceOpenGl.PrepareRenderBuffer();
+					rmlContext->Render();
+					shellRenderInterfaceOpenGl.PresentRenderBuffer();
+					Profiler::End("RmlContext::Render");
+
+
+					ImGui::Render();
 					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 					glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -236,6 +279,7 @@ namespace Aurora
 
 		Profiler::RestartProfiler();
 
+		Rml::Shutdown();
 		GraphicUtilities::Destroy();
 #if GLFW_ENABLED
 		glfwTerminate();
