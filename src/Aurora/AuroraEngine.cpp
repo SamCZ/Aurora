@@ -114,17 +114,19 @@ namespace Aurora
 
 		Rml::Initialise();
 
-		Rml::LoadFontFace("Assets/Fonts/canada1500-rg.ttf");
+		/*Rml::LoadFontFace("Assets/Fonts/canada1500-rg.ttf", true);
 		Rml::LoadFontFace("Assets/UI/NotoEmoji-Regular.ttf");
 		Rml::LoadFontFace("Assets/UI/LatoLatin-Regular.ttf");
 		Rml::LoadFontFace("Assets/UI/LatoLatin-Italic.ttf");
 		Rml::LoadFontFace("Assets/UI/LatoLatin-BoldItalic.ttf");
-		Rml::LoadFontFace("Assets/UI/LatoLatin-Bold.ttf");
+		Rml::LoadFontFace("Assets/UI/LatoLatin-Bold.ttf");*/
 
 		Rml::Context* rmlContext = Rml::CreateContext("main", Rml::Vector2i(1920, 1080));
 
-		Rml::ElementDocument* document = rmlContext->LoadDocument("Assets/UI/animation.rml");
-		document->Show();
+		//Rml::ElementDocument* document = rmlContext->LoadDocument("Assets/UI/base_ui.rml");
+		//document->Show();
+
+		//rmlContext->UnloadDocument(document);
 
 		do {
 			Profiler::RestartProfiler();
@@ -200,6 +202,14 @@ namespace Aurora
 					if (show_demo_window)
 						ImGui::ShowDemoWindow(&show_demo_window);
 				}
+
+				/*if(context->GetInputManager()->IsPressed("f5"))
+				{
+					rmlContext->UnloadDocument(document);
+					document = rmlContext->LoadDocument("Assets/UI/base_ui.rml");
+					document->ReloadStyleSheet();
+					document->Show();
+				}*/
 
 				rmlContext->SetDimensions({context->GetWindow()->GetSize().x, context->GetWindow()->GetSize().y});
 
