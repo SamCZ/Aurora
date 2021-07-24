@@ -210,6 +210,25 @@ namespace Aurora
 		size_t buffer_size = file_interface->Tell(file_handle);
 		file_interface->Seek(file_handle, 0, SEEK_SET);
 
+		DataBlob dataBlob(buffer_size);
+		file_interface->Read(dataBlob.data(), buffer_size, file_handle);
+		file_interface->Close(file_handle);
+
+		auto texturePtr = AuroraEngine::AssetManager->LoadTexture(source, dataBlob);
+
+		if(!texturePtr) {
+			return false;
+		}
+
+		texture_dimensions.x = texturePtr->GetDesc().Width;
+		texture_dimensions.y = texturePtr->GetDesc().Height;
+
+		auto* handle = new TexHandle();
+		handle->Texture = texturePtr;
+		texture_handle = (Rml::TextureHandle) handle;
+
+		return true;
+		/*
 		RMLUI_ASSERTMSG(buffer_size > sizeof(TGAHeader), "Texture file size is smaller than TGAHeader, file must be corrupt or otherwise invalid");
 		if(buffer_size <= sizeof(TGAHeader))
 		{
@@ -271,7 +290,7 @@ namespace Aurora
 		delete [] image_dest;
 		delete [] buffer;
 
-		return success;
+		return success;*/
 	}
 
 // Called by RmlUi when a texture is required to be built from an internally-generated sequence of pixels.
