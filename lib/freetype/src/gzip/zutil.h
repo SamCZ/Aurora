@@ -182,7 +182,8 @@ typedef unsigned long  ulg;
 #endif
 
 /* Diagnostic functions */
-#ifdef DEBUG
+// Aurora: disabled to prevent clash with Assimp's zlib
+#if 0
 #  include <stdio.h>
    extern int z_verbose;
    extern void z_error    OF((char *m));

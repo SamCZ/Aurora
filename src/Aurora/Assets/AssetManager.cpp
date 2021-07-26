@@ -337,6 +337,18 @@ namespace Aurora
 		return shaderProgram;
 	}
 
+	Shader_ptr AssetManager::CreateShaderProgram(const std::map<EShaderType, String>& shaders, const ShaderMacros& macros)
+	{
+		ShaderProgramDesc shaderProgramDesc("__Internal");
+
+		for (const auto &item : shaders)
+		{
+			shaderProgramDesc.AddShader(item.first, item.second, macros);
+		}
+
+		return AuroraEngine::RenderDevice->CreateShaderProgram(shaderProgramDesc);
+	}
+
 	/*const ShaderResourceObject_ptr &AssetManager::LoadShaderResource(const Path &path, const ShaderType& type)
 	{
 		if(m_ShaderResources.find(path) != m_ShaderResources.end()) {

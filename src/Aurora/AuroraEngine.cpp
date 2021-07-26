@@ -36,17 +36,10 @@
 #include <RmlUi/Core.h>
 #include "RmlUI/ShellSystemInterface.hpp"
 #include "RmlUI/ShellRenderInterfaceOpenGL.hpp"
+#include "RmlUI/RmlUI.hpp"
 
 namespace Aurora
 {
-	/*class PipelineErrorHandler : public IErrorCallback
-	{
-		void SignalError(const char* function, const char* file, int line, const char* errorDesc) override
-		{
-			Logger::Log(Logger::Severity::Error, function, file, line, errorDesc);
-		}
-	};*/
-
 	bool AuroraEngine::IsInitialized = false;
 	bool AuroraEngine::IsRunning = false;
 
@@ -56,6 +49,7 @@ namespace Aurora
 	SoundSystem_ptr AuroraEngine::SoundSystem = nullptr;
 #endif
 	UIRenderer_ptr AuroraEngine::UI_Renderer = nullptr;
+	RmlUI_ptr AuroraEngine::RmlUserInterface = nullptr;
 
 	//std::unique_ptr<Diligent::ImGuiImplDiligent> AuroraEngine::ImGuiImpl(nullptr);
 
@@ -83,7 +77,6 @@ namespace Aurora
 #ifdef FMOD_SUPPORTED
 		AuroraEngine::SoundSystem = std::make_shared<Sound::SoundSystem>();
 #endif
-
 		IsInitialized = true;
 	}
 
@@ -104,29 +97,10 @@ namespace Aurora
 		auto lastFpsTime = PrevTime;
 		int frameCount = 0;
 
+		double targetFrameRate = 80.0;
+		double wait_time = 1.0 / targetFrameRate;
+
 		bool show_demo_window = true;
-
-		ShellRenderInterfaceOpenGL shellRenderInterfaceOpenGl;
-		ShellSystemInterface shellSystemInterface;
-
-		Rml::SetRenderInterface(&shellRenderInterfaceOpenGl);
-		Rml::SetSystemInterface(&shellSystemInterface);
-
-		Rml::Initialise();
-
-		/*Rml::LoadFontFace("Assets/Fonts/canada1500-rg.ttf", true);
-		Rml::LoadFontFace("Assets/UI/NotoEmoji-Regular.ttf");
-		Rml::LoadFontFace("Assets/UI/LatoLatin-Regular.ttf");
-		Rml::LoadFontFace("Assets/UI/LatoLatin-Italic.ttf");
-		Rml::LoadFontFace("Assets/UI/LatoLatin-BoldItalic.ttf");
-		Rml::LoadFontFace("Assets/UI/LatoLatin-Bold.ttf");*/
-
-		Rml::Context* rmlContext = Rml::CreateContext("main", Rml::Vector2i(1920, 1080));
-
-		//Rml::ElementDocument* document = rmlContext->LoadDocument("Assets/UI/base_ui.rml");
-		//document->Show();
-
-		//rmlContext->UnloadDocument(document);
 
 		do {
 			Profiler::RestartProfiler();
@@ -205,11 +179,11 @@ namespace Aurora
 
 				/*if(context->GetInputManager()->IsPressed("f5"))
 				{
-					rmlContext->UnloadDocument(document);
+					document->Close();
 					document = rmlContext->LoadDocument("Assets/UI/base_ui.rml");
 					document->ReloadStyleSheet();
 					document->Show();
-				}*/
+				}
 
 				rmlContext->SetDimensions({context->GetWindow()->GetSize().x, context->GetWindow()->GetSize().y});
 
@@ -218,12 +192,17 @@ namespace Aurora
 					rmlContext->ProcessMouseMove(mousePos.value().x, mousePos.value().y, 0);
 				}
 
+				double wheel = context->GetInputManager()->GetValue("mouse_wheel");
+				if(wheel != 0.0) {
+					rmlContext->ProcessMouseWheel(-static_cast<float>(wheel), 0);
+				}*/
+
 				Profiler::Begin("WindowGameContext::Update");
 				context->Update(ElapsedTime, CurrTime);
 				Profiler::End("WindowGameContext::Update");
 
 				Profiler::Begin("RmlContext::Update");
-				rmlContext->Update();
+				RmlUserInterface->Update();
 				Profiler::End("RmlContext::Update");
 
 				if(!window->IsIconified()) {
@@ -252,9 +231,7 @@ namespace Aurora
 					glViewport(0, 0, window->GetWidth(), window->GetHeight());
 
 					Profiler::Begin("RmlContext::Render");
-					shellRenderInterfaceOpenGl.PrepareRenderBuffer();
-					rmlContext->Render();
-					shellRenderInterfaceOpenGl.PresentRenderBuffer();
+					RmlUserInterface->Render();
 					Profiler::End("RmlContext::Render");
 
 
@@ -280,6 +257,11 @@ namespace Aurora
 			}
 
 			Profiler::Finalize();
+
+			/*double dur = 1000.0 * (wait_time - (glfwGetTime() - CurrTime)) + 0.5;
+			if(dur > 0.0) {
+				std::this_thread::sleep_for(std::chrono::milliseconds((int64_t)dur));
+			}*/
 		} while (IsRunning && anyWindowRunning);
 
 		AuroraEngine::AssetManager.reset(); // This resolves that resources are destroyed before render device is deleted
@@ -289,7 +271,6 @@ namespace Aurora
 
 		Profiler::RestartProfiler();
 
-		Rml::Shutdown();
 		GraphicUtilities::Destroy();
 #if GLFW_ENABLED
 		glfwTerminate();
@@ -334,6 +315,11 @@ namespace Aurora
 		GameContexts.push_back(gameContext);
 
 		GameContextsByThread[thisThreadId] = gameContext;
+
+		if(RmlUserInterface == nullptr)
+		{
+			RmlUserInterface = std::make_shared<Aurora::RmlUI>("master");
+		}
 
 		/*if(ImGuiImpl == nullptr) {
 			ImGuiImpl = std::make_unique<ImGuiImplGLFW>(window->GetWindowHandle(), RenderDevice, swapChainDesc.ColorBufferFormat, swapChainDesc.DepthBufferFormat);
@@ -415,5 +401,10 @@ namespace Aurora
 		}
 
 		return nullptr;
+	}
+
+	void AuroraEngine::Shutdown()
+	{
+		IsRunning = false;
 	}
 }

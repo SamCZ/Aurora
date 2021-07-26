@@ -14,6 +14,8 @@
 #include "Graphics/Base/IRenderDevice.hpp"
 #include "Graphics/UI/UIRenderer.hpp"
 
+#include "RmlUI/RmlUI.hpp"
+
 #if GLFW_ENABLED
 #include "App/GLFWWindow.hpp"
 #endif
@@ -38,9 +40,11 @@ namespace Aurora
 		static SoundSystem_ptr SoundSystem;
 #endif
 		static UIRenderer_ptr UI_Renderer;
+		static RmlUI_ptr RmlUserInterface;
 	public:
 		static void Init();
 		static int Run();
+		static void Shutdown();
 
 		static WindowGameContext_ptr AddWindow(const WindowGameContext_ptr& gameContext, const IWindow_ptr & window, const WindowDefinition& windowDef, bool showImmediately = true);
 		static const std::vector<WindowGameContext_ptr>& GetGameContexts();
@@ -76,4 +80,5 @@ namespace Aurora
 
 #define ASM ::Aurora::AuroraEngine::AssetManager
 #define RD ::Aurora::AuroraEngine::RenderDevice
+#define GameUI ::Aurora::AuroraEngine::RmlUserInterface
 }

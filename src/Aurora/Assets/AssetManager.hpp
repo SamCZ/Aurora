@@ -51,6 +51,7 @@ namespace Aurora
 		String ReadShaderSource(const Path& path);
 		Shader_ptr LoadShaderFolder(const Path& path, const ShaderMacros& macros = {});
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
+		Shader_ptr CreateShaderProgram(const std::map<EShaderType, String>& shaders, const ShaderMacros& macros = {});
 
 		Texture_ptr LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo = {});
 		Texture_ptr LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo& textureLoadInfo = {});
