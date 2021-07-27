@@ -168,7 +168,7 @@ namespace Aurora
 		file_interface->Read(dataBlob.data(), buffer_size, file_handle);
 		file_interface->Close(file_handle);
 
-		auto texturePtr = AuroraEngine::AssetManager->LoadTexture(source, dataBlob);
+		auto texturePtr = AuroraEngine::AssetManager->LoadTexture(source, GraphicsFormat::RGBA8_UNORM, dataBlob);
 
 		if(!texturePtr) {
 			return false;

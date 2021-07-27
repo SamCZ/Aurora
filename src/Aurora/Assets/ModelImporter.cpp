@@ -148,7 +148,9 @@ namespace Aurora
 
 						memcpy(fileData.data(), aiData, fileData.size());
 
-						auto texture = AuroraEngine::AssetManager->LoadTexture(filePath.string(), fileData);
+						// TODO: Do not set GraphicsFormat::SRGBA8_UNORM for normal maps
+
+						auto texture = AuroraEngine::AssetManager->LoadTexture(filePath.string(), GraphicsFormat::SRGBA8_UNORM, fileData);
 						materialSlot.Textures[TextureTypeEnumToShaderNameString[texType]] = texture;
 						//std::cout << "TEXXX: " << TextureTypeEnumToShaderNameString[texType] << " - " << filePath.string() << std::endl;
 					} else {

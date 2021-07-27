@@ -132,7 +132,7 @@ namespace Aurora
 
 				if(varType == "Texture") {
 					auto texturePath = varValue.get<String>();
-					auto texture = AuroraEngine::AssetManager->LoadTexture(texturePath);
+					auto texture = AuroraEngine::AssetManager->LoadTexture(texturePath, GraphicsFormat::SRGBA8_UNORM);
 
 					if(texture == nullptr) {
 						AU_LOG_ERROR("Cannot load texture ", texturePath, " !");

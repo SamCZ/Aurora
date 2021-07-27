@@ -42,6 +42,7 @@ namespace Aurora
 {
 	bool AuroraEngine::IsInitialized = false;
 	bool AuroraEngine::IsRunning = false;
+	bool AuroraEngine::IsSRGBEnabled = true;
 
 	IRenderDevice* AuroraEngine::RenderDevice = nullptr;
 	AssetManager_ptr AuroraEngine::AssetManager = nullptr;

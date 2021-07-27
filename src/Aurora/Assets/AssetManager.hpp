@@ -53,8 +53,8 @@ namespace Aurora
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
 		Shader_ptr CreateShaderProgram(const std::map<EShaderType, String>& shaders, const ShaderMacros& macros = {});
 
-		Texture_ptr LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo = {});
-		Texture_ptr LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo& textureLoadInfo = {});
+		Texture_ptr LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo = {});
+		Texture_ptr LoadTexture(const String& filename, GraphicsFormat format, const DataBlob& fileData, const TextureLoadInfo& textureLoadInfo = {});
 
 		bool LoadJson(const Path& path, nlohmann::json& json);
 	private:

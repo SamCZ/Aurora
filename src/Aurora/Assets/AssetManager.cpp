@@ -82,7 +82,7 @@ namespace Aurora
 		return levelsNum;
 	}
 
-	Texture_ptr AssetManager::LoadTexture(const Path& path, const TextureLoadInfo& textureLoadInfo)
+	Texture_ptr AssetManager::LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo)
 	{
 		if(m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
 			return m_LoadedTextures[path];
@@ -107,7 +107,7 @@ namespace Aurora
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
-		textureDesc.ImageFormat = GraphicsFormat::SRGBA8_UNORM;
+		textureDesc.ImageFormat = format;
 		textureDesc.DebugName = path.string();
 		texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
@@ -137,7 +137,7 @@ namespace Aurora
 		return texture;
 	}
 
-	Texture_ptr AssetManager::LoadTexture(const String& filename, const DataBlob& fileData, const TextureLoadInfo &textureLoadInfo)
+	Texture_ptr AssetManager::LoadTexture(const String& filename, GraphicsFormat format, const DataBlob& fileData, const TextureLoadInfo &textureLoadInfo)
 	{
 		if(fileData.empty()) {
 			return nullptr;
@@ -156,7 +156,7 @@ namespace Aurora
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
-		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+		textureDesc.ImageFormat = format;
 		textureDesc.DebugName = "Loaded texture";
 		texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 

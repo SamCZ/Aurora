@@ -34,6 +34,7 @@ namespace Aurora
 		static std::vector<WindowGameContext_ptr> GameContexts;
 		static std::map<std::thread::id, WindowGameContext_ptr> GameContextsByThread;
 	public:
+		static bool IsSRGBEnabled;
 		static IRenderDevice* RenderDevice;
 		static AssetManager_ptr AssetManager;
 #ifdef FMOD_SUPPORTED
