@@ -48,5 +48,7 @@ namespace Aurora
 		void Resize(const Vector2i& size);
 
 		void Clear();
+
+		[[nodiscard]] inline const std::map<String, TargetInfo>& GetTargets() const { return m_Targets; }
 	};
 }

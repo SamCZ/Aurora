@@ -233,6 +233,8 @@ namespace Aurora
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
 
+		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+
 		//glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 		//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
