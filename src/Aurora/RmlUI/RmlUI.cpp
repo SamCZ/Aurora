@@ -164,8 +164,8 @@ namespace Aurora
 		assert(document != nullptr);
 		assert(document->GetContext() == m_RmlContext);
 
-		Rml::Vector2 pos = document->GetAbsoluteOffset(Rml::Box::BORDER);
-		Rml::Vector2 size = document->GetBox().GetSize(Rml::Box::CONTENT);
+		/*Rml::Vector2 pos = document->GetAbsoluteOffset(Rml::Box::BORDER);
+		Rml::Vector2 size = document->GetBox().GetSize(Rml::Box::CONTENT);*/
 		Rml::ModalFlag modal = document->IsModal() ? Rml::ModalFlag::Modal : Rml::ModalFlag::None;
 		Rml::FocusFlag focus = Rml::FocusFlag::Auto;
 		bool visible = document->IsVisible();
@@ -175,10 +175,10 @@ namespace Aurora
 		document->Close();
 
 		Rml::ElementDocument* newDocument = m_RmlContext->LoadDocument(document->GetSourceURL());
-		newDocument->SetProperty(Rml::PropertyId::Left, Rml::Property(pos.x, Rml::Property::PX));
+		/*newDocument->SetProperty(Rml::PropertyId::Left, Rml::Property(pos.x, Rml::Property::PX));
 		newDocument->SetProperty(Rml::PropertyId::Top, Rml::Property(pos.y, Rml::Property::PX));
 		newDocument->SetProperty(Rml::PropertyId::Width, Rml::Property(size.x, Rml::Property::PX));
-		newDocument->SetProperty(Rml::PropertyId::Height, Rml::Property(size.y, Rml::Property::PX));
+		newDocument->SetProperty(Rml::PropertyId::Height, Rml::Property(size.y, Rml::Property::PX));*/
 		newDocument->UpdateDocument();
 		newDocument->ReloadStyleSheet();
 
