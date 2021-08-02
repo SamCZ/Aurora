@@ -6,6 +6,7 @@
 #include <RmlUi/Core/ElementDocument.h>
 #include <RmlUi/Core/EventListener.h>
 #include <RmlUi/Core/Context.h>
+#include <RmlUi/Core/Core.h>
 
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Core/Common.hpp"

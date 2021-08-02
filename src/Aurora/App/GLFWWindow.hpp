@@ -29,6 +29,11 @@ namespace Aurora
 
 		void Initialize(const WindowDefinition& windowDefinition, const IWindow_ptr& parentWindow) override;
 
+		inline GLFWwindow* GetHandle()
+		{
+			return m_WindowHandle;
+		}
+
 		inline void SetSize(int width, int height) override
 		{
 			m_Size.x = width;

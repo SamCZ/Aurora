@@ -7,6 +7,8 @@ namespace Aurora
     class ShellSystemInterface : public Rml::SystemInterface
     {
     public:
+		ShellSystemInterface();
+    	~ShellSystemInterface();
         /// Get the number of seconds elapsed since the start of the application
         /// @returns Seconds elapsed
         double GetElapsedTime() override;

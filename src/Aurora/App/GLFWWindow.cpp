@@ -103,8 +103,8 @@ namespace Aurora
 			{ GLFW_KEY_INSERT, Rml::Input::KI_INSERT },
 			{ GLFW_KEY_DELETE, Rml::Input::KI_DELETE },
 			//{ GLFW_KEY_HELP, Rml::Input::KI_HELP },
-			//{ GLFW_KEY_LGUI, Rml::Input::KI_LWIN },                 // Left Windows key.
-			//{ GLFW_KEY_RGUI, Rml::Input::KI_RWIN },                 // Right Windows key.
+			{ GLFW_KEY_LEFT_SUPER, Rml::Input::KI_LWIN },                 // Left Windows key.
+			{ GLFW_KEY_RIGHT_SUPER, Rml::Input::KI_RWIN },                 // Right Windows key.
 			//{ GLFW_KEY_APPLICATION, Rml::Input::KI_APPS },          // Applications key.
 			//{ GLFW_KEY_POWER, Rml::Input::KI_POWER },
 			//{ GLFW_KEY_SLEEP, Rml::Input::KI_SLEEP },

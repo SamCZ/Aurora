@@ -7,6 +7,7 @@
 #include <type_traits>
 #include "Aurora/Graphics/OpenGL/GL.hpp"
 #include <iostream>
+#include <filesystem>
 
 #include "RmlShaders.hpp"
 
@@ -44,7 +45,7 @@ namespace Aurora
 
 	Scissors scissorsData = {};
 
-	ShellRenderInterfaceOpenGL::ShellRenderInterfaceOpenGL() : m_width(0), m_height(0), m_transform_enabled(false)
+	ShellRenderInterfaceOpenGL::ShellRenderInterfaceOpenGL() : m_width(0), m_height(0), m_transform_enabled(false), m_RegisteredCustomTextures()
 	{
 		glGenBuffers(1, &VBO);
 
@@ -67,8 +68,12 @@ namespace Aurora
 			VertexAttributeDesc{"in_TexCoord", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, tex_coord), false, 2},
 		});
 		g_Transform = glm::identity<Matrix4>();
-		g_Sampler = RD->CreateSampler(SamplerDesc());
 
+		SamplerDesc sampler;
+		sampler.MinFilter = false;
+		sampler.MagFilter = true;
+		sampler.MipFilter = false;
+		g_Sampler = RD->CreateSampler(sampler);
 		scissorsData.sSettings.x = 0;
 	}
 
@@ -153,7 +158,32 @@ namespace Aurora
 
 	bool ShellRenderInterfaceOpenGL::LoadTexture(Rml::TextureHandle& texture_handle, Rml::Vector2i& texture_dimensions, const Rml::String& source)
 	{
-		Rml::FileInterface* file_interface = Rml::GetFileInterface();
+		Path path(source);
+
+		if(source.starts_with(".."))
+		{
+			path = source.substr(3);
+		}
+
+		{
+			auto customTexture = m_RegisteredCustomTextures.find(path.filename().string());
+
+			if(customTexture != m_RegisteredCustomTextures.end())
+			{
+				const Texture_ptr& customTextureHandle = customTexture->second;
+
+				texture_dimensions.x = static_cast<int>(customTextureHandle->GetDesc().Width);
+				texture_dimensions.y = static_cast<int>(customTextureHandle->GetDesc().Height);
+
+				auto* handle = new TexHandle();
+				handle->Texture = customTextureHandle;
+				texture_handle = (Rml::TextureHandle) handle;
+
+				return true;
+			}
+		}
+
+		/*Rml::FileInterface* file_interface = Rml::GetFileInterface();
 		Rml::FileHandle file_handle = file_interface->Open(source);
 		if (!file_handle)
 		{
@@ -166,9 +196,9 @@ namespace Aurora
 
 		DataBlob dataBlob(buffer_size);
 		file_interface->Read(dataBlob.data(), buffer_size, file_handle);
-		file_interface->Close(file_handle);
+		file_interface->Close(file_handle);*/
 
-		auto texturePtr = AuroraEngine::AssetManager->LoadTexture(source, GraphicsFormat::RGBA8_UNORM, dataBlob);
+		auto texturePtr = AuroraEngine::AssetManager->LoadTexture(path, GraphicsFormat::RGBA8_UNORM);
 
 		if(!texturePtr) {
 			return false;
@@ -269,6 +299,12 @@ namespace Aurora
 	void ShellRenderInterfaceOpenGL::PresentRenderBuffer()
 	{
 		glDisable(GL_BLEND);
+	}
+
+	bool ShellRenderInterfaceOpenGL::SetCustomTextureHandleForeName(const std::string &name, const Texture_ptr &texture)
+	{
+		m_RegisteredCustomTextures[name] = texture;
+		return true;
 	}
 
 }

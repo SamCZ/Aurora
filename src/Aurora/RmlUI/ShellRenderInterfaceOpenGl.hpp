@@ -2,11 +2,14 @@
 
 #include <RmlUi/Core/RenderInterface.h>
 #include "ShellRenderInterfaceExtensions.hpp"
+#include "Aurora/Graphics/Base/IRenderDevice.hpp"
 
 namespace Aurora
 {
 	class ShellRenderInterfaceOpenGL : public Rml::RenderInterface
 	{
+	private:
+		std::map<std::string, Texture_ptr> m_RegisteredCustomTextures;
 	public:
 		ShellRenderInterfaceOpenGL();
 
@@ -50,6 +53,7 @@ namespace Aurora
 		void PrepareRenderBuffer();
 		void PresentRenderBuffer();
 
+		bool SetCustomTextureHandleForeName(const std::string& name, const Texture_ptr& texture = nullptr);
 	protected:
 		int m_width;
 		int m_height;
