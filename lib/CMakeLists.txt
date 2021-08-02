@@ -128,3 +128,13 @@ if(NOT TARGET RmlUI)
     set(CUSTOM_LINK_LIBRARIES freetype)
     add_subdirectory(RmlUI)
 endif()
+
+#------------------------------
+# newton-dynamics
+# Physics library
+#------------------------------
+if(NOT TARGET newton-dynamics)
+    set(NEWTON_BUILD_SANDBOX_DEMOS OFF)
+    set(NEWTON_BUILD_SHARED_LIBS OFF)
+    add_subdirectory(newton-dynamics/newton-3.14)
+endif()

@@ -38,6 +38,8 @@
 #include "RmlUI/ShellRenderInterfaceOpenGL.hpp"
 #include "RmlUI/RmlUI.hpp"
 
+#include <Newton.h>
+
 namespace Aurora
 {
 	bool AuroraEngine::IsInitialized = false;
@@ -102,6 +104,8 @@ namespace Aurora
 		double wait_time = 1.0 / targetFrameRate;
 
 		bool show_demo_window = true;
+
+		NewtonWorld *world = NewtonCreate();
 
 		do {
 			Profiler::RestartProfiler();
@@ -198,6 +202,8 @@ namespace Aurora
 					rmlContext->ProcessMouseWheel(-static_cast<float>(wheel), 0);
 				}*/
 
+				NewtonUpdate(world, 1.0f / 60);
+
 				Profiler::Begin("WindowGameContext::Update");
 				context->Update(ElapsedTime, CurrTime);
 				Profiler::End("WindowGameContext::Update");
@@ -264,6 +270,10 @@ namespace Aurora
 				std::this_thread::sleep_for(std::chrono::milliseconds((int64_t)dur));
 			}*/
 		} while (IsRunning && anyWindowRunning);
+
+		NewtonMaterialDestroyAllGroupID(world);
+		NewtonDestroyAllBodies(world);
+		NewtonDestroy(world);
 
 		AuroraEngine::AssetManager.reset(); // This resolves that resources are destroyed before render device is deleted
 

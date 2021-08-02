@@ -38,6 +38,9 @@ target_link_libraries(Aurora PUBLIC glad opengl32 gdi32)
 target_link_libraries(Aurora PUBLIC ImGui)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
+
+target_link_libraries(Aurora PUBLIC dgCore newton dgPhysics dMath dScene dModel dAnimation dContainers)
+
 function(link_aurora TARGET_NAME)
     target_link_libraries(${TARGET_NAME} PUBLIC Aurora)
     target_include_directories(${TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
