@@ -97,6 +97,7 @@ namespace Aurora
 
 
 		DrawCallState drawCallState;
+		drawCallState.ViewPort = screenSize;
 		drawCallState.Shader = texture ? shaderTextured : shaderColored;
 		drawCallState.InputLayoutHandle = inputLayout;
 		drawCallState.SetVertexBuffer(0, vertexBuffer);
