@@ -365,7 +365,7 @@ namespace Aurora
 		drawCallState.ClearDepthTarget = clear;
 
 		RD->Draw(drawCallState, {DrawArguments(4)});
-		RD->InvalidateState();
+		//RD->InvalidateState();
 	}
 
 	std::shared_ptr<Material> GraphicUtilities::Setup2DMaterial(std::shared_ptr<Material> material, bool useBlending)
