@@ -27,6 +27,7 @@ namespace Aurora
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 		m_ActiveTexture = -1;
+		m_LastShaderHandle = -1;
 
 		m_BoundTextures.clear();
 		m_BoundSamplers.clear();
