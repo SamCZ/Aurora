@@ -914,6 +914,8 @@ namespace Aurora
 
 			m_CurrentFrameBuffer = framebuffer;
 		}
+
+		glViewport(0, 0, state.ViewPort.x, state.ViewPort.y);
 	}
 
 	FrameBuffer_ptr GLRenderDevice::GetCachedFrameBuffer(const DrawCallState &state)

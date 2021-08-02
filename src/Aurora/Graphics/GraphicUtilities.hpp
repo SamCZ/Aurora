@@ -29,7 +29,7 @@ namespace Aurora
 		static void Blit(Texture_ptr src, Texture_ptr dest);
 		static void Blit(std::shared_ptr<Material>& material, Texture_ptr src, Texture_ptr dest);
 
-		static void Blit(std::shared_ptr<Material>& material, const std::map<String, Texture_ptr>& srcTextures, const Texture_ptr& dest);
+		static void Blit(std::shared_ptr<Material>& material, const std::map<String, Texture_ptr>& srcTextures, const Texture_ptr& dest, bool clear = true);
 
 		static Texture_ptr GetPlaceholderTexture();
 		static void SetPlaceholderTexture(Texture_ptr texture);

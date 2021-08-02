@@ -55,6 +55,8 @@ namespace Aurora
 				IsCubeMap(false),
 				DisableGPUsSync(false),
 				UseClearValue(false), ClearValue(0) { }
+
+		inline Vector2i GetSize() const noexcept { return Vector2i(Width, Height); }
 	};
 
 	class ITexture : public TypeBase<ITexture>

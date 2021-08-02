@@ -169,6 +169,7 @@ namespace Aurora
 		state.ResetTargets();
 
 		for(const auto& it : m_Targets) {
+			state.ViewPort = it.second.second->Texture->GetDesc().GetSize();
 			state.BindTarget(it.second.first, it.second.second->Texture, 0, 0); // TODO: slice and index for cubemaps / texture arrays
 		}
 

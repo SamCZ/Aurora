@@ -342,12 +342,17 @@ namespace Aurora
 		m_PlaceholderTexture = texture;
 	}
 
-	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, const std::map<String, Texture_ptr> &srcTextures, const Texture_ptr& dest)
+	void GraphicUtilities::Blit(std::shared_ptr<Material> &material, const std::map<String, Texture_ptr> &srcTextures, const Texture_ptr& dest, bool clear)
 	{
 		DrawCallState drawCallState;
 
 		if(dest != nullptr) {
 			drawCallState.BindTarget(0, dest);
+			drawCallState.ViewPort = dest->GetDesc().GetSize();
+		}
+		else
+		{
+			drawCallState.ViewPort = AuroraEngine::GetCurrentThreadContext()->GetWindow()->GetSize();
 		}
 
 		material->Apply(drawCallState);
@@ -355,6 +360,9 @@ namespace Aurora
 		for (const auto &item : srcTextures) {
 			drawCallState.BindTexture(item.first, item.second, false, TextureBinding::EAccess::Read);
 		}
+
+		drawCallState.ClearColorTarget = clear;
+		drawCallState.ClearDepthTarget = clear;
 
 		RD->Draw(drawCallState, {DrawArguments(4)});
 		RD->InvalidateState();

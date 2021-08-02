@@ -140,6 +140,7 @@ namespace Aurora
 		EPrimitiveType PrimitiveType;
 
 		FRasterState RasterState;
+		Vector2i ViewPort;
 
 		DrawCallState()
 		: BaseState(),
@@ -158,7 +159,8 @@ namespace Aurora
 		  ClearDepth(1.0f),
 		  ClearStencil(0),
 		  ClearColor(0, 0, 0, 0),
-		  DepthStencilState() { }
+		  DepthStencilState(),
+		  ViewPort() { }
 
 		inline void ResetTargets()
 		{
