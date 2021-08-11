@@ -142,3 +142,14 @@ if(NOT TARGET newton-dynamics)
     set(NEWTON_BUILD_CREATE_SUB_PROJECTS OFF)
     add_subdirectory(newton-dynamics/newton-4.00)
 endif()
+
+#------------------------------
+# RmlUI
+# UI render library
+#------------------------------
+if(NOT TARGET tracy)
+    add_subdirectory(tracy)
+    if(WIN32)
+        target_link_libraries(TracyClient PUBLIC Ws2_32 dbghelp)
+    endif()
+endif()

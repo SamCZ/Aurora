@@ -45,6 +45,8 @@
 
 #include <ndNewton.h>
 
+#include <TracyOpenGL.hpp>
+
 namespace Aurora
 {
 	bool AuroraEngine::IsInitialized = false;
@@ -114,6 +116,8 @@ namespace Aurora
 		bool show_demo_window = true;
 
 		do {
+			ZoneNamedN(gameLoopZone, "GameLoop", true)
+
 			Profiler::RestartProfiler();
 
 			auto CurrTime    = glfwGetTime();
@@ -189,11 +193,17 @@ namespace Aurora
 				}
 
 				Profiler::Begin("WindowGameContext::Update");
-				context->Update(ElapsedTime, CurrTime);
+				{
+					ZoneNamedN(contextUpdateZone, "ContextUpdate", true)
+					context->Update(ElapsedTime, CurrTime);
+				}
 				Profiler::End("WindowGameContext::Update");
 
 				Profiler::Begin("RmlContext::Update");
-				RmlUserInterface->Update();
+				{
+					ZoneNamedN(rmlUpdateZone, "RmlUpdate", true)
+					RmlUserInterface->Update();
+				}
 				Profiler::End("RmlContext::Update");
 
 				if(!window->IsIconified()) {
@@ -204,7 +214,10 @@ namespace Aurora
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 					Profiler::Begin("WindowGameContext::Render");
-					context->Render();
+					{
+						ZoneNamedN(contextRenderZone, "ContextRender", true)
+						context->Render();
+					}
 					Profiler::End("WindowGameContext::Render");
 
 					Profiler::DrawWithImGui(true);
@@ -213,10 +226,16 @@ namespace Aurora
 					glViewport(0, 0, window->GetWidth(), window->GetHeight());
 
 					Profiler::Begin("RmlContext::Render");
-					RmlUserInterface->Render();
+					{
+						ZoneNamedN(rmlRenderZone, "RmlRender", true)
+						RmlUserInterface->Render();
+					}
 					Profiler::End("RmlContext::Render");
 
-					Physics->Update(ElapsedTime);
+					{
+						ZoneNamedN(physicsUpdateZone, "PhysicsUpdate", true)
+						Physics->Update(ElapsedTime);
+					}
 
 					// This is for syncing threads
 					/*if(false)

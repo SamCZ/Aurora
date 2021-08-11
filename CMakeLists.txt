@@ -40,6 +40,7 @@ target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
 
 target_link_libraries(Aurora PUBLIC ndNewton)
+target_link_libraries(Aurora PUBLIC TracyClient)
 
 function(link_aurora TARGET_NAME)
     target_link_libraries(${TARGET_NAME} PUBLIC Aurora)

@@ -22,6 +22,8 @@
 #include "App/GLFWWindow.hpp"
 #endif
 
+#include <Tracy.hpp>
+
 namespace Aurora
 {
 #ifdef FMOD_SUPPORTED

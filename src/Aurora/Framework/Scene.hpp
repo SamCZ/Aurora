@@ -14,6 +14,8 @@
 #include <Aurora/Physics/Ray.hpp>
 #include <Aurora/Physics/CollisionResult.hpp>
 
+#include <Tracy.hpp>
+
 #define COMPONENT_LIST(name) \
 ComponentList<name> m_##name##s;      \
 public:                            \
@@ -186,6 +188,8 @@ namespace Aurora
 	public:
 		inline void Update(double delta)
 		{
+			ZoneNamedN(sceneUpdateZone, "SceneUpdate", true);
+
 			Profiler::Begin("GameMode::Tick");
 			if(m_GameMode != nullptr) {
 				m_GameMode->Tick(delta);

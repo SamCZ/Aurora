@@ -11,6 +11,8 @@ namespace Aurora
 
 	void SceneRenderer::Update(double delta, Frustum* frustum)
 	{
+		ZoneNamedN(sceneRendererZone, "SceneRendererUpdate", true);
+
 		(void) delta;
 		m_SortedRenderer.clear();
 
