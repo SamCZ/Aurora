@@ -9,8 +9,6 @@
 #include "ComponentList.hpp"
 #include "GameModeBase.hpp"
 
-#include <Aurora/Profiler/Profiler.hpp>
-
 #include <Aurora/Physics/Ray.hpp>
 #include <Aurora/Physics/CollisionResult.hpp>
 
@@ -190,39 +188,25 @@ namespace Aurora
 		{
 			ZoneNamedN(sceneUpdateZone, "SceneUpdate", true);
 
-			Profiler::Begin("GameMode::Tick");
 			if(m_GameMode != nullptr) {
 				m_GameMode->Tick(delta);
 			}
-			Profiler::End("GameMode::Tick");
 
-			Profiler::Begin("PreUpdateSystems");
 			m_SceneComponents.PreUpdateSystems(delta);
 			m_MeshComponents.PreUpdateSystems(delta);
-			Profiler::End("PreUpdateSystems");
-
-			Profiler::Begin("Actors::Tick");
 
 			for(int i = (int)m_Actors.size() - 1; i >= 0; i--) {
 				Actor* actor = m_Actors[i];
 				actor->Tick(delta);
 			}
 
-			Profiler::End("Actors::Tick");
-
-			Profiler::Begin("UpdateSystems");
 			m_SceneComponents.UpdateSystems(delta);
 			m_MeshComponents.UpdateSystems(delta);
-			Profiler::End("UpdateSystems");
 
-			Profiler::Begin("UpdateComponents");
 			m_SceneComponents.UpdateComponents(delta);
-			Profiler::End("UpdateComponents");
 
-			Profiler::Begin("PostUpdateSystems");
 			m_SceneComponents.PostUpdateSystems(delta);
 			m_MeshComponents.PostUpdateSystems(delta);
-			Profiler::End("PostUpdateSystems");
 		}
 
 		std::optional<CollisionResult> RayCast(const Ray& ray, const Layer& layer = Layer("RayCast"));

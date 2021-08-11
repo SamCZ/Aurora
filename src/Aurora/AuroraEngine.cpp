@@ -25,8 +25,6 @@
 #endif
 #include "Graphics/GraphicUtilities.hpp"
 
-#include "Profiler/Profiler.hpp"
-
 #include "Graphics/OpenGL/GL.hpp"
 
 #include <imgui.h>
@@ -118,13 +116,10 @@ namespace Aurora
 		do {
 			ZoneNamedN(gameLoopZone, "GameLoop", true)
 
-			Profiler::RestartProfiler();
-
 			auto CurrTime    = glfwGetTime();
 			auto ElapsedTime = CurrTime - PrevTime;
 			PrevTime         = CurrTime;
 
-			Profiler::Begin("FrameTimeCalculation");
 			frameCount++;
 			if(CurrTime - lastFpsTime >= 1.0) {
 				for (auto& context : GameContexts) {
@@ -138,7 +133,6 @@ namespace Aurora
 				frameCount = 0;
 				lastFpsTime += 1.0;
 			}
-			Profiler::End("FrameTimeCalculation");
 
 			anyWindowRunning = false;
 
@@ -192,45 +186,34 @@ namespace Aurora
 						ImGui::ShowDemoWindow(&show_demo_window);
 				}
 
-				Profiler::Begin("WindowGameContext::Update");
 				{
 					ZoneNamedN(contextUpdateZone, "ContextUpdate", true)
 					context->Update(ElapsedTime, CurrTime);
 				}
-				Profiler::End("WindowGameContext::Update");
 
-				Profiler::Begin("RmlContext::Update");
 				{
 					ZoneNamedN(rmlUpdateZone, "RmlUpdate", true)
 					RmlUserInterface->Update();
 				}
-				Profiler::End("RmlContext::Update");
 
 				if(!window->IsIconified()) {
-					Profiler::Begin("Render");
 					glViewport(0, 0, window->GetSize().x, window->GetSize().y);
 
 					glClearColor(0, 0, 0, 1);
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-					Profiler::Begin("WindowGameContext::Render");
 					{
 						ZoneNamedN(contextRenderZone, "ContextRender", true)
 						context->Render();
 					}
-					Profiler::End("WindowGameContext::Render");
-
-					Profiler::DrawWithImGui(true);
 
 					glDisable(GL_FRAMEBUFFER_SRGB);
 					glViewport(0, 0, window->GetWidth(), window->GetHeight());
 
-					Profiler::Begin("RmlContext::Render");
 					{
 						ZoneNamedN(rmlRenderZone, "RmlRender", true)
 						RmlUserInterface->Render();
 					}
-					Profiler::End("RmlContext::Render");
 
 					{
 						ZoneNamedN(physicsUpdateZone, "PhysicsUpdate", true)
@@ -247,10 +230,7 @@ namespace Aurora
 					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 					glEnable(GL_FRAMEBUFFER_SRGB);
 
-					Profiler::Begin("SwapChain()->Present");
 					window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
-					Profiler::End("SwapChain()->Present");
-					Profiler::End("Render");
 				} else {
 					std::this_thread::sleep_for(std::chrono::milliseconds(1));
 				}
@@ -263,8 +243,6 @@ namespace Aurora
 				contextsToRemove.pop(); // This will call destructor on WindowGameContext
 			}
 
-			Profiler::Finalize();
-
 			/*double dur = 1000.0 * (wait_time - (glfwGetTime() - CurrTime)) + 0.5;
 			if(dur > 0.0) {
 				std::this_thread::sleep_for(std::chrono::milliseconds((int64_t)dur));
@@ -276,8 +254,6 @@ namespace Aurora
 
 		delete RenderDevice;
         RenderDevice = nullptr;
-
-		Profiler::RestartProfiler();
 
 		GraphicUtilities::Destroy();
 #if GLFW_ENABLED

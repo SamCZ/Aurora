@@ -16,7 +16,6 @@ namespace Aurora
 		(void) delta;
 		m_SortedRenderer.clear();
 
-        Profiler::Begin("Prepare renderers");
 		for(auto* cameraComponent : m_Scene->GetCameraComponents()) {
 			for(auto* meshComponent : m_Scene->GetMeshComponents())
 			{
@@ -58,7 +57,6 @@ namespace Aurora
 				}
 			}
 		}
-        Profiler::End("Prepare renderers");
 	}
 
 	void SceneRenderer::Render(RenderTargetPack* renderTargetPack, bool apply, bool clear)
