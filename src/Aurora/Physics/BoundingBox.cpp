@@ -133,12 +133,13 @@ namespace Aurora
 				result2.ContactPoint = point1;
 				result2.Distance = m_ClipTemp[1];
 				results.AddCollision(result2);
+			} else {
+				glm::dvec3 point = (ray.Direction * m_ClipTemp[0]) + ray.Origin;
+				CollisionResult result;
+				result.ContactPoint = point;
+				result.Distance = m_ClipTemp[0];
+				results.AddCollision(result);
 			}
-			glm::dvec3 point = (ray.Direction * m_ClipTemp[0]) + ray.Origin;
-			CollisionResult result;
-			result.ContactPoint = point;
-			result.Distance = m_ClipTemp[0];
-			results.AddCollision(result);
 			return 1;
 		}
 		return 0;

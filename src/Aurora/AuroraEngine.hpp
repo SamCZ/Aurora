@@ -16,6 +16,8 @@
 
 #include "RmlUI/RmlUI.hpp"
 
+#include "Physics/PhysicsWorld.hpp"
+
 #if GLFW_ENABLED
 #include "App/GLFWWindow.hpp"
 #endif
@@ -42,6 +44,7 @@ namespace Aurora
 #endif
 		static UIRenderer_ptr UI_Renderer;
 		static RmlUI_ptr RmlUserInterface;
+		static PhysicsWorld_ptr Physics;
 	public:
 		static void Init();
 		static int Run();

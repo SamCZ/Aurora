@@ -134,7 +134,11 @@ endif()
 # Physics library
 #------------------------------
 if(NOT TARGET newton-dynamics)
-    set(NEWTON_BUILD_SANDBOX_DEMOS OFF)
+    set(NEWTON_BUILD_SANDBOX_DEMOS ON)
     set(NEWTON_BUILD_SHARED_LIBS OFF)
-    add_subdirectory(newton-dynamics/newton-3.14)
+    set(NEWTON_BUILD_SINGLE_THREADED OFF)
+    set(NEWTON_DOUBLE_PRECISION OFF)
+    set(NEWTON_ENABLE_AVX ON)
+    set(NEWTON_BUILD_CREATE_SUB_PROJECTS OFF)
+    add_subdirectory(newton-dynamics/newton-4.00)
 endif()

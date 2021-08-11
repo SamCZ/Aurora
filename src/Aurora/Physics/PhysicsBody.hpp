@@ -3,6 +3,8 @@
 #include "Aurora/Core/Common.hpp"
 #include "BoundingBox.hpp"
 
+class ndBodyKinematic;
+
 namespace Aurora
 {
 	class PhysicsBody
@@ -10,11 +12,17 @@ namespace Aurora
 	private:
 		Bound* m_Collider;
 		BoundingBox m_Transformed;
+		ndBodyKinematic* m_Body;
 	public:
-		inline PhysicsBody() : m_Collider(nullptr)
+		inline PhysicsBody() : m_Collider(nullptr), m_Body(nullptr)
 		{
 
 		}
+
+		~PhysicsBody();
+
+		void RemoveBody();
+		void SetBody(ndBodyKinematic* newBody, bool addToWorld = true);
 
 		inline void SetCollider(Bound* boundingBox)
 		{

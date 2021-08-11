@@ -43,8 +43,8 @@ namespace Aurora
 
 	void GLRenderDevice::Init()
 	{
-		glGenVertexArrays(1,&m_nVAO);
-		glGenVertexArrays(1,&m_nVAOEmpty);
+		glGenVertexArrays(1, &m_nVAO);
+		glGenVertexArrays(1, &m_nVAOEmpty);
 		glBindVertexArray(m_nVAO);
 
 
@@ -52,7 +52,7 @@ namespace Aurora
 		// Enable depth remapping to [0, 1] interval
 		glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
 
-		glEnable(GL_FRAMEBUFFER_SRGB);
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
         const GLubyte* vendor = glGetString(GL_VENDOR); // Returns the vendor
         const GLubyte* renderer = glGetString(GL_RENDERER); // Returns a hint to the model
@@ -953,8 +953,6 @@ namespace Aurora
 				continue;
 			}
 
-			AU_LOG_INFO("RT to FB created ", rt, " ", targetBinding.Texture->GetDesc().DebugName)
-
 			auto glTex = GetTexture(state.RenderTargets[rt].Texture);
 
 			framebuffer->RenderTargets[rt] = state.RenderTargets[rt].Texture.get();
@@ -965,6 +963,14 @@ namespace Aurora
 			} else {
 				glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, GL_TEXTURE_CUBE_MAP_POSITIVE_X + targetBinding.Index, glTex->Handle(), GLint(targetBinding.MipSlice));
 			}
+
+			GLint encoding=-1;
+			glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &encoding);
+			if (encoding == GL_LINEAR)
+				AU_LOG_INFO("Framebuffer attachment ", targetBinding.Texture->GetDesc().DebugName, " (", rt, ") color encoding is linear.");
+			if (encoding == GL_SRGB)
+				AU_LOG_INFO("Framebuffer attachment ", targetBinding.Texture->GetDesc().DebugName, " (", rt, ") color encoding is sRGB.");
+
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, renderState.targets[rt]->handle, renderState.targetMipSlices[rt], renderState.targetIndicies[rt]);
 
 			framebuffer->DrawBuffers[(framebuffer->NumBuffers)++] = GL_COLOR_ATTACHMENT0 + rt;

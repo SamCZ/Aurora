@@ -39,7 +39,7 @@ target_link_libraries(Aurora PUBLIC ImGui)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
 
-target_link_libraries(Aurora PUBLIC dgCore newton dgPhysics dMath dScene dModel dAnimation dContainers)
+target_link_libraries(Aurora PUBLIC ndNewton)
 
 function(link_aurora TARGET_NAME)
     target_link_libraries(${TARGET_NAME} PUBLIC Aurora)

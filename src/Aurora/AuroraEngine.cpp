@@ -38,7 +38,12 @@
 #include "RmlUI/ShellRenderInterfaceOpenGL.hpp"
 #include "RmlUI/RmlUI.hpp"
 
-#include <Newton.h>
+#define MAX_PHYSICS_FPS				60.0f
+#define MAX_PHYSICS_SUB_STEPS		2
+#define MAX_PHYSICS_THREAD_COUNT    1
+#define PROJECTILE_INITIAL_SPEED	20.0f
+
+#include <ndNewton.h>
 
 namespace Aurora
 {
@@ -53,8 +58,7 @@ namespace Aurora
 #endif
 	UIRenderer_ptr AuroraEngine::UI_Renderer = nullptr;
 	RmlUI_ptr AuroraEngine::RmlUserInterface = nullptr;
-
-	//std::unique_ptr<Diligent::ImGuiImplDiligent> AuroraEngine::ImGuiImpl(nullptr);
+	PhysicsWorld_ptr AuroraEngine::Physics = nullptr;
 
 	std::vector<WindowGameContext_ptr> AuroraEngine::GameContexts;
 	std::map<std::thread::id, WindowGameContext_ptr> AuroraEngine::GameContextsByThread;
@@ -69,6 +73,7 @@ namespace Aurora
 		}
 	}
 #endif
+
 	void AuroraEngine::Init()
 	{
 #if GLFW_ENABLED
@@ -80,6 +85,9 @@ namespace Aurora
 #ifdef FMOD_SUPPORTED
 		AuroraEngine::SoundSystem = std::make_shared<Sound::SoundSystem>();
 #endif
+
+		Physics = std::make_shared<PhysicsWorld>();
+
 		IsInitialized = true;
 	}
 
@@ -104,8 +112,6 @@ namespace Aurora
 		double wait_time = 1.0 / targetFrameRate;
 
 		bool show_demo_window = true;
-
-		NewtonWorld *world = NewtonCreate();
 
 		do {
 			Profiler::RestartProfiler();
@@ -182,28 +188,6 @@ namespace Aurora
 						ImGui::ShowDemoWindow(&show_demo_window);
 				}
 
-				/*if(context->GetInputManager()->IsPressed("f5"))
-				{
-					document->Close();
-					document = rmlContext->LoadDocument("Assets/UI/base_ui.rml");
-					document->ReloadStyleSheet();
-					document->Show();
-				}
-
-				rmlContext->SetDimensions({context->GetWindow()->GetSize().x, context->GetWindow()->GetSize().y});
-
-				auto mousePos = context->GetInputManager()->CursorPosition_Pixels();
-				if(mousePos.has_value()) {
-					rmlContext->ProcessMouseMove(mousePos.value().x, mousePos.value().y, 0);
-				}
-
-				double wheel = context->GetInputManager()->GetValue("mouse_wheel");
-				if(wheel != 0.0) {
-					rmlContext->ProcessMouseWheel(-static_cast<float>(wheel), 0);
-				}*/
-
-				NewtonUpdate(world, 1.0f / 60);
-
 				Profiler::Begin("WindowGameContext::Update");
 				context->Update(ElapsedTime, CurrTime);
 				Profiler::End("WindowGameContext::Update");
@@ -214,15 +198,6 @@ namespace Aurora
 
 				if(!window->IsIconified()) {
 					Profiler::Begin("Render");
-					/*ITextureView* pRTV = swapChain->GetCurrentBackBufferRTV();
-					ITextureView* pDSV = swapChain->GetDepthBufferDSV();
-					ImmediateContext->SetRenderTargets(1, &pRTV, pDSV, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-
-					Profiler::Begin("Clear back buffer targets");
-					AuroraEngine::ImmediateContext->ClearRenderTarget(pRTV, ClearColor, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-					AuroraEngine::ImmediateContext->ClearDepthStencil(pDSV, CLEAR_DEPTH_FLAG, 1.f, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-					Profiler::End("Clear back buffer targets");*/
-
 					glViewport(0, 0, window->GetSize().x, window->GetSize().y);
 
 					glClearColor(0, 0, 0, 1);
@@ -241,6 +216,13 @@ namespace Aurora
 					RmlUserInterface->Render();
 					Profiler::End("RmlContext::Render");
 
+					Physics->Update(ElapsedTime);
+
+					// This is for syncing threads
+					/*if(false)
+					{
+						Physics->Sync();
+					}*/
 
 					ImGui::Render();
 					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -251,7 +233,6 @@ namespace Aurora
 					Profiler::End("SwapChain()->Present");
 					Profiler::End("Render");
 				} else {
-					//ImGuiImpl->EndFrame();
 					std::this_thread::sleep_for(std::chrono::milliseconds(1));
 				}
 			}
@@ -271,10 +252,7 @@ namespace Aurora
 			}*/
 		} while (IsRunning && anyWindowRunning);
 
-		NewtonMaterialDestroyAllGroupID(world);
-		NewtonDestroyAllBodies(world);
-		NewtonDestroy(world);
-
+		Physics.reset();
 		AuroraEngine::AssetManager.reset(); // This resolves that resources are destroyed before render device is deleted
 
 		delete RenderDevice;

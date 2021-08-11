@@ -31,7 +31,7 @@ namespace Aurora
 			Buffer.emplace_back(element);
 		}
 
-		inline VertexBufferType& Get(int index) {
+		inline VertexBufferType& Get(unsigned int index) {
 			return Buffer[index];
 		}
 

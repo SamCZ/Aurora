@@ -10,6 +10,7 @@ namespace Aurora
 {
 	static Material_ptr m_BlitMaterial = nullptr;
 	static Texture_ptr m_PlaceholderTexture;
+	static Sampler_ptr m_BilinearSampler;
 
 	void GraphicUtilities::Init()
 	{
@@ -33,6 +34,7 @@ namespace Aurora
 		}*/
 
 		m_BlitMaterial = Setup2DMaterial(std::make_shared<Material>("Blit", "Assets/Shaders/Blit"), true);
+		m_BilinearSampler = RD->CreateSampler(SamplerDesc());
 	}
 
 	void GraphicUtilities::Destroy()
@@ -90,7 +92,7 @@ namespace Aurora
 				textureDesc.MipLevels = GetMipLevelsNum(targetWidth, targetHeight);
 				textureDesc.IsArray = true;
 				textureDesc.DepthOrArraySize = textures.size();
-				textureDesc.ImageFormat = GraphicsFormat::SRGBA8_UNORM;
+				textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
 
 				pTexArray = RD->CreateTexture(textureDesc);
 			}
@@ -359,6 +361,7 @@ namespace Aurora
 
 		for (const auto &item : srcTextures) {
 			drawCallState.BindTexture(item.first, item.second, false, TextureBinding::EAccess::Read);
+			drawCallState.BindSampler(item.first, m_BilinearSampler);
 		}
 
 		drawCallState.ClearColorTarget = clear;

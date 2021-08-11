@@ -142,6 +142,15 @@ namespace Aurora
 #endif
 		}
 
+		inline std::vector<Index_t> GetIndexBuffer(int lod = 0)
+		{
+			if(!m_Mesh->LODResources.contains(lod)) {
+				return {};
+			}
+
+			return m_Mesh->LODResources[lod].Indices;
+		}
+
 		inline VertexBuffer<BufferTypename>* CreateVertexBuffer(int lod = 0, MeshLodResource** out_resource = nullptr)
 		{
 			MeshLodResource* lodResource;

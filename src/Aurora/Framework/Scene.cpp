@@ -25,6 +25,9 @@ namespace Aurora
 				//continue;
 			}
 
+			// TODO: Fix collision with camera
+			if(cmp->Name == "Camera") continue;
+
 			auto& bounds = cmp->GetBody().GetTransformedBounds();
 
 			results.SetCurrentObject(actor);
