@@ -61,6 +61,7 @@ namespace Aurora
 
 	void SceneRenderer::Render(RenderTargetPack* renderTargetPack, bool apply, bool clear)
 	{
+		ZoneScopedN("SceneRender");
 		DrawCallState drawCallState;
 
 		if(apply) {
@@ -70,6 +71,7 @@ namespace Aurora
 		for(auto& it2 : m_SortedRenderer) {
 			CameraComponent *cameraComponent = it2.first;
 			for (const auto &it : it2.second) {
+				ZoneNamedN(materialRenderZone, "MaterialRender", true);
 				Material *material = it.first;
 
 				material->SetVariable("ProjectionViewMatrix", cameraComponent->GetProjectionViewMatrix());

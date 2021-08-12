@@ -2,11 +2,8 @@
 #include "GLRenderDevice.hpp"
 
 #include "GLConversions.hpp"
-#include "GLFormatMapping.hpp"
-#include "GLShaderProgram.hpp"
-#include "GLTexture.hpp"
-#include "GLBuffer.hpp"
-#include "GLSampler.hpp"
+
+#include <TracyOpenGL.hpp>
 
 namespace Aurora
 {
@@ -43,6 +40,8 @@ namespace Aurora
 
 	void GLRenderDevice::Init()
 	{
+		TracyGpuContext
+
 		glGenVertexArrays(1, &m_nVAO);
 		glGenVertexArrays(1, &m_nVAOEmpty);
 		glBindVertexArray(m_nVAO);
@@ -585,6 +584,7 @@ namespace Aurora
 
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
 	{
+		TracyGpuZone("DrawIndexed");
 		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
 			AU_LOG_ERROR("Cannot draw with these arguments !");
 			throw;

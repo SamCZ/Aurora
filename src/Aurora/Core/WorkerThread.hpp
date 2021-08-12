@@ -7,26 +7,37 @@
 #include <functional>
 #include <utility>
 
+#include <common/TracySystem.hpp>
+
 class WorkerThread
 {
 private:
-	std::atomic_bool m_ReadyState;
-	std::atomic_bool m_ProcessedState;
-	std::atomic_bool m_DestroyState;
-	std::mutex m_Mutex;
+	std::string             m_ThreadName;
+	std::atomic_bool        m_ReadyState;
+	std::atomic_bool        m_ProcessedState;
+	std::atomic_bool        m_DestroyState;
+	std::mutex              m_Mutex;
 	std::condition_variable m_ConditionVariable;
 
 	std::thread m_Thread;
 
 	std::function<void()> m_ThreadFunction;
 public:
-	inline WorkerThread() : m_Thread(), m_ReadyState(false), m_ProcessedState(false), m_DestroyState(false), m_Mutex(), m_ConditionVariable()
+	inline explicit WorkerThread(std::string threadName = "") : m_ThreadName(std::move(threadName)), m_Thread(), m_ReadyState(false), m_ProcessedState(false), m_DestroyState(false), m_Mutex(), m_ConditionVariable()
 	{
 
 	}
 
-	inline explicit WorkerThread(std::function<void()> threadFunc)
-			: m_ThreadFunction(std::move(threadFunc)), m_Thread([this] { Run(); }), m_ReadyState(false), m_ProcessedState(false), m_DestroyState(false), m_Mutex(), m_ConditionVariable()
+	inline explicit WorkerThread(std::function<void()> threadFunc, std::string threadName = "")
+	:
+		m_ThreadName(std::move(threadName)),
+		m_ThreadFunction(std::move(threadFunc)),
+		m_Thread([this] { Run(); }),
+		m_ReadyState(false),
+		m_ProcessedState(false),
+		m_DestroyState(false),
+		m_Mutex(),
+		m_ConditionVariable()
 	{
 
 	}
@@ -65,6 +76,11 @@ public:
 private:
 	inline void Run()
 	{
+		if(m_ThreadName.length() > 0)
+		{
+			tracy::SetThreadName(m_ThreadName.c_str());
+		}
+
 		while(true)
 		{
 			std::unique_lock<std::mutex> lk(m_Mutex);
