@@ -4,15 +4,15 @@
 #include <set>
 #include <map>
 #include <string>
+#include <filesystem>
+#include <optional>
 
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
 #include "Binding.hpp"
 
-#include <filesystem>
 #include <Aurora/App/IWindow.hpp>
-
 
 namespace Aurora::Input
 {

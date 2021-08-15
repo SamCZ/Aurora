@@ -29,9 +29,14 @@ target_compile_definitions(Aurora PUBLIC RMLUI_STATIC_LIB=1)
 target_include_directories(Aurora PUBLIC src)
 
 if(FMOD_SUPPORTED)
-    target_link_libraries(Aurora PUBLIC FMod)
-    target_compile_definitions(Aurora PUBLIC FMOD_SUPPORTED=1)
+    # TODO: Fix FMod for MSVC
+    if(NOT MSVC)
+        target_link_libraries(Aurora PUBLIC FMod)
+        target_compile_definitions(Aurora PUBLIC FMOD_SUPPORTED=1)
+    endif()
 endif()
+
+target_compile_definitions(Aurora PUBLIC NOMINMAX)
 
 target_link_libraries(Aurora PUBLIC glfw glm nlohmann_json assimp)
 target_link_libraries(Aurora PUBLIC glad opengl32 gdi32)
@@ -41,6 +46,10 @@ target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
 target_link_libraries(Aurora PUBLIC ndNewton)
 target_link_libraries(Aurora PUBLIC TracyClient)
+
+foreach(INCLUDE_DIR ${AURORA_ADD_INCLUDE_DIRS})
+    target_include_directories(Aurora PUBLIC ${INCLUDE_DIR})
+endforeach(INCLUDE_DIR)
 
 function(link_aurora TARGET_NAME)
     target_link_libraries(${TARGET_NAME} PUBLIC Aurora)

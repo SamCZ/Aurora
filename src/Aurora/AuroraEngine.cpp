@@ -249,6 +249,8 @@ namespace Aurora
 			}*/
 		} while (IsRunning && anyWindowRunning);
 
+		GameUI.reset();
+
 		Physics.reset();
 		AuroraEngine::AssetManager.reset(); // This resolves that resources are destroyed before render device is deleted
 

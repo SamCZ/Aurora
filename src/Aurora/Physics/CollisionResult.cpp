@@ -1,4 +1,5 @@
 #include "CollisionResult.hpp"
+#include <algorithm>
 
 namespace Aurora
 {

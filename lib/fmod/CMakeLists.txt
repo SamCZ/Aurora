@@ -67,22 +67,20 @@ else()
     return()
 endif()
 
-add_library(FMod STATIC
-        ${FMOD_CORE_INCLUDE_DIR}/fmod.h
-        ${FMOD_CORE_INCLUDE_DIR}/fmod_codec.h
-        ${FMOD_CORE_INCLUDE_DIR}/fmod_common.h
-        ${FMOD_CORE_INCLUDE_DIR}/fmod_dsp.h
-        ${FMOD_CORE_INCLUDE_DIR}/fmod_dsp_effects.h
-        ${FMOD_CORE_INCLUDE_DIR}/fmod_errors.h
-        ${FMOD_CORE_INCLUDE_DIR}/fmod_output.h
-        ${FMOD_STUDIO_INCLUDE_DIR}/fmod_studio.h
-        ${FMOD_STUDIO_INCLUDE_DIR}/fmod_studio_common.h
-        )
-set_target_properties(FMod PROPERTIES LINKER_LANGUAGE C)
-target_include_directories(FMod PUBLIC ${FMOD_CORE_INCLUDE_DIR})
-target_include_directories(FMod PUBLIC ${FMOD_STUDIO_INCLUDE_DIR})
+add_library(FMod SHARED IMPORTED)
+set_property(TARGET FMod PROPERTY IMPORTED_LOCATION ${FMOD_CORE_LIBRARY_DLL} ${FMOD_STUDIO_LIBRARY_DLL})
+set_property(TARGET FMod PROPERTY IMPORTED_IMPLIB ${FMOD_CORE_LIBRARY} ${FMOD_STUDIO_LIBRARY})
 
-target_link_libraries(FMod ${FMOD_CORE_LIBRARY} ${FMOD_STUDIO_LIBRARY})
+set(AURORA_ADD_INCLUDE_DIRS
+        ${FMOD_CORE_INCLUDE_DIR}
+        ${FMOD_STUDIO_INCLUDE_DIR}
+        CACHE INTERNAL "AURORA_ADD_INCLUDE_DIRS")
+
+#set_target_properties(FMod PROPERTIES LINKER_LANGUAGE C)
+#target_include_directories(FMod PUBLIC ${FMOD_CORE_INCLUDE_DIR})
+#target_include_directories(FMod PUBLIC ${FMOD_STUDIO_INCLUDE_DIR})
+
+#target_link_libraries(FMod IMPORTED ${FMOD_CORE_LIBRARY} ${FMOD_STUDIO_LIBRARY})
 
 message(${FMOD_CORE_INCLUDE_DIR})
 #message(${FMOD_CORE_LIBRARY})

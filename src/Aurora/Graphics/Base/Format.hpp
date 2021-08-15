@@ -4,8 +4,10 @@
 
 namespace Aurora
 {
+#ifndef _MSC_VER
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+#endif
 	enum class GraphicsFormat : uint8_t
 	{
 		Unknown = 0,
@@ -41,5 +43,7 @@ namespace Aurora
 		X24G8_UINT,
 		D32,
 	};
+#ifndef _MSC_VER
 #pragma clang diagnostic pop
+#endif
 }

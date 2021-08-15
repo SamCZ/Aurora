@@ -3,9 +3,11 @@
 #include <iostream>
 #include <limits>
 
+#ifndef _MSC_VER
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
 #pragma GCC diagnostic ignored "-Wvolatile"
+#endif
 
 #define GLM_EXT_INCLUDED
 #define GLM_ENABLE_EXPERIMENTAL
@@ -19,7 +21,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 
+#ifndef _MSC_VER
 #pragma GCC diagnostic pop
+#endif
 
 typedef glm::vec4 Vector4;
 typedef glm::vec3 Vector3;

@@ -77,15 +77,29 @@ if(NOT TARGET assimp)
 
     if(BUILD_SHARED_LIBS)
         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            set(AURORA_DLL_TO_COPY
-                    ${AURORA_DLL_TO_COPY}
-                    ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll
-                    CACHE INTERNAL "AURORA_DLL_TO_COPY")
+            if(MSVC)
+                set(AURORA_DLL_TO_COPY
+                        ${AURORA_DLL_TO_COPY}
+                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mtd.dll
+                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
+            else(MSVC)
+                set(AURORA_DLL_TO_COPY
+                        ${AURORA_DLL_TO_COPY}
+                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll
+                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
+            endif(MSVC)
         else()
-            set(AURORA_DLL_TO_COPY
-                    ${AURORA_DLL_TO_COPY}
-                    ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.dll
-                    CACHE INTERNAL "AURORA_DLL_TO_COPY")
+            if(MSVC)
+                set(AURORA_DLL_TO_COPY
+                        ${AURORA_DLL_TO_COPY}
+                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mt.dll
+                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
+            else(MSVC)
+                set(AURORA_DLL_TO_COPY
+                        ${AURORA_DLL_TO_COPY}
+                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.dll
+                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
+            endif(MSVC)
         endif()
     endif()
 
@@ -140,6 +154,7 @@ if(NOT TARGET newton-dynamics)
     set(NEWTON_DOUBLE_PRECISION OFF)
     set(NEWTON_ENABLE_AVX ON)
     set(NEWTON_BUILD_CREATE_SUB_PROJECTS OFF)
+    set(NEWTON_STATIC_RUNTIME_LIBRARIES ON)
     add_subdirectory(newton-dynamics/newton-4.00)
 endif()
 
@@ -151,5 +166,6 @@ if(NOT TARGET tracy)
     add_subdirectory(tracy)
     if(WIN32)
         target_link_libraries(TracyClient PUBLIC Ws2_32 dbghelp)
+        target_compile_definitions(TracyClient PUBLIC NOMINMAX)
     endif()
 endif()
