@@ -3,58 +3,154 @@
 
 namespace Aurora
 {
-
-	SceneRenderer::SceneRenderer(Scene_ptr scene) : m_Scene(std::move(scene)), m_SortedRenderer()
+	struct alignas(16) CameraConstants
 	{
+		Matrix4 ProjectionViewMatrix;
+		Matrix4 ModelMatrix;
+	};
 
+	SceneRenderer::SceneRenderer(Scene_ptr scene) : m_Scene(std::move(scene))
+	{
+		m_CameraConstantsUniformBuffer = RD->CreateBuffer(BufferDesc("CameraConstants", sizeof(CameraConstants), 0, EBufferType::UniformBuffer));
+	}
+
+	SceneRenderer::~SceneRenderer()
+	{
+		for (ModelContext* mc : m_ModelContextCache)
+		{
+			delete mc;
+		}
 	}
 
 	void SceneRenderer::Update(double delta, Frustum* frustum)
 	{
 		ZoneNamedN(sceneRendererZone, "SceneRendererUpdate", true);
 
-		(void) delta;
-		m_SortedRenderer.clear();
+		m_iCurrentModelContextIndex = 0;
 
-		for(auto* cameraComponent : m_Scene->GetCameraComponents()) {
-			for(auto* meshComponent : m_Scene->GetMeshComponents())
+		m_OpaqueQueue.Clear();
+		m_TransparentQueue.Clear();
+		m_TranslucentQueue.Clear();
+		m_SkyQueue.Clear();
+
+		Mesh* lastMesh = nullptr;
+		Material* lastMaterial = nullptr;
+
+		for (MeshComponent *meshComponent : m_Scene->GetMeshComponents())
+		{
+			if(!meshComponent->GetOwner()->IsActive() || !meshComponent->IsActive()) continue;
+
+			auto &mesh = meshComponent->GetMesh();
+
+			if (mesh == nullptr)
 			{
-				if(!meshComponent->GetOwner()->IsActive() || !meshComponent->IsActive()) continue;
+				continue;
+			}
 
-				// Perform frustum culling
-				//Profiler::Begin("Frustum culling");
-				if(meshComponent->GetBody().HasCollider() && frustum != nullptr) {
-					if(!frustum->IsBoxVisible(meshComponent->GetBody().GetTransformedBounds())) {
-						//Profiler::End("Frustum culling");
-						continue;
-					}
+			if(meshComponent->GetBody().HasCollider() && frustum != nullptr) {
+				if(!frustum->IsBoxVisible(meshComponent->GetBody().GetTransformedBounds())) {
+					//Profiler::End("Frustum culling");
+					continue;
 				}
-				//Profiler::End("Frustum culling");
+			}
 
-				auto& mesh = meshComponent->GetMesh();
+			const Matrix4& transform = meshComponent->GetTransformMatrix();
 
-				if(mesh == nullptr) {
+			// TODO: Complete lods
+			LOD lod = 0;
+
+			auto &sections = mesh->LODResources[lod].Sections;
+
+			for (uint32_t i = 0; i < sections.size(); ++i)
+			{
+				auto &section = sections[i];
+				int materialIndex = section.MaterialIndex;
+
+				auto &materialSlot = mesh->MaterialSlots[materialIndex];
+
+				if (materialSlot.Material == nullptr)
+				{
 					continue;
 				}
 
-				auto& sections = mesh->LODResources[0].Sections;
+				auto &material = materialSlot.Material;
 
-				for (size_t i = 0; i < sections.size(); ++i) {
-					auto& section = sections[i];
-					int materialIndex = section.MaterialIndex;
+				QueueBucket bucket = material->GetQueueBucket();
 
-					if(!mesh->MaterialSlots.contains(materialIndex)) {
-						continue;
-					}
+				ModelContext *mc = GetModelContext();
+				mc->m_Material = material.get();
+				mc->m_Mesh = mesh.get();
+				mc->m_iSectionIndex = i;
+				mc->m_Transform = transform;
+				mc->m_Lod = lod;
+				mc->m_bMeshObjectChanged = lastMesh != mesh.get() || lastMaterial != material.get();
 
-					auto& materialSlot = mesh->MaterialSlots[materialIndex];
-
-					if(materialSlot.Material == nullptr) {
-						continue;
-					}
-
-					m_SortedRenderer[cameraComponent][materialSlot.Material.get()].push_back(std::tuple<Mesh*, uint32_t, Matrix4, Actor*>(meshComponent->GetMesh().get(), i, meshComponent->GetTransformMatrix(), meshComponent->GetOwner()));
+				switch (bucket)
+				{
+					case QueueBucket::Opaque:
+						m_OpaqueQueue.Add(mc);
+						break;
+					case QueueBucket::Transparent:
+						m_TransparentQueue.Add(mc);
+						break;
+					case QueueBucket::Translucent:
+						m_TranslucentQueue.Add(mc);
+						break;
+					case QueueBucket::Sky:
+						m_SkyQueue.Add(mc);
+						break;
 				}
+
+				lastMesh = mesh.get();
+				lastMaterial = material.get();
+			}
+		}
+	}
+
+	void SceneRenderer::RenderQueue(DrawCallState& drawCallState, CameraComponent *camera, MaterialRenderList &renderQueue)
+	{
+		drawCallState.ViewPort = camera->GetSize();
+
+		CameraConstants cameraData = {};
+		cameraData.ProjectionViewMatrix = camera->GetProjectionViewMatrix();
+
+		for (const auto &item : renderQueue.Map())
+		{
+			const MaterialRenderList::ModelContextList &mcList = item.second;
+
+			if (mcList.empty()) continue;
+
+			Material *material = mcList[0]->m_Material;
+
+			//renderDevice->SetShader(material->GetShader());
+			material->Apply(drawCallState);
+
+			for (ModelContext* mc : mcList)
+			{
+				Mesh* mesh = mc->m_Mesh;
+				drawCallState.InputLayoutHandle = mesh->GetInputLayout();
+
+				drawCallState.SetVertexBuffer(0, mesh->LODResources[mc->m_Lod].VertexBuffer);
+				drawCallState.SetIndexBuffer(mesh->LODResources[mc->m_Lod].IndexBuffer);
+
+				if(mc->m_bMeshObjectChanged)
+				{
+					cameraData.ModelMatrix = mc->m_Transform;
+
+					RD->WriteBuffer(m_CameraConstantsUniformBuffer, &cameraData, sizeof(cameraData));
+					drawCallState.BindUniformBuffer("CameraConstants", m_CameraConstantsUniformBuffer);
+				}
+
+				auto &section = mesh->LODResources[mc->m_Lod].Sections[mc->m_iSectionIndex];
+
+				DrawArguments drawArguments;
+				drawArguments.VertexCount = section.NumTriangles;
+				drawArguments.StartIndexLocation = section.FirstIndex;
+				drawArguments.InstanceCount = 1;
+				RD->DrawIndexed(drawCallState, {drawArguments});
+
+				drawCallState.ClearColorTarget = false;
+				drawCallState.ClearDepthTarget = false;
 			}
 		}
 	}
@@ -68,47 +164,25 @@ namespace Aurora
 			renderTargetPack->Apply(drawCallState);
 		}
 
-		for(auto& it2 : m_SortedRenderer) {
-			CameraComponent *cameraComponent = it2.first;
-			for (const auto &it : it2.second) {
-				ZoneNamedN(materialRenderZone, "MaterialRender", true);
-				Material *material = it.first;
-
-				material->SetVariable("ProjectionViewMatrix", cameraComponent->GetProjectionViewMatrix());
-				material->SetVariable("ViewMatrix", cameraComponent->GetViewMatrix());
-				material->SetVariable<float>("g_Time", static_cast<float>(glfwGetTime()));
-
-				for (const auto& renderData : it.second) {
-					Mesh *mesh = std::get<0>(renderData);
-					uint32_t sectionIndex = std::get<1>(renderData);
-					const Matrix4 &modelMatrix = std::get<2>(renderData);
-
-					drawCallState.InputLayoutHandle = mesh->GetInputLayout();
-
-					drawCallState.SetVertexBuffer(0, mesh->LODResources[0].VertexBuffer);
-					drawCallState.SetIndexBuffer(mesh->LODResources[0].IndexBuffer);
-
-					material->SetVariable("ModelMatrix", modelMatrix);
-
-					std::get<3>(renderData)->OnPreRender(material);
-
-					material->Apply(drawCallState);
-
-					auto &section = mesh->LODResources[0].Sections[sectionIndex];
-
-					DrawArguments drawArguments;
-					drawArguments.VertexCount = section.NumTriangles;
-					drawArguments.StartIndexLocation = section.FirstIndex;
-					drawArguments.InstanceCount = 1;
-					RD->DrawIndexed(drawCallState, {drawArguments});
-
-					drawCallState.ClearColorTarget = false;
-					drawCallState.ClearDepthTarget = false;
-				}
-			}
+		for (CameraComponent *cameraComponent : m_Scene->GetCameraComponents())
+		{
+			RenderQueue(drawCallState, cameraComponent, m_OpaqueQueue);
+			RenderQueue(drawCallState, cameraComponent, m_TransparentQueue);
+			RenderQueue(drawCallState, cameraComponent, m_TranslucentQueue);
+			RenderQueue(drawCallState, cameraComponent, m_SkyQueue);
 		}
+	}
 
-		// This adds 2.5ms to render on
-		RD->InvalidateState();
+	ModelContext *SceneRenderer::GetModelContext()
+	{
+		if (m_iCurrentModelContextIndex < m_ModelContextCache.size())
+		{
+			return m_ModelContextCache[m_iCurrentModelContextIndex++];
+		}
+		else
+		{
+			m_ModelContextCache.push_back(new ModelContext);
+			return m_ModelContextCache[m_iCurrentModelContextIndex++];
+		}
 	}
 }

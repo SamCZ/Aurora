@@ -29,10 +29,10 @@ target_compile_definitions(Aurora PUBLIC RMLUI_STATIC_LIB=1)
 target_include_directories(Aurora PUBLIC src)
 
 if(FMOD_SUPPORTED)
-    # TODO: Fix FMod for MSVC
+    # TODO: Fix FMod
     if(NOT MSVC)
-        target_link_libraries(Aurora PUBLIC FMod)
-        target_compile_definitions(Aurora PUBLIC FMOD_SUPPORTED=1)
+        #target_link_libraries(Aurora PUBLIC FMod)
+        #target_compile_definitions(Aurora PUBLIC FMOD_SUPPORTED=1)
     endif()
 endif()
 

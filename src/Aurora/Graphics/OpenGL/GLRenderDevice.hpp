@@ -41,6 +41,11 @@ namespace Aurora
 		std::map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
 
 		GLContextState m_ContextState;
+
+		Vector2i m_LastViewPort;
+		FRasterState m_LastRasterState;
+		FDepthStencilState m_LastDepthState;
+		InputLayout_ptr m_LastInputLayout;
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
@@ -77,7 +82,7 @@ namespace Aurora
 		void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 
 		void InvalidateState() override;
-	private:
+	public:
 		void BindShaderResources(const BaseState& state);
 
 		void ApplyDispatchState(const DispatchState& state);
@@ -96,6 +101,6 @@ namespace Aurora
 
 		void ClearRenderTargets(const DrawCallState &state);
 
-		static void SetDepthStencilState(FDepthStencilState state);
+		void SetDepthStencilState(FDepthStencilState state);
 	};
 }

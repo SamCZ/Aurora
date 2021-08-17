@@ -6,14 +6,14 @@
 namespace Aurora
 {
 
-	Material::Material(String name, const Path &shaderPath, const ShaderMacros &macros) : m_Name(std::move(name))
+	Material::Material(String name, const Path &shaderPath, const ShaderMacros &macros) : m_Name(std::move(name)), m_QueueBucket(QueueBucket::Opaque)
 	{
 		m_Shader = ASM->LoadShaderFolder(shaderPath, macros);
 
 		LoadShaderResources(m_Shader);
 	}
 
-	Material::Material(String name, Shader_ptr shader) : m_Name(std::move(name)), m_Shader(std::move(shader))
+	Material::Material(String name, Shader_ptr shader) : m_Name(std::move(name)), m_Shader(std::move(shader)), m_QueueBucket(QueueBucket::Opaque)
 	{
 		LoadShaderResources(m_Shader);
 	}

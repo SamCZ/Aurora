@@ -19,6 +19,7 @@ namespace Aurora
 	};
 
 	typedef uint32_t Index_t;
+	typedef uint32_t LOD;
 
 	struct MaterialSlot
 	{
@@ -72,7 +73,7 @@ namespace Aurora
 		virtual ~Mesh();
 	public:
 		std::unordered_map<uint8_t, MeshLodResource> LODResources;
-		std::unordered_map<uint8_t, MaterialSlot> MaterialSlots;
+		std::vector<MaterialSlot> MaterialSlots;
 		std::unique_ptr<Bound> m_Bounds;
 	public:
 		virtual const InputLayout_ptr& GetInputLayout() const = 0;

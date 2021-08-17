@@ -55,6 +55,18 @@ struct A
     AU_ENUM(enum_name, num_type)
 #endif
 
+#define AU_CLASS_BODY(classname)                                       \
+public:                                                                \
+template<typename... Args>                                             \
+static std::shared_ptr<classname> New(Args&& ...args)                  \
+{                                                                      \
+	return std::make_shared<classname>(std::forward<Args>(args)...);   \
+}                                                                      \
+
+
+
+
+
 template<typename T>
 class SharedFromThis : public std::enable_shared_from_this<T>
 {

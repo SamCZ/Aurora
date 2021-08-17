@@ -24,8 +24,9 @@ namespace Aurora
 {
 	AU_CLASS(Scene)
 	{
-		friend class Actor;
+		AU_CLASS_BODY(Scene)
 	private:
+		friend class Actor;
 		std::vector<Actor*> m_Actors;
 
 		COMPONENT_LIST(MeshComponent)

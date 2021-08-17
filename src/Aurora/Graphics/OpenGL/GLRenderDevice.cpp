@@ -4,6 +4,15 @@
 #include "GLConversions.hpp"
 
 #include <TracyOpenGL.hpp>
+#include <algorithm>
+
+//#define TRACE_GPU 1
+
+#ifdef TRACE_GPU
+#define TR_SCOPE(name) TracyGpuZone(name)
+#else
+#define TR_SCOPE(name)
+#endif
 
 namespace Aurora
 {
@@ -27,7 +36,16 @@ namespace Aurora
 		return static_cast<GLShaderProgram*>(shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 	}
 
-	GLRenderDevice::GLRenderDevice() : IRenderDevice(), m_nVAO(0), m_nVAOEmpty(0), m_LastVao(0), m_ContextState()
+	GLRenderDevice::GLRenderDevice()
+	: IRenderDevice(),
+	m_nVAO(0),
+	m_nVAOEmpty(0),
+	m_LastVao(0),
+	m_ContextState(),
+	m_LastRasterState(),
+	m_LastDepthState(),
+	m_LastViewPort(0, 0),
+	  m_LastInputLayout(nullptr)
 	{
 
 	}
@@ -58,6 +76,9 @@ namespace Aurora
 
         AU_LOG_INFO("GPU Vendor: ", vendor);
         AU_LOG_INFO("GPU Renderer: ", renderer);
+
+		SetRasterState(m_LastRasterState);
+		SetDepthStencilState(m_LastDepthState);
 	}
 
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
@@ -212,6 +233,7 @@ namespace Aurora
 
 	void GLRenderDevice::SetShader(const Shader_ptr &shader)
 	{
+		TR_SCOPE("SetShader");
 		m_ContextState.SetShader(GetShader(shader));
 	}
 
@@ -584,7 +606,8 @@ namespace Aurora
 
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
 	{
-		TracyGpuZone("DrawIndexed");
+		TR_SCOPE("DrawIndexed");
+
 		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
 			AU_LOG_ERROR("Cannot draw with these arguments !");
 			throw;
@@ -621,6 +644,7 @@ namespace Aurora
 
 	void GLRenderDevice::ApplyDrawCallState(const DrawCallState &state)
 	{
+		TR_SCOPE("ApplyDrawCallState");
 		SetShader(state.Shader);
 
 		BindShaderInputs(state);
@@ -638,6 +662,11 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
 	{
+		TR_SCOPE("BindShaderInputs");
+
+		//if(state.InputLayoutHandle == m_LastInputLayout) return;
+		//m_LastInputLayout = state.InputLayoutHandle;
+
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
 
@@ -744,6 +773,7 @@ namespace Aurora
 
 	void GLRenderDevice::InvalidateState()
 	{
+		TR_SCOPE("InvalidateState");
 		m_ContextState.Invalidate();
 	}
 
@@ -755,6 +785,8 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderResources(const BaseState& state)
 	{
+		TR_SCOPE("BindShaderResources");
+
 		CHECK_GL_ERROR();
 
 		if(state.Shader == nullptr) return;
@@ -898,6 +930,7 @@ namespace Aurora
 
 	void GLRenderDevice::BindRenderTargets(const DrawCallState &state)
 	{
+		TR_SCOPE("BindRenderTargets");
 		FrameBuffer_ptr framebuffer = GetCachedFrameBuffer(state);
 
 		if (framebuffer != m_CurrentFrameBuffer)
@@ -915,11 +948,17 @@ namespace Aurora
 			m_CurrentFrameBuffer = framebuffer;
 		}
 
-		glViewport(0, 0, state.ViewPort.x, state.ViewPort.y);
+		if(state.ViewPort != m_LastViewPort)
+		{
+			m_LastViewPort = state.ViewPort;
+			glViewport(0, 0, state.ViewPort.x, state.ViewPort.y);
+		}
 	}
 
 	FrameBuffer_ptr GLRenderDevice::GetCachedFrameBuffer(const DrawCallState &state)
 	{
+		TR_SCOPE("GetCachedFrameBuffer");
+
 		if(!state.HasAnyRenderTarget) {
 			return nullptr;
 		}
@@ -1037,11 +1076,13 @@ namespace Aurora
 
 	void GLRenderDevice::SetBlendState(const DrawCallState &state)
 	{
+		TR_SCOPE("SetBlendState")
 		// TODO: Blend state
 	}
 
 	void GLRenderDevice::SetRasterState(const FRasterState& rasterState)
 	{
+		TR_SCOPE("SetRasterState");
 		// TODO: Call gl commands only on change of values !
 
 		switch (rasterState.FillMode)
@@ -1081,6 +1122,10 @@ namespace Aurora
 		{
 			glEnable(GL_DEPTH_CLAMP);
 		}
+		else
+		{
+			glDisable(GL_DEPTH_CLAMP);
+		}
 
 		if (rasterState.ScissorEnable)
 		{
@@ -1097,20 +1142,27 @@ namespace Aurora
 			glPolygonOffset(rasterState.SlopeScaledDepthBias, float(rasterState.DepthBias));
 		}
 
-		if (rasterState.MultisampleEnable)
+		if(rasterState.MultisampleEnable != m_LastRasterState.MultisampleEnable)
 		{
-			glEnable(GL_MULTISAMPLE);
-			glSampleMaski(0, ~0u);
-			CHECK_GL_ERROR();
-		}
-		else
-		{
-			glDisable(GL_MULTISAMPLE);
+			m_LastRasterState.MultisampleEnable = rasterState.MultisampleEnable;
+
+			if (rasterState.MultisampleEnable)
+			{
+				glEnable(GL_MULTISAMPLE);
+				glSampleMaski(0, ~0u);
+				CHECK_GL_ERROR();
+			}
+			else
+			{
+				glDisable(GL_MULTISAMPLE);
+			}
 		}
 	}
 
 	void GLRenderDevice::ClearRenderTargets(const DrawCallState &renderState)
 	{
+		TR_SCOPE("ClearRenderTargets");
+
 		uint32_t nClearBitField = 0;
 		if (renderState.ClearColorTarget)
 		{
@@ -1138,36 +1190,43 @@ namespace Aurora
 
 	void GLRenderDevice::SetDepthStencilState(FDepthStencilState depthState)
 	{
-		if (depthState.DepthEnable)
-		{
-			glEnable(GL_DEPTH_TEST);
-			glDepthMask((depthState.DepthWriteMask == EDepthWriteMask::All) ? GL_TRUE : GL_FALSE);
-			glDepthFunc(ConvertComparisonFunc(depthState.DepthFunc));
-		}
-		else
-		{
-			glDisable(GL_DEPTH_TEST);
-		}
+		TR_SCOPE("SetDepthStencilState");
 
-		if (depthState.StencilEnable)
+		if(std::memcmp(&depthState, &m_LastDepthState, sizeof(depthState)) != 0)
 		{
-			glEnable(GL_STENCIL_TEST);
+			m_LastDepthState = depthState;
 
-			glStencilFuncSeparate(GL_FRONT, ConvertComparisonFunc(depthState.FrontFace.StencilFunc), depthState.StencilRefValue, depthState.StencilReadMask);
-			glStencilOpSeparate(GL_FRONT, ConvertStencilOp(depthState.FrontFace.StencilFailOp),
-								ConvertStencilOp(depthState.FrontFace.StencilDepthFailOp),
-								ConvertStencilOp(depthState.FrontFace.StencilPassOp));
+			if (depthState.DepthEnable)
+			{
+				glEnable(GL_DEPTH_TEST);
+				glDepthMask((depthState.DepthWriteMask == EDepthWriteMask::All) ? GL_TRUE : GL_FALSE);
+				glDepthFunc(ConvertComparisonFunc(depthState.DepthFunc));
+			}
+			else
+			{
+				glDisable(GL_DEPTH_TEST);
+			}
 
-			glStencilFuncSeparate(GL_BACK, ConvertComparisonFunc(depthState.BackFace.StencilFunc), depthState.StencilRefValue, depthState.StencilReadMask);
-			glStencilOpSeparate(GL_BACK, ConvertStencilOp(depthState.BackFace.StencilFailOp),
-								ConvertStencilOp(depthState.BackFace.StencilDepthFailOp),
-								ConvertStencilOp(depthState.BackFace.StencilPassOp));
+			if (depthState.StencilEnable)
+			{
+				glEnable(GL_STENCIL_TEST);
 
-			glStencilMask(depthState.StencilWriteMask);
-		}
-		else
-		{
-			glDisable(GL_STENCIL_TEST);
+				glStencilFuncSeparate(GL_FRONT, ConvertComparisonFunc(depthState.FrontFace.StencilFunc), depthState.StencilRefValue, depthState.StencilReadMask);
+				glStencilOpSeparate(GL_FRONT, ConvertStencilOp(depthState.FrontFace.StencilFailOp),
+				                    ConvertStencilOp(depthState.FrontFace.StencilDepthFailOp),
+				                    ConvertStencilOp(depthState.FrontFace.StencilPassOp));
+
+				glStencilFuncSeparate(GL_BACK, ConvertComparisonFunc(depthState.BackFace.StencilFunc), depthState.StencilRefValue, depthState.StencilReadMask);
+				glStencilOpSeparate(GL_BACK, ConvertStencilOp(depthState.BackFace.StencilFailOp),
+				                    ConvertStencilOp(depthState.BackFace.StencilDepthFailOp),
+				                    ConvertStencilOp(depthState.BackFace.StencilPassOp));
+
+				glStencilMask(depthState.StencilWriteMask);
+			}
+			else
+			{
+				glDisable(GL_STENCIL_TEST);
+			}
 		}
 	}
 }

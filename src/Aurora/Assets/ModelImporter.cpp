@@ -164,6 +164,11 @@ namespace Aurora
 					//Log(TextureTypeEnumToString[texType], filePath.string());
 				}
 
+				if(engineMesh->MaterialSlots.size() <= meshMaterialSlot)
+				{
+					engineMesh->MaterialSlots.resize(engineMesh->MaterialSlots.size() + 1);
+				}
+
 				engineMesh->MaterialSlots[meshMaterialSlot] = materialSlot;
 			}
 

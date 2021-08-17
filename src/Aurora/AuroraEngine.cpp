@@ -236,6 +236,8 @@ namespace Aurora
 				}
 			}
 
+			TracyGpuCollect
+
 			while(!contextsToRemove.empty()) {
 				auto context = contextsToRemove.front();
 				GameContextsByThread.erase(context->m_ThreadId);
