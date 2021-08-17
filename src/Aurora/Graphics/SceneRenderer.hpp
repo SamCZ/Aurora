@@ -27,7 +27,7 @@ namespace Aurora
 	public:
 		void Add(ModelContext *mc)
 		{
-			m_Map[mc->m_Material->GetShaderUID()].push_back(mc);
+			m_Map[mc->m_Material->GetUniqueID()].push_back(mc);
 		}
 
 		void Clear()

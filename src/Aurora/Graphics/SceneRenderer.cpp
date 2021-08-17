@@ -166,10 +166,10 @@ namespace Aurora
 
 		for (CameraComponent *cameraComponent : m_Scene->GetCameraComponents())
 		{
+			RenderQueue(drawCallState, cameraComponent, m_SkyQueue);
 			RenderQueue(drawCallState, cameraComponent, m_OpaqueQueue);
 			RenderQueue(drawCallState, cameraComponent, m_TransparentQueue);
 			RenderQueue(drawCallState, cameraComponent, m_TranslucentQueue);
-			RenderQueue(drawCallState, cameraComponent, m_SkyQueue);
 		}
 	}
 
