@@ -150,7 +150,7 @@ namespace Aurora
 	{
 #if GL_ARB_shader_image_load_store
 		GLuint GLTexHandle = 0;
-		if (UpdateBoundObjectsArr(m_BoundImages, index, texture, GLTexHandle))
+		if (UpdateBoundObjectsArr(m_BoundImages, index, texture, GLTexHandle) || true) // TODO: Fix this hotfix for compute shaders not updating texture after changing mip write level
 		{
 			glBindImageTexture(index, GLTexHandle, mipLevel, isLayered, layer, access, format);
 			CHECK_GL_ERROR("glBindImageTexture() failed");

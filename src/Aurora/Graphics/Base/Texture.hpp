@@ -62,7 +62,26 @@ namespace Aurora
 				DisableGPUsSync(false),
 				UseClearValue(false), ClearValue(0) { }
 
-		inline Vector2i GetSize() const noexcept { return Vector2i(Width, Height); }
+		[[nodiscard]] inline Vector2i GetSize() const noexcept { return Vector2i(Width, Height); }
+
+		[[nodiscard]] inline uint32_t GetMipLevelCount() const
+		{
+			return (uint32_t)std::floor(std::log2(glm::min(Width, Height))) + 1;
+		}
+
+		std::pair<uint32_t, uint32_t> GetMipSize(uint32_t mip) const
+		{
+			uint32_t width = Width;
+			uint32_t height = Height;
+			while (mip != 0)
+			{
+				width /= 2;
+				height /= 2;
+				mip--;
+			}
+
+			return { width, height };
+		}
 	};
 
 	class ITexture : public TypeBase<ITexture>

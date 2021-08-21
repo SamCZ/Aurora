@@ -867,7 +867,6 @@ namespace Aurora
 				GLenum format = glTexture->Format().InternalFormat;
 				GLenum access = GL_WRITE_ONLY;
 				bool layered = false;
-				GLint level = 0;
 				GLint layer = 0;
 
 				switch (targetTextureBinding->Access) {
@@ -876,7 +875,7 @@ namespace Aurora
 					case TextureBinding::EAccess::ReadAndWrite: access = GL_READ_WRITE; break;
 				}
 
-				m_ContextState.BindImage(imageResource.Binding, glTexture, level, layered, layer, access, format);
+				m_ContextState.BindImage(imageResource.Binding, glTexture, targetTextureBinding->MipLevel, layered, layer, access, format);
 			} else {
 				AU_LOG_WARNING("Trying to bind image as UAV but somewhere the texture is not marked as UAV");
 			}

@@ -2,6 +2,7 @@
 
 #include <utility>
 #include <map>
+#include <array>
 
 #include "RenderBase.hpp"
 
@@ -40,10 +41,12 @@ namespace Aurora
 		Texture_ptr Texture;
 		bool IsUAV;
 		EAccess Access;
-		TextureBinding() : Texture(nullptr), IsUAV(false), Access(EAccess::Write) {}
-		explicit TextureBinding(Texture_ptr texture) : Texture(std::move(texture)), IsUAV(false), Access(EAccess::Write) {}
-		TextureBinding(Texture_ptr texture, bool isUAV) : Texture(std::move(texture)), IsUAV(isUAV), Access(EAccess::Write) {}
-		TextureBinding(Texture_ptr texture, bool isUAV, EAccess access) : Texture(std::move(texture)), IsUAV(isUAV), Access(access) {}
+		int MipLevel;
+
+		TextureBinding() : Texture(nullptr), IsUAV(false), Access(EAccess::Write), MipLevel(0) {}
+		explicit TextureBinding(Texture_ptr texture) : Texture(std::move(texture)), IsUAV(false), Access(EAccess::Write), MipLevel(0) {}
+		TextureBinding(Texture_ptr texture, bool isUAV) : Texture(std::move(texture)), IsUAV(isUAV), Access(EAccess::Write), MipLevel(0) {}
+		TextureBinding(Texture_ptr texture, bool isUAV, EAccess access, int mipLevel) : Texture(std::move(texture)), IsUAV(isUAV), Access(access), MipLevel(mipLevel) {}
 	};
 
 	struct TargetBinding
@@ -84,9 +87,9 @@ namespace Aurora
 			SSBOBuffers.clear();
 		}
 
-		inline void BindTexture(const std::string& name, const Texture_ptr& texture, bool isUAV = false, TextureBinding::EAccess access = TextureBinding::EAccess::Write)
+		inline void BindTexture(const std::string& name, const Texture_ptr& texture, bool isUAV = false, TextureBinding::EAccess access = TextureBinding::EAccess::Write, int mipLevel = 0)
 		{
-			BoundTextures[name] = TextureBinding(texture, isUAV, access);
+			BoundTextures[name] = TextureBinding(texture, isUAV, access, mipLevel);
 		}
 
 		inline void BindSampler(const std::string& name, const Sampler_ptr& sampler)
