@@ -18,6 +18,7 @@ namespace Aurora
 			Custom
 		};
 	private:
+		uint m_CameraID;
 		EViewMode m_LastViewMode;
 		EViewMode m_ViewMode;
 
@@ -37,8 +38,8 @@ namespace Aurora
 
 		bool m_IsFrustumUpdateEnabled;
 	public:
-		CameraComponent(int width, int height);
-		explicit CameraComponent(const Vector2i& size);
+		CameraComponent(uint cameraID, int width, int height);
+		explicit CameraComponent(uint cameraID, const Vector2i& size);
 
 		void Resize(int width, int height);
 		void Resize(const Vector2i& size);
@@ -82,6 +83,9 @@ namespace Aurora
 
 		inline void SetFrustumUpdateEnabled(bool enabled) { m_IsFrustumUpdateEnabled = enabled; }
 		[[nodiscard]] inline bool IsFrustumUpdateEnabled() const { return m_IsFrustumUpdateEnabled; }
+
+		inline explicit operator uint() const { return m_CameraID; }
+		inline uint ID() const { return m_CameraID; }
 	protected:
 		inline void MarkTransformUpdate() override
 		{

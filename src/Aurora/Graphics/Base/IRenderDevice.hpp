@@ -17,6 +17,13 @@
 #include "RasterState.hpp"
 #include "FDepthStencilState.hpp"
 
+#if defined(AURORA_OPENGL) || true
+#include "../OpenGL/GLRenderGroupScope.hpp"
+#define GPU_DEBUG_SCOPE(name) ::Aurora::GLRenderGroupScope glRenderGroupScope(name);
+#else
+#define GPU_DEBUG_SCOPE(name)
+#endif
+
 namespace Aurora
 {
 	typedef const void* TextureData;

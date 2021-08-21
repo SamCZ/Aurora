@@ -61,7 +61,7 @@ namespace Aurora
 		textureDesc.Height = h;
 		textureDesc.MipLevels = 1;
 		textureDesc.ImageFormat = GraphicsFormat::R8_UNORM;
-		textureDesc.DebugName = "Font texture";
+		textureDesc.Name = "Font texture";
 		Texture_ptr texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		AuroraEngine::RenderDevice->WriteTexture(texture, 0, 0, data);

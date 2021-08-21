@@ -18,7 +18,7 @@ namespace Aurora
 		}
 
 		TextureDesc textureDesc;
-		textureDesc.DebugName = name;
+		textureDesc.Name = name;
 		textureDesc.Width = 0;
 		textureDesc.Height = 0;
 		textureDesc.MipLevels = 1;

@@ -10,6 +10,12 @@
 
 namespace Aurora
 {
+	enum TEX_FLAGS : uint8_t
+	{
+		TEX_FLAG_NONE = 0,
+		TEX_FLAG_UAV = 1 << 0
+	};
+
 	struct TextureDesc
 	{
 		enum class EUsage : uint8_t
@@ -26,7 +32,7 @@ namespace Aurora
 		uint32_t SampleCount, SampleQuality;
 		GraphicsFormat ImageFormat;
 		EUsage Usage;
-		std::string DebugName;
+		std::string Name = "Unknown";
 
 		bool IsArray; //3D or array if .z != 0?
 		bool IsCubeMap;
@@ -47,7 +53,7 @@ namespace Aurora
 				Usage(EUsage::Default),
 				SampleCount(1),
 				SampleQuality(0),
-				DebugName(),
+				Name("Unknown"),
 				IsCPUWritable(false),
 				IsUAV(false),
 				IsRenderTarget(false),

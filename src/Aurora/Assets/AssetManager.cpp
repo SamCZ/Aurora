@@ -108,7 +108,7 @@ namespace Aurora
 		textureDesc.Height = height;
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
 		textureDesc.ImageFormat = format;
-		textureDesc.DebugName = path.string();
+		textureDesc.Name = path.string();
 		texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
@@ -157,7 +157,7 @@ namespace Aurora
 		textureDesc.Height = height;
 		textureDesc.MipLevels = getMipLevelsNum(width, height);
 		textureDesc.ImageFormat = format;
-		textureDesc.DebugName = "Loaded texture";
+		textureDesc.Name = "Loaded texture";
 		texture = AuroraEngine::RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
@@ -241,32 +241,7 @@ namespace Aurora
 				continue;
 			}
 
-			String shaderSource = LoadFileToString(filePath);
-
-			/*{
-				static const std::regex re("^[ ]*#[ ]*include[ ]+[\"<](.*)[\">].*");
-
-				std::stringstream input;
-				std::stringstream output;
-				input << shaderSource;
-
-				std::smatch matches;
-
-				std::string line;
-				while(std::getline(input,line))
-				{
-					if (std::regex_search(line, matches, re))
-					{
-						std::string include_file = matches[1];
-
-						AU_LOG_INFO(include_file);
-					} else {
-						output << line;
-					}
-				}
-
-				shaderSource = output.str();
-			}*/
+			String shaderSource = ReadShaderSource(filePath);
 
 			shaderProgramDesc.AddShader(shaderType, shaderSource, macros);
 		}

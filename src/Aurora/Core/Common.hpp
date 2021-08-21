@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include "Types.hpp"
 #include "../Logger/Logger.hpp"
 
 #define BASE_OF(TypeName, BaseClass) typename std::enable_if<std::is_base_of<BaseClass, TypeName>::value>::type* = nullptr

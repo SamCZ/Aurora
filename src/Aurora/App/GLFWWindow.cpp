@@ -170,6 +170,8 @@ namespace Aurora
 				)
 			return;
 
+		if(severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
+
 		std::stringstream MessageSS;
 
 		MessageSS << "OpenGL debug message " << id << " (";

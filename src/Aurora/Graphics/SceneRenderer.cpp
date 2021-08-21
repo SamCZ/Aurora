@@ -22,16 +22,13 @@ namespace Aurora
 		}
 	}
 
-	void SceneRenderer::Update(double delta, Frustum* frustum)
+	void SceneRenderer::Update(double delta)
 	{
 		ZoneNamedN(sceneRendererZone, "SceneRendererUpdate", true);
 
 		m_iCurrentModelContextIndex = 0;
 
-		m_OpaqueQueue.Clear();
-		m_TransparentQueue.Clear();
-		m_TranslucentQueue.Clear();
-		m_SkyQueue.Clear();
+		m_CameraQueueList.clear();
 
 		Mesh* lastMesh = nullptr;
 		Material* lastMaterial = nullptr;
@@ -45,13 +42,6 @@ namespace Aurora
 			if (mesh == nullptr)
 			{
 				continue;
-			}
-
-			if(meshComponent->GetBody().HasCollider() && frustum != nullptr) {
-				if(!frustum->IsBoxVisible(meshComponent->GetBody().GetTransformedBounds())) {
-					//Profiler::End("Frustum culling");
-					continue;
-				}
 			}
 
 			const Matrix4& transform = meshComponent->GetTransformMatrix();
@@ -85,20 +75,27 @@ namespace Aurora
 				mc->m_Lod = lod;
 				mc->m_bMeshObjectChanged = lastMesh != mesh.get() || lastMaterial != material.get();
 
-				switch (bucket)
+				for (CameraComponent *cameraComponent : m_Scene->GetCameraComponents())
 				{
-					case QueueBucket::Opaque:
-						m_OpaqueQueue.Add(mc);
-						break;
-					case QueueBucket::Transparent:
-						m_TransparentQueue.Add(mc);
-						break;
-					case QueueBucket::Translucent:
-						m_TranslucentQueue.Add(mc);
-						break;
-					case QueueBucket::Sky:
-						m_SkyQueue.Add(mc);
-						break;
+					if(!meshComponent->GetBody().HasCollider() || cameraComponent->GetFrustum().IsBoxVisible(meshComponent->GetBody().GetTransformedBounds())) {
+						CameraQueueList& queueList = m_CameraQueueList[cameraComponent->ID()];
+
+						switch (bucket)
+						{
+							case QueueBucket::Opaque:
+								queueList.OpaqueQueue.Add(mc);
+								break;
+							case QueueBucket::Transparent:
+								queueList.TransparentQueue.Add(mc);
+								break;
+							case QueueBucket::Translucent:
+								queueList.TranslucentQueue.Add(mc);
+								break;
+							case QueueBucket::Sky:
+								queueList.SkyQueue.Add(mc);
+								break;
+						}
+					}
 				}
 
 				lastMesh = mesh.get();
@@ -158,6 +155,7 @@ namespace Aurora
 	void SceneRenderer::Render(RenderTargetPack* renderTargetPack, bool apply, bool clear)
 	{
 		ZoneScopedN("SceneRender");
+		GPU_DEBUG_SCOPE("Scene Render")
 		DrawCallState drawCallState;
 
 		if(apply) {
@@ -166,10 +164,12 @@ namespace Aurora
 
 		for (CameraComponent *cameraComponent : m_Scene->GetCameraComponents())
 		{
-			RenderQueue(drawCallState, cameraComponent, m_SkyQueue);
-			RenderQueue(drawCallState, cameraComponent, m_OpaqueQueue);
-			RenderQueue(drawCallState, cameraComponent, m_TransparentQueue);
-			RenderQueue(drawCallState, cameraComponent, m_TranslucentQueue);
+			CameraQueueList& queueList = m_CameraQueueList[cameraComponent->ID()];
+
+			RenderQueue(drawCallState, cameraComponent, queueList.SkyQueue);
+			RenderQueue(drawCallState, cameraComponent, queueList.OpaqueQueue);
+			RenderQueue(drawCallState, cameraComponent, queueList.TransparentQueue);
+			RenderQueue(drawCallState, cameraComponent, queueList.TranslucentQueue);
 		}
 	}
 

@@ -42,6 +42,14 @@ namespace Aurora
 		}
 	};
 
+	struct CameraQueueList
+	{
+		MaterialRenderList OpaqueQueue;
+		MaterialRenderList TransparentQueue;
+		MaterialRenderList TranslucentQueue;
+		MaterialRenderList SkyQueue;
+	};
+
 	AU_CLASS(SceneRenderer)
 	{
 	private:
@@ -50,17 +58,14 @@ namespace Aurora
 		std::vector<ModelContext*> m_ModelContextCache;
 		uint32_t m_iCurrentModelContextIndex = 0;
 
-		MaterialRenderList m_OpaqueQueue;
-		MaterialRenderList m_TransparentQueue;
-		MaterialRenderList m_TranslucentQueue;
-		MaterialRenderList m_SkyQueue;
+		std::unordered_map<uint, CameraQueueList> m_CameraQueueList;
 
 		Buffer_ptr m_CameraConstantsUniformBuffer;
 	public:
 		explicit SceneRenderer(Scene_ptr scene);
 		~SceneRenderer();
 
-		void Update(double delta, Frustum* frustum);
+		void Update(double delta);
 		void Render(RenderTargetPack* renderTargetPack, bool apply, bool clear);
 
 	private:

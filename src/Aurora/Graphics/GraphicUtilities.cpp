@@ -12,6 +12,8 @@ namespace Aurora
 	static Texture_ptr m_PlaceholderTexture;
 	static Sampler_ptr m_BilinearSampler;
 
+	std::vector<TemporalRT*> GraphicUtilities::m_TemporalRenderTargets;
+
 	void GraphicUtilities::Init()
 	{
 		/*{
@@ -86,7 +88,7 @@ namespace Aurora
 				targetHeight = height;
 
 				TextureDesc textureDesc;
-				textureDesc.DebugName = "TextureArray";
+				textureDesc.Name = "TextureArray";
 				textureDesc.Width = targetWidth;
 				textureDesc.Height = targetHeight;
 				textureDesc.MipLevels = GetMipLevelsNum(targetWidth, targetHeight);
@@ -201,7 +203,7 @@ namespace Aurora
 				targetHeight = height;
 
 				TextureDesc textureDesc;
-				textureDesc.DebugName = "CubeMap";
+				textureDesc.Name = "CubeMap";
 				textureDesc.Width = targetWidth;
 				textureDesc.Height = targetHeight;
 				textureDesc.MipLevels = 1;
@@ -297,7 +299,7 @@ namespace Aurora
 
 		gBufferDesc.ImageFormat = format;
 		gBufferDesc.ClearValue = clearColor;
-		gBufferDesc.DebugName = name;
+		gBufferDesc.Name = name;
 
 		return AuroraEngine::RenderDevice->CreateTexture(gBufferDesc, nullptr);
 	}
@@ -403,5 +405,31 @@ namespace Aurora
 		}*/
 
 		return material;
+	}
+
+	TemporalRT *GraphicUtilities::GetTemporalRT(const String &name, int width, int height, GraphicsFormat format, uint flags)
+	{
+		TemporalRT::TempRTKey key = { width, height, format, flags };
+
+		for (TemporalRT* rt : m_TemporalRenderTargets)
+		{
+			if(rt->m_Key == key && !rt->m_InUse)
+			{
+				rt->m_InUse = true;
+				return rt;
+			}
+		}
+
+		auto* rt = new TemporalRT(key, CreateRenderTarget2D(name.c_str(), width, height, format, Colors::Transparent, false, flags & TEX_FLAG_UAV));
+		rt->SetName(name);
+
+		m_TemporalRenderTargets.push_back(rt);
+
+		return rt;
+	}
+
+	void TemporalRT::Free()
+	{
+		m_InUse = false;
 	}
 }

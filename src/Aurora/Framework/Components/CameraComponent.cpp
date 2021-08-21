@@ -2,8 +2,8 @@
 
 namespace Aurora
 {
-	CameraComponent::CameraComponent(int width, int height)
-			: SceneComponent(), m_Width(width), m_Height(height), m_LastViewMode(EViewMode::Orthographic),
+	CameraComponent::CameraComponent(uint cameraID, int width, int height)
+			: SceneComponent(), m_CameraID(cameraID), m_Width(width), m_Height(height), m_LastViewMode(EViewMode::Orthographic),
 			  m_ViewMode(EViewMode::Perspective),
 			  m_zNear(0.05f), m_zFar(2000.0f), m_FOV(80.0f), m_Frustum(glm::identity<Matrix4>()),
 			  m_ProjectionMatrix(),
@@ -11,7 +11,7 @@ namespace Aurora
 			  m_ProjectionViewMatrix(),
 			  m_IsFrustumUpdateEnabled(true), m_NeedsUpdateMatrix(true) { }
 
-	CameraComponent::CameraComponent(const Vector2i &size) : CameraComponent(size.x, size.y)
+	CameraComponent::CameraComponent(uint cameraID, const Vector2i &size) : CameraComponent(cameraID, size.x, size.y)
 	{
 
 	}

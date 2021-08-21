@@ -187,6 +187,11 @@ namespace Aurora
 			glDeleteShader(shaderID);
 		}
 
+
+		glUseProgram(programID);
+		glObjectLabel(GL_PROGRAM, programID, static_cast<GLsizei>(desc.GetName().size()), desc.GetName().c_str());
+		glUseProgram(0);
+
 		return shaderProgram;
 	}
 
@@ -329,6 +334,9 @@ namespace Aurora
 			CHECK_GL_ERROR();
 		}
 
+		glObjectLabel(GL_TEXTURE, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
+		CHECK_GL_ERROR();
+
 		glBindTexture(bindTarget, 0);
 
 		GLuint srgbView = GL_NONE;
@@ -349,14 +357,20 @@ namespace Aurora
 
 			CHECK_GL_ERROR();
 
+			glBindTexture(bindTarget, srgbView);
+
+			String srgbName = desc.Name + "_SRGB";
+			glObjectLabel(GL_TEXTURE, srgbView, static_cast<GLsizei>(srgbName.size()), srgbName.c_str());
+
 			if (desc.SampleCount == 1)
 			{
-				glBindTexture(bindTarget, srgbView);
+
 				glTexParameteri(bindTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				glTexParameteri(bindTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-				glBindTexture(bindTarget, 0);
 				CHECK_GL_ERROR();
 			}
+
+			glBindTexture(bindTarget, 0);
 		}
 
 		// TODO: Write @textureData
@@ -439,6 +453,8 @@ namespace Aurora
 			glGenBuffers(1, &handle);
 			glBindBuffer(bindTarget, handle);
 
+			glObjectLabel(GL_BUFFER, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
+
 			glBufferData(bindTarget, desc.ByteSize, data, usage);
 			CHECK_GL_ERROR();
 
@@ -446,6 +462,8 @@ namespace Aurora
 		} else {
 			glGenTextures(1, &handle);
 			glBindTexture(GL_TEXTURE_BUFFER, handle);
+
+			glObjectLabel(GL_TEXTURE, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
 
 			glTexBuffer(GL_TEXTURE_BUFFER, GL_R32UI, handle);
 			CHECK_GL_ERROR();
@@ -984,6 +1002,9 @@ namespace Aurora
 		glGenFramebuffers(1, &framebuffer->Handle);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->Handle);
 
+		String fbName = "Cached framebuffer " + std::to_string(hash);
+		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
+
 		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
 		{
 			const auto& targetBinding = state.RenderTargets[rt];
@@ -1006,9 +1027,9 @@ namespace Aurora
 			GLint encoding=-1;
 			glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING, &encoding);
 			if (encoding == GL_LINEAR)
-				AU_LOG_INFO("Framebuffer attachment ", targetBinding.Texture->GetDesc().DebugName, " (", rt, ") color encoding is linear.");
+				AU_LOG_INFO("Framebuffer attachment ", targetBinding.Texture->GetDesc().Name, " (", rt, ") color encoding is linear.");
 			if (encoding == GL_SRGB)
-				AU_LOG_INFO("Framebuffer attachment ", targetBinding.Texture->GetDesc().DebugName, " (", rt, ") color encoding is sRGB.");
+				AU_LOG_INFO("Framebuffer attachment ", targetBinding.Texture->GetDesc().Name, " (", rt, ") color encoding is sRGB.");
 
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + rt, renderState.targets[rt]->handle, renderState.targetMipSlices[rt], renderState.targetIndicies[rt]);
 
