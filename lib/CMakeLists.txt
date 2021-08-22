@@ -12,6 +12,7 @@ if(NOT TARGET glfw AND NOT PLATFORM_ANDROID)
     set(BUILD_SHARED_LIBS OFF)
     set(GLFW_USE_HYBRID_HPG ON)
     add_subdirectory(glfw)
+    set_property(TARGET glfw PROPERTY FOLDER "GameLib")
 endif()
 
 #--------------------------------
@@ -22,6 +23,7 @@ if(NOT TARGET nlohmann_json)
     set(JSON_BuildTests OFF)
     set(JSON_Install OFF)
     add_subdirectory(nlohmann_json)
+    set_property(TARGET nlohmann_json PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -30,6 +32,7 @@ endif()
 #------------------------------
 if(NOT TARGET glm)
     add_subdirectory(glm)
+    set_property(TARGET glm PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -38,6 +41,7 @@ endif()
 #------------------------------
 if(NOT TARGET glad AND NOT PLATFORM_ANDROID)
     add_subdirectory(glad)
+    set_property(TARGET glad PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -46,6 +50,7 @@ endif()
 #------------------------------
 if(FMOD_SUPPORTED)
     add_subdirectory(fmod)
+    #set_property(TARGET fmod PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -75,31 +80,61 @@ if(NOT TARGET assimp)
     set(ASSIMP_BUILD_DRACO OFF)
     add_subdirectory(assimp)
 
+    set_property(TARGET assimp PROPERTY FOLDER "GameLib")
+
     if(BUILD_SHARED_LIBS)
         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            if(MSVC)
+            if(WIN32)
+                if(MSVC)
+                    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+                        set(AURORA_DLL_TO_COPY
+                                ${AURORA_DLL_TO_COPY}
+                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/Debug/assimp-vc142-mtd.dll
+                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
+                    else()
+                        set(AURORA_DLL_TO_COPY
+                                ${AURORA_DLL_TO_COPY}
+                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mtd.dll
+                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
+                    endif()
+                else(MSVC)
+                    set(AURORA_DLL_TO_COPY
+                            ${AURORA_DLL_TO_COPY}
+                            ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll
+                            CACHE INTERNAL "AURORA_DLL_TO_COPY")
+                endif(MSVC)
+            else(WIN32)
                 set(AURORA_DLL_TO_COPY
                         ${AURORA_DLL_TO_COPY}
-                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mtd.dll
+                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.so
                         CACHE INTERNAL "AURORA_DLL_TO_COPY")
-            else(MSVC)
-                set(AURORA_DLL_TO_COPY
-                        ${AURORA_DLL_TO_COPY}
-                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll
-                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
-            endif(MSVC)
+            endif(WIN32)
         else()
-            if(MSVC)
+            if(WIN32)
+                if(MSVC)
+                    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+                        set(AURORA_DLL_TO_COPY
+                                ${AURORA_DLL_TO_COPY}
+                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/Release/assimp-vc142-mt.dll
+                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
+                    else()
+                        set(AURORA_DLL_TO_COPY
+                                ${AURORA_DLL_TO_COPY}
+                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mt.dll
+                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
+                    endif()
+                else(MSVC)
+                    set(AURORA_DLL_TO_COPY
+                            ${AURORA_DLL_TO_COPY}
+                            ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.dll
+                            CACHE INTERNAL "AURORA_DLL_TO_COPY")
+                endif(MSVC)
+            else(WIN32)
                 set(AURORA_DLL_TO_COPY
                         ${AURORA_DLL_TO_COPY}
-                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mt.dll
+                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.so
                         CACHE INTERNAL "AURORA_DLL_TO_COPY")
-            else(MSVC)
-                set(AURORA_DLL_TO_COPY
-                        ${AURORA_DLL_TO_COPY}
-                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.dll
-                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
-            endif(MSVC)
+            endif(WIN32)
         endif()
     endif()
 
@@ -112,6 +147,7 @@ endif()
 #------------------------------
 if(NOT TARGET ImGui)
     add_subdirectory(imgui)
+    set_property(TARGET ImGui PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -128,6 +164,7 @@ if(NOT TARGET freetype)
     set(CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz ON)
     set(CMAKE_DISABLE_FIND_PACKAGE_BrotliDec ON)
     add_subdirectory(freetype)
+    set_property(TARGET freetype PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -141,6 +178,8 @@ if(NOT TARGET RmlUI)
     set(CUSTOM_CONFIGURATION ON)
     set(CUSTOM_LINK_LIBRARIES freetype)
     add_subdirectory(RmlUI)
+    set_property(TARGET RmlCore PROPERTY FOLDER "GameLib")
+    set_property(TARGET RmlDebugger PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -156,6 +195,7 @@ if(NOT TARGET newton-dynamics)
     set(NEWTON_BUILD_CREATE_SUB_PROJECTS OFF)
     set(NEWTON_STATIC_RUNTIME_LIBRARIES ON)
     add_subdirectory(newton-dynamics/newton-4.00)
+    set_property(TARGET ndNewton PROPERTY FOLDER "GameLib")
 endif()
 
 #------------------------------
@@ -164,6 +204,7 @@ endif()
 #------------------------------
 if(NOT TARGET tracy)
     add_subdirectory(tracy)
+    set_property(TARGET TracyClient PROPERTY FOLDER "GameLib")
     if(WIN32)
         target_link_libraries(TracyClient PUBLIC Ws2_32 dbghelp)
         target_compile_definitions(TracyClient PUBLIC NOMINMAX)

@@ -12,4 +12,8 @@ set(SOURCE_FILES
 
 add_library(ImGui STATIC ${SOURCE_FILES})
 target_include_directories(ImGui PUBLIC imgui)
-target_link_libraries(ImGui glfw glad gdi32 opengl32 imm32)
+target_link_libraries(ImGui glfw glad)
+
+if(WIN32)
+    target_link_libraries(ImGui gdi32 opengl32 imm32)
+endif()

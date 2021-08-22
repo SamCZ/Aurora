@@ -39,10 +39,13 @@ endif()
 target_compile_definitions(Aurora PUBLIC NOMINMAX)
 
 target_link_libraries(Aurora PUBLIC glfw glm nlohmann_json assimp)
-target_link_libraries(Aurora PUBLIC glad opengl32 gdi32)
+target_link_libraries(Aurora PUBLIC glad)
 target_link_libraries(Aurora PUBLIC ImGui)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
+if(WIN32)
+    target_link_libraries(Aurora PUBLIC opengl32 gdi32)
+endif()
 
 target_link_libraries(Aurora PUBLIC ndNewton)
 target_link_libraries(Aurora PUBLIC TracyClient)
@@ -55,14 +58,16 @@ function(link_aurora TARGET_NAME)
     target_link_libraries(${TARGET_NAME} PUBLIC Aurora)
     target_include_directories(${TARGET_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
-    foreach(DLL ${AURORA_DLL_TO_COPY})
-        #configure_file(${DLL} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
-        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-                COMMAND "${CMAKE_COMMAND}" -E copy
-                ${DLL}
-                ${CMAKE_CURRENT_BINARY_DIR}
-                COMMENT "Copying dll ${DLL} to output directory")
-    endforeach(DLL)
+    if(WIN32)
+        foreach(DLL ${AURORA_DLL_TO_COPY})
+            #configure_file(${DLL} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+            add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+                    COMMAND "${CMAKE_COMMAND}" -E copy
+                    ${DLL}
+                    ${CMAKE_CURRENT_BINARY_DIR}
+                    COMMENT "Copying dll ${DLL} to output directory")
+        endforeach(DLL)
+    endif(WIN32)
 endfunction()
 
 # Build examples
