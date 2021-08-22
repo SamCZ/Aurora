@@ -6,7 +6,7 @@
 #include <thread>
 
 #include "Graphics/OpenGL/GLRenderDevice.hpp"
-#include "Graphics/OpenGL/SwapChainGL4.hpp"
+#include "Graphics/OpenGL/GLSwapChain.hpp"
 
 #if GLFW_ENABLED
 
@@ -101,8 +101,6 @@ namespace Aurora
 
 		bool anyWindowRunning;
 		std::queue<WindowGameContext_ptr> contextsToRemove;
-
-		const float ClearColor[] = {0.0f, 0.0f, 0.0f, 1.0f};
 
 		auto PrevTime = glfwGetTime();
 		auto lastFpsTime = PrevTime;
@@ -361,7 +359,7 @@ namespace Aurora
 		// TODO: Comple swap chain
 
 #if GLFW_ENABLED
-		swapChain = std::make_shared<SwapChainGL4>(((GLFWWindow*)window.get())->GetWindowHandle());
+		swapChain = std::make_shared<GLSwapChain>(((GLFWWindow*)window.get())->GetWindowHandle());
 #endif
 		return true;
 	}

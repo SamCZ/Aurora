@@ -8,13 +8,13 @@
 
 namespace Aurora
 {
-	AU_CLASS(SwapChainGL4) : public ISwapChain
+	AU_CLASS(GLSwapChain) : public ISwapChain
 	{
 	private:
 		GLFWwindow* m_Window;
 		int m_LastSyncInterval;
 	public:
-		inline explicit SwapChainGL4(GLFWwindow* window) : m_Window(window), m_LastSyncInterval(-1)
+		inline explicit GLSwapChain(GLFWwindow* window) : m_Window(window), m_LastSyncInterval(-1)
 		{
 
 		}
