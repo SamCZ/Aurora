@@ -644,7 +644,7 @@ namespace Aurora
 		for(const auto& drawArg : args) {
 			uint32_t indexOffset = drawArg.StartIndexLocation * 4 + state.IndexBufferOffset;
 
-			if(drawArg.InstanceCount > 0) {
+			if(drawArg.InstanceCount > 1) {
 				glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
 			} else {
 				glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLint(drawArg.StartVertexLocation));
