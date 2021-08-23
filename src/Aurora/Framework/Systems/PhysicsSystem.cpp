@@ -2,6 +2,8 @@
 #include "Aurora/Physics/MotionIntegrators.hpp"
 //#include <GLFW/glfw3.h>
 
+#include <Tracy.hpp>
+
 namespace Aurora
 {
 	PhysicsSystem::PhysicsSystem() : m_TerminalVelocity(57.0)
@@ -34,6 +36,8 @@ namespace Aurora
 
 	void Aurora::PhysicsSystem::Update(const std::vector<SceneComponent *> &components, double delta)
 	{
+		ZoneScopedN("PhysicsSystem::Update")
+
 		static Vector3D gravity = Vector3D(0, -30, 0); //-9.81
 		static double object_mass = 1;
 
