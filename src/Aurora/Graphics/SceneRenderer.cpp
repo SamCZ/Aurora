@@ -9,7 +9,7 @@ namespace Aurora
 		Matrix4 ModelMatrix;
 	};
 
-	SceneRenderer::SceneRenderer(Scene_ptr scene) : m_Scene(std::move(scene))
+	SceneRenderer::SceneRenderer(Scene_ptr scene) : m_Scene(std::move(scene)), m_NumDrawCalls(0), m_NumTriangles(0)
 	{
 		m_CameraConstantsUniformBuffer = RD->CreateBuffer(BufferDesc("CameraConstants", sizeof(CameraConstants), 0, EBufferType::UniformBuffer));
 	}
@@ -64,6 +64,8 @@ namespace Aurora
 				}
 
 				auto &material = materialSlot.Material;
+
+				if(!material->IsEnabled()) continue;
 
 				QueueBucket bucket = material->GetQueueBucket();
 
@@ -145,6 +147,8 @@ namespace Aurora
 				drawArguments.StartIndexLocation = section.FirstIndex;
 				drawArguments.InstanceCount = 1;
 				RD->DrawIndexed(drawCallState, {drawArguments});
+				m_NumDrawCalls++;
+				m_NumTriangles += section.NumTriangles / 3;
 
 				drawCallState.ClearColorTarget = false;
 				drawCallState.ClearDepthTarget = false;
@@ -154,6 +158,8 @@ namespace Aurora
 
 	void SceneRenderer::Render(RenderTargetPack* renderTargetPack, bool apply, bool clear)
 	{
+		m_NumDrawCalls = 0;
+		m_NumTriangles = 0;
 		ZoneScopedN("SceneRender");
 		GPU_DEBUG_SCOPE("Scene Render")
 		DrawCallState drawCallState;

@@ -5,17 +5,27 @@
 
 namespace Aurora
 {
+	std::vector<Material*> Material::m_LoadedMaterials;
 
-	Material::Material(String name, const Path &shaderPath, const ShaderMacros &macros) : m_Name(std::move(name)), m_QueueBucket(QueueBucket::Opaque)
+	Material::Material(String name, const Path &shaderPath, const ShaderMacros &macros) : m_Name(std::move(name)), m_QueueBucket(QueueBucket::Opaque), m_Enabled(true)
 	{
 		m_Shader = ASM->LoadShaderFolder(shaderPath, macros);
 
 		LoadShaderResources(m_Shader);
+
+		m_LoadedMaterials.push_back(this);
 	}
 
-	Material::Material(String name, Shader_ptr shader) : m_Name(std::move(name)), m_Shader(std::move(shader)), m_QueueBucket(QueueBucket::Opaque)
+	Material::Material(String name, Shader_ptr shader) : m_Name(std::move(name)), m_Shader(std::move(shader)), m_QueueBucket(QueueBucket::Opaque), m_Enabled(true)
 	{
 		LoadShaderResources(m_Shader);
+
+		m_LoadedMaterials.push_back(this);
+	}
+
+	Material::~Material()
+	{
+		m_LoadedMaterials.erase(std::find(m_LoadedMaterials.begin(), m_LoadedMaterials.end(), this));
 	}
 
 	void Material::LoadShaderResources(const Shader_ptr &shader)

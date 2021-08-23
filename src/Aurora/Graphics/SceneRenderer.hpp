@@ -61,6 +61,9 @@ namespace Aurora
 		std::unordered_map<uint, CameraQueueList> m_CameraQueueList;
 
 		Buffer_ptr m_CameraConstantsUniformBuffer;
+
+		uint32_t m_NumDrawCalls;
+		uint32_t m_NumTriangles;
 	public:
 		explicit SceneRenderer(Scene_ptr scene);
 		~SceneRenderer();
@@ -68,6 +71,8 @@ namespace Aurora
 		void Update(double delta);
 		void Render(RenderTargetPack* renderTargetPack, bool apply, bool clear);
 
+		inline uint32_t NumDrawCalls() const { return m_NumDrawCalls; }
+		inline uint32_t NumTriangles() const { return m_NumTriangles; }
 	private:
 		ModelContext *GetModelContext();
 		void RenderQueue(DrawCallState& drawCallState, CameraComponent *camera, MaterialRenderList &renderQueue);

@@ -49,8 +49,13 @@ namespace Aurora
 		typedef std::vector<ShaderTextureDef> TextureDefList;
 		typedef std::vector<std::pair<String, Sampler_ptr>> SamplerList;
 	private:
+		static std::vector<Material*> m_LoadedMaterials;
+	public:
+		static const std::vector<Material*>& GetLoadedMaterials() { return m_LoadedMaterials; }
+	private:
 		const String m_Name;
 		Shader_ptr m_Shader;
+		bool m_Enabled;
 	private:
 		ConstantBufferList m_ShaderConstantBuffers;
 		TextureDefList m_ShaderTextures;
@@ -65,6 +70,7 @@ namespace Aurora
 	public:
 		Material(String name, const Path& shaderPath, const ShaderMacros& macros = {});
 		Material(String name, Shader_ptr shader);
+		~Material();
 
 		void LoadShaderResources(const Shader_ptr& shader);
 		void UpdateResources();
@@ -90,6 +96,12 @@ namespace Aurora
 
 		[[nodiscard]] inline const Shader_ptr& GetShader() const { return m_Shader; }
 		[[nodiscard]] inline UniqueIdentifier GetShaderUID() const { return m_Shader->GetUniqueID(); }
+
+		inline void SetEnabled(bool enabled) { m_Enabled = enabled; };
+		[[nodiscard]] inline bool IsEnabled() const { return m_Enabled; }
+		[[nodiscard]] inline bool& Enabled() { return m_Enabled; }
+
+		inline const String& GetName() const { return m_Name; }
 	public:
 		bool SetVariable(const String& name, void* data, size_t size);
 

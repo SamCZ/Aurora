@@ -224,11 +224,19 @@ namespace Aurora
 						Physics->Sync();
 					}*/
 
-					ImGui::Render();
-					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+					{
+						ZoneNamedN(imGuiZone, "ImGui", true)
+						GPU_DEBUG_SCOPE("ImGui")
+
+						ImGui::Render();
+						ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+					}
 					glEnable(GL_FRAMEBUFFER_SRGB);
 
-					window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
+					{
+						ZoneNamedN(swapChainZone, "SwapChain", true)
+						window->GetSwapChain()->Present(window->IsVsyncEnabled() ? 1 : 0);
+					}
 				} else {
 					std::this_thread::sleep_for(std::chrono::milliseconds(1));
 				}
