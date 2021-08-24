@@ -20,6 +20,12 @@ public:                            \
 [[nodiscard]] inline ComponentList<name>& Get##name##List() { return m_##name##s; } \
 [[nodiscard]] inline const std::vector<name *>& Get##name##s() const { return m_##name##s.GetComponents(); } \
 
+#define COMPONENT_LIST_NAMED(name, varName) \
+ComponentList<name> m_##varName##s;      \
+public:                            \
+[[nodiscard]] inline ComponentList<name>& Get##varName##List() { return m_##varName##s; } \
+[[nodiscard]] inline const std::vector<name *>& Get##varName##s() const { return m_##varName##s.GetComponents(); } \
+
 namespace Aurora
 {
 	AU_CLASS(Scene)
@@ -33,6 +39,7 @@ namespace Aurora
 		COMPONENT_LIST(SceneComponent)
 		COMPONENT_LIST(CameraComponent)
 		COMPONENT_LIST(PointLightComponent)
+		COMPONENT_LIST_NAMED(SceneComponent, PhysicsSceneComponent)
 
 		GameModeBase* m_GameMode;
 	public:
@@ -203,11 +210,13 @@ namespace Aurora
 
 			m_SceneComponents.UpdateSystems(delta);
 			m_MeshComponents.UpdateSystems(delta);
+			m_PhysicsSceneComponents.UpdateSystems(delta);
 
 			m_SceneComponents.UpdateComponents(delta);
 
 			m_SceneComponents.PostUpdateSystems(delta);
 			m_MeshComponents.PostUpdateSystems(delta);
+			m_PhysicsSceneComponents.PostUpdateSystems(delta);
 		}
 
 		std::optional<CollisionResult> RayCast(const Ray& ray, const Layer& layer = Layer("RayCast"));

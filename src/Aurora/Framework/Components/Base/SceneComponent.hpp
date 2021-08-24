@@ -94,7 +94,7 @@ namespace Aurora
 		inline void AddRotation(double x, double y, double z) { m_Rotation.x += x, m_Rotation.y += y, m_Rotation.z += z; MarkTransformUpdate(); }
 		inline void AddScale(double x, double y, double z) { m_Scale.x += x, m_Scale.y += y, m_Scale.z += z; MarkTransformUpdate(); }
 	public:
-		inline void SetSimulatePhysics(bool enabled) { m_IsSimulatingPhysics = enabled; }
+		void SetSimulatePhysics(bool enabled);
 		inline bool IsSimulatingPhysics() const { return m_IsSimulatingPhysics; }
 
 		inline void SetCanReceiveCollisions(bool receiveCollision) { m_CanReceiveCollisions = receiveCollision; }

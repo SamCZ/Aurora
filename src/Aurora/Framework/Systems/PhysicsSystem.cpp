@@ -65,6 +65,7 @@ namespace Aurora
 		size_t componentCount = components.size();
 
 		for (int i = 0; i < componentCount; ++i) {
+			ZoneNamedN(componentCountZone, "ComponentPhysics", true);
 			auto* component = components[i];
 
 			component->CollidingAxes(0) = false;

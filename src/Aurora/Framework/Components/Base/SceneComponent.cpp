@@ -1,4 +1,5 @@
 #include "SceneComponent.hpp"
+#include "../../Scene.hpp"
 
 namespace Aurora
 {
@@ -15,6 +16,11 @@ namespace Aurora
 		m_Parent = InParent;
 		m_Owner = InParent->m_Owner;
 		m_Scene = InParent->m_Scene;
+
+		if(IsSimulatingPhysics())
+		{
+			m_Scene->GetPhysicsSceneComponentList().Add(this);
+		}
 
 		InParent->m_Components.push_back(this);
 		return true;
@@ -92,5 +98,24 @@ namespace Aurora
 		store.y = trns[i][1];
 		store.z = trns[i][2];
 		return store;
+	}
+
+	void SceneComponent::SetSimulatePhysics(bool enabled)
+	{
+		m_IsSimulatingPhysics = enabled;
+
+		assert(m_Scene);
+
+		auto& pList = m_Scene->GetPhysicsSceneComponentList();
+
+		auto it = std::find(pList.begin(), pList.end(), this);
+		if(enabled)
+		{
+			if(it == pList.end()) pList.Add(this);
+		}
+		else
+		{
+			if(it != pList.end()) pList.Remove(this);
+		}
 	}
 }
