@@ -9,32 +9,16 @@
 #include "Graphics/OpenGL/GLSwapChain.hpp"
 
 #if GLFW_ENABLED
-
-	#ifdef _WIN32
-	#define GLFW_EXPOSE_NATIVE_WIN32
-	#endif
-	#ifdef __unix__
-	#include <X11/Xlib-xcb.h>
-		#define GLFW_EXPOSE_NATIVE_X11
-	#endif
-
-	#include <GLFW/glfw3.h>
-	#include <GLFW/glfw3native.h>
-
 	#include "App/Input/GLFW/Manager.hpp"
 #endif
-#include "Graphics/GraphicUtilities.hpp"
 
-#include "Graphics/OpenGL/GL.hpp"
+#include "Graphics/GraphicUtilities.hpp"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
 #include <RmlUi/Core.h>
-#include "RmlUI/ShellSystemInterface.hpp"
-#include "RmlUI/ShellRenderInterfaceOpenGL.hpp"
-#include "RmlUI/RmlUI.hpp"
 
 #define MAX_PHYSICS_FPS				60.0f
 #define MAX_PHYSICS_SUB_STEPS		2
@@ -363,8 +347,6 @@ namespace Aurora
             return true;
         }
 #endif*/
-
-		// TODO: Comple swap chain
 
 #if GLFW_ENABLED
 		swapChain = std::make_shared<GLSwapChain>(((GLFWWindow*)window.get())->GetWindowHandle());
