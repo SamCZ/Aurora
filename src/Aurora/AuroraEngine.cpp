@@ -17,6 +17,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include "Tools/ImGuizmo.h"
 
 #include <RmlUi/Core.h>
 
@@ -28,6 +29,9 @@
 #include <ndNewton.h>
 
 #include <TracyOpenGL.hpp>
+
+#include <entt/entity/entity.hpp>
+#include <entt/entity/registry.hpp>
 
 namespace Aurora
 {
@@ -162,6 +166,8 @@ namespace Aurora
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
+
+				ImGuizmo::BeginFrame();
 
 				{
 					if (show_demo_window)

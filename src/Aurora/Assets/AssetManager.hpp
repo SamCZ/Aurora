@@ -10,6 +10,7 @@
 #include "FilePackager.hpp"
 
 #include "Resources/ShaderResourceObject.hpp"
+#include "GLTFLoader.hpp"
 
 namespace Aurora
 {
@@ -36,14 +37,18 @@ namespace Aurora
 
 		std::map<Path, ShaderResourceObject_ptr> m_ShaderResources;
 		std::map<Path, Shader_ptr> m_ShaderPrograms;
+		GLTFLoader* m_gLTFLoader;
 	public:
 		AssetManager();
+		~AssetManager();
 
 		DataBlob LoadFile(const Path& path, bool* isFromAssetPackage = nullptr);
 		[[nodiscard]] bool FileExists(const Path& path, bool* isFromAssetPackage = nullptr) const;
 		String LoadFileToString(const Path& path, bool* isFromAssetPackage = nullptr);
 
 		void LoadPackageFile(const Path& path);
+
+		Mesh_ptr LoadGLTF(const Path& path);
 
 		/*const ShaderResourceObject_ptr& LoadShaderResource(const Path& path, const ShaderType& type);
 		std::vector<ShaderResourceObject_ptr> LoadShaderResourceFolder(const Path& path);*/
@@ -52,6 +57,7 @@ namespace Aurora
 		Shader_ptr LoadShaderFolder(const Path& path, const ShaderMacros& macros = {});
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
 		Shader_ptr CreateShaderProgram(const std::map<EShaderType, String>& shaders, const ShaderMacros& macros = {});
+		bool ClearShaderFromCache(const Path& path);
 
 		Texture_ptr LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo = {});
 		Texture_ptr LoadTexture(const String& filename, GraphicsFormat format, const DataBlob& fileData, const TextureLoadInfo& textureLoadInfo = {});

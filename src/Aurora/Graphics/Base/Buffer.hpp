@@ -50,6 +50,13 @@ namespace Aurora
 		Copy
 	};
 
+	enum class EBufferAccess : uint8_t
+	{
+		ReadOnly = 0,
+		WriteOnly,
+		ReadWrite
+	};
+
 	struct BufferDesc
 	{
 		std::string Name;

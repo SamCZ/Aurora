@@ -30,3 +30,7 @@
 	path = lib/tracy
 	url = git@github.com:wolfpld/tracy.git
 	branch = master
+[submodule "tinygltf"]
+	path = lib/tinygltf
+	url = git@github.com:syoyo/tinygltf.git
+	branch = master

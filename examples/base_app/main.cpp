@@ -75,6 +75,8 @@ public:
 
 		auto* cameraActor = m_MainScene->SpawnActor<BaseCameraActor>("Camera", Vector3D(0.0));
 		cameraActor->GetCamera()->Resize(GetWindow()->GetSize());
+
+		ASM->LoadGLTF("Assets/box.gltf");
 	}
 
 	void Update(double delta, double currentTime) override

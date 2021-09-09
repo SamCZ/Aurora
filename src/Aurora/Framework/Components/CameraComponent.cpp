@@ -93,6 +93,19 @@ namespace Aurora
 		return m_ViewMatrix;
 	}
 
+	void CameraComponent::LookAt(const Vector3 &eye, const Vector3 &center, const Vector3 &up)
+	{
+		auto mat = glm::lookAt(eye, center, up);
+
+		Vector3 location;
+		Vector3 rotation;
+		Vector3 scale;
+		glm::DecomposeTransform(mat, location, rotation, scale);
+		//SetLocation(location);
+		SetRotation(rotation);
+		//SetScale(scale);
+	}
+
 	Matrix4 CameraComponent::GetProjectionViewMatrix() const
 	{
 		return m_ProjectionViewMatrix;

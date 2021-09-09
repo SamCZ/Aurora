@@ -49,6 +49,7 @@ endif()
 
 target_link_libraries(Aurora PUBLIC ndNewton)
 target_link_libraries(Aurora PUBLIC TracyClient)
+target_link_libraries(Aurora PUBLIC tinygltf)
 
 foreach(INCLUDE_DIR ${AURORA_ADD_INCLUDE_DIRS})
     target_include_directories(Aurora PUBLIC ${INCLUDE_DIR})

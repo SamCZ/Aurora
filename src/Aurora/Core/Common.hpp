@@ -100,9 +100,6 @@ std::shared_ptr<B> SharedFromThis<T>::AsSharedSafe()
 	return std::dynamic_pointer_cast<B, T>(this->shared_from_this());
 }
 
-using String = std::basic_string<char>;
-using Path = std::filesystem::path;
-
 template<typename T>
 inline bool VectorRemove(std::vector<T>& vector, T& data)
 {

@@ -52,6 +52,7 @@ namespace Aurora
 		static std::vector<Material*> m_LoadedMaterials;
 	public:
 		static const std::vector<Material*>& GetLoadedMaterials() { return m_LoadedMaterials; }
+		static void ClearLoadedMaterials() { m_LoadedMaterials.clear(); }
 	private:
 		const String m_Name;
 		Shader_ptr m_Shader;
@@ -71,6 +72,8 @@ namespace Aurora
 		Material(String name, const Path& shaderPath, const ShaderMacros& macros = {});
 		Material(String name, Shader_ptr shader);
 		~Material();
+
+		void ReloadShader();
 
 		void LoadShaderResources(const Shader_ptr& shader);
 		void UpdateResources();
@@ -116,5 +119,10 @@ namespace Aurora
 
 		void SetTexture(const String& name, const Texture_ptr& texture);
 		void SetSampler(const String& name, const Sampler_ptr& sampler);
+
+	private:
+		typedef std::pair<ShaderConstantBuffer&, const ShaderVariable&> ShaderVarResult;
+		std::optional<ShaderVarResult> FindVariable(const String& varName);
+		void SetVariable(const ShaderVarResult& shaderVarResult, const void* data, size_t size);
 	};
 }

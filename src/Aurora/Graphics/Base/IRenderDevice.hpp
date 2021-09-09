@@ -20,7 +20,9 @@
 
 #if defined(AURORA_OPENGL) || true
 #include "../OpenGL/GLRenderGroupScope.hpp"
-#define GPU_DEBUG_SCOPE(name) ::Aurora::GLRenderGroupScope glRenderGroupScope(name);
+#define CAT_(a, b) a ## b
+#define CAT(a, b) CAT_(a, b)
+#define GPU_DEBUG_SCOPE(name) ::Aurora::GLRenderGroupScope CAT(_GPU_Debug_Scope_, __LINE__)(name);
 #else
 #define GPU_DEBUG_SCOPE(name)
 #endif
@@ -214,6 +216,18 @@ namespace Aurora
 			RenderTargets[slot] = TargetBinding(std::move(texture), index, mipSlice);
 		}
 
+		void BindDepthTarget(Texture_ptr depthTarget, uint32_t depthIndex, uint32_t depthMipSlice)
+		{
+			DepthTarget = depthTarget;
+			DepthIndex = depthIndex;
+			DepthMipSlice = depthMipSlice;
+
+			if(depthTarget != nullptr)
+			{
+				HasAnyRenderTarget = true;
+			}
+		}
+
 		inline void UnboundTarget(uint16_t slot)
 		{
 			assert(slot < MaxRenderTargets);
@@ -268,7 +282,14 @@ namespace Aurora
 		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) = 0;
 		virtual void ClearBufferUInt(const Buffer_ptr& buffer, uint32_t clearValue) = 0;
 		virtual void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) = 0;
-		virtual void ReadBuffer(const Buffer_ptr& buffer, void* data, size_t* dataSize) = 0; // for debugging purposes only*/
+		virtual void* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) = 0;
+
+		template<typename T> T* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
+		{
+			reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
+		}
+
+		virtual void UnmapBuffer(const Buffer_ptr& buffer) = 0;
 		inline Buffer_ptr CreateBuffer(const BufferDesc& desc) { return CreateBuffer(desc, nullptr); }
 		// Samplers
 		virtual Sampler_ptr CreateSampler(const SamplerDesc& desc) = 0;

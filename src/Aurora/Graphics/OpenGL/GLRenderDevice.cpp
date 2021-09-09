@@ -531,40 +531,25 @@ namespace Aurora
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
-	void GLRenderDevice::ReadBuffer(const Buffer_ptr &buffer, void *data, size_t *dataSize)
+	void* GLRenderDevice::MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
+	{
+		if(buffer == nullptr) {
+			return nullptr;
+		}
+		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
+		GLvoid* pMappedData = glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
+		return pMappedData;
+	}
+
+	void GLRenderDevice::UnmapBuffer(const Buffer_ptr& buffer)
 	{
 		if(buffer == nullptr) {
 			return;
 		}
-
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
-
-		auto nBytesToRead = uint32_t(*dataSize);
-		if (nBytesToRead > glBuffer->GetDesc().ByteSize)
-		{
-			nBytesToRead = glBuffer->GetDesc().ByteSize;
-		}
-
-		/*glBindBuffer(GL_SHADER_STORAGE_BUFFER, glBuffer->Handle());
-
-		void* pMappedData = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, nBytesToRead, GL_MAP_READ_BIT);
-		if (pMappedData)
-		{
-			memcpy(data, pMappedData, nBytesToRead);
-			*dataSize = nBytesToRead;
-		}
-		else
-		{
-			*dataSize = 0;
-		}
-
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, GL_NONE);*/
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, glBuffer->Handle());
-		GLvoid* pMappedData = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
-		memcpy(data, pMappedData, nBytesToRead);
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		glUnmapBuffer(glBuffer->BindTarget());
+		glBindBuffer(glBuffer->BindTarget(), GL_NONE);
 	}
 
 	Sampler_ptr GLRenderDevice::CreateSampler(const SamplerDesc &desc)
@@ -1049,7 +1034,7 @@ namespace Aurora
 			else
 				attachment = GL_DEPTH_ATTACHMENT;
 
-			if (state.DepthIndex == ~0u || state.DepthTarget->GetDesc().DepthOrArraySize == 0) {
+			if (state.DepthTarget->GetDesc().DepthOrArraySize == 0) {
 				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, glDepthTex->BindTarget(), glDepthTex->Handle(), GLint(state.DepthMipSlice));
 			} else {
 				glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, glDepthTex->Handle(), GLint(state.DepthMipSlice), GLint(state.DepthIndex));

@@ -13,7 +13,15 @@
 
 namespace Aurora
 {
-	AssetManager::AssetManager() = default;
+	AssetManager::AssetManager() : m_gLTFLoader(nullptr)
+	{
+		m_gLTFLoader = new GLTFLoader(this);
+	}
+
+	AssetManager::~AssetManager()
+	{
+		delete m_gLTFLoader;
+	}
 
 	void AssetManager::LoadPackageFile(const Path& path)
 	{
@@ -80,6 +88,11 @@ namespace Aurora
 		unsigned int levelsNum = (unsigned int)(logf((float)size) / logf(2.0f)) + 1;
 
 		return levelsNum;
+	}
+
+	Mesh_ptr AssetManager::LoadGLTF(const Path& path)
+	{
+		return m_gLTFLoader->Load(path);
 	}
 
 	Texture_ptr AssetManager::LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo)
@@ -255,6 +268,21 @@ namespace Aurora
 		m_ShaderPrograms[path] = shaderProgram;
 
 		return shaderProgram;
+	}
+
+	bool AssetManager::ClearShaderFromCache(const Path &path)
+	{
+		auto it = m_ShaderPrograms.find(path);
+
+		if(it != m_ShaderPrograms.end())
+		{
+			m_ShaderPrograms.erase(it);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	String AssetManager::ReadShaderSource(const Path& path)

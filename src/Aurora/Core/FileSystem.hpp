@@ -2,7 +2,9 @@
 
 #include <vector>
 #include <filesystem>
+#include <iostream>
 
+#include "Types.hpp"
 #include "MemoryStream.hpp"
 
 namespace Aurora

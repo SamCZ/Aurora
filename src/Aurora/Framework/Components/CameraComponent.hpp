@@ -70,6 +70,8 @@ namespace Aurora
 		[[nodiscard]] Vector3D GetUpVector() override;
 		[[nodiscard]] Vector3D GetLeftVector() override;
 
+		void LookAt(const Vector3& eye, const Vector3& center, const Vector3& up);
+
 		inline const Frustum& GetFrustum() { return m_Frustum; }
 
 		inline float GetFov() const { return m_FOV; }

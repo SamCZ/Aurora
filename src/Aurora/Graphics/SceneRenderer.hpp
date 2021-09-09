@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Aurora/Core/Common.hpp>
+#include <Aurora/Core/Vector.hpp>
 #include <Aurora/Framework/Scene.hpp>
+#include <Aurora/Tools/robin_hood.h>
 
 #include "RenderTargetManager.hpp"
 
@@ -21,7 +23,7 @@ namespace Aurora
 	{
 	public:
 		typedef std::vector<ModelContext*> ModelContextList;
-		typedef std::map<UniqueIdentifier, ModelContextList> MaterialMap;
+		typedef robin_hood::unordered_map<UniqueIdentifier, ModelContextList> MaterialMap;
 	private:
 		MaterialMap m_Map;
 	public:
@@ -58,7 +60,7 @@ namespace Aurora
 		std::vector<ModelContext*> m_ModelContextCache;
 		uint32_t m_iCurrentModelContextIndex = 0;
 
-		std::unordered_map<uint, CameraQueueList> m_CameraQueueList;
+		robin_hood::unordered_map<uint, CameraQueueList> m_CameraQueueList;
 
 		Buffer_ptr m_CameraConstantsUniformBuffer;
 
@@ -70,6 +72,7 @@ namespace Aurora
 
 		void Update(double delta);
 		void Render(RenderTargetPack* renderTargetPack, bool apply, bool clear);
+		void CaptureDepthToCubeMap(const Texture_ptr& cubeMap, const Vector3D& pos);
 
 		inline uint32_t NumDrawCalls() const { return m_NumDrawCalls; }
 		inline uint32_t NumTriangles() const { return m_NumTriangles; }

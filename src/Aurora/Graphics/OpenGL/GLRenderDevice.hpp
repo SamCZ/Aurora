@@ -68,7 +68,8 @@ namespace Aurora
 		void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) override;
 		void ClearBufferUInt(const Buffer_ptr& buffer, uint32_t clearValue) override;
 		void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) override;
-		void ReadBuffer(const Buffer_ptr& buffer, void* data, size_t* dataSize) override;
+		void* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) override;
+		void UnmapBuffer(const Buffer_ptr& buffer) override;
 		// Samplers
 		Sampler_ptr CreateSampler(const SamplerDesc& desc) override;
 		// InputLayout

@@ -44,13 +44,15 @@ namespace Aurora
 
 		if(m_NeedsUpdateMatrix) {
 			m_NeedsUpdateMatrix = false;
-			auto rotation = glm::identity<Matrix4>();
+			/*auto rotation = glm::identity<Matrix4>();
 
 			rotation *= glm::rotate(glm::radians(static_cast<float>(m_Rotation.z)), axisZ);
 			rotation *= glm::rotate(glm::radians(static_cast<float>(m_Rotation.y)), axisY);
 			rotation *= glm::rotate(glm::radians(static_cast<float>(m_Rotation.x)), axisX);
 
-			m_LastMatrix = (glm::translate((Vector3)m_Location) * rotation) * glm::scale((Vector3)m_Scale);
+			m_LastMatrix = (glm::translate((Vector3)m_Location) * rotation) * glm::scale((Vector3)m_Scale);*/
+
+			m_LastMatrix = glm::translate((Vector3)m_Location) * glm::toMat4(glm::quat(glm::radians(m_Rotation))) * glm::scale((Vector3)m_Scale);
 
 			if (m_Parent != nullptr)
 			{

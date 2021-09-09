@@ -191,4 +191,51 @@ namespace Aurora
 			return m_ModelContextCache[m_iCurrentModelContextIndex++];
 		}
 	}
+
+	void SceneRenderer::CaptureDepthToCubeMap(const Texture_ptr& cubeMap, const Vector3D& pos)
+	{
+		ZoneScopedN("CaptureDepthToCubeMap");
+		GPU_DEBUG_SCOPE("CaptureDepthToCubeMap")
+
+		const TextureDesc& desc = cubeMap->GetDesc();
+
+		CameraComponent camera = *m_Scene->GetCameraComponents()[0];
+		camera.SetFov(90);
+		camera.SetZNear(0.5f);
+		camera.SetZFar(250.0f);
+		camera.Resize(desc.GetSize());
+		camera.SetRotation(0, 0, 0);
+
+		CameraQueueList& queueList = m_CameraQueueList[0];
+		DrawCallState drawCallState;
+		drawCallState.ResetTargets();
+
+		drawCallState.BindDepthTarget(cubeMap, 0, 0);
+		drawCallState.ViewPort = desc.GetSize();
+
+		Vector3 captureViews[] = {
+				Vector3(0, -90, 0), // X+
+				Vector3(0, 90, 0), // X-
+				Vector3(90, 0, 0), // Y+
+				Vector3(-90, 0, 0), // Y-
+				Vector3(0, 0, 0), // Z+
+				Vector3(0, -180, 0), // Z-
+		};
+
+		for (int i = 0; i < 6; ++i)
+		{
+			camera.SetLocation(pos);
+			camera.SetRotation(captureViews[i]);
+			camera.Tick(0);
+
+			GPU_DEBUG_SCOPE("Face " + std::to_string(i))
+			drawCallState.DepthIndex = i;
+			drawCallState.ClearDepthTarget = true;
+
+			//RenderQueue(drawCallState, &camera, queueList.SkyQueue);
+			RenderQueue(drawCallState, &camera, queueList.OpaqueQueue);
+			RenderQueue(drawCallState, &camera, queueList.TransparentQueue);
+			RenderQueue(drawCallState, &camera, queueList.TranslucentQueue);
+		}
+	}
 }

@@ -207,4 +207,21 @@ namespace Aurora
 			}
 		}
 	}
+
+	GLenum ConvertBufferAccess(EBufferAccess bufferAccess)
+	{
+		switch(bufferAccess)
+		{
+			case EBufferAccess::ReadOnly:
+				return GL_READ_ONLY;
+			case EBufferAccess::WriteOnly:
+				return GL_WRITE_ONLY;
+			case EBufferAccess::ReadWrite:
+				return GL_READ_WRITE;
+			default: {
+				AU_LOG_FATAL("Unknown buffer access !");
+				throw;
+			}
+		}
+	}
 }

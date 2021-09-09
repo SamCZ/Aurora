@@ -420,7 +420,7 @@ namespace Aurora
 												static_cast<uint32_t>(ArraySize),
 												UniformBlockIndex,
 												shaderType,
-												blockSizeFromVars,
+												static_cast<size_t>(dataSize), // Dont use blockSizeFromVars, its going to cause weird crashed at destructing data vector
 												shaderVariables
 										});
 			}

@@ -20,4 +20,5 @@ namespace Aurora
 	GLenum ConvertBufferType(EBufferType bufferType);
 	GLenum ConvertUsage(EBufferUsage usage);
 	GLenum ConvertIndexBufferFormat(EIndexBufferFormat format);
+	GLenum ConvertBufferAccess(EBufferAccess bufferAccess);
 }

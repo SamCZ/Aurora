@@ -9,6 +9,7 @@
 #endif
 
 #include <sstream>
+#include <iomanip>
 
 namespace Aurora
 {
@@ -82,6 +83,38 @@ namespace Aurora
 #endif
 	}
 
+	std::string FormatBytes(uint64_t bytes)
+	{
+		int marker = 1024; // Change to 1000 if required
+		int decimal = 3; // Change as required
+		int kiloBytes = marker; // One Kilobyte is 1024 bytes
+		int megaBytes = marker * marker; // One MB is 1024 KB
+		int gigaBytes = marker * marker * marker; // One GB is 1024 MB
+		//uint64_t teraBytes = marker * marker * marker * marker; // One TB is 1024 GB
+
+		std::stringstream ss;
+
+		// return bytes if less than a KB
+		if(bytes < kiloBytes)
+		{
+			ss << bytes << " Bytes";
+		} // return KB if less than a MB
+		else if(bytes < megaBytes)
+		{
+			ss << std::setprecision(decimal) << ((float)bytes / (float)kiloBytes) << " KB";
+		}// return MB if less than a GB
+		else if(bytes < gigaBytes)
+		{
+			ss << std::setprecision(decimal) << ((float)bytes / (float)megaBytes) << " MB";
+		} // return GB if less than a TB
+		else
+		{
+			ss << std::setprecision(decimal) << ((float)bytes / (float)gigaBytes) << " GB";
+		}
+
+		return ss.str();
+	}
+
 	std::vector<std::string> SystemInfo::PrintToString()
 	{
 		std::vector<std::string> infos;
@@ -103,37 +136,37 @@ namespace Aurora
 		std::stringstream ss;
 
 		{
-			ss << "Total virtual memory: " << (totalVirtualMem / 1024 / 1024);
+			ss << "Total virtual memory: " << FormatBytes(totalVirtualMem);
 			infos.push_back(ss.str());
 			ss = std::stringstream();
 		}
 
 		{
-			ss << "Used virtual memory: " << (virtualMemUsed / 1024 / 1024);
+			ss << "Used virtual memory: " << FormatBytes(virtualMemUsed);
 			infos.push_back(ss.str());
 			ss = std::stringstream();
 		}
 
 		{
-			ss << "Used virtual memory (by process): " << (virtualMemUsedByMe / 1024 / 1024);
+			ss << "Used virtual memory (by process): " << FormatBytes(virtualMemUsedByMe);
 			infos.push_back(ss.str());
 			ss = std::stringstream();
 		}
 
 		{
-			ss << "Total physical Memory: " << (totalPhysMem / 1024 / 1024);
+			ss << "Total physical Memory: " << FormatBytes(totalPhysMem);
 			infos.push_back(ss.str());
 			ss = std::stringstream();
 		}
 
 		{
-			ss << "Used physical Memory: " << (physMemUsed / 1024 / 1024);
+			ss << "Used physical Memory: " << FormatBytes(physMemUsed);
 			infos.push_back(ss.str());
 			ss = std::stringstream();
 		}
 
 		{
-			ss << "Used physical Memory (by process): " << (physMemUsedByMe / 1024 / 1024);
+			ss << "Used physical Memory (by process): " << FormatBytes(physMemUsedByMe);
 			infos.push_back(ss.str());
 			ss = std::stringstream();
 		}
