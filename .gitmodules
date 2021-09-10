@@ -34,3 +34,6 @@
 	path = lib/tinygltf
 	url = git@github.com:syoyo/tinygltf.git
 	branch = master
+[submodule "entt"]
+	path = lib/entt
+	url = git@github.com:skypjack/entt.git

@@ -224,3 +224,12 @@ if(NOT TARGET tinygltf)
     set(TINYGLTF_INSTALL OFF)
     add_subdirectory(tinygltf)
 endif()
+
+#------------------------------
+# EnTT
+# ECS library
+#------------------------------
+if(NOT TARGET EnTT)
+    add_subdirectory(entt)
+    set_property(TARGET EnTT PROPERTY FOLDER "GameLib")
+endif()
