@@ -14,11 +14,14 @@
 
 #include <glad/glad.h>
 
-#include "Aurora/AuroraEngine.hpp"
-
 namespace Aurora
 {
+	double GetTimeInSeconds()
+	{
+		return glfwGetTime();
+	}
 
+#ifdef RML_UI_ENABLED
 	static const std::unordered_map<unsigned, uint16_t> RmlKeyMap {
 			{ GLFW_KEY_SPACE, Rml::Input::KI_SPACE },
 			{ GLFW_KEY_0, Rml::Input::KI_0 },
@@ -144,7 +147,7 @@ namespace Aurora
 			//{ GLFW_KEY_VOLUME_DOWN, Rml::Input::KI_VOLUME_DOWN },
 			//{ GLFW_KEY_VOLUME_UP, Rml::Input::KI_VOLUME_UP },
 	};
-
+#endif
 	GLFWWindow::GLFWWindow() : IWindow(), m_WindowHandle(nullptr), m_Focused(false),
 							   m_CursorMode(ECursorMode::Normal), m_InputManager(Input::Manager_ptr(new Input::Manager(this))),
 							   m_SwapChain(nullptr), m_Vsync(true)
@@ -236,6 +239,11 @@ namespace Aurora
 		glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
 
 		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+		glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+
+
+		//glfwWindowHint(GLFW_DEPTH_BITS, 32);
+		//glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
 		//glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 		//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
@@ -474,9 +482,10 @@ namespace Aurora
 		for(auto& listener : window->m_ResizeListeners) {
 			if(listener) listener(width, height);
 		}
-
+#ifdef RML_UI_ENABLED
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		GameUI->GetRmlContext()->SetDimensions({width, height});
+#endif
 	}
 
 	void GLFWWindow::OnFocusCallback(GLFWwindow *rawWindow, int focused)
@@ -487,7 +496,7 @@ namespace Aurora
 
 		//TODO: Call callbacks
 	}
-
+#ifdef RML_UI_ENABLED
 	int ModifiersGLFWToRml(int modifier)
 	{
 		int rmlModifiers = 0;
@@ -499,7 +508,7 @@ namespace Aurora
 			rmlModifiers |= Rml::Input::KeyModifier::KM_SHIFT;
 		return rmlModifiers;
 	}
-
+#endif
 	int currentMods = 0;
 
 	void GLFWWindow::OnKeyCallback(GLFWwindow *rawWindow, int key, int scancode, int action, int mods)
@@ -521,7 +530,7 @@ namespace Aurora
 
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnKeyChange(key, scancode, pressed);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 
@@ -541,6 +550,7 @@ namespace Aurora
 		} else {
 			GameUI->GetRmlContext()->ProcessKeyUp((Rml::Input::KeyIdentifier)rmlkey->second, ModifiersGLFWToRml(mods));
 		}
+#endif
 	}
 
 	void GLFWWindow::OnCursorPosCallBack(GLFWwindow *rawWindow, double xpos, double ypos)
@@ -549,20 +559,22 @@ namespace Aurora
 
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseMove(newPosition);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		GameUI->GetRmlContext()->ProcessMouseMove(xpos, ypos, ModifiersGLFWToRml(currentMods));
+#endif
 	}
 
 	void GLFWWindow::OnMouseScrollCallback(GLFWwindow *rawWindow, double xoffset, double yoffset)
 	{
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseWheel({xoffset, yoffset});
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		GameUI->GetRmlContext()->ProcessMouseWheel(-yoffset, ModifiersGLFWToRml(currentMods));
+#endif
 	}
 
 	int MouseButtonGLFWToRml(int button)
@@ -599,7 +611,7 @@ namespace Aurora
 
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseButton(button, pressed);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		if(pressed)
@@ -608,6 +620,7 @@ namespace Aurora
 		} else {
 			GameUI->GetRmlContext()->ProcessMouseButtonUp(MouseButtonGLFWToRml(button), ModifiersGLFWToRml(currentMods));
 		}
+#endif
 	}
 
 	void GLFWWindow::CharModsCallback(GLFWwindow *rawWindow, uint32_t codepoint, int mods)
@@ -615,13 +628,14 @@ namespace Aurora
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		auto c = CodepointToUtf8(codepoint);
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnTextInput(c);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 
 		std::string str;
 		for (const auto &item : c) str += (char)item;
 		GameUI->GetRmlContext()->ProcessTextInput(str);
+#endif
 	}
 }
 #endif

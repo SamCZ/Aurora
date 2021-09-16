@@ -1,7 +1,6 @@
 #pragma once
 
-#include <cstdint>
-#include "Aurora/Core/Color.hpp"
+#include "Aurora/Graphics/Color.hpp"
 
 namespace Aurora
 {

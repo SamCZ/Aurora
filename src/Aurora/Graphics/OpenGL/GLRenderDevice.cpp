@@ -1,14 +1,19 @@
-#include <Aurora/Core/Crc.hpp>
 #include "GLRenderDevice.hpp"
 
 #include "GLConversions.hpp"
 
-#include <TracyOpenGL.hpp>
 #include <algorithm>
+#ifdef _WIN32
+#include <Windows.h>
+#include <wrl.h>
+#endif
 
-//#define TRACE_GPU 1
+#include <cstdint>
+
+#define TRACE_GPU 1
 
 #ifdef TRACE_GPU
+#include <TracyOpenGL.hpp>
 #define TR_SCOPE(name) TracyGpuZone(name)
 #else
 #define TR_SCOPE(name)
@@ -16,6 +21,100 @@
 
 namespace Aurora
 {
+#ifdef _WIN32
+	inline bool GetSSE42Support()
+	{
+		int cpui[4];
+		__cpuidex(cpui, 1, 0);
+		return !!(cpui[2] & 0x100000);
+	}
+
+	static const bool CpuSupportsSSE42 = GetSSE42Support();
+#endif
+
+	static uint64_t CrcTable[256];
+
+	class CrcHash
+	{
+	private:
+		uint64_t m_crc;
+	public:
+		inline CrcHash() : m_crc(0)
+		{
+			uint64_t poly = 0xC96C5795D7870F42;
+
+			for (int i = 0; i < 256; ++i)
+			{
+				uint64_t crc = i;
+
+				for (uint32_t j = 0; j < 8; ++j)
+				{
+					// is current coefficient set?
+					if (crc & 1)
+					{
+						// yes, then assume it gets zero'd (by implied x^64 coefficient of dividend)
+						crc >>= 1;
+
+						// and add rest of the divisor
+						crc ^= poly;
+					}
+					else
+					{
+						// no? then move to next coefficient
+						crc >>= 1;
+					}
+				}
+
+				CrcTable[i] = crc;
+			}
+		}
+
+		inline uint64_t Get()
+		{
+			return m_crc;
+		}
+
+#ifdef _WIN32_DISABLED
+		template<size_t size> __forceinline void AddBytesSSE42(void* p)
+		{
+			static_assert(size % 4 == 0, "Size of hashable types must be multiple of 4");
+
+			auto* data = (uint32_t*)p;
+
+			const size_t numIterations = size / sizeof(uint32_t);
+			for (size_t i = 0; i < numIterations; i++)
+			{
+				crc = _mm_crc32_u32(crc, data[i]);
+			}
+		}
+#endif
+
+		inline void AddBytes(char *p, uint64_t size)
+		{
+			for (uint64_t idx = 0; idx < size; idx++)
+			{
+				uint8_t index = p[idx] ^ m_crc;
+				uint64_t lookup = CrcTable[index];
+
+				m_crc >>= 8;
+				m_crc ^= lookup;
+			}
+		}
+
+		template<typename T>
+		void Add(const T &value)
+		{
+#ifdef _WIN32_DISABLED
+			if (CpuSupportsSSE42)
+				AddBytesSSE42<sizeof(value)>((void*)&value);
+			else
+				AddBytes((char*)&value, sizeof(value));
+#else
+			AddBytes((char *) &value, sizeof(value));
+#endif
+		}
+	};
+
 	GLBuffer* GetBuffer(const Buffer_ptr& buffer)
 	{
 		return static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
@@ -58,7 +157,9 @@ namespace Aurora
 
 	void GLRenderDevice::Init()
 	{
+#ifdef TRACE_GPU
 		TracyGpuContext
+#endif
 
 		glGenVertexArrays(1, &m_nVAO);
 		glGenVertexArrays(1, &m_nVAOEmpty);
@@ -77,8 +178,12 @@ namespace Aurora
         AU_LOG_INFO("GPU Vendor: ", vendor);
         AU_LOG_INFO("GPU Renderer: ", renderer);
 
+		glDisable(GL_MULTISAMPLE);
+
 		SetRasterState(m_LastRasterState);
 		SetDepthStencilState(m_LastDepthState);
+
+		glFlush();
 	}
 
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
@@ -252,7 +357,7 @@ namespace Aurora
 		GLenum bindTarget = GL_NONE;
 		uint32_t numLayers = 1;
 
-		if (desc.IsCubeMap)
+		if (desc.DimensionType == EDimensionType::TYPE_CubeMap)
 		{
 			bindTarget = GL_TEXTURE_CUBE_MAP;
 			glBindTexture(bindTarget, handle);
@@ -268,7 +373,7 @@ namespace Aurora
 
 			CHECK_GL_ERROR();
 		}
-		else if (desc.IsArray)
+		else if (desc.DimensionType == EDimensionType::TYPE_2DArray)
 		{
 			bindTarget = GL_TEXTURE_2D_ARRAY;
 			glBindTexture(bindTarget, handle);
@@ -284,7 +389,7 @@ namespace Aurora
 
 			CHECK_GL_ERROR();
 		}
-		else if (desc.DepthOrArraySize > 0)
+		else if (desc.DimensionType == EDimensionType::TYPE_3D)
 		{
 			bindTarget = GL_TEXTURE_3D;
 			glBindTexture(bindTarget, handle);
@@ -300,6 +405,7 @@ namespace Aurora
 		}
 		else if (desc.SampleCount > 1)
 		{
+			AU_LOG_FATAL("Multisample is not supported !")
 			//bindTarget = GL_TEXTURE_2D_MULTISAMPLE;
 			glBindTexture(bindTarget, handle);
 
@@ -359,7 +465,7 @@ namespace Aurora
 
 			glBindTexture(bindTarget, srgbView);
 
-			String srgbName = desc.Name + "_SRGB";
+			std::string srgbName = desc.Name + "_SRGB";
 			glObjectLabel(GL_TEXTURE, srgbView, static_cast<GLsizei>(srgbName.size()), srgbName.c_str());
 
 			if (desc.SampleCount == 1)
@@ -389,11 +495,11 @@ namespace Aurora
 		uint32_t width = std::max<uint32_t>(1, desc.Width >> mipLevel);
 		uint32_t height = std::max<uint32_t>(1, desc.Height >> mipLevel);
 
-		if(desc.IsCubeMap)
+		if(desc.DimensionType == EDimensionType::TYPE_CubeMap)
 		{
 			glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + subresource, (GLint)mipLevel, 0, 0, (GLsizei)width, (GLsizei)height, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
 			CHECK_GL_ERROR();
-		} else if (desc.IsArray || desc.DepthOrArraySize > 0)
+		} else if (desc.DimensionType == EDimensionType::TYPE_2DArray || desc.DepthOrArraySize > 0)
 		{
 			glTexSubImage3D(glTexture->BindTarget(), GLint(mipLevel), 0, 0, (GLint)subresource, (GLsizei)width, (GLsizei)height, 1/*depth*/, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
 			CHECK_GL_ERROR();
@@ -607,6 +713,8 @@ namespace Aurora
 		}
 	}
 
+	#define BUFFER_OFFSET(i) ((char *)NULL + (i))
+
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
 	{
 		TR_SCOPE("DrawIndexed");
@@ -627,12 +735,11 @@ namespace Aurora
 		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
 
 		for(const auto& drawArg : args) {
-			uint32_t indexOffset = drawArg.StartIndexLocation * 4 + state.IndexBufferOffset;
-
 			if(drawArg.InstanceCount > 1) {
-				glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
+				glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
 			} else {
-				glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLint(drawArg.StartVertexLocation));
+				//glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLint(drawArg.StartVertexLocation));
+				glDrawElements(primitiveType, drawArg.VertexCount, ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation));
 			}
 		}
 
@@ -691,8 +798,13 @@ namespace Aurora
 			const ShaderInputVariable& inputVariable = var.second;
 			VertexAttributeDesc layoutAttribute;
 
-			if(!state.InputLayoutHandle->GetDescriptorBySemanticID(location, layoutAttribute)) {
+			/*if(!state.InputLayoutHandle->GetDescriptorBySemanticID(location, layoutAttribute)) {
 				AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader !");
+				continue;
+			}*/
+
+			if(!state.InputLayoutHandle->GetDescriptorByName(inputVariable.Name, layoutAttribute)) {
+				AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader (" , inputVariable.Name, ") !");
 				continue;
 			}
 
@@ -709,20 +821,20 @@ namespace Aurora
 
 			glEnableVertexAttribArray(GLuint(location));
 
-			if(formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT) {
+			if(formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT || formatMapping.Type == GL_UNSIGNED_SHORT || formatMapping.Type == GL_SHORT) {
 				glVertexAttribIPointer(
 						GLuint(location),
 						GLint(formatMapping.Components),
 						formatMapping.Type,
-						GLsizei(glBuffer->GetDesc().Stride),
+						GLsizei(layoutAttribute.Stride),
 						(const void*)size_t(layoutAttribute.Offset));
 			} else {
 				glVertexAttribPointer(
-						GLuint(location), // location
+						GLuint(location),
 						GLint(formatMapping.Components),
 						formatMapping.Type,
-						GL_FALSE,// Is normalized
-						GLsizei(glBuffer->GetDesc().Stride),
+						layoutAttribute.Normalized ? GL_TRUE : GL_FALSE,
+						GLsizei(layoutAttribute.Stride),
 						(const void*)size_t(layoutAttribute.Offset));
 			}
 
@@ -950,6 +1062,8 @@ namespace Aurora
 			m_CurrentFrameBuffer = framebuffer;
 		}
 
+		assert(state.ViewPort.x > 0 && state.ViewPort.y > 0);
+
 		if(state.ViewPort != m_LastViewPort)
 		{
 			m_LastViewPort = state.ViewPort;
@@ -986,7 +1100,7 @@ namespace Aurora
 		glGenFramebuffers(1, &framebuffer->Handle);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->Handle);
 
-		String fbName = "Cached framebuffer " + std::to_string(hash);
+		std::string fbName = "Cached framebuffer " + std::to_string(hash);
 		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
 
 		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
@@ -1197,7 +1311,7 @@ namespace Aurora
 	{
 		TR_SCOPE("SetDepthStencilState");
 
-		if(std::memcmp(&depthState, &m_LastDepthState, sizeof(depthState)) != 0)
+		if(true)
 		{
 			m_LastDepthState = depthState;
 

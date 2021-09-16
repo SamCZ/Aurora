@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Base/Buffer.hpp"
-#include <glad/glad.h>
+#include "GL.hpp"
 
 namespace Aurora
 {

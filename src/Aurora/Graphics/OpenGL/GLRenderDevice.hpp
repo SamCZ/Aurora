@@ -1,13 +1,12 @@
 #pragma once
 
-#include "Aurora/Core/Common.hpp"
 #include "../Base/IRenderDevice.hpp"
 #include "GL.hpp"
 #include "GLContextState.hpp"
 
 namespace Aurora
 {
-	AU_CLASS(FrameBuffer)
+	class FrameBuffer
 	{
 	public:
 		GLuint Handle;
@@ -27,6 +26,8 @@ namespace Aurora
 				glDeleteFramebuffers(1, &Handle);
 		}
 	};
+
+	typedef std::shared_ptr<FrameBuffer> FrameBuffer_ptr;
 
 	class GLRenderDevice : public IRenderDevice
 	{

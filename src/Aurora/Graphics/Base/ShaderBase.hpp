@@ -5,9 +5,7 @@
 #include <vector>
 #include <memory>
 #include <map>
-
-#include "Aurora/Logger/Logger.hpp"
-#include "Aurora/Core/Common.hpp"
+#include <functional>
 
 #include "InputLayout.hpp"
 #include "TypeBase.hpp"
@@ -44,15 +42,15 @@ namespace Aurora
 		AccelStruct,
 	};
 
-	AU_ENUM_FLAGS(EShaderType, uint8_t)
+	enum class EShaderType : uint8_t
 	{
 		Unknown  = 0,
-		Vertex   = BITF(0),
-		Hull     = BITF(1),
-		Domain   = BITF(2),
-		Geometry = BITF(3),
-		Pixel    = BITF(4),
-		Compute  = BITF(5),
+		Vertex   = 1 << 0,
+		Hull     = 1 << 1,
+		Domain   = 1 << 2,
+		Geometry = 1 << 3,
+		Pixel    = 1 << 4,
+		Compute  = 1 << 5,
 	};
 
 	static std::string ShaderType_ToString(const EShaderType& shaderType)
@@ -97,7 +95,7 @@ namespace Aurora
 	{
 		std::string Name;
 
-		/// Shader resource type, see Diligent::SHADER_RESOURCE_TYPE.
+		/// Shader resource type
 		ShaderResourceType Type = ShaderResourceType::Unknown;
 
 		/// Array size. For non-array resource this value is 1.
@@ -152,13 +150,11 @@ namespace Aurora
 		{
 			if(shaderDesc.Type == EShaderType::Unknown)
 			{
-				AU_LOG_WARNING("Cannot add Unknown shader type to ", Name, " ! Skipping...")
-				return;
+				//AU_LOG_WARNING("Cannot add Unknown shader type to ", Name, " ! Skipping...")
 			}
 
 			if(ShaderDescriptions.contains(shaderDesc.Type)) {
-				AU_LOG_WARNING("Shader ", ShaderType_ToString(shaderDesc.Type), " already exists in program ", Name, " ! Skipping...")
-				return;
+				//AU_LOG_WARNING("Shader ", ShaderType_ToString(shaderDesc.Type), " already exists in program ", Name, " ! Skipping...")
 			}
 
 			ShaderDescriptions[shaderDesc.Type] = shaderDesc;

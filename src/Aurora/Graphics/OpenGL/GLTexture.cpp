@@ -1,7 +1,6 @@
 #include "GLTexture.hpp"
 
 #include "GLRenderDevice.hpp"
-#include "Aurora/AuroraEngine.hpp"
 
 namespace Aurora
 {
@@ -14,9 +13,9 @@ namespace Aurora
 
 	GLTexture::~GLTexture()
 	{
-		if(m_UsedInFrameBuffers && RD != nullptr) {
+		/*if(m_UsedInFrameBuffers && RD != nullptr) {
 			static_cast<GLRenderDevice*>(RD)->NotifyTextureDestroy(this); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
-		}
+		}*/
 
 		if(m_Handle) {
 			glDeleteTextures(1, &m_Handle);

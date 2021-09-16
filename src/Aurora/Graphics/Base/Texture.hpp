@@ -6,7 +6,8 @@
 
 #include "Format.hpp"
 #include "TypeBase.hpp"
-#include "Aurora/Core/Color.hpp"
+#include "Aurora/Graphics/Color.hpp"
+#include "Aurora/Core/Vector.hpp"
 
 namespace Aurora
 {
@@ -14,6 +15,14 @@ namespace Aurora
 	{
 		TEX_FLAG_NONE = 0,
 		TEX_FLAG_UAV = 1 << 0
+	};
+
+	enum class EDimensionType : uint8_t
+	{
+		TYPE_2D,
+		TYPE_3D,
+		TYPE_CubeMap,
+		TYPE_2DArray
 	};
 
 	struct TextureDesc
@@ -29,16 +38,15 @@ namespace Aurora
 		uint32_t Height;
 		uint32_t DepthOrArraySize;
 		uint32_t MipLevels;
-		uint32_t SampleCount, SampleQuality;
+		uint32_t SampleCount;
 		GraphicsFormat ImageFormat;
 		EUsage Usage;
+		EDimensionType DimensionType;
+
 		std::string Name = "Unknown";
 
-		bool IsArray; //3D or array if .z != 0?
-		bool IsCubeMap;
 		bool IsRenderTarget;
 		bool IsUAV;
-		bool IsCPUWritable;
 		bool DisableGPUsSync;
 
 		Color ClearValue;
@@ -51,25 +59,22 @@ namespace Aurora
 				DepthOrArraySize(0),
 				MipLevels(1),
 				Usage(EUsage::Default),
+				DimensionType(EDimensionType::TYPE_2D),
 				SampleCount(1),
-				SampleQuality(0),
 				Name("Unknown"),
-				IsCPUWritable(false),
 				IsUAV(false),
 				IsRenderTarget(false),
-				IsArray(false),
-				IsCubeMap(false),
 				DisableGPUsSync(false),
 				UseClearValue(false), ClearValue(0) { }
 
-		[[nodiscard]] inline Vector2i GetSize() const noexcept { return Vector2i(Width, Height); }
+		[[nodiscard]] inline Vector2i GetSize() const noexcept { return {Width, Height}; }
 
 		[[nodiscard]] inline uint32_t GetMipLevelCount() const
 		{
 			return (uint32_t)std::floor(std::log2(glm::min(Width, Height))) + 1;
 		}
 
-		std::pair<uint32_t, uint32_t> GetMipSize(uint32_t mip) const
+		[[nodiscard]] std::pair<uint32_t, uint32_t> GetMipSize(uint32_t mip) const
 		{
 			uint32_t width = Width;
 			uint32_t height = Height;

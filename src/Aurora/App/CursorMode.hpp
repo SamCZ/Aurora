@@ -4,7 +4,7 @@ namespace Aurora
 {
 	enum class ECursorMode
 	{
-		Normal,
+		Normal = 0,
 		Hidden,
 		Disabled
 	};

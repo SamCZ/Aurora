@@ -363,7 +363,7 @@ namespace Aurora
 					GLint isReferenced = 0;
 					glGetActiveUniformBlockiv(program, i, shaderReferences[j], &isReferenced);
 
-					if(isReferenced) shaderType |= eShaderTypes[j];
+					if(isReferenced) shaderType = eShaderTypes[j];
 				}
 
 				size_t blockSizeFromVars = 0;

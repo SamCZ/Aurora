@@ -4,7 +4,7 @@
 #include <map>
 #include <array>
 
-#include "RenderBase.hpp"
+#include "Aurora/Core/Profiler.hpp"
 
 #include "ShaderBase.hpp"
 #include "Texture.hpp"
@@ -17,15 +17,6 @@
 #include "BlendState.hpp"
 #include "RasterState.hpp"
 #include "FDepthStencilState.hpp"
-
-#if defined(AURORA_OPENGL) || true
-#include "../OpenGL/GLRenderGroupScope.hpp"
-#define CAT_(a, b) a ## b
-#define CAT(a, b) CAT_(a, b)
-#define GPU_DEBUG_SCOPE(name) ::Aurora::GLRenderGroupScope CAT(_GPU_Debug_Scope_, __LINE__)(name);
-#else
-#define GPU_DEBUG_SCOPE(name)
-#endif
 
 namespace Aurora
 {
@@ -76,10 +67,10 @@ namespace Aurora
 	{
 		static constexpr uint8_t MaxBoundTextures = 8;
 
-		std::map<std::string, TextureBinding> BoundTextures;
-		std::map<std::string, Sampler_ptr> BoundSamplers;
-		std::map<std::string, Buffer_ptr> BoundUniformBuffers;
-		std::map<std::string, Buffer_ptr> SSBOBuffers;
+		std::map<std::string, TextureBinding> BoundTextures{};
+		std::map<std::string, Sampler_ptr> BoundSamplers{};
+		std::map<std::string, Buffer_ptr> BoundUniformBuffers{};
+		std::map<std::string, Buffer_ptr> SSBOBuffers{};
 
 		virtual void ResetResources()
 		{
@@ -135,7 +126,7 @@ namespace Aurora
 
 		InputLayout_ptr InputLayoutHandle;
 
-		std::map<uint8_t, Buffer_ptr> VertexBuffers;
+		std::map<uint32_t, Buffer_ptr> VertexBuffers;
 		bool HasAnyRenderTarget;
 		FDepthStencilState DepthStencilState;
 
@@ -165,6 +156,7 @@ namespace Aurora
 		  HasAnyRenderTarget(false),
 		  RasterState(),
 		  InputLayoutHandle(nullptr),
+		  VertexBuffers(),
 		  ClearColorTarget(true),
 		  ClearDepthTarget(true),
 		  ClearStencilTarget(false),
@@ -172,7 +164,7 @@ namespace Aurora
 		  ClearStencil(0),
 		  ClearColor(0, 0, 0, 0),
 		  DepthStencilState(),
-		  ViewPort() { }
+		  ViewPort(0, 0) { }
 
 		inline void ResetTargets()
 		{
@@ -200,7 +192,7 @@ namespace Aurora
 			IndexBuffer = IndexBufferBinding(std::move(buffer), format);
 		}
 
-		inline void SetVertexBuffer(uint8_t slot, Buffer_ptr buffer)
+		inline void SetVertexBuffer(uint32_t slot, Buffer_ptr buffer)
 		{
 			VertexBuffers[slot] = std::move(buffer);
 		}
@@ -216,7 +208,7 @@ namespace Aurora
 			RenderTargets[slot] = TargetBinding(std::move(texture), index, mipSlice);
 		}
 
-		void BindDepthTarget(Texture_ptr depthTarget, uint32_t depthIndex, uint32_t depthMipSlice)
+		void BindDepthTarget(const Texture_ptr& depthTarget, uint32_t depthIndex, uint32_t depthMipSlice)
 		{
 			DepthTarget = depthTarget;
 			DepthIndex = depthIndex;
@@ -239,7 +231,7 @@ namespace Aurora
 	{
 		uint32_t VertexCount;
 		uint32_t InstanceCount;
-		uint32_t StartIndexLocation;
+		size_t StartIndexLocation;
 		uint32_t StartVertexLocation;
 		uint32_t StartInstanceLocation;
 
@@ -286,7 +278,7 @@ namespace Aurora
 
 		template<typename T> T* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
 		{
-			reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
+			return reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
 		}
 
 		virtual void UnmapBuffer(const Buffer_ptr& buffer) = 0;

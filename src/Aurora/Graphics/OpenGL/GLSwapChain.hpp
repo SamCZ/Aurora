@@ -2,7 +2,7 @@
 
 #if GLFW_ENABLED
 
-#include "../ISwapChain.hpp"
+#include "../Base/SwapChain.hpp"
 
 #include <GLFW/glfw3.h>
 

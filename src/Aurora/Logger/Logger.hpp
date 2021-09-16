@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <stdio.h>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -84,4 +85,4 @@ namespace Aurora
 #define AU_LOG_INFO(...) AU_LOG(Info, __VA_ARGS__)
 #define AU_LOG_WARNING(...) AU_LOG(Warning, __VA_ARGS__)
 #define AU_LOG_ERROR(...) AU_LOG(Error, __VA_ARGS__)
-#define AU_LOG_FATAL(...) AU_LOG(FatalError, __VA_ARGS__)
+#define AU_LOG_FATAL(...) AU_LOG(FatalError, __VA_ARGS__); exit(-1);

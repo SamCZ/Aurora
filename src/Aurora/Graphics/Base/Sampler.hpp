@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "Aurora/Core/Color.hpp"
+#include "Aurora/Graphics/Color.hpp"
 #include "TypeBase.hpp"
 
 namespace Aurora
