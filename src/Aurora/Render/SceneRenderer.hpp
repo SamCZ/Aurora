@@ -11,5 +11,9 @@ namespace Aurora
 	public:
 		explicit SceneRenderer(Scene* scene);
 		~SceneRenderer();
+
+		//void RenderPass();
+
+		void Render();
 	};
 }

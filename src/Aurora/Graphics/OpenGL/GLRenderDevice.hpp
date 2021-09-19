@@ -3,6 +3,7 @@
 #include "../Base/IRenderDevice.hpp"
 #include "GL.hpp"
 #include "GLContextState.hpp"
+#include "Aurora/Tools/robin_hood.h"
 
 namespace Aurora
 {
@@ -39,7 +40,7 @@ namespace Aurora
 		GLuint m_nVAOEmpty;
 		GLuint m_LastVao;
 		FrameBuffer_ptr m_CurrentFrameBuffer = nullptr;
-		std::map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
+		robin_hood::unordered_map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
 
 		GLContextState m_ContextState;
 

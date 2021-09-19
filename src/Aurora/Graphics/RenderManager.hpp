@@ -33,8 +33,8 @@ namespace Aurora
 			if(Height < other.Height) return -1;
 			if(Height > other.Height) return 1;
 
-			if(Format < other.Format) return -1;
-			if(Format > other.Format) return 1;
+			if((uint8_t)Format < (uint8_t)other.Format) return -1;
+			if((uint8_t)Format > (uint8_t)other.Format) return 1;
 
 			if(DimensionType < other.DimensionType) return -1;
 			if(DimensionType > other.DimensionType) return 1;
@@ -45,8 +45,8 @@ namespace Aurora
 			if(DepthOrArraySize < other.DepthOrArraySize) return -1;
 			if(DepthOrArraySize > other.DepthOrArraySize) return 1;
 
-			if(Usage < other.Usage) return -1;
-			if(Usage > other.Usage) return 1;
+			if((uint8_t)Usage < (uint8_t)other.Usage) return -1;
+			if((uint8_t)Usage > (uint8_t)other.Usage) return 1;
 
 			return 0;
 		}
@@ -70,7 +70,8 @@ namespace Aurora
 		friend class RenderManager;
 	private:
 		Texture_ptr m_Texture;
-		RTCacheSort* m_SortHandle;
+		RenderManager* m_Manager;
+		int m_Index = -1;
 	public:
 		operator const Texture_ptr&()
 		{

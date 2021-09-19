@@ -58,7 +58,8 @@ namespace Aurora
 			storage.LastUseTime = GetTimeInSeconds();
 
 			TemporalRenderTargetStorage& storedTarget = m_TemporalRenderTargets.emplace_back(storage);
-			rt.m_SortHandle = &storedTarget.Cache;
+			rt.m_Manager = this;
+			rt.m_Index = m_TemporalRenderTargets.size() - 1;
 			rt.m_Texture = storedTarget.Texture;
 		}
 		else
@@ -67,7 +68,8 @@ namespace Aurora
 			storedTarget.Name = name;
 			storedTarget.Cache.Handle = 1;
 			storedTarget.LastUseTime = GetTimeInSeconds();
-			rt.m_SortHandle = &storedTarget.Cache;
+			rt.m_Manager = this;
+			rt.m_Index = foundCachedRTIndex;
 			rt.m_Texture = storedTarget.Texture;
 		}
 
@@ -76,10 +78,11 @@ namespace Aurora
 
 	void TemporalRenderTarget::Free()
 	{
-		assert(m_SortHandle != nullptr);
+		assert(m_Index >= 0);
+		assert(m_Manager != nullptr);
 
-		m_SortHandle->Handle = 0;
-		m_SortHandle = nullptr;
+		m_Manager->m_TemporalRenderTargets[m_Index].Cache.Handle = 0;
+		m_Manager = nullptr;
 		m_Texture = nullptr;
 	}
 

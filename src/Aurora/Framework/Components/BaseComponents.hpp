@@ -5,10 +5,12 @@
 #include "Aurora/Core/UUID.hpp"
 #include "Aurora/Graphics/Mesh.hpp"
 
-// Some components were acquired from Hazer(Cherno game engine)
+// Some components were acquired from Hazel(Cherno game engine)
 
 namespace Aurora
 {
+	class Material;
+
 	struct TagComponent
 	{
 		std::string Tag;
@@ -81,7 +83,6 @@ namespace Aurora
 	{
 		std::shared_ptr<XMesh> Mesh;
 		std::shared_ptr<MaterialSet> MaterialOverrides;
-		std::shared_ptr<class IShaderProgram> Shader;
 
 		MeshComponent() = default;
 		MeshComponent(const MeshComponent& other) = default;
