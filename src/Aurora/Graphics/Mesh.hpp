@@ -21,15 +21,11 @@ namespace Aurora
 			size_t IndexByteOffset;
 			EIndexBufferFormat IndexFormat;
 			EPrimitiveType PrimitiveType;
-
-			// For debugging purposes
-			Texture_ptr BaseColor = nullptr;
-			Texture_ptr NormalMap = nullptr;
 		};
 	public:
 		std::vector<Buffer_ptr>			m_Buffers;
 		std::vector<PrimitiveSection>	m_Sections;
-
+		std::shared_ptr<MaterialSet> Materials = std::make_shared<MaterialSet>();
 
 	public:
 		XMesh()

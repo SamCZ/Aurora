@@ -1,0 +1,31 @@
+#include "../../vs_common.h"
+#include "../instancing.h"
+
+out vec2 TexCoord;
+out vec3 Normal;
+out mat3 TBN;
+
+layout(location = 0) in vec3 POSITION;
+layout(location = 1) in vec2 TEXCOORD_0;
+layout(location = 2) in vec3 NORMAL;
+//layout(location = 3) in vec4 TANGENT;
+
+out gl_PerVertex
+{
+	vec4 gl_Position;
+};
+
+void main() {
+	//uint instance = gl_InstanceID;
+	mat4 ModelMatrix = gInstances[gl_InstanceID].ModelMatrix;
+
+	gl_Position = ProjectionViewMatrix * ModelMatrix * vec4(POSITION, 1.0);
+	TexCoord = TEXCOORD_0;
+	Normal = normalize(NORMAL);
+
+	/*vec3 T = normalize((ModelMatrix * vec4(TANGENT.xyz, 0.0)).xyz);
+	vec3 B = normalize((ModelMatrix * vec4(cross(Normal, TANGENT.xyz) * TANGENT.w, 0.0)).xyz);
+	vec3 N = normalize((ModelMatrix * vec4(Normal, 0.0)).xyz);
+
+	TBN = mat3(T, B, N);*/
+}

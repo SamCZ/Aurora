@@ -2,10 +2,11 @@
 
 #include <memory>
 #include <cassert>
-#include "Material/Material.hpp"
 
 namespace Aurora
 {
+	class Material;
+
 	class MaterialSet
 	{
 	private:
@@ -27,6 +28,11 @@ namespace Aurora
 		{
 			assert(HasMaterial(i));
 			return m_Materials[i];
+		}
+
+		std::map<uint, std::shared_ptr<Material>>::size_type GetCount() const
+		{
+			return m_Materials.size();
 		}
 	};
 }

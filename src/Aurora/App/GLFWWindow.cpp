@@ -310,7 +310,7 @@ namespace Aurora
 		glDebugMessageCallback( MessageCallback, 0 );
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 
-		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor)
+		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
 
 		if(!GLAD_GL_EXT_texture_array) {
 			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");

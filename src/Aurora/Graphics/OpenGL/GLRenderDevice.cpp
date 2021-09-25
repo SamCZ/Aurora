@@ -14,6 +14,9 @@
 
 #ifdef TRACE_GPU
 #include <TracyOpenGL.hpp>
+#include <Aurora/Core/assert.hpp>
+#include <Aurora/Core/String.hpp>
+
 #define TR_SCOPE(name) TracyGpuZone(name)
 #else
 #define TR_SCOPE(name)
@@ -178,7 +181,13 @@ namespace Aurora
         AU_LOG_INFO("GPU Vendor: ", vendor);
         AU_LOG_INFO("GPU Renderer: ", renderer);
 
+		GLint size;
+		glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &size);
+		AU_LOG_INFO("GL_MAX_SHADER_STORAGE_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
+
 		glDisable(GL_MULTISAMPLE);
+
+		InvalidateState();
 
 		SetRasterState(m_LastRasterState);
 		SetDepthStencilState(m_LastDepthState);
@@ -343,7 +352,6 @@ namespace Aurora
 
 	void GLRenderDevice::SetShader(const Shader_ptr &shader)
 	{
-		TR_SCOPE("SetShader");
 		m_ContextState.SetShader(GetShader(shader));
 	}
 
@@ -405,7 +413,8 @@ namespace Aurora
 		}
 		else if (desc.SampleCount > 1)
 		{
-			AU_LOG_FATAL("Multisample is not supported !")
+			AU_LOG_FATAL("Multisample is not supported !");
+			AU_LOG_FATAL("Multisample is not supported !");
 			//bindTarget = GL_TEXTURE_2D_MULTISAMPLE;
 			glBindTexture(bindTarget, handle);
 
@@ -590,7 +599,7 @@ namespace Aurora
 
 		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
 
-		assert(glBuffer->GetDesc().ByteSize >= dataSize);
+		au_assert(glBuffer->GetDesc().ByteSize >= dataSize);
 
 		if (dataSize > glBuffer->GetDesc().ByteSize)
 			dataSize = glBuffer->GetDesc().ByteSize;
@@ -717,15 +726,13 @@ namespace Aurora
 
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
 	{
-		TR_SCOPE("DrawIndexed");
-
 		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
 			AU_LOG_ERROR("Cannot draw with these arguments !");
 			throw;
 			return;
 		}
 
-		ApplyDrawCallState(state);
+		//ApplyDrawCallState(state);
 
 		CHECK_GL_ERROR();
 
@@ -755,7 +762,6 @@ namespace Aurora
 
 	void GLRenderDevice::ApplyDrawCallState(const DrawCallState &state)
 	{
-		TR_SCOPE("ApplyDrawCallState");
 		SetShader(state.Shader);
 
 		BindShaderInputs(state);
@@ -773,11 +779,6 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
 	{
-		TR_SCOPE("BindShaderInputs");
-
-		//if(state.InputLayoutHandle == m_LastInputLayout) return;
-		//m_LastInputLayout = state.InputLayoutHandle;
-
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
 
@@ -793,6 +794,9 @@ namespace Aurora
 			m_LastVao = m_nVAO;
 			glBindVertexArray(m_nVAO);
 		}
+
+		if(state.InputLayoutHandle == m_LastInputLayout) return;
+		m_LastInputLayout = state.InputLayoutHandle;
 
 		for(const auto& var : inputVars) {
 			uint8_t location = var.first;
@@ -889,8 +893,13 @@ namespace Aurora
 
 	void GLRenderDevice::InvalidateState()
 	{
-		TR_SCOPE("InvalidateState");
 		m_ContextState.Invalidate();
+
+		m_LastRasterState.FillMode = EFillMode::Solid;
+		m_LastRasterState.CullMode = ECullMode::Front;
+		m_LastRasterState.DepthClipEnable = false;
+
+		m_LastDepthState.DepthEnable = false;
 	}
 
 	void GLRenderDevice::ApplyDispatchState(const DispatchState &state)
@@ -901,8 +910,6 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderResources(const BaseState& state)
 	{
-		TR_SCOPE("BindShaderResources");
-
 		CHECK_GL_ERROR();
 
 		if(state.Shader == nullptr) return;
@@ -1045,7 +1052,6 @@ namespace Aurora
 
 	void GLRenderDevice::BindRenderTargets(const DrawCallState &state)
 	{
-		TR_SCOPE("BindRenderTargets");
 		FrameBuffer_ptr framebuffer = GetCachedFrameBuffer(state);
 
 		if (framebuffer != m_CurrentFrameBuffer)
@@ -1074,8 +1080,6 @@ namespace Aurora
 
 	FrameBuffer_ptr GLRenderDevice::GetCachedFrameBuffer(const DrawCallState &state)
 	{
-		TR_SCOPE("GetCachedFrameBuffer");
-
 		if(!state.HasAnyRenderTarget) {
 			return nullptr;
 		}
@@ -1196,70 +1200,94 @@ namespace Aurora
 
 	void GLRenderDevice::SetBlendState(const DrawCallState &state)
 	{
-		TR_SCOPE("SetBlendState")
 		// TODO: Blend state
 	}
 
 	void GLRenderDevice::SetRasterState(const FRasterState& rasterState)
 	{
-		TR_SCOPE("SetRasterState");
 		// TODO: Call gl commands only on change of values !
 
-		switch (rasterState.FillMode)
+		if(m_LastRasterState.FillMode != rasterState.FillMode)
 		{
-			case EFillMode::Line:
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				break;
-			case EFillMode::Solid:
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				break;
+			switch (rasterState.FillMode)
+			{
+				case EFillMode::Line:
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					break;
+				case EFillMode::Solid:
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					break;
 
-			default:
-				AU_LOG_WARNING("Unknown fill mode specified");
-				break;
+				default:
+					AU_LOG_WARNING("Unknown fill mode specified");
+					break;
+			}
+			m_LastRasterState.FillMode = rasterState.FillMode;
 		}
 
-		switch (rasterState.CullMode)
+		if(m_LastRasterState.CullMode != rasterState.CullMode)
 		{
-			case ECullMode::Back:
-				glCullFace(GL_BACK);
-				glEnable(GL_CULL_FACE);
-				break;
-			case ECullMode::Front:
-				glCullFace(GL_FRONT);
-				glEnable(GL_CULL_FACE);
-				break;
-			case ECullMode::None:
-				glDisable(GL_CULL_FACE);
-				break;
-			default:
-				AU_LOG_WARNING("Unknown cullMode");
+			switch (rasterState.CullMode)
+			{
+				case ECullMode::Back:
+					glCullFace(GL_BACK);
+					glEnable(GL_CULL_FACE);
+					break;
+				case ECullMode::Front:
+					glCullFace(GL_FRONT);
+					glEnable(GL_CULL_FACE);
+					break;
+				case ECullMode::None:
+					glDisable(GL_CULL_FACE);
+					break;
+				default:
+					AU_LOG_WARNING("Unknown cullMode");
+			}
+			m_LastRasterState.CullMode = rasterState.CullMode;
 		}
 
-		glFrontFace(rasterState.FrontCounterClockwise ? GL_CCW : GL_CW);
-
-		if (rasterState.DepthClipEnable)
+		if(m_LastRasterState.FrontCounterClockwise != rasterState.FrontCounterClockwise)
 		{
-			glEnable(GL_DEPTH_CLAMP);
-		}
-		else
-		{
-			glDisable(GL_DEPTH_CLAMP);
+			glFrontFace(rasterState.FrontCounterClockwise ? GL_CCW : GL_CW);
+			m_LastRasterState.FrontCounterClockwise = rasterState.FrontCounterClockwise;
 		}
 
-		if (rasterState.ScissorEnable)
+		if(m_LastRasterState.DepthClipEnable)
 		{
-			glEnable(GL_SCISSOR_TEST);
-		}
-		else
-		{
-			glDisable(GL_SCISSOR_TEST);
+			if (rasterState.DepthClipEnable)
+			{
+				glEnable(GL_DEPTH_CLAMP);
+			}
+			else
+			{
+				glDisable(GL_DEPTH_CLAMP);
+			}
+			m_LastRasterState.DepthClipEnable = rasterState.DepthClipEnable;
 		}
 
-		if (rasterState.DepthBias != 0 || rasterState.SlopeScaledDepthBias != 0.f)
+		if(m_LastRasterState.ScissorEnable != rasterState.ScissorEnable)
 		{
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonOffset(rasterState.SlopeScaledDepthBias, float(rasterState.DepthBias));
+			if (rasterState.ScissorEnable)
+			{
+				glEnable(GL_SCISSOR_TEST);
+			}
+			else
+			{
+				glDisable(GL_SCISSOR_TEST);
+			}
+			m_LastRasterState.ScissorEnable = rasterState.ScissorEnable;
+		}
+
+		if(m_LastRasterState.DepthBias != rasterState.DepthBias || m_LastRasterState.SlopeScaledDepthBias != rasterState.SlopeScaledDepthBias)
+		{
+			if (rasterState.DepthBias != 0 || rasterState.SlopeScaledDepthBias != 0.f)
+			{
+				glEnable(GL_POLYGON_OFFSET_FILL);
+				glPolygonOffset(rasterState.SlopeScaledDepthBias, float(rasterState.DepthBias));
+			}
+
+			m_LastRasterState.DepthBias = rasterState.DepthBias;
+			m_LastRasterState.SlopeScaledDepthBias = rasterState.SlopeScaledDepthBias;
 		}
 
 		if(rasterState.MultisampleEnable != m_LastRasterState.MultisampleEnable)
@@ -1281,8 +1309,6 @@ namespace Aurora
 
 	void GLRenderDevice::ClearRenderTargets(const DrawCallState &renderState)
 	{
-		TR_SCOPE("ClearRenderTargets");
-
 		uint32_t nClearBitField = 0;
 		if (renderState.ClearColorTarget)
 		{
@@ -1310,12 +1336,8 @@ namespace Aurora
 
 	void GLRenderDevice::SetDepthStencilState(FDepthStencilState depthState)
 	{
-		TR_SCOPE("SetDepthStencilState");
-
-		if(true)
+		if(m_LastDepthState.DepthEnable != depthState.DepthEnable || m_LastDepthState.DepthWriteMask != depthState.DepthWriteMask || m_LastDepthState.DepthFunc != depthState.DepthFunc)
 		{
-			m_LastDepthState = depthState;
-
 			if (depthState.DepthEnable)
 			{
 				glEnable(GL_DEPTH_TEST);
@@ -1326,6 +1348,15 @@ namespace Aurora
 			{
 				glDisable(GL_DEPTH_TEST);
 			}
+
+			m_LastDepthState.DepthEnable = depthState.DepthEnable;
+			m_LastDepthState.DepthWriteMask = depthState.DepthWriteMask;
+			m_LastDepthState.DepthFunc = depthState.DepthFunc;
+		}
+
+		if(m_LastDepthState.StencilEnable != depthState.StencilEnable)
+		{
+			//TODO: Other props needs to be checked too, but I think that we will never user stencil
 
 			if (depthState.StencilEnable)
 			{
@@ -1347,6 +1378,7 @@ namespace Aurora
 			{
 				glDisable(GL_STENCIL_TEST);
 			}
+			m_LastDepthState.StencilEnable = depthState.StencilEnable;
 		}
 	}
 }

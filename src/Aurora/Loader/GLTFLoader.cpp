@@ -11,6 +11,7 @@
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Graphics/Mesh.hpp>
 #include <Aurora/Graphics/Base/IRenderDevice.hpp>
+#include <Aurora/Graphics/Material/MaterialPBR.hpp>
 
 namespace Aurora
 {
@@ -84,7 +85,7 @@ namespace Aurora
 			const tinygltf::BufferView &bufferView = model.bufferViews[i];
 
 			if (bufferView.target == 0) {  // TODO impl drawarrays
-				AU_LOG_WARNING("WARN: bufferView.target is zero")
+				AU_LOG_WARNING("WARN: bufferView.target is zero");
 				continue;  // Unsupported bufferView.
 				/*
 				  From spec2.0 readme:
@@ -122,7 +123,7 @@ namespace Aurora
 					bufferDesc.Type = EBufferType::IndexBuffer;
 					break;
 				default:
-					AU_LOG_WARNING("Unknown mesh buffer target ", bufferView.target)
+					AU_LOG_WARNING("Unknown mesh buffer target ", bufferView.target);
 					continue;
 			}
 
@@ -161,6 +162,17 @@ namespace Aurora
 				attributeDesc.Stride = byteStride;
 				attributeDesc.SemanticIndex = attrId;
 				attrId++;
+
+				if(attributeDesc.Name == "POSITION")
+				{
+					Buffer_ptr buffer = buffers[attributeDesc.BufferIndex];
+
+					auto* vertices = renderDevice->MapBuffer<Vector3>(buffer, EBufferAccess::ReadOnly);
+					{
+
+					}
+					renderDevice->UnmapBuffer(buffer);
+				}
 
 				//std::cout << attrib.first;
 
@@ -216,7 +228,7 @@ namespace Aurora
 					section.IndexOffset = section.IndexByteOffset / sizeof(uint8_t);
 					break;
 				default:
-					AU_LOG_FATAL("Unsupported index format in GLTF mesh !")
+					AU_LOG_FATAL("Unsupported index format in GLTF mesh !");
 					break;
 			}
 
@@ -232,7 +244,7 @@ namespace Aurora
 					section.PrimitiveType = EPrimitiveType::TriangleStrip;
 					break;
 				default:
-					AU_LOG_FATAL("Unsupported primitive mode !")
+					AU_LOG_FATAL("Unsupported primitive mode !");
 					break;
 			}
 
@@ -240,9 +252,16 @@ namespace Aurora
 			// Load material
 			const tinygltf::Material& material = model.materials[primitive.material];
 
+			matref gameMaterial = std::make_shared<MaterialPBR>();
+
 			for(const auto& it : material.values)
 			{
-				std::cout << it.first << " - " << it.second.TextureIndex() << std::endl;
+				//std::cout << it.first << " - " << it.second.TextureIndex() << std::endl;
+			}
+
+			for(const auto& it : material.additionalValues)
+			{
+				//std::cout << it.first << " - " << it.second.string_value << std::endl;
 			}
 
 			auto baseColorParam = material.values.find("baseColorTexture");
@@ -251,17 +270,21 @@ namespace Aurora
 				tinygltf::Texture& texture = model.textures[baseColorParam->second.TextureIndex()];
 				tinygltf::Image &image = model.images[texture.source];
 
-				section.BaseColor = GLTFImageToTexture(image, renderDevice);
+				//section.BaseColor = GLTFImageToTexture(image, renderDevice);
+				gameMaterial->SetParamTexture(MaterialPBR::MP_ALBEDO_MAP, GLTFImageToTexture(image, renderDevice));
 			}
 
 			if(material.normalTexture.index >= 0)
 			{
 				tinygltf::Texture& texture = model.textures[material.normalTexture.index];
 				tinygltf::Image &image = model.images[texture.source];
-				section.NormalMap = GLTFImageToTexture(image, renderDevice);
+				//section.NormalMap = GLTFImageToTexture(image, renderDevice);
+				gameMaterial->SetParamTexture(MaterialPBR::MP_NORMAL_MAP, GLTFImageToTexture(image, renderDevice));
 			}
 
-			section.MaterialIndex = 0; // TODO
+			gpuMesh->Materials->SetMaterial(i, gameMaterial);
+
+			section.MaterialIndex = i; // TODO
 			// indexes
 
 			gpuMesh->m_Sections.emplace_back(section);
@@ -294,27 +317,27 @@ namespace Aurora
 		}
 		else
 		{
-			AU_LOG_ERROR("Cannot load glTF ", path)
+			AU_LOG_ERROR("Cannot load glTF ", path);
 			return meshes;
 		}
 
 		if (!warn.empty())
 		{
-			AU_LOG_WARNING("glTF warning ", warn)
+			AU_LOG_WARNING("glTF warning ", warn);
 		}
 
 		if (!err.empty())
 		{
-			AU_LOG_ERROR("glTF error ", err)
+			AU_LOG_ERROR("glTF error ", err);
 		}
 
 		if (!res)
 		{
-			AU_LOG_ERROR("Failed to load glTF: ", path)
+			AU_LOG_ERROR("Failed to load glTF: ", path);
 		}
 		else
 		{
-			AU_LOG_INFO("Loaded glTF: ", path)
+			AU_LOG_INFO("Loaded glTF: ", path);
 		}
 
 		const tinygltf::Scene &scene = model.scenes[model.defaultScene];

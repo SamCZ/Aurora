@@ -8,6 +8,12 @@
 
 #include "../Base/Format.hpp"
 
+// This needs to added to cmake option as some render debug
+#ifndef OPENGL_ERROR_CHECKING
+#define OPENGL_ERROR_CHECKING
+#endif
+
+#ifdef OPENGL_ERROR_CHECKING
 #ifndef CHECK_GL_ERROR_ARG
 #define CHECK_GL_ERROR_ARG(...)                                                                                              \
     do                                                                                                                   \
@@ -41,6 +47,11 @@
         	throw std::runtime_error("OpenGL Error !");                                                                 \
         }                                                                                                               \
     } while (false);
+#endif
+#else
+#define CHECK_GL_ERROR_ARG(...)
+#define CHECK_GL_ERROR(...)
+#define CHECK_GL_ERROR_AND_THROW(...)
 #endif
 
 namespace Aurora
@@ -97,7 +108,7 @@ namespace Aurora
 			GET_GL_TYPE(GL_FLOAT_MAT4x3, float, 4 * 3, GraphicsFormat::Unknown)
 
 			default:
-				AU_LOG_FATAL("Unknown opengl type for size conversion: ", glType)
+				AU_LOG_FATAL("Unknown opengl type for size conversion: ", glType);
 				return {};
 		}
 

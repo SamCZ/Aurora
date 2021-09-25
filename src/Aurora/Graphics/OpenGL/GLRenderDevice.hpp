@@ -86,24 +86,17 @@ namespace Aurora
 
 		void InvalidateState() override;
 	public:
-		void BindShaderResources(const BaseState& state);
+		void BindShaderResources(const BaseState& state) override;
+		void ApplyDispatchState(const DispatchState& state) override;
+		void ApplyDrawCallState(const DrawCallState& state) override;
+		void BindShaderInputs(const DrawCallState &state) override;
+		void BindRenderTargets(const DrawCallState &state) override;
+		void SetBlendState(const DrawCallState &state) override;
+		void SetRasterState(const FRasterState& rasterState) override;
+		void ClearRenderTargets(const DrawCallState &state) override;
+		void SetDepthStencilState(FDepthStencilState state) override;
 
-		void ApplyDispatchState(const DispatchState& state);
-		void ApplyDrawCallState(const DrawCallState& state);
-
-		void BindShaderInputs(const DrawCallState &state);
-
-		void BindRenderTargets(const DrawCallState &state);
-
-		FrameBuffer_ptr GetCachedFrameBuffer(const DrawCallState &state);
 		void NotifyTextureDestroy(class GLTexture* texture);
-
-		void SetBlendState(const DrawCallState &state);
-
-		void SetRasterState(const FRasterState& rasterState);
-
-		void ClearRenderTargets(const DrawCallState &state);
-
-		void SetDepthStencilState(FDepthStencilState state);
+		FrameBuffer_ptr GetCachedFrameBuffer(const DrawCallState &state);
 	};
 }

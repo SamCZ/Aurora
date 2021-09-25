@@ -5,13 +5,19 @@
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Object.hpp"
 #include "Aurora/Graphics/Color.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
 
+#define DEFINE_PARAM(name) static uint name
+#define DECLARE_PARAM(class, name) uint class::name
+
 namespace Aurora
 {
-	class MaterialBase
+	class MaterialBase : public ObjectBase
 	{
+	public:
+		CLASS_OBJ(MaterialBase, ObjectBase)
 	private:
 		struct Parameter // NOLINT(cppcoreguidelines-pro-type-member-init)
 		{
@@ -93,12 +99,12 @@ namespace Aurora
 			if(description) *description = param.Description;
 		}
 
-		const int& GetParamIntValue(uint paramID) { return GetParamValue<int>(paramID); }
-		const float& GetParamFloatValue(uint paramID) { return GetParamValue<float>(paramID); }
-		const Vector2& GetParamVec2Value(uint paramID) { return GetParamValue<Vector2>(paramID); }
-		const Vector3& GetParamVec3Value(uint paramID) { return GetParamValue<Vector3>(paramID); }
-		const Vector4& GetParamVec4Value(uint paramID) { return GetParamValue<Vector4>(paramID); }
-		const Color& GetParamColorValue(uint paramID) { return GetParamValue<Color>(paramID); }
+		[[nodiscard]] const int& GetParamIntValue(uint paramID) const { return GetParamValue<int>(paramID); }
+		[[nodiscard]] const float& GetParamFloatValue(uint paramID) const { return GetParamValue<float>(paramID); }
+		[[nodiscard]] const Vector2& GetParamVec2Value(uint paramID) const { return GetParamValue<Vector2>(paramID); }
+		[[nodiscard]] const Vector3& GetParamVec3Value(uint paramID) const { return GetParamValue<Vector3>(paramID); }
+		[[nodiscard]] const Vector4& GetParamVec4Value(uint paramID) const { return GetParamValue<Vector4>(paramID); }
+		[[nodiscard]] const Color& GetParamColorValue(uint paramID) const { return GetParamValue<Color>(paramID); }
 
 		void SetParamIntValue(uint paramID, int val) { SetParamValue<int>(paramID, val); }
 		void SetParamFloatValue(uint paramID, float val) { SetParamValue<float>(paramID, val); }
@@ -122,7 +128,7 @@ namespace Aurora
 			return paramID;
 		}
 
-		const Texture_ptr& GetParamTexture(uint paramID)
+		[[nodiscard]] const Texture_ptr& GetParamTexture(uint paramID) const
 		{
 			assert(paramID < m_Parameters.size());
 			const Parameter& param = m_Parameters[paramID];

@@ -296,5 +296,17 @@ namespace Aurora
 		virtual void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
 
 		virtual void InvalidateState() = 0;
+
+		///
+
+		virtual void BindShaderResources(const BaseState& state) = 0;
+		virtual void ApplyDispatchState(const DispatchState& state) = 0;
+		virtual void ApplyDrawCallState(const DrawCallState& state) = 0;
+		virtual void BindShaderInputs(const DrawCallState &state) = 0;
+		virtual void BindRenderTargets(const DrawCallState &state) = 0;
+		virtual void SetBlendState(const DrawCallState &state) = 0;
+		virtual void SetRasterState(const FRasterState& rasterState) = 0;
+		virtual void ClearRenderTargets(const DrawCallState &state) = 0;
+		virtual void SetDepthStencilState(FDepthStencilState state) = 0;
 	};
 }

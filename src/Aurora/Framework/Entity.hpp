@@ -16,6 +16,11 @@ namespace Aurora
 
 		~Entity() = default;
 
+		operator entt::entity() const
+		{
+			return m_EntityHandle;
+		}
+
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{

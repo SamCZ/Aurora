@@ -82,9 +82,38 @@ namespace Aurora
 	struct MeshComponent
 	{
 		std::shared_ptr<XMesh> Mesh;
-		std::shared_ptr<MaterialSet> MaterialOverrides;
+		std::shared_ptr<MaterialSet> MaterialOverrides = std::make_shared<MaterialSet>();
 
-		MeshComponent() = default;
-		MeshComponent(const MeshComponent& other) = default;
+		MeshComponent()
+		{
+			//std::cout << "MeshComponent const" << std::endl;
+		}
+
+		~MeshComponent()
+		{
+			//std::cout << "MeshComponent dest" << std::endl;
+		}
+
+		MeshComponent(const MeshComponent& other) : Mesh(other.Mesh), MaterialOverrides(other.MaterialOverrides)
+		{
+			//std::cout << "MeshComponent copy const" << std::endl;
+		}
+
+		std::shared_ptr<Material> GetMaterial(int materialIndex)
+		{
+			if(Mesh == nullptr) return nullptr;
+
+			if(MaterialOverrides != nullptr && MaterialOverrides->HasMaterial(materialIndex))
+			{
+				return MaterialOverrides->GetMaterial(materialIndex);
+			}
+
+			if(Mesh->Materials != nullptr && Mesh->Materials->HasMaterial(materialIndex))
+			{
+				return Mesh->Materials->GetMaterial(materialIndex);
+			}
+
+			return nullptr;
+		}
 	};
 }
