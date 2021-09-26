@@ -63,13 +63,20 @@ namespace Aurora
 		IndexBufferBinding(Buffer_ptr buffer, EIndexBufferFormat format) : Buffer(std::move(buffer)), Format(format) {}
 	};
 
+	struct UniformBufferBinding
+	{
+		Buffer_ptr Buffer = nullptr;
+		uint32_t Offset = 0;
+		uint32_t Size = 0;
+	};
+
 	struct StateResources
 	{
 		static constexpr uint8_t MaxBoundTextures = 8;
 
 		std::map<std::string, TextureBinding> BoundTextures{};
 		std::map<std::string, Sampler_ptr> BoundSamplers{};
-		std::map<std::string, Buffer_ptr> BoundUniformBuffers{};
+		std::map<std::string, UniformBufferBinding> BoundUniformBuffers{};
 		std::map<std::string, Buffer_ptr> SSBOBuffers{};
 
 		virtual void ResetResources()
@@ -90,9 +97,9 @@ namespace Aurora
 			BoundSamplers[name] = sampler;
 		}
 
-		inline void BindUniformBuffer(const std::string& name, const Buffer_ptr& uniformBuffer)
+		inline void BindUniformBuffer(const std::string& name, const Buffer_ptr& uniformBuffer, uint32_t offset = 0, uint32_t size = 0)
 		{
-			BoundUniformBuffers[name] = uniformBuffer;
+			BoundUniformBuffers[name] = {uniformBuffer, offset, size};
 		}
 
 		inline void BindSSBOBuffer(const std::string& name, const Buffer_ptr& ssbo)

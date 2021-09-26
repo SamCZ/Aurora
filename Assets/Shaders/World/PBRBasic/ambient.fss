@@ -1,3 +1,5 @@
+#include "cb_pbr.h"
+
 in vec2 TexCoord;
 in vec3 Normal;
 in mat3 TBN;
@@ -23,5 +25,5 @@ void main()
 	FragColor.rgb *= d;
 
 	o_Normals = vec4(N * 2.0f - 1.0f, 1.0f);
-	o_RoughnessMetallicAO = vec4(0, 0, 1, 1);
+	o_RoughnessMetallicAO = vec4(pbrConstants.Roughness, pbrConstants.Metallic, pbrConstants.AmbientOcclusion, 1);
 }

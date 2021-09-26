@@ -1,5 +1,7 @@
 #include "MaterialPBR.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
+#include "Aurora/Graphics/RenderManager.hpp"
+#include "Shaders/World/PBRBasic/cb_pbr.h"
 
 namespace Aurora
 {
@@ -23,10 +25,14 @@ namespace Aurora
 	void MaterialPBR::OnShaderReload(ResourceManager* rsm)
 	{
 		// Load shaders
-		//SetShader(EPassType::Depth, nullptr);
+		SetShader(EPassType::Depth, rsm->LoadShader("MaterialPBR", {
+				{EShaderType::Vertex, "Assets/Shaders/World/PBRBasic/depth.vss"},
+				{EShaderType::Pixel, "Assets/Shaders/World/PBRBasic/depth.fss"},
+		}));
+
 		SetShader(EPassType::Ambient, rsm->LoadShader("MaterialPBR", {
-				{EShaderType::Vertex, "Shaders/World/PBRBasic/ambient.vss"},
-				{EShaderType::Pixel, "Shaders/World/PBRBasic/ambient.fss"},
+				{EShaderType::Vertex, "Assets/Shaders/World/PBRBasic/ambient.vss"},
+				{EShaderType::Pixel, "Assets/Shaders/World/PBRBasic/ambient.fss"},
 		}));
 	}
 
@@ -44,6 +50,9 @@ namespace Aurora
 			{
 				drawState.BindTexture("BaseColor", GetParamTexture(MP_ALBEDO_MAP));
 				drawState.BindTexture("NormalMap", GetParamTexture(MP_NORMAL_MAP));
+
+				drawState.BindSampler("BaseColor", Samplers::WrapWrapLinearLinear);
+				drawState.BindSampler("NormalMap", Samplers::WrapWrapLinearLinear);
 				break;
 			}
 		}

@@ -563,12 +563,16 @@ namespace Aurora
 		GLuint handle = 0;
 		GLenum bindTarget = ConvertBufferType(desc.Type);
 		GLenum usage = ConvertUsage(desc.Usage);
+		void* mappedData = nullptr;
 
 		if(desc.Type != EBufferType::TextureBuffer) {
 			glGenBuffers(1, &handle);
 			glBindBuffer(bindTarget, handle);
 
 			glObjectLabel(GL_BUFFER, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
+
+			//glBufferStorage(bindTarget, desc.ByteSize, data, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+			//mappedData = glMapBufferRange(bindTarget, 0, desc.ByteSize, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
 			glBufferData(bindTarget, desc.ByteSize, data, usage);
 			CHECK_GL_ERROR();
@@ -586,11 +590,14 @@ namespace Aurora
 			glBindTexture(GL_TEXTURE_BUFFER, GL_NONE);
 		}
 
-		return std::make_shared<GLBuffer>(desc, handle, bindTarget, usage);
+		auto buffer = std::make_shared<GLBuffer>(desc, handle, bindTarget, usage);
+		buffer->m_MappedData = mappedData;
+		return buffer;
 	}
 
 	void GLRenderDevice::WriteBuffer(const Buffer_ptr &buffer, const void *data, size_t dataSize)
 	{
+		CPU_DEBUG_SCOPE("GLRenderDevice::WriteBuffer")
 		if(buffer == nullptr) {
 			return;
 		}
@@ -603,6 +610,8 @@ namespace Aurora
 
 		if (dataSize > glBuffer->GetDesc().ByteSize)
 			dataSize = glBuffer->GetDesc().ByteSize;
+
+		//memcpy(glBuffer->m_MappedData, data, dataSize);
 
 		glBufferSubData(glBuffer->BindTarget(), 0, GLsizeiptr(dataSize), data);
 		CHECK_GL_ERROR();
@@ -653,8 +662,9 @@ namespace Aurora
 		}
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
-		GLvoid* pMappedData = glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
-		return pMappedData;
+		return glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
+		//GLvoid* pMappedData = glMapBufferRange(glBuffer->BindTarget(), 0, glBuffer->GetDesc().ByteSize, GL_MAP_WRITE_BIT);//GL_MAP_UNSYNCHRONIZED_BIT
+		//return glBuffer->m_MappedData;
 	}
 
 	void GLRenderDevice::UnmapBuffer(const Buffer_ptr& buffer)
@@ -1004,13 +1014,18 @@ namespace Aurora
 		for(const auto& uniformResource : shader->GetGLResource().GetUniformBlocks()) {
 			auto uniformBufferIt = state.BoundUniformBuffers.find(uniformResource.Name);
 
-			Buffer_ptr uniformBufferHandle = nullptr;
+			UniformBufferBinding uniformBinding;
 
 			if(uniformBufferIt != state.BoundUniformBuffers.end()) {
-				uniformBufferHandle = uniformBufferIt->second;
+				uniformBinding = uniformBufferIt->second;
 			}
 
-			m_ContextState.BindUniformBuffer(uniformResource.Binding, GetBuffer(uniformBufferHandle));
+			if(uniformBinding.Size == 0 && uniformBinding.Buffer != nullptr)
+			{
+				uniformBinding.Size = uniformBinding.Buffer->GetDesc().ByteSize;
+			}
+
+			m_ContextState.BindUniformBuffer(uniformResource.Binding, GetBuffer(uniformBinding.Buffer), uniformBinding.Offset, uniformBinding.Size);
 		}
 
 

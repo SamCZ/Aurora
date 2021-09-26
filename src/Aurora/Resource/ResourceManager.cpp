@@ -143,10 +143,10 @@ namespace Aurora
 
 	Shader_ptr ResourceManager::LoadComputeShader(const Path &path, const ShaderMacros &macros)
 	{
-		auto it = m_ShaderPrograms.find(path);
+		auto it = m_ShaderPrograms.find(path.string());
 
 		if(it != m_ShaderPrograms.end()) {
-			return m_ShaderPrograms[path];
+			return m_ShaderPrograms[path.string()];
 		}
 
 		String shaderSource = ReadShaderSource(path);
@@ -159,21 +159,21 @@ namespace Aurora
 			return nullptr;
 		}
 
-		m_ShaderPrograms[path] = shaderProgram;
+		m_ShaderPrograms[path.string()] = shaderProgram;
 
 		return shaderProgram;
 	}
 
 	Shader_ptr ResourceManager::LoadShader(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros &macros)
 	{
-		std::string multipath = "";
+		std::stringstream ss;
 
 		for (const auto &item : shaderTypesPaths)
 		{
-			multipath += item.second.string() + ";";
+			ss << item.second.string() << ";";
 		}
 
-		multipath = multipath.substr(multipath.length() - 1);
+		String multipath = ss.str();
 
 		auto it = m_ShaderPrograms.find(multipath);
 

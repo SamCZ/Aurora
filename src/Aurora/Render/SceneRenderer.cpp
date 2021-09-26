@@ -5,8 +5,8 @@
 #include "Aurora/Physics/Frustum.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
 
-#include "vs_common.h"
-#include "ps_common.h"
+#include "Shaders/vs_common.h"
+#include "Shaders/ps_common.h"
 
 namespace Aurora
 {
@@ -199,24 +199,25 @@ namespace Aurora
 			baseVsData->ProjectionViewMatrix = projectionViewMatrix;
 			m_RenderDevice->UnmapBuffer(m_BaseVSDataBuffer);
 		}*/
-		{
+		/*{
 			BaseVSData baseVsData {projectionViewMatrix};
 			m_RenderDevice->WriteBuffer(m_BaseVSDataBuffer, &baseVsData, sizeof baseVsData);
-		}
+		}*/
 
 		PrepareRender();
 		SortVisibleEntities();
 
 		// Actual render
 
-		static Sampler_ptr sampler = m_RenderDevice->CreateSampler(SamplerDesc());
-
 		DrawCallState drawCallState;
-		drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
+		//drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
 		drawCallState.BindUniformBuffer("Instances", m_InstancingBuffer);
 
-		drawCallState.BindSampler("BaseColor", sampler);
-		drawCallState.BindSampler("NormalMap", sampler);
+		{
+			BEGIN_UB(BaseVSData, baseVsData)
+					baseVsData->ProjectionViewMatrix = projectionViewMatrix;
+			END_UB(BaseVSData)
+		}
 
 		drawCallState.ClearDepthTarget = true;
 		drawCallState.ClearColorTarget = true;
@@ -244,6 +245,20 @@ namespace Aurora
 
 		{ // Composite Deferred renderer
 
+			{
+				/*VBufferCacheIndex cacheIndex;
+				Vector4* test = m_RenderManager->GetUniformBufferCache().GetOrMap<Vector4>(sizeof(Vector4) * 1, cacheIndex);
+				if(test)
+				{
+					*test = Vector4(0, 1, 2, 3);
+
+					std::cout << cacheIndex.Offset << " - " << cacheIndex.BufferIndex << std::endl;
+
+					m_RenderManager->GetUniformBufferCache().Unmap(cacheIndex);
+				}*/
+
+			}
+
 			m_RenderManager->Blit(albedoAndFlagsRT);
 		}
 
@@ -256,6 +271,7 @@ namespace Aurora
 	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType)
 	{
 		CPU_DEBUG_SCOPE("SceneRenderer::RenderPass")
+		GPU_DEBUG_SCOPE(String("RenderPass [") + PassTypesToString[(int)passType] + "]");
 
 		Material* lastMaterial = nullptr;
 		XMesh* lastMesh = nullptr;
@@ -297,10 +313,13 @@ namespace Aurora
 				lastSection = mc.MeshSection;
 			}
 
-			/*auto* instancesPtr = m_RenderDevice->MapBuffer<ObjectInstanceData>(m_InstancingBuffer, EBufferAccess::WriteOnly);
-			std::memcpy(instancesPtr, mc.Instances.data(), sizeof(ObjectInstanceData) * mc.Instances.size());
-			m_RenderDevice->UnmapBuffer(m_InstancingBuffer);*/
-			m_RenderDevice->WriteBuffer(m_InstancingBuffer, mc.Instances.data(), sizeof(ObjectInstanceData) * mc.Instances.size());
+			{
+				//CPU_DEBUG_SCOPE("WriteInstances")
+				/*auto* instancesPtr = m_RenderDevice->MapBuffer<ObjectInstanceData>(m_InstancingBuffer, EBufferAccess::WriteOnly);
+				std::memcpy(instancesPtr, mc.Instances.data(), sizeof(ObjectInstanceData) * mc.Instances.size());
+				m_RenderDevice->UnmapBuffer(m_InstancingBuffer);*/
+				m_RenderDevice->WriteBuffer(m_InstancingBuffer, mc.Instances.data(), sizeof(ObjectInstanceData) * mc.Instances.size());
+			}
 
 			DrawArguments drawArguments;
 			drawArguments.VertexCount = section.IndexCount;

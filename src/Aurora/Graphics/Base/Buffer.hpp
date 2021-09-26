@@ -57,23 +57,36 @@ namespace Aurora
 		ReadWrite
 	};
 
+	enum EBufferFlags : uint8_t
+	{
+		BF_DYNAMIC_STORAGE	= 1 << 0,
+		BF_MAP_READ			= 1 << 1,
+		BF_MAP_WRITE		= 1 << 2,
+		BF_MAP_PERSISTENT	= 1 << 3,
+		BF_MAP_COHERENT		= 1 << 4,
+		BF_CLIENT_STORAGE	= 1 << 5
+	};
+
 	struct BufferDesc
 	{
 		std::string Name;
 		uint32_t ByteSize;
 		EBufferType Type;
 		EBufferUsage Usage;
+		uint8_t Flags; // TODO: Fix flags, buffer is write only now !
 
 		BufferDesc()
 				: ByteSize(0),
 				  Name("Undefined"),
 				  Type(EBufferType::Unknown),
-				  Usage(EBufferUsage::Unknown) {}
+				  Usage(EBufferUsage::Unknown),
+				  Flags(BF_MAP_WRITE) {}
 
 		BufferDesc(std::string name, uint32_t size, EBufferType type, EBufferUsage usage = EBufferUsage::DynamicDraw)
 				: ByteSize(size),
 				  Name(std::move(name)),
 				  Type(type),
+				  Flags(0),
 				  Usage(usage) {}
 	};
 

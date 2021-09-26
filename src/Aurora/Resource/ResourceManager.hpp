@@ -15,7 +15,7 @@ namespace Aurora
 		std::vector<Path> m_FileSearchPaths;
 		std::map<Path, std::pair<Path, ABankHeader>> m_AssetPackageFiles;
 		std::map<Path, std::vector<Path>> m_AssetPackageFolders;
-		std::map<Path, Shader_ptr> m_ShaderPrograms;
+		std::map<String, Shader_ptr> m_ShaderPrograms;
 	public:
 		explicit ResourceManager(IRenderDevice* renderDevice);
 

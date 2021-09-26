@@ -7,7 +7,7 @@ file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
 add_library(Aurora STATIC ${PROJECT_SOURCE})
 
 target_include_directories(Aurora PUBLIC src)
-target_include_directories(Aurora PUBLIC Shaders)
+target_include_directories(Aurora PUBLIC Assets)
 
 target_compile_definitions(Aurora PUBLIC GLFW_INCLUDE_NONE=1)
 target_compile_definitions(Aurora PUBLIC GLFW_ENABLED=1)

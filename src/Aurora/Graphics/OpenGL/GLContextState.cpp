@@ -160,12 +160,19 @@ namespace Aurora
 #endif
 	}
 
-	void GLContextState::BindUniformBuffer(GLContextState::BindIndex index, GLBuffer *buffer)
+	void GLContextState::BindUniformBuffer(GLContextState::BindIndex index, GLBuffer *buffer, uint32_t offset, uint32_t size)
 	{
 		GLuint GLBufferHandle = 0;
 		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle))
 		{
-			glBindBufferBase(GL_UNIFORM_BUFFER, index, GLBufferHandle);
+			if(offset == 0 || size == buffer->GetDesc().ByteSize)
+			{
+				glBindBufferBase(GL_UNIFORM_BUFFER, index, GLBufferHandle);
+			}
+			else
+			{
+				glBindBufferRange(GL_UNIFORM_BUFFER, index, GLBufferHandle, offset, size);
+			}
 			CHECK_GL_ERROR("Failed to bind uniform buffer to slot ", index);
 		}
 	}

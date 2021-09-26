@@ -8,7 +8,18 @@
 
 namespace Aurora
 {
-	RenderManager::RenderManager(IRenderDevice *renderDevice) : m_RenderDevice(renderDevice)
+	namespace Samplers
+	{
+		Sampler_ptr ClampClampLinearLinear;
+		Sampler_ptr WrapWrapLinearLinear;
+
+		Sampler_ptr ClampClampNearestNearest;
+		Sampler_ptr WrapWrapNearestNearest;
+	}
+
+	RenderManager::RenderManager(IRenderDevice *renderDevice)
+	: m_RenderDevice(renderDevice),
+	m_UniformBufferCache(m_RenderDevice, EBufferType::UniformBuffer, 3, 65536, false) // We don't use GPU mapped memory because on OpenGL is too slow...
 	{
 		{
 			ShaderProgramDesc desc("Blit");
@@ -16,6 +27,12 @@ namespace Aurora
 			desc.AddShader(EShaderType::Pixel, Shaders::INTERNAL_SHADER_BLIT_PS);
 			m_BlitShader = m_RenderDevice->CreateShaderProgram(desc);
 		}
+
+		Samplers::ClampClampLinearLinear = renderDevice->CreateSampler(SamplerDesc(true, true, true, EWrapMode::Clamp, EWrapMode::Clamp));
+		Samplers::WrapWrapLinearLinear = renderDevice->CreateSampler(SamplerDesc(true, true, true, EWrapMode::Wrap, EWrapMode::Wrap));
+
+		Samplers::ClampClampNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Clamp, EWrapMode::Clamp));
+		Samplers::WrapWrapNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Wrap, EWrapMode::Wrap));
 	}
 
 	TemporalRenderTarget RenderManager::CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage)
@@ -160,5 +177,7 @@ namespace Aurora
 		{
 			AU_LOG_WARNING("Temporal render target count exceeded 50, are you sure you are not doing something wrong ?");
 		}
+
+		m_UniformBufferCache.Reset();
 	}
 }

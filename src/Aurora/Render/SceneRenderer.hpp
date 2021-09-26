@@ -9,7 +9,7 @@
 #include "Aurora/Graphics/RenderManager.hpp"
 #include <entt/entt.hpp>
 
-#include "World/instancing.h"
+#include "Shaders/World/instancing.h"
 
 namespace Aurora
 {
