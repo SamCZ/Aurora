@@ -165,7 +165,7 @@ namespace Aurora
 		GLuint GLBufferHandle = 0;
 		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle))
 		{
-			if(offset == 0 || size == buffer->GetDesc().ByteSize)
+			if(size == buffer->GetDesc().ByteSize)
 			{
 				glBindBufferBase(GL_UNIFORM_BUFFER, index, GLBufferHandle);
 			}
