@@ -215,7 +215,7 @@ namespace Aurora
 
 		{
 			BEGIN_UB(BaseVSData, baseVsData)
-					baseVsData->ProjectionViewMatrix = projectionViewMatrix;
+				baseVsData->ProjectionViewMatrix = projectionViewMatrix;
 			END_UB(BaseVSData)
 		}
 
