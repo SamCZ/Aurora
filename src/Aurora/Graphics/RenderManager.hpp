@@ -170,6 +170,6 @@ namespace Aurora
 
 #define END_UB(bufferName) \
     m_RenderManager->GetUniformBufferCache().Unmap(cacheIndex); \
-    drawCallState.BindUniformBuffer(#bufferName, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);}
+    drawState.BindUniformBuffer(#bufferName, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);}
 
 }

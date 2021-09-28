@@ -33,3 +33,6 @@
 [submodule "entt"]
 	path = lib/entt
 	url = git@github.com:skypjack/entt.git
+[submodule "glslang"]
+	path = lib/glslang
+	url = https://github.com/KhronosGroup/glslang.git

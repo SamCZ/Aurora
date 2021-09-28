@@ -208,9 +208,9 @@ namespace Aurora
 
 		// Actual render
 
-		DrawCallState drawCallState;
+		DrawCallState drawState;
 		//drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
-		drawCallState.BindUniformBuffer("Instances", m_InstancingBuffer);
+		drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
 
 		{
 			BEGIN_UB(BaseVSData, baseVsData)
@@ -218,12 +218,12 @@ namespace Aurora
 			END_UB(BaseVSData)
 		}
 
-		drawCallState.ClearDepthTarget = true;
-		drawCallState.ClearColorTarget = true;
-		drawCallState.DepthStencilState.DepthEnable = true;
-		drawCallState.RasterState.CullMode = ECullMode::Back;
+		drawState.ClearDepthTarget = true;
+		drawState.ClearColorTarget = true;
+		drawState.DepthStencilState.DepthEnable = true;
+		drawState.RasterState.CullMode = ECullMode::Back;
 
-		drawCallState.ViewPort = camera.Size;
+		drawState.ViewPort = camera.Size;
 
 		RenderSet globalRenderSet = BuildRenderSet();
 
@@ -233,14 +233,14 @@ namespace Aurora
 
 		auto depthRT = m_RenderManager->CreateTemporalRenderTarget("Depth", camera.Size, GraphicsFormat::D32);
 
-		drawCallState.BindDepthTarget(depthRT, 0, 0);
-		drawCallState.BindTarget(0, albedoAndFlagsRT);
-		drawCallState.BindTarget(1, normalsRT);
-		drawCallState.BindTarget(2, roughnessMetallicAORT);
+		drawState.BindDepthTarget(depthRT, 0, 0);
+		drawState.BindTarget(0, albedoAndFlagsRT);
+		drawState.BindTarget(1, normalsRT);
+		drawState.BindTarget(2, roughnessMetallicAORT);
 
-		m_RenderDevice->BindRenderTargets(drawCallState);
-		m_RenderDevice->ClearRenderTargets(drawCallState);
-		RenderPass(drawCallState, globalRenderSet, EPassType::Ambient);
+		m_RenderDevice->BindRenderTargets(drawState);
+		m_RenderDevice->ClearRenderTargets(drawState);
+		RenderPass(drawState, globalRenderSet, EPassType::Ambient);
 
 		{ // Composite Deferred renderer
 

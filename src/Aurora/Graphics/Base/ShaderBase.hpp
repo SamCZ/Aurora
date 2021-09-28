@@ -142,6 +142,7 @@ namespace Aurora
 		typedef std::function<void(const std::string&)> ErrorFnc;
 	private:
 		std::string Name;
+
 		std::map<EShaderType, ShaderDesc> ShaderDescriptions;
 		ErrorFnc ErrorOutput;
 	public:

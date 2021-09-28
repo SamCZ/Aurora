@@ -25,12 +25,12 @@ namespace Aurora
 	void MaterialPBR::OnShaderReload(ResourceManager* rsm)
 	{
 		// Load shaders
-		SetShader(EPassType::Depth, rsm->LoadShader("MaterialPBR", {
+		SetShader(EPassType::Depth, rsm->LoadShader("MaterialPBR-Depth", {
 				{EShaderType::Vertex, "Assets/Shaders/World/PBRBasic/depth.vss"},
 				{EShaderType::Pixel, "Assets/Shaders/World/PBRBasic/depth.fss"},
 		}));
 
-		SetShader(EPassType::Ambient, rsm->LoadShader("MaterialPBR", {
+		SetShader(EPassType::Ambient, rsm->LoadShader("MaterialPBR-Ambient", {
 				{EShaderType::Vertex, "Assets/Shaders/World/PBRBasic/ambient.vss"},
 				{EShaderType::Pixel, "Assets/Shaders/World/PBRBasic/ambient.fss"},
 		}));

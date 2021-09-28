@@ -22,6 +22,8 @@
 #define TR_SCOPE(name)
 #endif
 
+#define GLSLANG_COMPILER
+
 #ifdef GLSLANG_COMPILER
 #include <glslang/Public/ShaderLang.h>
 #endif
@@ -160,16 +162,16 @@ namespace Aurora
 	{
 		glDeleteVertexArrays(1, &m_nVAO);
 		glDeleteVertexArrays(1, &m_nVAOEmpty);
-
-		ShFinalize();
+#ifdef GLSLANG_COMPILER
 		glslang::FinalizeProcess();
+#endif
 	}
 
 	void GLRenderDevice::Init()
 	{
+#ifdef GLSLANG_COMPILER
 		glslang::InitializeProcess();
-		ShInitialize();
-
+#endif
 #ifdef TRACE_GPU
 		TracyGpuContext
 #endif
@@ -210,7 +212,9 @@ namespace Aurora
 			AU_LOG_INFO("GL_MAX_UNIFORM_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
 		}
 
+#ifdef GLSLANG_COMPILER
 		AU_LOG_INFO("GLSL Version ", glslang::GetGlslVersionString());
+#endif
 
 		glDisable(GL_MULTISAMPLE);
 
@@ -355,6 +359,54 @@ namespace Aurora
 
 		return Resources;
 	}
+
+	class IncluderImpl : public ::glslang::TShader::Includer
+	{
+	public:
+		IncluderImpl()
+		{}
+
+		// For the "system" or <>-style includes; search the "system" paths.
+		virtual IncludeResult* includeSystem(const char* headerName,
+		                                     const char* /*includerName*/,
+		                                     size_t /*inclusionDepth*/)
+		{
+			std::cout << "Trying to include (System) " << headerName << std::endl;
+
+			/*const char* test = "yo\nnasdsdfsdf";
+
+			auto* pNewInclude =
+					new IncludeResult{
+							headerName,
+							reinterpret_cast<const char*>(test),
+							strlen(test),
+							nullptr};
+
+			return pNewInclude;*/
+			return nullptr;
+		}
+
+		// For the "local"-only aspect of a "" include. Should not search in the
+		// "system" paths, because on returning a failure, the parser will
+		// call includeSystem() to look in the "system" locations.
+		virtual IncludeResult* includeLocal(const char* headerName,
+		                                    const char* includerName,
+		                                    size_t      inclusionDepth)
+		{
+			std::cout << "Trying to include (Local) " << headerName << std::endl;
+			return nullptr;
+		}
+
+		// Signals that the parser will no longer use the contents of the
+		// specified IncludeResult.
+		virtual void releaseInclude(IncludeResult* IncldRes)
+		{
+			delete IncldRes;
+		}
+
+	private:
+
+	};
 #endif
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
 	{
@@ -378,62 +430,6 @@ namespace Aurora
 		// Compile shaders
 #ifdef GLSLANG_COMPILER
 		{ // glslang compilation
-			glslang::TShader shader(EShLangVertex);
-
-			shader.setEnvInput(glslang::EShSourceGlsl, EShLangVertex, glslang::EShClientOpenGL, 430);
-
-			::glslang::TProgram Program;
-
-			std::vector<::glslang::TShader> gshaders;
-
-			EShMessages        messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules | EShMsgAST);
-
-			for(const auto& it : shaderDescriptions)
-			{
-				const auto &shaderDesc = it.second;
-				const EShaderType type = shaderDesc.Type;
-
-				std::string source;
-
-				source += "#version 450 core\n";
-				source += "layout(std140) uniform;\n";
-
-				source += shaderDesc.Source;
-
-				EShLanguage        ShLang = ShaderTypeToShLanguage(type);
-				::glslang::TShader* Shader = new ::glslang::TShader(ShLang);
-
-				Shader->setEnvInput(::glslang::EShSourceGlsl, ShLang, ::glslang::EShClientOpenGL, 450);
-				Shader->setEnvClient(::glslang::EShClientOpenGL, ::glslang::EShTargetOpenGL_450);
-				Shader->setEnvTarget(::glslang::EShTargetSpv, ::glslang::EShTargetSpv_1_0);
-				Shader->setEntryPoint("main");
-				//Shader->setSourceEntryPoint("main");
-
-
-				const char* ShaderStrings[]       = {source.c_str()};
-				const int   ShaderStringLengths[] = {static_cast<int>(source.length())};
-				const char* Names[]               = {"yo"};
-				Shader->setStringsWithLengthsAndNames(ShaderStrings, ShaderStringLengths, Names, 1);
-				Shader->setAutoMapBindings(true);
-
-				TBuiltInResource Resources = InitResources();
-				if(Shader->parse(&Resources, 100, false, messages))
-				{
-					AU_LOG_FATAL("Failed to parse shader source: \n", Shader->getInfoLog(), Shader->getInfoDebugLog());
-				}
-
-				//gshaders.push_back(Shader);
-				Program.addShader(Shader);
-			}
-
-			if (!Program.link(messages))
-			{
-				AU_LOG_FATAL("Failed to link program: \n", Program.getInfoLog(), Program.getInfoDebugLog());
-				return {};
-			}
-
-			Program.mapIO();
-
 
 		}
 #endif
@@ -456,8 +452,35 @@ namespace Aurora
 
 			source += shaderDesc.Source;
 
+			std::string glslSourcePreprocessed;
+			EShMessages        messages = (EShMessages)(EShMsgAST);
+			{
+				EShLanguage        ShLang = ShaderTypeToShLanguage(type);
+				::glslang::TShader* Shader = new ::glslang::TShader(ShLang);
+
+				Shader->setEnvInput(::glslang::EShSourceGlsl, ShLang, ::glslang::EShClientOpenGL, 450);
+				Shader->setEnvClient(::glslang::EShClientOpenGL, ::glslang::EShTargetOpenGL_450);
+				Shader->setEnvTarget(::glslang::EShTargetSpv, ::glslang::EShTargetSpv_1_0);
+				Shader->setEntryPoint("main");
+				//Shader->setSourceEntryPoint("main");
+
+
+				const char* ShaderStrings[]       = {source.c_str()};
+				const int   ShaderStringLengths[] = {static_cast<int>(source.length())};
+				const char* Names[]               = {"yo"};
+				Shader->setStringsWithLengthsAndNames(ShaderStrings, ShaderStringLengths, Names, 1);
+				Shader->setAutoMapBindings(true);
+
+				TBuiltInResource Resources = InitResources();
+				IncluderImpl includer;
+				if(!Shader->preprocess(&Resources, 100, ECoreProfile, false, true, messages, &glslSourcePreprocessed, includer))
+				{
+					AU_LOG_FATAL("Failed to preprocess shader: \n", Shader->getInfoLog(), Shader->getInfoDebugLog());
+				}
+			}
+
 			std::string error;
-			GLuint shaderID = CompileShaderRaw(source, type, &error);
+			GLuint shaderID = CompileShaderRaw(glslSourcePreprocessed, type, &error);
 
 			if(shaderID == 0) {
 				AU_LOG_ERROR("Cannot compile shader ", ShaderType_ToString(type), " in program ", desc.GetName(), "!\n", error);
