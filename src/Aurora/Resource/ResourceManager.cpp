@@ -216,4 +216,20 @@ namespace Aurora
 
 		return shaderProgram;
 	}
+
+	bool ResourceManager::LoadJson(const Path &path, nlohmann::json &json)
+	{
+		auto file = LoadFile(path);
+
+		if(file.empty()) {
+			return false;
+		}
+
+		auto* data = reinterpret_cast<uint8_t*>(file.data());
+		auto dataLen = file.size();
+
+		json = nlohmann::json::parse(data, data + dataLen);
+
+		return true;
+	}
 }

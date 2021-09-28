@@ -6,6 +6,8 @@
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "AssetBank.hpp"
 
+#include <nlohmann/json.hpp>
+
 namespace Aurora
 {
 	class ResourceManager
@@ -36,5 +38,7 @@ namespace Aurora
 
 		Shader_ptr LoadShader(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros& macros = {});
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
+
+		bool LoadJson(const Path &path, nlohmann::json &json);
 	};
 }
