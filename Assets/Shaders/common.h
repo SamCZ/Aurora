@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef SHADER_ENGINE_SIDE
+#if defined(SHADER_ENGINE_SIDE)
 #include "Aurora/Core/Vector.hpp"
 
 using namespace Aurora;
@@ -9,6 +9,8 @@ using namespace Aurora;
 #define layout(...)
 
 typedef Matrix4 mat4;
-#else
+#endif
+
+#if !defined(SHADER_ENGINE_SIDE)
 #define uniformbuffer uniform
 #endif

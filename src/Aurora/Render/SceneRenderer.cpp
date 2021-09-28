@@ -20,7 +20,7 @@ namespace Aurora
 	SceneRenderer::SceneRenderer(Scene *scene, RenderManager* renderManager, IRenderDevice* renderDevice)
 	: m_Scene(scene), m_RenderDevice(renderDevice), m_RenderManager(renderManager)
 	{
-		m_InstancingBuffer = m_RenderDevice->CreateBuffer(BufferDesc("InstanceBuffer", sizeof(ObjectInstanceData) * MAX_INSTANCES, EBufferType::UniformBuffer));
+		m_InstancingBuffer = m_RenderDevice->CreateBuffer(BufferDesc("InstanceBuffer", sizeof(Matrix4) * MAX_INSTANCES, EBufferType::UniformBuffer));
 		m_BaseVSDataBuffer = m_RenderDevice->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
 	}
 
@@ -131,7 +131,6 @@ namespace Aurora
 				XMesh::PrimitiveSection& section = visibleEntity.Mesh->m_Sections[visibleEntity.MeshSection];
 				bool canBeInstanced = !!(visibleEntity.Material->GetFlags() & MaterialFlags::Instanced);
 
-				ObjectInstanceData objectInstanceData {visibleEntity.Transform};
 				//std::cout << visibleEntity.Material->GetTypeName() << " - " << visibleEntity.Mesh << " - " << visibleEntity.MeshSection << std::endl;
 
 				// Initialize last variables
@@ -145,13 +144,13 @@ namespace Aurora
 					currentModelContext.Material = visibleEntity.Material;
 					currentModelContext.Mesh = visibleEntity.Mesh;
 					currentModelContext.MeshSection = &section;
-					currentModelContext.Instances.push_back(objectInstanceData);
+					currentModelContext.Instances.push_back(visibleEntity.Transform);
 					continue;
 				}
 
 				if(lastMesh == visibleEntity.Mesh && lastMaterial == visibleEntity.Material && lastCanBeInstanced == canBeInstanced && lastSection == visibleEntity.MeshSection)
 				{
-					currentModelContext.Instances.push_back(objectInstanceData);
+					currentModelContext.Instances.push_back(visibleEntity.Transform);
 				}
 				else
 				{
@@ -168,7 +167,7 @@ namespace Aurora
 						currentModelContext.Material = visibleEntity.Material;
 						currentModelContext.Mesh = visibleEntity.Mesh;
 						currentModelContext.MeshSection = &section;
-						currentModelContext.Instances.push_back(objectInstanceData);
+						currentModelContext.Instances.push_back(visibleEntity.Transform);
 					}
 				}
 			}
@@ -318,7 +317,7 @@ namespace Aurora
 				/*auto* instancesPtr = m_RenderDevice->MapBuffer<ObjectInstanceData>(m_InstancingBuffer, EBufferAccess::WriteOnly);
 				std::memcpy(instancesPtr, mc.Instances.data(), sizeof(ObjectInstanceData) * mc.Instances.size());
 				m_RenderDevice->UnmapBuffer(m_InstancingBuffer);*/
-				m_RenderDevice->WriteBuffer(m_InstancingBuffer, mc.Instances.data(), sizeof(ObjectInstanceData) * mc.Instances.size());
+				m_RenderDevice->WriteBuffer(m_InstancingBuffer, mc.Instances.data(), sizeof(Matrix4) * mc.Instances.size());
 			}
 
 			DrawArguments drawArguments;

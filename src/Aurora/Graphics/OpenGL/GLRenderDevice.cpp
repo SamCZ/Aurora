@@ -22,6 +22,10 @@
 #define TR_SCOPE(name)
 #endif
 
+#ifdef GLSLANG_COMPILER
+#include <glslang/Public/ShaderLang.h>
+#endif
+
 namespace Aurora
 {
 #ifdef _WIN32
@@ -156,10 +160,16 @@ namespace Aurora
 	{
 		glDeleteVertexArrays(1, &m_nVAO);
 		glDeleteVertexArrays(1, &m_nVAOEmpty);
+
+		ShFinalize();
+		glslang::FinalizeProcess();
 	}
 
 	void GLRenderDevice::Init()
 	{
+		glslang::InitializeProcess();
+		ShInitialize();
+
 #ifdef TRACE_GPU
 		TracyGpuContext
 #endif
@@ -181,9 +191,26 @@ namespace Aurora
         AU_LOG_INFO("GPU Vendor: ", vendor);
         AU_LOG_INFO("GPU Renderer: ", renderer);
 
-		GLint size;
-		glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &size);
-		AU_LOG_INFO("GL_MAX_SHADER_STORAGE_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
+		{
+			GLint size;
+			glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &size);
+			AU_LOG_INFO("GL_MAX_SHADER_STORAGE_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
+		}
+
+		{
+			GLint size;
+			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &size);
+			AU_LOG_INFO("GL_MAX_VERTEX_UNIFORM_COMPONENTS is ", size * 4, " bytes", "(", FormatBytes(size * 4), ")");
+			AU_LOG_INFO("Max instances: ", ((size * 4) / sizeof(Matrix4)));
+		}
+
+		{
+			GLint size;
+			glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &size);
+			AU_LOG_INFO("GL_MAX_UNIFORM_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
+		}
+
+		AU_LOG_INFO("GLSL Version ", glslang::GetGlslVersionString());
 
 		glDisable(GL_MULTISAMPLE);
 
@@ -194,7 +221,141 @@ namespace Aurora
 
 		glFlush();
 	}
+#ifdef GLSLANG_COMPILER
+	EShLanguage ShaderTypeToShLanguage(EShaderType ShaderType)
+	{
+		switch (ShaderType)
+		{
+			case EShaderType::Vertex:           return EShLangVertex;
+			case EShaderType::Hull:             return EShLangTessControl;
+			case EShaderType::Domain:           return EShLangTessEvaluation;
+			case EShaderType::Geometry:         return EShLangGeometry;
+			case EShaderType::Pixel:            return EShLangFragment;
+			case EShaderType::Compute:          return EShLangCompute;
+			case EShaderType::Amplification:    return EShLangTaskNV;
+			case EShaderType::Mesh:             return EShLangMeshNV;
+			case EShaderType::RayGen:          return EShLangRayGen;
+			case EShaderType::RayMiss:         return EShLangMiss;
+			case EShaderType::RayClosestHit:  return EShLangClosestHit;
+			case EShaderType::RayAnyHit:      return EShLangAnyHit;
+			case EShaderType::RayIntersection: return EShLangIntersect;
+			case EShaderType::Callable:         return EShLangCallable;
+			default:
+				AU_LOG_FATAL("Unexpected shader type");
+				return EShLangCount;
+		}
+	}
 
+	TBuiltInResource InitResources()
+	{
+		TBuiltInResource Resources;
+
+		Resources.maxLights                                 = 32;
+		Resources.maxClipPlanes                             = 6;
+		Resources.maxTextureUnits                           = 32;
+		Resources.maxTextureCoords                          = 32;
+		Resources.maxVertexAttribs                          = 64;
+		Resources.maxVertexUniformComponents                = 4096;
+		Resources.maxVaryingFloats                          = 64;
+		Resources.maxVertexTextureImageUnits                = 32;
+		Resources.maxCombinedTextureImageUnits              = 80;
+		Resources.maxTextureImageUnits                      = 32;
+		Resources.maxFragmentUniformComponents              = 4096;
+		Resources.maxDrawBuffers                            = 32;
+		Resources.maxVertexUniformVectors                   = 128;
+		Resources.maxVaryingVectors                         = 8;
+		Resources.maxFragmentUniformVectors                 = 16;
+		Resources.maxVertexOutputVectors                    = 16;
+		Resources.maxFragmentInputVectors                   = 15;
+		Resources.minProgramTexelOffset                     = -8;
+		Resources.maxProgramTexelOffset                     = 7;
+		Resources.maxClipDistances                          = 8;
+		Resources.maxComputeWorkGroupCountX                 = 65535;
+		Resources.maxComputeWorkGroupCountY                 = 65535;
+		Resources.maxComputeWorkGroupCountZ                 = 65535;
+		Resources.maxComputeWorkGroupSizeX                  = 1024;
+		Resources.maxComputeWorkGroupSizeY                  = 1024;
+		Resources.maxComputeWorkGroupSizeZ                  = 64;
+		Resources.maxComputeUniformComponents               = 1024;
+		Resources.maxComputeTextureImageUnits               = 16;
+		Resources.maxComputeImageUniforms                   = 8;
+		Resources.maxComputeAtomicCounters                  = 8;
+		Resources.maxComputeAtomicCounterBuffers            = 1;
+		Resources.maxVaryingComponents                      = 60;
+		Resources.maxVertexOutputComponents                 = 64;
+		Resources.maxGeometryInputComponents                = 64;
+		Resources.maxGeometryOutputComponents               = 128;
+		Resources.maxFragmentInputComponents                = 128;
+		Resources.maxImageUnits                             = 8;
+		Resources.maxCombinedImageUnitsAndFragmentOutputs   = 8;
+		Resources.maxCombinedShaderOutputResources          = 8;
+		Resources.maxImageSamples                           = 0;
+		Resources.maxVertexImageUniforms                    = 0;
+		Resources.maxTessControlImageUniforms               = 0;
+		Resources.maxTessEvaluationImageUniforms            = 0;
+		Resources.maxGeometryImageUniforms                  = 0;
+		Resources.maxFragmentImageUniforms                  = 8;
+		Resources.maxCombinedImageUniforms                  = 8;
+		Resources.maxGeometryTextureImageUnits              = 16;
+		Resources.maxGeometryOutputVertices                 = 256;
+		Resources.maxGeometryTotalOutputComponents          = 1024;
+		Resources.maxGeometryUniformComponents              = 1024;
+		Resources.maxGeometryVaryingComponents              = 64;
+		Resources.maxTessControlInputComponents             = 128;
+		Resources.maxTessControlOutputComponents            = 128;
+		Resources.maxTessControlTextureImageUnits           = 16;
+		Resources.maxTessControlUniformComponents           = 1024;
+		Resources.maxTessControlTotalOutputComponents       = 4096;
+		Resources.maxTessEvaluationInputComponents          = 128;
+		Resources.maxTessEvaluationOutputComponents         = 128;
+		Resources.maxTessEvaluationTextureImageUnits        = 16;
+		Resources.maxTessEvaluationUniformComponents        = 1024;
+		Resources.maxTessPatchComponents                    = 120;
+		Resources.maxPatchVertices                          = 32;
+		Resources.maxTessGenLevel                           = 64;
+		Resources.maxViewports                              = 16;
+		Resources.maxVertexAtomicCounters                   = 0;
+		Resources.maxTessControlAtomicCounters              = 0;
+		Resources.maxTessEvaluationAtomicCounters           = 0;
+		Resources.maxGeometryAtomicCounters                 = 0;
+		Resources.maxFragmentAtomicCounters                 = 8;
+		Resources.maxCombinedAtomicCounters                 = 8;
+		Resources.maxAtomicCounterBindings                  = 1;
+		Resources.maxVertexAtomicCounterBuffers             = 0;
+		Resources.maxTessControlAtomicCounterBuffers        = 0;
+		Resources.maxTessEvaluationAtomicCounterBuffers     = 0;
+		Resources.maxGeometryAtomicCounterBuffers           = 0;
+		Resources.maxFragmentAtomicCounterBuffers           = 1;
+		Resources.maxCombinedAtomicCounterBuffers           = 1;
+		Resources.maxAtomicCounterBufferSize                = 16384;
+		Resources.maxTransformFeedbackBuffers               = 4;
+		Resources.maxTransformFeedbackInterleavedComponents = 64;
+		Resources.maxCullDistances                          = 8;
+		Resources.maxCombinedClipAndCullDistances           = 8;
+		Resources.maxSamples                                = 4;
+		Resources.maxMeshOutputVerticesNV                   = 256;
+		Resources.maxMeshOutputPrimitivesNV                 = 512;
+		Resources.maxMeshWorkGroupSizeX_NV                  = 32;
+		Resources.maxMeshWorkGroupSizeY_NV                  = 1;
+		Resources.maxMeshWorkGroupSizeZ_NV                  = 1;
+		Resources.maxTaskWorkGroupSizeX_NV                  = 32;
+		Resources.maxTaskWorkGroupSizeY_NV                  = 1;
+		Resources.maxTaskWorkGroupSizeZ_NV                  = 1;
+		Resources.maxMeshViewCountNV                        = 4;
+
+		Resources.limits.nonInductiveForLoops                 = 1;
+		Resources.limits.whileLoops                           = 1;
+		Resources.limits.doWhileLoops                         = 1;
+		Resources.limits.generalUniformIndexing               = 1;
+		Resources.limits.generalAttributeMatrixVectorIndexing = 1;
+		Resources.limits.generalVaryingIndexing               = 1;
+		Resources.limits.generalSamplerIndexing               = 1;
+		Resources.limits.generalVariableIndexing              = 1;
+		Resources.limits.generalConstantMatrixVectorIndexing  = 1;
+
+		return Resources;
+	}
+#endif
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
 	{
 		const auto& shaderDescriptions = desc.GetShaderDescriptions();
@@ -215,6 +376,67 @@ namespace Aurora
 		}*/
 
 		// Compile shaders
+#ifdef GLSLANG_COMPILER
+		{ // glslang compilation
+			glslang::TShader shader(EShLangVertex);
+
+			shader.setEnvInput(glslang::EShSourceGlsl, EShLangVertex, glslang::EShClientOpenGL, 430);
+
+			::glslang::TProgram Program;
+
+			std::vector<::glslang::TShader> gshaders;
+
+			EShMessages        messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules | EShMsgAST);
+
+			for(const auto& it : shaderDescriptions)
+			{
+				const auto &shaderDesc = it.second;
+				const EShaderType type = shaderDesc.Type;
+
+				std::string source;
+
+				source += "#version 450 core\n";
+				source += "layout(std140) uniform;\n";
+
+				source += shaderDesc.Source;
+
+				EShLanguage        ShLang = ShaderTypeToShLanguage(type);
+				::glslang::TShader* Shader = new ::glslang::TShader(ShLang);
+
+				Shader->setEnvInput(::glslang::EShSourceGlsl, ShLang, ::glslang::EShClientOpenGL, 450);
+				Shader->setEnvClient(::glslang::EShClientOpenGL, ::glslang::EShTargetOpenGL_450);
+				Shader->setEnvTarget(::glslang::EShTargetSpv, ::glslang::EShTargetSpv_1_0);
+				Shader->setEntryPoint("main");
+				//Shader->setSourceEntryPoint("main");
+
+
+				const char* ShaderStrings[]       = {source.c_str()};
+				const int   ShaderStringLengths[] = {static_cast<int>(source.length())};
+				const char* Names[]               = {"yo"};
+				Shader->setStringsWithLengthsAndNames(ShaderStrings, ShaderStringLengths, Names, 1);
+				Shader->setAutoMapBindings(true);
+
+				TBuiltInResource Resources = InitResources();
+				if(Shader->parse(&Resources, 100, false, messages))
+				{
+					AU_LOG_FATAL("Failed to parse shader source: \n", Shader->getInfoLog(), Shader->getInfoDebugLog());
+				}
+
+				//gshaders.push_back(Shader);
+				Program.addShader(Shader);
+			}
+
+			if (!Program.link(messages))
+			{
+				AU_LOG_FATAL("Failed to link program: \n", Program.getInfoLog(), Program.getInfoDebugLog());
+				return {};
+			}
+
+			Program.mapIO();
+
+
+		}
+#endif
 
 		std::vector<GLuint> compiledShaders;
 		for(const auto& it : shaderDescriptions) {

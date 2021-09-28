@@ -30,7 +30,7 @@ namespace Aurora
 		Aurora::Material* Material;
 		XMesh* Mesh;
 		XMesh::PrimitiveSection* MeshSection;
-		std::vector<ObjectInstanceData> Instances;
+		std::vector<Matrix4> Instances;
 	};
 
 	using RenderSet = std::vector<ModelContext>;

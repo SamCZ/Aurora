@@ -99,7 +99,7 @@ namespace Aurora
 	String ResourceManager::ReadShaderSource(const Path &path, std::vector<Path>& alreadyIncluded)
 	{
 		String shaderSource = LoadFileToString(path);
-		if(path.filename() != "common.h") {
+		{
 			static const std::regex re("^[ ]*#[ ]*include[ ]+[\"<](.*)[\">].*");
 
 			std::stringstream input;
@@ -113,6 +113,11 @@ namespace Aurora
 			{
 				if (std::regex_search(line, matches, re))
 				{
+					if(path.filename() == "common.h")
+					{
+						continue;
+					}
+
 					std::string include_file = matches[1];
 					Path includePath = path.parent_path() / include_file;
 
