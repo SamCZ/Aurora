@@ -4,8 +4,6 @@
 #include <map>
 #include <array>
 
-#include "Aurora/Core/Profiler.hpp"
-
 #include "ShaderBase.hpp"
 #include "Texture.hpp"
 #include "Sampler.hpp"

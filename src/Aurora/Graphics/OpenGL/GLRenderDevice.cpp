@@ -9,20 +9,10 @@
 #endif
 
 #include <cstdint>
-
-#define TRACE_GPU 1
-
-#ifdef TRACE_GPU
-#include <TracyOpenGL.hpp>
 #include <Aurora/Core/assert.hpp>
 #include <Aurora/Core/String.hpp>
+#include <Aurora/Core/Profiler.hpp>
 
-#define TR_SCOPE(name) TracyGpuZone(name)
-#else
-#define TR_SCOPE(name)
-#endif
-
-#define GLSLANG_COMPILER
 
 #ifdef GLSLANG_COMPILER
 #include <glslang/Public/ShaderLang.h>
@@ -172,10 +162,6 @@ namespace Aurora
 #ifdef GLSLANG_COMPILER
 		glslang::InitializeProcess();
 #endif
-#ifdef TRACE_GPU
-		TracyGpuContext
-#endif
-
 		glGenVertexArrays(1, &m_nVAO);
 		glGenVertexArrays(1, &m_nVAOEmpty);
 		glBindVertexArray(m_nVAO);
@@ -202,14 +188,14 @@ namespace Aurora
 		{
 			GLint size;
 			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &size);
-			AU_LOG_INFO("GL_MAX_VERTEX_UNIFORM_COMPONENTS is ", size * 4, " bytes", "(", FormatBytes(size * 4), ")");
-			AU_LOG_INFO("Max instances: ", ((size * 4) / sizeof(Matrix4)));
+			AU_LOG_INFO("GL_MAX_VERTEX_UNIFORM_COMPONENTS is ", size);
 		}
 
 		{
 			GLint size;
 			glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &size);
 			AU_LOG_INFO("GL_MAX_UNIFORM_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
+			AU_LOG_INFO("Max instances: ", (size / sizeof(Matrix4)));
 		}
 
 #ifdef GLSLANG_COMPILER
@@ -410,6 +396,8 @@ namespace Aurora
 #endif
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
 	{
+		CPU_DEBUG_SCOPE("CreateShaderProgram");
+
 		const auto& shaderDescriptions = desc.GetShaderDescriptions();
 
 		if(shaderDescriptions.empty()) {

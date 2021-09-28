@@ -19,6 +19,8 @@ namespace Aurora
 
 		}
 
+		~GLSwapChain() override = default;
+
 		void Present(int syncInterval) override
 		{
 			if(m_LastSyncInterval != syncInterval) {

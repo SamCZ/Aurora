@@ -1,5 +1,7 @@
 #include "SceneRenderer.hpp"
 
+#include "Aurora/Core/Profiler.hpp"
+
 #include "Aurora/Framework/Scene.hpp"
 #include "Aurora/Framework/Entity.hpp"
 #include "Aurora/Physics/Frustum.hpp"
@@ -243,6 +245,7 @@ namespace Aurora
 		RenderPass(drawState, globalRenderSet, EPassType::Ambient);
 
 		{ // Composite Deferred renderer
+
 
 			{
 				/*VBufferCacheIndex cacheIndex;

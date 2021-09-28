@@ -13,6 +13,7 @@ namespace Aurora
 	AU_CLASS(ISwapChain)
 	{
 	public:
+		virtual ~ISwapChain() = default;
 		virtual void Present(int syncInterval) = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		[[nodiscard]] virtual const SwapChainDesc& GetDesc() const noexcept = 0;

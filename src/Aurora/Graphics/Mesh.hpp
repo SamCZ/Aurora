@@ -30,12 +30,12 @@ namespace Aurora
 	public:
 		XMesh()
 		{
-			std::cout << "new xmesh" << std::endl;
+
 		}
 
 		~XMesh()
 		{
-			std::cout << "delete xmesh" << std::endl;
+
 		}
 	};
 }
