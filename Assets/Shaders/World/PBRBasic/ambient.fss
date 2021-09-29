@@ -17,13 +17,9 @@ void main()
 
 	vec3 N = normalize(Normal);
 
-	float d = dot(N, normalize(vec3(0.5f, 0.5f, 0.5f)));
-	d = max(d, 0.2f);
-
 	FragColor = texture(BaseColor, TexCoord);
-	//FragColor.a = 1;
-	FragColor.rgb *= d;
+	FragColor.a = 1;
 
-	o_Normals = vec4(N * 2.0f - 1.0f, 1.0f);
+	o_Normals = vec4(N * 0.5f + 0.5f, 1.0f);
 	o_RoughnessMetallicAO = vec4(pbrConstants.Roughness, pbrConstants.Metallic, pbrConstants.AmbientOcclusion, 1);
 }

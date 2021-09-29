@@ -14,9 +14,11 @@
 #include "Aurora/Graphics/OpenGL/GLSwapChain.hpp"
 #include "Aurora/Graphics/OpenGL/GLRenderDevice.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
-
-
 #include "Aurora/Resource/ResourceManager.hpp"
+
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 
 namespace Aurora
 {
@@ -92,9 +94,26 @@ namespace Aurora
 		m_ResourceManager = new ResourceManager(m_RenderDevice);
 		m_ResourceManager->AddFileSearchPath(AURORA_PROJECT_DIR);
 
+		{ // Init imgui, TODO: add define for it
+			IMGUI_CHECKVERSION();
+			ImGui::CreateContext();
+			ImGuiIO& io = ImGui::GetIO(); (void)io;
+			//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+			//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+			// Setup Dear ImGui style
+			ImGui::StyleColorsDark();
+			//ImGui::StyleColorsClassic();
+
+			// Setup Platform/Renderer backends
+			ImGui_ImplGlfw_InitForOpenGL(((GLFWWindow*)m_Window)->GetHandle(), true);
+			ImGui_ImplOpenGL3_Init("#version 330 core");
+		}
+
 		// Init global context
 		g_Context = new AuroraContext();
 		g_Context->m_Window = m_Window;
+		g_Context->m_InputManager = m_Window->GetInputManager().get();
 		g_Context->m_RenderDevice = m_RenderDevice;
 		g_Context->m_RenderManager = m_RenderManager;
 		g_Context->m_ResourceManager = m_ResourceManager;
@@ -142,6 +161,12 @@ namespace Aurora
 			glfwPollEvents();
 			std::static_pointer_cast<Input::Manager>(m_Window->GetInputManager())->Update(frameTime);
 
+			{ // ImGui update
+				ImGui_ImplOpenGL3_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
+			}
+
 			{
 				CPU_DEBUG_SCOPE("Game update")
 				m_AppContext->Update(delta);
@@ -150,6 +175,12 @@ namespace Aurora
 			{
 				CPU_DEBUG_SCOPE("Game render")
 				m_AppContext->Render();
+			}
+
+			{
+				CPU_DEBUG_SCOPE("ImGui render")
+				ImGui::Render();
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			}
 
 			{

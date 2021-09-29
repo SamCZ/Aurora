@@ -198,6 +198,12 @@ namespace Aurora
 			AU_LOG_INFO("Max instances: ", (size / sizeof(Matrix4)));
 		}
 
+		{
+			GLint size;
+			glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &size);
+			AU_LOG_INFO("GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT is ", size);
+		}
+
 #ifdef GLSLANG_COMPILER
 		AU_LOG_INFO("GLSL Version ", glslang::GetGlslVersionString());
 #endif

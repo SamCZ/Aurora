@@ -9,6 +9,8 @@ using namespace Aurora;
 #define layout(...)
 
 typedef Matrix4 mat4;
+typedef Vector4 vec4;
+typedef Vector2 vec2;
 #endif
 
 #if !defined(SHADER_ENGINE_SIDE)

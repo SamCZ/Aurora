@@ -1,5 +1,8 @@
 #include "SceneRenderer.hpp"
 
+#include "Aurora/Engine.hpp"
+#include "Aurora/Resource/ResourceManager.hpp"
+
 #include "Aurora/Core/Profiler.hpp"
 
 #include "Aurora/Framework/Scene.hpp"
@@ -9,21 +12,28 @@
 
 #include "Shaders/vs_common.h"
 #include "Shaders/ps_common.h"
+#include "Shaders/PostProcess/cb_sky.h"
+
+#include <imgui.h>
 
 namespace Aurora
 {
-	template< typename T >
-	class pointer_comparator : public std::binary_function< T, T, bool >
-	{
-	public :
-		bool operator()( T x, T y ) const { return x < y; }
-	};
 
 	SceneRenderer::SceneRenderer(Scene *scene, RenderManager* renderManager, IRenderDevice* renderDevice)
 	: m_Scene(scene), m_RenderDevice(renderDevice), m_RenderManager(renderManager)
 	{
 		m_InstancingBuffer = m_RenderDevice->CreateBuffer(BufferDesc("InstanceBuffer", sizeof(Matrix4) * MAX_INSTANCES, EBufferType::UniformBuffer));
 		m_BaseVSDataBuffer = m_RenderDevice->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
+
+		m_PBRCompositeShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
+				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+				{EShaderType::Pixel, "Assets/Shaders/PBR/pbr_composite.fss"},
+		});
+
+		m_SkyShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
+				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+				{EShaderType::Pixel, "Assets/Shaders/PostProcess/sky.frag"},
+		});
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -210,60 +220,107 @@ namespace Aurora
 
 		// Actual render
 
-		DrawCallState drawState;
-		//drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
-		drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
-
-		{
-			BEGIN_UB(BaseVSData, baseVsData)
-				baseVsData->ProjectionViewMatrix = projectionViewMatrix;
-			END_UB(BaseVSData)
-		}
-
-		drawState.ClearDepthTarget = true;
-		drawState.ClearColorTarget = true;
-		drawState.DepthStencilState.DepthEnable = true;
-		drawState.RasterState.CullMode = ECullMode::Back;
-
-		drawState.ViewPort = camera.Size;
-
-		RenderSet globalRenderSet = BuildRenderSet();
-
 		auto albedoAndFlagsRT = m_RenderManager->CreateTemporalRenderTarget("Albedo", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		auto normalsRT = m_RenderManager->CreateTemporalRenderTarget("Normals", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		auto roughnessMetallicAORT = m_RenderManager->CreateTemporalRenderTarget("RoughnessMetallicAO", camera.Size, GraphicsFormat::RGBA8_UNORM);
-
 		auto depthRT = m_RenderManager->CreateTemporalRenderTarget("Depth", camera.Size, GraphicsFormat::D32);
 
-		drawState.BindDepthTarget(depthRT, 0, 0);
-		drawState.BindTarget(0, albedoAndFlagsRT);
-		drawState.BindTarget(1, normalsRT);
-		drawState.BindTarget(2, roughnessMetallicAORT);
-
-		m_RenderDevice->BindRenderTargets(drawState);
-		m_RenderDevice->ClearRenderTargets(drawState);
-		RenderPass(drawState, globalRenderSet, EPassType::Ambient);
-
-		{ // Composite Deferred renderer
-
+		{
+			DrawCallState drawState;
+			//drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
+			drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
 
 			{
-				/*VBufferCacheIndex cacheIndex;
-				Vector4* test = m_RenderManager->GetUniformBufferCache().GetOrMap<Vector4>(sizeof(Vector4) * 1, cacheIndex);
-				if(test)
-				{
-					*test = Vector4(0, 1, 2, 3);
-
-					std::cout << cacheIndex.Offset << " - " << cacheIndex.BufferIndex << std::endl;
-
-					m_RenderManager->GetUniformBufferCache().Unmap(cacheIndex);
-				}*/
-
+				BEGIN_UB(BaseVSData, baseVsData)
+					baseVsData->ProjectionViewMatrix = projectionViewMatrix;
+				END_UB(BaseVSData)
 			}
 
-			m_RenderManager->Blit(albedoAndFlagsRT);
+			drawState.ClearDepthTarget = true;
+			drawState.ClearColorTarget = true;
+			drawState.DepthStencilState.DepthEnable = true;
+			drawState.RasterState.CullMode = ECullMode::Back;
+
+			drawState.ViewPort = camera.Size;
+
+			RenderSet globalRenderSet = BuildRenderSet();
+
+			drawState.BindDepthTarget(depthRT, 0, 0);
+			drawState.BindTarget(0, albedoAndFlagsRT);
+			drawState.BindTarget(1, normalsRT);
+			drawState.BindTarget(2, roughnessMetallicAORT);
+
+			m_RenderDevice->BindRenderTargets(drawState);
+			m_RenderDevice->ClearRenderTargets(drawState);
+			RenderPass(drawState, globalRenderSet, EPassType::Ambient);
 		}
 
+		static AtmosphereData athLocal = {Vector4(1, 2, 4, 0)};
+		static float scatteringStrength = 1;
+		const Vector3 waveLengths = Vector3(700, 530, 440);
+		athLocal.scatteringCoefficients = Vector4 (
+				pow(400 / waveLengths.x, 4) * scatteringStrength,
+				pow(400 / waveLengths.y, 4) * scatteringStrength,
+				pow(400 / waveLengths.z, 4) * scatteringStrength,
+				0
+		);
+
+		{
+			ImGui::Begin("Atmosphere");
+			{
+				ImGui::DragFloat("Planet radius", &athLocal.data0.x, 0.1f);
+				ImGui::DragFloat("Atmosphere radius", &athLocal.data0.y, 0.1f);
+				ImGui::DragFloat("Density FallOff", &athLocal.data0.z, 0.1f);
+				ImGui::DragFloat("Scattering Strength", &scatteringStrength, 0.1f);
+			}
+			ImGui::End();
+		}
+
+		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::RGBA8_UNORM);
+		{ // Sky render
+			DrawCallState drawState;
+			drawState.Shader = m_SkyShader;
+			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
+			drawState.ClearDepthTarget = false;
+			drawState.ClearColorTarget = false;
+			drawState.RasterState.CullMode = ECullMode::None;
+			drawState.DepthStencilState.DepthEnable = false;
+			drawState.ViewPort = camera.Size;
+
+			drawState.BindTarget(0, skyRT);
+			drawState.BindTexture("DepthTexture", depthRT);
+
+			BEGIN_UB(SkyConstants, skyConstants)
+				skyConstants->InvProjection = glm::inverse(camera.Projection);
+				skyConstants->InvView = cameraTransform.GetTransform();
+				skyConstants->CameraPos = Vector4(cameraTransform.Translation, 1);
+				skyConstants->ViewPort = Vector4(camera.Size, 0, 0);
+				skyConstants->atmosphereData = athLocal;
+			END_UB(SkyConstants)
+
+			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
+		}
+
+		{ // Composite Deferred renderer
+			DrawCallState drawState;
+			drawState.Shader = m_PBRCompositeShader;
+			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
+			drawState.ClearDepthTarget = false;
+			drawState.ClearColorTarget = false;
+			drawState.RasterState.CullMode = ECullMode::None;
+			drawState.DepthStencilState.DepthEnable = false;
+
+			drawState.ViewPort = camera.Size;
+
+			drawState.BindTexture("AlbedoAndFlagsRT", albedoAndFlagsRT);
+			drawState.BindTexture("NormalsRT", normalsRT);
+			drawState.BindTexture("RoughnessMetallicAORT", roughnessMetallicAORT);
+			drawState.BindTexture("SkyRT", skyRT);
+
+			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
+		}
+
+		skyRT.Free();
 		albedoAndFlagsRT.Free();
 		normalsRT.Free();
 		roughnessMetallicAORT.Free();

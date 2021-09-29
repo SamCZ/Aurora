@@ -50,6 +50,9 @@ namespace Aurora
 
 		Buffer_ptr m_InstancingBuffer;
 		Buffer_ptr m_BaseVSDataBuffer;
+
+		Shader_ptr m_PBRCompositeShader;
+		Shader_ptr m_SkyShader;
 	public:
 		SceneRenderer(Scene* scene, RenderManager* renderManager, IRenderDevice* renderDevice);
 		~SceneRenderer();
