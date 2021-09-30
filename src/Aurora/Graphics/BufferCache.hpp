@@ -48,7 +48,16 @@ namespace Aurora
 		{
 			m_CurrentOffset = 0;
 			m_CurrentBuffer = 0;
+		}
+
+		void OnFrameEnd()
+		{
 			m_NumBytesPerFrame = 0;
+		}
+
+		uint GetNumBytesPerFrame()
+		{
+			return m_NumBytesPerFrame;
 		}
 	};
 }

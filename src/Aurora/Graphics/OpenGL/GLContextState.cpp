@@ -163,7 +163,7 @@ namespace Aurora
 	void GLContextState::BindUniformBuffer(GLContextState::BindIndex index, GLBuffer *buffer, uint32_t offset, uint32_t size)
 	{
 		GLuint GLBufferHandle = 0;
-		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle))
+		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle) || (buffer != nullptr)) // TODO: Fix this for buffer cache, when only offset and size is changed
 		{
 			if(size == buffer->GetDesc().ByteSize)
 			{

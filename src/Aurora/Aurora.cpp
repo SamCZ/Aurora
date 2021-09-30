@@ -168,17 +168,19 @@ namespace Aurora
 			}
 
 			{
-				CPU_DEBUG_SCOPE("Game update")
+				CPU_DEBUG_SCOPE("Game update");
 				m_AppContext->Update(delta);
 			}
 
 			{
-				CPU_DEBUG_SCOPE("Game render")
+				CPU_DEBUG_SCOPE("Game render");
+				GPU_DEBUG_SCOPE("Game render");
 				m_AppContext->Render();
 			}
 
 			{
-				CPU_DEBUG_SCOPE("ImGui render")
+				CPU_DEBUG_SCOPE("ImGui render");
+				GPU_DEBUG_SCOPE("ImGui render");
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			}

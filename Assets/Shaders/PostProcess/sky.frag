@@ -6,7 +6,7 @@ uniform sampler2D DepthTexture;
 
 out vec4 FragColor;
 
-#define numInScatteringPoints 10
+#define numInScatteringPoints 8
 #define numOpticalDepthPoints 10
 
 #define scatteringCoefficients atmosphereData.scatteringCoefficients

@@ -128,7 +128,7 @@ namespace Aurora
 			}
 
 			auto gpuBuffer = renderDevice->CreateBuffer(bufferDesc);
-			renderDevice->WriteBuffer(gpuBuffer, &buffer.data.at(0) + bufferView.byteOffset, bufferView.byteLength);
+			renderDevice->WriteBuffer(gpuBuffer, &buffer.data.at(0) + bufferView.byteOffset, bufferView.byteLength, 0);
 			buffers.emplace_back(gpuBuffer);
 
 			//std::cout << " OFFSET(" << bufferView.byteOffset << ")";

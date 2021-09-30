@@ -48,7 +48,7 @@ namespace Aurora
 			bufferCacheIndex.Size = size;
 			bufferCacheIndex.Buffer = m_Buffers[bufferCacheIndex.BufferIndex];
 
-			m_CurrentOffset += size;
+			m_CurrentOffset += std::max(size, 256u);
 
 			if(freeSpace == size)
 			{ // If we fill whole buffer we advance to another
@@ -58,19 +58,20 @@ namespace Aurora
 
 			m_NumBytesPerFrame += size;
 
+			size_t offset = bufferCacheIndex.BufferIndex * m_SingleBufferSize + bufferCacheIndex.Offset;
 			if(m_UseGpuMapping)
 			{
-				return m_RenderDevice->MapBuffer(bufferCacheIndex.Buffer, EBufferAccess::WriteOnly);
+				return reinterpret_cast<uint8_t*>(m_RenderDevice->MapBuffer(bufferCacheIndex.Buffer, EBufferAccess::WriteOnly)) + offset;
 			}
 			else
 			{
-				return &m_LocalMappedMemory[bufferCacheIndex.BufferIndex * m_SingleBufferSize + bufferCacheIndex.Offset];
+				return &m_LocalMappedMemory[offset];
 			}
 		}
 		else if(m_CurrentBuffer < m_NumBuffers - 1)
 		{ // No free space, need to cache remaining and advance buffer
 			AU_LOG_WARNING(FormatBytes(freeSpace), " bytes was skipped at the end of BufferCache !");
-			m_CurrentOffset = 0;
+			m_CurrentOffset = std::max(size, 256u);
 			m_CurrentBuffer += 1;
 
 			bufferCacheIndex.Offset = m_CurrentOffset;
@@ -103,7 +104,8 @@ namespace Aurora
 		}
 		else
 		{
-			m_RenderDevice->WriteBuffer(bufferCacheIndex.Buffer, &m_LocalMappedMemory[bufferCacheIndex.BufferIndex * m_SingleBufferSize + bufferCacheIndex.Offset], bufferCacheIndex.Size);
+			size_t offset = bufferCacheIndex.BufferIndex * m_SingleBufferSize + bufferCacheIndex.Offset;
+			m_RenderDevice->WriteBuffer(bufferCacheIndex.Buffer, &m_LocalMappedMemory[offset], bufferCacheIndex.Size, offset);
 		}
 	}
 }

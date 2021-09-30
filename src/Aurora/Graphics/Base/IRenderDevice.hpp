@@ -276,7 +276,7 @@ namespace Aurora
 		inline Texture_ptr CreateTexture(const TextureDesc& desc) { return CreateTexture(desc, nullptr); }
 		// Buffers
 		virtual Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) = 0;
-		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) = 0;
+		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize, size_t offset) = 0;
 		virtual void ClearBufferUInt(const Buffer_ptr& buffer, uint32_t clearValue) = 0;
 		virtual void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) = 0;
 		virtual void* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) = 0;

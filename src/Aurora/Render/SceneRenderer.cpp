@@ -253,6 +253,7 @@ namespace Aurora
 			m_RenderDevice->BindRenderTargets(drawState);
 			m_RenderDevice->ClearRenderTargets(drawState);
 			RenderPass(drawState, globalRenderSet, EPassType::Ambient);
+			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
 		static AtmosphereData athLocal = {Vector4(1, 2, 4, 0)};
@@ -299,6 +300,7 @@ namespace Aurora
 			END_UB(SkyConstants)
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
+			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
 		{ // Composite Deferred renderer
@@ -318,6 +320,7 @@ namespace Aurora
 			drawState.BindTexture("SkyRT", skyRT);
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
+			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
 		skyRT.Free();
@@ -377,7 +380,7 @@ namespace Aurora
 				/*auto* instancesPtr = m_RenderDevice->MapBuffer<ObjectInstanceData>(m_InstancingBuffer, EBufferAccess::WriteOnly);
 				std::memcpy(instancesPtr, mc.Instances.data(), sizeof(ObjectInstanceData) * mc.Instances.size());
 				m_RenderDevice->UnmapBuffer(m_InstancingBuffer);*/
-				m_RenderDevice->WriteBuffer(m_InstancingBuffer, mc.Instances.data(), sizeof(Matrix4) * mc.Instances.size());
+				m_RenderDevice->WriteBuffer(m_InstancingBuffer, mc.Instances.data(), sizeof(Matrix4) * mc.Instances.size(), 0);
 			}
 
 			DrawArguments drawArguments;

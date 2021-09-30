@@ -834,7 +834,7 @@ namespace Aurora
 		return buffer;
 	}
 
-	void GLRenderDevice::WriteBuffer(const Buffer_ptr &buffer, const void *data, size_t dataSize)
+	void GLRenderDevice::WriteBuffer(const Buffer_ptr &buffer, const void *data, size_t dataSize, size_t offset)
 	{
 		CPU_DEBUG_SCOPE("GLRenderDevice::WriteBuffer")
 		if(buffer == nullptr) {
@@ -851,8 +851,9 @@ namespace Aurora
 			dataSize = glBuffer->GetDesc().ByteSize;
 
 		//memcpy(glBuffer->m_MappedData, data, dataSize);
+		//glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
-		glBufferSubData(glBuffer->BindTarget(), 0, GLsizeiptr(dataSize), data);
+		glBufferSubData(glBuffer->BindTarget(), offset, GLsizeiptr(dataSize), data);
 		CHECK_GL_ERROR();
 
 		glBindBuffer(glBuffer->BindTarget(), GL_NONE);

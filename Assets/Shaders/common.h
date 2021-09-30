@@ -14,5 +14,5 @@ typedef Vector2 vec2;
 #endif
 
 #if !defined(SHADER_ENGINE_SIDE)
-#define uniformbuffer uniform
+#define uniformbuffer layout(std140) uniform
 #endif

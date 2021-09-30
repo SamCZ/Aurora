@@ -179,5 +179,6 @@ namespace Aurora
 		}
 
 		m_UniformBufferCache.Reset();
+		m_UniformBufferCache.OnFrameEnd();
 	}
 }
