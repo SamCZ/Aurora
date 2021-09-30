@@ -22,7 +22,6 @@ namespace Aurora
 	: m_Scene(scene), m_RenderDevice(renderDevice), m_RenderManager(renderManager)
 	{
 		m_InstancingBuffer = m_RenderDevice->CreateBuffer(BufferDesc("InstanceBuffer", sizeof(Matrix4) * MAX_INSTANCES, EBufferType::UniformBuffer));
-		m_BaseVSDataBuffer = m_RenderDevice->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
 
 		m_PBRCompositeShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
 				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
@@ -35,10 +34,7 @@ namespace Aurora
 		});
 	}
 
-	SceneRenderer::~SceneRenderer()
-	{
-
-	}
+	SceneRenderer::~SceneRenderer() = default;
 
 	void SceneRenderer::AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform)
 	{

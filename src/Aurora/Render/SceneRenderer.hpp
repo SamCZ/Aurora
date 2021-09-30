@@ -49,7 +49,6 @@ namespace Aurora
 		std::array<std::vector<entt::entity>, SortTypeCount> m_FinalSortedEntities;
 
 		Buffer_ptr m_InstancingBuffer;
-		Buffer_ptr m_BaseVSDataBuffer;
 
 		Shader_ptr m_PBRCompositeShader;
 		Shader_ptr m_SkyShader;
