@@ -421,13 +421,6 @@ namespace Aurora
 			return nullptr;
 		}*/
 
-		// Compile shaders
-#ifdef GLSLANG_COMPILER
-		{ // glslang compilation
-
-		}
-#endif
-
 		std::vector<GLuint> compiledShaders;
 		for(const auto& it : shaderDescriptions) {
 			const auto& shaderDesc = it.second;

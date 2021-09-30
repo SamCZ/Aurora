@@ -18,7 +18,6 @@
 
 namespace Aurora
 {
-
 	SceneRenderer::SceneRenderer(Scene *scene, RenderManager* renderManager, IRenderDevice* renderDevice)
 	: m_Scene(scene), m_RenderDevice(renderDevice), m_RenderManager(renderManager)
 	{
@@ -32,7 +31,7 @@ namespace Aurora
 
 		m_SkyShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
 				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
-				{EShaderType::Pixel, "Assets/Shaders/PostProcess/sky.frag"},
+				{EShaderType::Pixel, "Assets/Shaders/PostProcess/sky.fss"},
 		});
 	}
 
@@ -205,16 +204,6 @@ namespace Aurora
 		Matrix4 projectionViewMatrix = camera.Projection * glm::inverse(cameraTransform.GetTransform());
 		Frustum frustum(projectionViewMatrix);
 
-		/*{
-			auto* baseVsData = m_RenderDevice->MapBuffer<BaseVSData>(m_BaseVSDataBuffer, EBufferAccess::WriteOnly);
-			baseVsData->ProjectionViewMatrix = projectionViewMatrix;
-			m_RenderDevice->UnmapBuffer(m_BaseVSDataBuffer);
-		}*/
-		/*{
-			BaseVSData baseVsData {projectionViewMatrix};
-			m_RenderDevice->WriteBuffer(m_BaseVSDataBuffer, &baseVsData, sizeof baseVsData);
-		}*/
-
 		PrepareRender();
 		SortVisibleEntities();
 
@@ -230,11 +219,9 @@ namespace Aurora
 			//drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
 			drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
 
-			{
-				BEGIN_UB(BaseVSData, baseVsData)
-					baseVsData->ProjectionViewMatrix = projectionViewMatrix;
-				END_UB(BaseVSData)
-			}
+			BEGIN_UB(BaseVSData, baseVsData)
+				baseVsData->ProjectionViewMatrix = projectionViewMatrix;
+			END_UB(BaseVSData)
 
 			drawState.ClearDepthTarget = true;
 			drawState.ClearColorTarget = true;
