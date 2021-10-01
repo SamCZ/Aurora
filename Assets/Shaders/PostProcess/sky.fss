@@ -10,6 +10,7 @@ out vec4 FragColor;
 #define numOpticalDepthPoints 10
 
 #define scatteringCoefficients atmosphereData.scatteringCoefficients
+#define LightDir atmosphereData.LightDirection.xyz
 
 // Returs vector (dstToSphere, dstThroughSphere)
 // If ray origin is inside sphere, dstToSphere = 0
@@ -41,10 +42,6 @@ vec2 raySphere(vec3 sphereCenter, float sphereRadius, vec3 rayOrigin, vec3 rayDi
 }
 
 vec3 planetCenter = vec3(0, 0, 0);
-const vec3 dirToSun = normalize(vec3(0.5, 0.5, 0.5));
-/*const float planetRadius = 1.0f;
-const float atmosphereRadius = 2.0f;
-const float densityFallOff = 4.0f;*/
 
 float densityAtPoint(vec3 densitySamplePoint)
 {
@@ -78,8 +75,8 @@ vec3 calculateLight(vec3 rayOrigin, vec3 rayDir, float rayLength)
 
     for(uint i = 0; i < numInScatteringPoints; i++)
     {
-        float sunRayLength = raySphere(planetCenter, atmosphereRadius, inScatterPoint, dirToSun).y;
-        float sunRayOpticalDepth = opticalDepth(inScatterPoint, dirToSun, sunRayLength);
+        float sunRayLength = raySphere(planetCenter, atmosphereRadius, inScatterPoint, LightDir).y;
+        float sunRayOpticalDepth = opticalDepth(inScatterPoint, LightDir, sunRayLength);
         float viewRayOpticalDepth = opticalDepth(inScatterPoint, -rayDir, stepSize * i);
         vec3 transmittance = exp(-(sunRayOpticalDepth + viewRayOpticalDepth) * scatteringCoefficients.xyz);
         float localDensity = densityAtPoint(inScatterPoint);

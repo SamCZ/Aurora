@@ -248,6 +248,7 @@ namespace Aurora
 				pow(400 / waveLengths.z, 4) * scatteringStrength,
 				0
 		);
+		static Vector3 lightRotation = Vector3(90, 0, 0);
 
 		{
 			ImGui::Begin("Atmosphere");
@@ -256,6 +257,10 @@ namespace Aurora
 				ImGui::DragFloat("Atmosphere radius", &athLocal.data0.y, 0.1f);
 				ImGui::DragFloat("Density FallOff", &athLocal.data0.z, 0.1f);
 				ImGui::DragFloat("Scattering Strength", &scatteringStrength, 0.1f);
+				if(ImGui::DragFloat3("Light rotation", glm::value_ptr(lightRotation), 0.1))
+				{
+					athLocal.LightDirection = Vector4(glm::cos(glm::radians(lightRotation.x)), glm::sin(glm::radians(lightRotation.y)), 0, 0);
+				}
 			}
 			ImGui::End();
 		}
@@ -377,6 +382,7 @@ namespace Aurora
 			{
 				if(modelContexts[i + 1].Material != mat)
 				{
+					m_RenderManager->GetUniformBufferCache().Reset();
 					mat->EndPass(drawCallState, passType);
 					lastMaterial = nullptr;
 				}

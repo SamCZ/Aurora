@@ -4,6 +4,7 @@ struct AtmosphereData
 {
 	vec4 data0;
 	vec4 scatteringCoefficients;
+	vec4 LightDirection;
 };
 
 uniformbuffer SkyConstants
