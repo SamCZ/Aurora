@@ -64,6 +64,19 @@ namespace Aurora
 			DeAlloc(mem);
 		}
 
+		[[nodiscard]] MemSize GetMemoryBlockCount() const
+		{
+			return m_Memory.size();
+		}
+		MemPtr GetMemoryBlockPtr(MemSize index)
+		{
+			return m_Memory[index].Memory;
+		}
+		[[nodiscard]] MemSize GetMemoryBlockSize(MemSize index) const
+		{
+			return m_BlockSize;
+		}
+
 	private:
 		MemoryBlock& AllocateMemoryBlock();
 		void* AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator framentIt, MemSize size);

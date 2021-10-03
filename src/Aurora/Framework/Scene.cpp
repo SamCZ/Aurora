@@ -17,6 +17,12 @@ namespace Aurora
 
 	void Scene::Tick(double delta)
 	{
+		for(uint i = m_Actors.size(); i --> 0;)
+		{
+			Actor* actor = m_Actors[i];
+			actor->Tick(delta);
+		}
+
 		{
 			auto view = m_Registry.view<TransformComponent>();
 			for (entt::entity entity : view)
@@ -53,5 +59,16 @@ namespace Aurora
 			entity.AddComponent<TagComponent>(name);
 
 		return entity;
+	}
+
+	void Scene::DestroyActor(Actor *actor)
+	{
+		if(actor->m_EntityHandle != entt::null)
+		{
+			m_Registry.release(actor->m_EntityHandle);
+		}
+
+		m_ActorMemory.DeAllocAndUnload<Actor>(actor);
+		m_Actors.erase(std::find(m_Actors.begin(), m_Actors.end(), actor));
 	}
 }
