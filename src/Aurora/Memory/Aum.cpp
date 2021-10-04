@@ -18,7 +18,6 @@ namespace Aurora
 		{
 			delete[] item.Memory;
 		}
-		std::cout << "end" << std::endl;
 	}
 
 	Aum::MemoryBlock& Aum::AllocateMemoryBlock()

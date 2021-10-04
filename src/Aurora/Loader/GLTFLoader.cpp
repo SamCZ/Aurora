@@ -60,7 +60,7 @@ namespace Aurora
 				switch(image.bits)
 				{
 					case 8:
-						desc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+						desc.ImageFormat = GraphicsFormat::SRGBA8_UNORM;
 						break;
 					default:
 						AU_LOG_FATAL("Image bit format not supported ! ", image.name, " - ", image.bits);

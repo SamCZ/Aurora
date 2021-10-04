@@ -265,7 +265,7 @@ namespace Aurora
 			ImGui::End();
 		}
 
-		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::RGBA8_UNORM);
+		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::SRGBA8_UNORM);
 		{ // Sky render
 			DrawCallState drawState;
 			drawState.Shader = m_SkyShader;
@@ -307,7 +307,12 @@ namespace Aurora
 			drawState.BindTexture("RoughnessMetallicAORT", roughnessMetallicAORT);
 			drawState.BindTexture("SkyRT", skyRT);
 
+			glEnable(GL_FRAMEBUFFER_SRGB);
+
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
+
+			glDisable(GL_FRAMEBUFFER_SRGB);
+
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
@@ -343,11 +348,6 @@ namespace Aurora
 				m_RenderDevice->SetRasterState(drawCallState.RasterState);
 				m_RenderDevice->SetDepthStencilState(drawCallState.DepthStencilState);
 
-				for (int a = 0; a < mesh->m_Buffers.size(); ++a)
-				{
-					drawCallState.SetVertexBuffer(a, mesh->m_Buffers[a]);
-				}
-
 				lastMaterial = mat;
 			}
 
@@ -356,6 +356,11 @@ namespace Aurora
 				drawCallState.PrimitiveType = section.PrimitiveType;
 				drawCallState.InputLayoutHandle = section.Layout;
 				drawCallState.SetIndexBuffer(mesh->m_Buffers[section.BufferIndex], section.IndexFormat);
+
+				for (int a = 0; a < mesh->m_Buffers.size(); ++a)
+				{
+					drawCallState.SetVertexBuffer(a, mesh->m_Buffers[a]);
+				}
 
 				m_RenderDevice->BindShaderInputs(drawCallState);
 

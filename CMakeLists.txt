@@ -8,6 +8,7 @@ add_subdirectory(lib)
 
 file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
 add_library(Aurora STATIC ${PROJECT_SOURCE})
+target_compile_options(Aurora PRIVATE -fpermissive)
 
 target_include_directories(Aurora PUBLIC src)
 target_include_directories(Aurora PUBLIC Assets)

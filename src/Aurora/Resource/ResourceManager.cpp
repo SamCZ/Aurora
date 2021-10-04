@@ -121,6 +121,12 @@ namespace Aurora
 					std::string include_file = matches[1];
 					Path includePath = path.parent_path() / include_file;
 
+					// If path contains / at first character, we just absolute path
+					if(include_file.starts_with('/'))
+					{
+						includePath = include_file.substr(1);
+					}
+
 					if(std::find(alreadyIncluded.begin(), alreadyIncluded.end(), includePath.filename()) != alreadyIncluded.end())
 					{
 						continue;

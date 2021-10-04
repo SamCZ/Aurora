@@ -11,7 +11,7 @@ namespace Aurora
 	DECLARE_PARAM(MaterialPBR, MP_METALLIC_MAP);
 	DECLARE_PARAM(MaterialPBR, MP_AO_MAP);
 
-	MaterialPBR::MaterialPBR()
+	MaterialPBR::MaterialPBR() : Material()
 	{
 		SetName("PBR");
 
