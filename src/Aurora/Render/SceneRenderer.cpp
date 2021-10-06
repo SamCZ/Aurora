@@ -136,7 +136,7 @@ namespace Aurora
 			{
 				const VisibleEntity& visibleEntity = m_VisibleEntitiesRegistry.get<VisibleEntity>(e);
 				XMesh::PrimitiveSection& section = visibleEntity.Mesh->m_Sections[visibleEntity.MeshSection];
-				bool canBeInstanced = !!(visibleEntity.Material->GetFlags() & MaterialFlags::Instanced);
+				bool canBeInstanced = visibleEntity.Material->HasFlag(MF_INSTANCED);
 
 				//std::cout << visibleEntity.Material->GetTypeName() << " - " << visibleEntity.Mesh << " - " << visibleEntity.MeshSection << std::endl;
 
@@ -328,6 +328,8 @@ namespace Aurora
 		CPU_DEBUG_SCOPE("SceneRenderer::RenderPass")
 		GPU_DEBUG_SCOPE(String("RenderPass [") + PassTypesToString[(int)passType] + "]");
 
+		std::vector<DrawArguments> drawArgs;
+
 		Material* lastMaterial = nullptr;
 		XMesh* lastMesh = nullptr;
 		XMesh::PrimitiveSection* lastSection = nullptr;
@@ -368,6 +370,7 @@ namespace Aurora
 				lastSection = mc.MeshSection;
 			}
 
+			if(mat->HasFlag(MF_INSTANCED) && !mc.Instances.empty())
 			{
 				//CPU_DEBUG_SCOPE("WriteInstances")
 				/*auto* instancesPtr = m_RenderDevice->MapBuffer<ObjectInstanceData>(m_InstancingBuffer, EBufferAccess::WriteOnly);
@@ -376,12 +379,30 @@ namespace Aurora
 				m_RenderDevice->WriteBuffer(m_InstancingBuffer, mc.Instances.data(), sizeof(Matrix4) * mc.Instances.size(), 0);
 			}
 
-			DrawArguments drawArguments;
-			drawArguments.VertexCount = section.IndexCount;
-			drawArguments.StartIndexLocation = section.IndexByteOffset;
-			drawArguments.InstanceCount = mc.Instances.size();
+			if(section.Ranges.size() == 1)
+			{
+				DrawArguments drawArguments;
+				drawArguments.VertexCount = section.Ranges[0].IndexCount;
+				drawArguments.StartIndexLocation = section.Ranges[0].IndexByteOffset;
+				drawArguments.InstanceCount = mc.Instances.size();
 
-			m_RenderDevice->DrawIndexed(drawCallState, {drawArguments});
+				m_RenderDevice->DrawIndexed(drawCallState, {drawArguments});
+			}
+			else
+			{
+				drawArgs.clear();
+
+				for(const XMesh::PrimitiveSection::Range& range : section.Ranges)
+				{
+					DrawArguments drawArguments;
+					drawArguments.VertexCount = range.IndexCount;
+					drawArguments.StartIndexLocation = range.IndexByteOffset;
+					drawArguments.InstanceCount = mc.Instances.size();
+					drawArgs.emplace_back(drawArguments);
+				}
+
+				m_RenderDevice->DrawIndexed(drawCallState, drawArgs);
+			}
 
 			if(i != modelContexts.size() - 1)
 			{

@@ -188,7 +188,7 @@ namespace Aurora
 			{
 				m_RenderManager->EndFrame();
 				CPU_DEBUG_SCOPE("Swap chain")
-				m_SwapChain->Present(1);
+				m_SwapChain->Present(0);
 			}
 
 #ifdef AU_TRACY_ENABLED

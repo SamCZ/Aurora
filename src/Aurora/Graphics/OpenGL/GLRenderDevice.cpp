@@ -1086,10 +1086,18 @@ namespace Aurora
 						(const void*)size_t(layoutAttribute.Offset));
 			}
 
-			glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
+			//glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
 		}
 
 		//glBindBuffer(GL_ARRAY_BUFFER, GL_NONE); Do not do this, android render will fail !
+
+		if(m_LastInputLayout != nullptr)
+		{
+			if(inputVars.size() == m_LastInputLayout->GetDescriptors().size())
+			{
+				return;
+			}
+		}
 
 		static GLint nMaxVertexAttrs = 0;
 		if(nMaxVertexAttrs == 0)

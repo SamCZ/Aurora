@@ -77,6 +77,54 @@ namespace Aurora
 		{
 			Projection = glm::ortho(left, right, bottom, top);
 		}
+
+		[[nodiscard]] Matrix4 GetProjectionViewMatrix(const TransformComponent& transformComponent) const
+		{
+			return Projection * glm::inverse(transformComponent.GetTransform());
+		}
+
+		[[nodiscard]] Vector3 GetWorldPosition(const TransformComponent& transformComponent, double x, double y, double projectionZPos) const
+		{
+			Matrix4 inverseMat = glm::inverse(GetProjectionViewMatrix(transformComponent));
+
+			Vector3 store = Vector3((2.0 * x) / (float)Size.x - 1.0, (2.0 * y) / (float)Size.y - 1.0, projectionZPos * 2 - 1);
+			Vector4 proStore = inverseMat * Vector4(store, 1.0);
+			store.x = proStore.x;
+			store.y = proStore.y;
+			store.z = proStore.z;
+			store *= 1.0f / proStore.w;
+			return store;
+		}
+
+		bool GetScreenCoordinates(const TransformComponent& transformComponent, const Vector3D& position, Vector2& out_ScreenPos) const
+		{
+			Vector4 result = (GetProjectionViewMatrix(transformComponent) * Vector4(position, 1.0f));
+
+			if(result.w > 0.0f) {
+				// the result of this will be x and y coords in -1..1 projection space
+				const float RHW = 1.0f / result.w;
+				Vector4 PosInScreenSpace = Vector4(result.x * RHW, result.y * RHW, result.z * RHW, result.w);
+
+				// Move from projection space to normalized 0..1 UI space
+				const float NormalizedX = ( PosInScreenSpace.x / 2.f ) + 0.5f;
+				const float NormalizedY = 1.f - ( PosInScreenSpace.y / 2.f ) - 0.5f;
+
+				out_ScreenPos.x = NormalizedX * (float)Size.x;
+				out_ScreenPos.y = NormalizedY * (float)Size.y;
+
+				if(out_ScreenPos.x < 0 || out_ScreenPos.x > (float)Size.x) {
+					return false;
+				}
+
+				if(out_ScreenPos.y < 0 || out_ScreenPos.y > (float)Size.y) {
+					return false;
+				}
+
+				return true;
+			}
+
+			return false;
+		}
 	};
 
 	struct MeshComponent

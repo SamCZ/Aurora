@@ -209,23 +209,19 @@ namespace Aurora
 
 			XMesh::PrimitiveSection section;
 			section.Layout = renderDevice->CreateInputLayout(vertexAttrs);
-			section.IndexCount = indexAccessor.count;
-			section.IndexByteOffset = indexAccessor.byteOffset;
 			section.BufferIndex = indexAccessor.bufferView;
+			section.AddRange(indexAccessor.count, indexAccessor.byteOffset);
 
 			switch (indexAccessor.componentType)
 			{
 				case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
 					section.IndexFormat = EIndexBufferFormat::Uint32;
-					section.IndexOffset = section.IndexByteOffset / sizeof(uint32_t);
 					break;
 				case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
 					section.IndexFormat = EIndexBufferFormat::Uint16;
-					section.IndexOffset = section.IndexByteOffset / sizeof(uint16_t);
 					break;
 				case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
 					section.IndexFormat = EIndexBufferFormat::Uint8;
-					section.IndexOffset = section.IndexByteOffset / sizeof(uint8_t);
 					break;
 				default:
 					AU_LOG_FATAL("Unsupported index format in GLTF mesh !");

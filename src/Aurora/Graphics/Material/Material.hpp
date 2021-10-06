@@ -21,10 +21,12 @@ namespace Aurora
 		Count
 	};
 
-	enum class MaterialFlags
+	enum MaterialFlags : uint8_t
 	{
-		Instanced = 0,
-		_entt_enum_as_bitmask
+		MF_NONE = 0,
+		MF_INSTANCED = 1 << 0,
+		MF_TRANSFORM = 1 << 1,
+
 	};
 
 	static constexpr uint8_t SortTypeCount = (uint8) RenderSortType::Count;
@@ -36,7 +38,7 @@ namespace Aurora
 	private:
 		std::map<EPassType, Shader_ptr> m_Shaders;
 		RenderSortType m_SortType = RenderSortType::Opaque;
-		MaterialFlags m_Flags = MaterialFlags::Instanced;
+		uint8_t m_Flags = MF_INSTANCED | MF_TRANSFORM;
 	public:
 		~Material() override = default;
 
@@ -48,7 +50,8 @@ namespace Aurora
 
 		void SetSortType(RenderSortType sortType) { m_SortType = sortType; }
 		[[nodiscard]] RenderSortType GetSortType() const { return m_SortType; }
-		[[nodiscard]] MaterialFlags GetFlags() const { return m_Flags; }
+		[[nodiscard]] uint8_t GetFlags() const { return m_Flags; }
+		[[nodiscard]] bool HasFlag(uint8_t flag) const { return m_Flags & flag; }
 	protected:
 		void SetShader(EPassType passType, const Shader_ptr& shader)
 		{
@@ -61,6 +64,8 @@ namespace Aurora
 			au_assert(it != m_Shaders.end());
 			return it->second;
 		}
+
+		void SetFlags(uint8_t flags) { m_Flags = flags; }
 	};
 
 	using matref = std::shared_ptr<Material>;
