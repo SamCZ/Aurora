@@ -28,7 +28,7 @@ namespace Aurora
 				{EShaderType::Pixel, "Assets/Shaders/PBR/pbr_composite.fss"},
 		});
 
-		m_SkyShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
+		m_SkyShader = GetEngine()->GetResourceManager()->LoadShader("Sky", {
 				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 				{EShaderType::Pixel, "Assets/Shaders/PostProcess/sky.fss"},
 		});
@@ -197,8 +197,9 @@ namespace Aurora
 		Entity cameraEntity(cameraEntityID, m_Scene);
 		auto& cameraTransform = cameraEntity.GetComponent<TransformComponent>();
 		auto& camera = cameraEntity.GetComponent<CameraComponent>();
-		Matrix4 projectionViewMatrix = camera.Projection * glm::inverse(cameraTransform.GetTransform());
-		Frustum frustum(projectionViewMatrix);
+		Matrix4 projectionMatrix = camera.Projection;
+		Matrix4 viewMatrix = glm::inverse(cameraTransform.GetTransform());
+		Frustum frustum(projectionMatrix * viewMatrix);
 
 		PrepareRender();
 		SortVisibleEntities();
@@ -216,7 +217,9 @@ namespace Aurora
 			drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
 
 			BEGIN_UB(BaseVSData, baseVsData)
-				baseVsData->ProjectionViewMatrix = projectionViewMatrix;
+				baseVsData->ProjectionMatrix = projectionMatrix;
+				baseVsData->ViewMatrix = viewMatrix;
+				baseVsData->ProjectionViewMatrix = projectionMatrix * viewMatrix;
 			END_UB(BaseVSData)
 
 			drawState.ClearDepthTarget = true;
@@ -386,6 +389,11 @@ namespace Aurora
 				drawArguments.StartIndexLocation = section.Ranges[0].IndexByteOffset;
 				drawArguments.InstanceCount = mc.Instances.size();
 
+				if(drawArguments.VertexCount == 0)
+				{
+					continue;
+				}
+
 				m_RenderDevice->DrawIndexed(drawCallState, {drawArguments});
 			}
 			else
@@ -398,6 +406,12 @@ namespace Aurora
 					drawArguments.VertexCount = range.IndexCount;
 					drawArguments.StartIndexLocation = range.IndexByteOffset;
 					drawArguments.InstanceCount = mc.Instances.size();
+
+					if(drawArguments.VertexCount == 0)
+					{
+						continue;
+					}
+
 					drawArgs.emplace_back(drawArguments);
 				}
 
