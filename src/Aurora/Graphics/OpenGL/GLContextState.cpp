@@ -42,6 +42,7 @@ namespace Aurora
 		if(NewObject == nullptr) {
 			bool state = CurrentObjectID != -1;
 			CurrentObjectID = -1;
+			NewGLHandle = 0;
 			return state;
 		}
 
@@ -165,7 +166,7 @@ namespace Aurora
 		GLuint GLBufferHandle = 0;
 		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle) || (buffer != nullptr)) // TODO: Fix this for buffer cache, when only offset and size is changed
 		{
-			if(size == buffer->GetDesc().ByteSize)
+			if(buffer == nullptr || size == buffer->GetDesc().ByteSize)
 			{
 				glBindBufferBase(GL_UNIFORM_BUFFER, index, GLBufferHandle);
 			}

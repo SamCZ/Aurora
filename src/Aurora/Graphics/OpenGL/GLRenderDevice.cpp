@@ -1261,12 +1261,23 @@ namespace Aurora
 				uniformBinding = uniformBufferIt->second;
 			}
 
+			GLBuffer* glBuffer = nullptr;
+
 			if(uniformBinding.Size == 0 && uniformBinding.Buffer != nullptr)
 			{
 				uniformBinding.Size = uniformBinding.Buffer->GetDesc().ByteSize;
 			}
 
-			m_ContextState.BindUniformBuffer(uniformResource.Binding, GetBuffer(uniformBinding.Buffer), uniformBinding.Offset, uniformBinding.Size);
+			if(uniformBinding.Buffer != nullptr)
+			{
+				glBuffer = GetBuffer(uniformBinding.Buffer);
+			}
+			else
+			{
+				continue;
+			}
+
+			m_ContextState.BindUniformBuffer(uniformResource.Binding, glBuffer, uniformBinding.Offset, uniformBinding.Size);
 		}
 
 
