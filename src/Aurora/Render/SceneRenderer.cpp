@@ -269,6 +269,7 @@ namespace Aurora
 		}
 
 		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::SRGBA8_UNORM);
+		if(false)
 		{ // Sky render
 			DrawCallState drawState;
 			drawState.Shader = m_SkyShader;

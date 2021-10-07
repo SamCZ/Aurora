@@ -10,6 +10,11 @@
 
 namespace Aurora
 {
+		struct TextureLoadInfo
+		{
+				bool SRGB = true;
+		};
+
 	class ResourceManager
 	{
 	private:
@@ -18,6 +23,7 @@ namespace Aurora
 		std::map<Path, std::pair<Path, ABankHeader>> m_AssetPackageFiles;
 		std::map<Path, std::vector<Path>> m_AssetPackageFolders;
 		std::map<String, Shader_ptr> m_ShaderPrograms;
+		std::map<Path, Texture_ptr> m_LoadedTextures;
 	public:
 		explicit ResourceManager(IRenderDevice* renderDevice);
 
@@ -40,5 +46,7 @@ namespace Aurora
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
 
 		bool LoadJson(const Path &path, nlohmann::json &json);
+
+		Texture_ptr LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo);
 	};
 }
