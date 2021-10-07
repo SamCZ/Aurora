@@ -5,9 +5,12 @@
 #include "Base/PrimitiveType.hpp"
 #include "Base/Texture.hpp"
 #include "MaterialSet.hpp"
+#include "Aurora/Physics/AABB.hpp"
 
 namespace Aurora
 {
+	class Entity;
+
 	class XMesh
 	{
 	public:
@@ -37,16 +40,14 @@ namespace Aurora
 		std::vector<Buffer_ptr>			m_Buffers;
 		std::vector<PrimitiveSection>	m_Sections;
 		std::shared_ptr<MaterialSet> Materials = std::make_shared<MaterialSet>();
+		AABB m_Bounds;
+		bool m_BoundsPreTransformed = false;
+		bool m_HasBounds = false;
 
 	public:
-		XMesh()
-		{
+		XMesh() = default;
+		virtual ~XMesh() = default;
 
-		}
-
-		~XMesh()
-		{
-
-		}
+		virtual bool BeforeSectionAdd(PrimitiveSection& section, Entity* cameraEntity) { return true; }
 	};
 }

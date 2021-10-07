@@ -45,11 +45,15 @@ namespace Aurora
 		visibleEntity.Mesh = mesh;
 		visibleEntity.MeshSection = meshSection;
 		visibleEntity.Transform = transform;
-		m_VisibleEntities.emplace_back(visibleEntityID);
-		m_VisibleTypeCounters[material->GetTypeID()]++;
+
+		if(mesh->BeforeSectionAdd(mesh->m_Sections[meshSection], &m_CurrentCameraEntity))
+		{
+			m_VisibleEntities.emplace_back(visibleEntityID);
+			m_VisibleTypeCounters[material->GetTypeID()]++;
+		}
 	}
 
-	void SceneRenderer::PrepareRender()
+	void SceneRenderer::PrepareRender(Frustum* frustum)
 	{
 		CPU_DEBUG_SCOPE("SceneRenderer::PrepareRender")
 		m_VisibleEntities.clear();
@@ -70,6 +74,38 @@ namespace Aurora
 
 			if(mesh == nullptr) continue;
 
+			// Check frustum culling
+
+			Matrix4 modelTransform = transform.GetTransform();
+
+			/*
+			 * material, mesh, transform
+			 */
+
+			if(mesh->m_HasBounds)
+			{
+				if(mesh->m_BoundsPreTransformed)
+				{
+					if(!frustum->IsBoxVisible(mesh->m_Bounds))
+					{
+						continue;
+					}
+				}
+				else
+				{
+					AABB transformedAABB = mesh->m_Bounds;
+					transformedAABB *= modelTransform;
+					if(!frustum->IsBoxVisible(transformedAABB))
+					{
+						continue;
+					}
+				}
+			}
+			else
+			{
+				// TODO: Decide what to do with mesh with no bounds, rn we just enable rendering it
+			}
+
 			for (size_t i = 0; i < mesh->m_Sections.size(); ++i)
 			{
 				const XMesh::PrimitiveSection& section = mesh->m_Sections[i];
@@ -77,15 +113,6 @@ namespace Aurora
 				matref material = meshComponent.GetMaterial(section.MaterialIndex);
 
 				if(material == nullptr) continue;
-
-				// Check frustum culling
-
-				Matrix4 modelTransform = transform.GetTransform();
-
-				/*
-				 * material, mesh, transform
-				 */
-
 
 				AddVisibleEntity(material.get(), mesh.get(), i, modelTransform);
 			}
@@ -194,14 +221,16 @@ namespace Aurora
 		CPU_DEBUG_SCOPE("SceneRenderer::Render")
 		assert(m_Scene);
 
-		Entity cameraEntity(cameraEntityID, m_Scene);
-		auto& cameraTransform = cameraEntity.GetComponent<TransformComponent>();
-		auto& camera = cameraEntity.GetComponent<CameraComponent>();
+		m_CurrentCameraEntity = Entity(cameraEntityID, m_Scene);
+		auto& cameraTransform = m_CurrentCameraEntity.GetComponent<TransformComponent>();
+		auto& camera = m_CurrentCameraEntity.GetComponent<CameraComponent>();
 		Matrix4 projectionMatrix = camera.Projection;
 		Matrix4 viewMatrix = glm::inverse(cameraTransform.GetTransform());
-		Frustum frustum(projectionMatrix * viewMatrix);
+		Matrix4 projectionViewMatrix = projectionMatrix * viewMatrix;
 
-		PrepareRender();
+		Frustum frustum(projectionViewMatrix);
+
+		PrepareRender(&frustum);
 		SortVisibleEntities();
 
 		// Actual render
@@ -219,7 +248,7 @@ namespace Aurora
 			BEGIN_UB(BaseVSData, baseVsData)
 				baseVsData->ProjectionMatrix = projectionMatrix;
 				baseVsData->ViewMatrix = viewMatrix;
-				baseVsData->ProjectionViewMatrix = projectionMatrix * viewMatrix;
+				baseVsData->ProjectionViewMatrix = projectionViewMatrix;
 			END_UB(BaseVSData)
 
 			drawState.ClearDepthTarget = true;
@@ -390,7 +419,7 @@ namespace Aurora
 				drawArguments.StartIndexLocation = section.Ranges[0].IndexByteOffset;
 				drawArguments.InstanceCount = mc.Instances.size();
 
-				if(drawArguments.VertexCount == 0)
+				if(drawArguments.VertexCount == 0 || !section.Ranges[0].Enabled)
 				{
 					continue;
 				}
@@ -403,6 +432,8 @@ namespace Aurora
 
 				for(const XMesh::PrimitiveSection::Range& range : section.Ranges)
 				{
+					if(!range.Enabled) continue;
+
 					DrawArguments drawArguments;
 					drawArguments.VertexCount = range.IndexCount;
 					drawArguments.StartIndexLocation = range.IndexByteOffset;

@@ -44,6 +44,8 @@ namespace Aurora
 		glm::vec3 Right = { 1.0f, 0.0f, 0.0f };
 		glm::vec3 Forward = { 0.0f, 0.0f, -1.0f };
 
+		bool Locked = false; // For debug purposes
+
 		TransformComponent() = default;
 		TransformComponent(const TransformComponent& other) = default;
 		explicit TransformComponent(const glm::vec3& translation) : Translation(translation) {}

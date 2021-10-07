@@ -7,7 +7,7 @@
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/Mesh.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
-#include <entt/entt.hpp>
+#include "Aurora/Framework/Entity.hpp"
 
 #include "Shaders/World/instancing.h"
 
@@ -16,6 +16,7 @@ namespace Aurora
 	class Scene;
 	class Material;
 	class XMesh;
+	class Frustum;
 
 	struct VisibleEntity
 	{
@@ -52,13 +53,15 @@ namespace Aurora
 
 		Shader_ptr m_PBRCompositeShader;
 		Shader_ptr m_SkyShader;
+
+		Entity m_CurrentCameraEntity;
 	public:
 		SceneRenderer(Scene* scene, RenderManager* renderManager, IRenderDevice* renderDevice);
 		~SceneRenderer();
 
 		void AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform);
 
-		void PrepareRender();
+		void PrepareRender(Frustum* frustum);
 		void SortVisibleEntities();
 
 		RenderSet BuildRenderSet();

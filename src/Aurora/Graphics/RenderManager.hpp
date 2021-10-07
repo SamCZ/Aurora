@@ -22,9 +22,11 @@ namespace Aurora
 	{
 		extern Sampler_ptr ClampClampLinearLinear;
 		extern Sampler_ptr WrapWrapLinearLinear;
+		extern Sampler_ptr WrapWrapNearNearestFarLinear;
 
 		extern Sampler_ptr ClampClampNearestNearest;
 		extern Sampler_ptr WrapWrapNearestNearest;
+		extern Sampler_ptr ClampClampNearNearestFarLinear;
 	}
 
 	struct RTCacheSort

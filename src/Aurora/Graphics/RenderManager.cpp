@@ -15,6 +15,8 @@ namespace Aurora
 
 		Sampler_ptr ClampClampNearestNearest;
 		Sampler_ptr WrapWrapNearestNearest;
+		Sampler_ptr WrapWrapNearNearestFarLinear;
+		Sampler_ptr ClampClampNearNearestFarLinear;
 	}
 
 	RenderManager::RenderManager(IRenderDevice *renderDevice)
@@ -30,9 +32,11 @@ namespace Aurora
 
 		Samplers::ClampClampLinearLinear = renderDevice->CreateSampler(SamplerDesc(true, true, true, EWrapMode::Clamp, EWrapMode::Clamp));
 		Samplers::WrapWrapLinearLinear = renderDevice->CreateSampler(SamplerDesc(true, true, true, EWrapMode::Wrap, EWrapMode::Wrap));
+		Samplers::WrapWrapNearNearestFarLinear = renderDevice->CreateSampler(SamplerDesc(true, false, true, EWrapMode::Wrap, EWrapMode::Wrap));
 
 		Samplers::ClampClampNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Clamp, EWrapMode::Clamp));
 		Samplers::WrapWrapNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Wrap, EWrapMode::Wrap));
+		Samplers::ClampClampNearNearestFarLinear = renderDevice->CreateSampler(SamplerDesc(true, false, true, EWrapMode::Clamp, EWrapMode::Clamp));
 	}
 
 	TemporalRenderTarget RenderManager::CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage)
