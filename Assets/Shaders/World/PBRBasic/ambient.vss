@@ -20,7 +20,7 @@ void main() {
 	//mat4 ins = gInstances[0];
 	//mat4 ModelMatrix = gInstances[gl_InstanceID].ModelMatrix;
 
-	gl_Position = ProjectionViewMatrix * gInstances[gl_InstanceID] * vec4(POSITION, 1.0);
+	gl_Position = ProjectionMatrix * ViewMatrix * gInstances[gl_InstanceID] * vec4(POSITION, 1.0);
 	TexCoord = TEXCOORD_0;
 	Normal = normalize(NORMAL);
 
