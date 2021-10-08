@@ -255,6 +255,7 @@ namespace Aurora
 			drawState.ClearColorTarget = true;
 			drawState.DepthStencilState.DepthEnable = true;
 			drawState.RasterState.CullMode = ECullMode::Back;
+			drawState.ClearColor = Color(0,96,213);
 
 			drawState.ViewPort = camera.Size;
 

@@ -20,6 +20,10 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
+#include "Aurora/Graphics/NanoVG/nanovg.h"
+#define NANOVG_GL3_IMPLEMENTATION
+#include "Aurora/Graphics/NanoVG/nanovg_gl.h"
+
 namespace Aurora
 {
 	static AuroraContext* g_Context = nullptr;
@@ -41,8 +45,12 @@ namespace Aurora
 
 	}
 
+	struct NVGcontext* vg;
+
 	AuroraEngine::~AuroraEngine()
 	{
+		nvgDeleteGL3(vg);
+
 		delete m_AppContext;
 		delete g_Context;
 		delete m_ResourceManager;
@@ -118,6 +126,9 @@ namespace Aurora
 		g_Context->m_RenderManager = m_RenderManager;
 		g_Context->m_ResourceManager = m_ResourceManager;
 
+		vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES); //NVG_DEBUG
+		nvgCreateFont(vg, "default", "../Assets/Fonts/GROBOLD.ttf");
+
 		// Init App context
 		m_AppContext = appContext;
 		m_AppContext->Init();
@@ -128,6 +139,9 @@ namespace Aurora
 		double lastTime = glfwGetTime();
 		int frameRate = 0;
 		double frameRateAcc = 0;
+
+		int FPS = 0;
+
 		while(!m_Window->IsShouldClose())
 		{
 			double currentTime = glfwGetTime();
@@ -149,6 +163,8 @@ namespace Aurora
 					ss << " - " << frameRate << " fps, " << avgFrameTimeMs << "ms";
 
 					m_Window->SetTitle(ss.str());
+
+					FPS = frameRate;
 
 					AU_LOG_INFO(ss.str());
 					frameRateAcc = 0;
@@ -176,6 +192,44 @@ namespace Aurora
 				CPU_DEBUG_SCOPE("Game render");
 				GPU_DEBUG_SCOPE("Game render");
 				m_AppContext->Render();
+			}
+
+			{
+				nvgBeginFrame(vg, m_Window->GetWidth(), m_Window->GetHeight(), 1.0f); // TODO: Fix hdpi devices
+
+				/*nvgBeginPath(vg);
+				nvgRect(vg, 100,100, 120,30);
+				nvgFillColor(vg, nvgRGBA(255,192,0,255));
+				nvgFill(vg);
+
+				{
+					nvgSave(vg);
+					nvgBeginPath(vg);
+					nvgTranslate(vg, 100 - 15, 100 - 16);
+					nvgMoveTo(vg, 10, 17);
+					nvgLineTo(vg, 13, 20);
+					nvgLineTo(vg, 20, 13);
+					nvgStrokeWidth(vg, 1.0f);
+					nvgStrokeColor(vg, {1, 0, 1, 1});
+					nvgStroke(vg);
+					nvgRestore(vg);
+				}*/
+
+				{
+					std::stringstream ss;
+					ss << "FPS: " << FPS << std::endl;
+
+					nvgFontSize(vg, 16);
+					nvgFontFace(vg, "default");
+
+					nvgFontBlur(vg, 0);
+					nvgGlobalAlpha(vg, 1.0f);
+					nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+					nvgFillColor(vg, nvgRGBAf(1, 1, 1, 1));
+					nvgText(vg, 10, 10, ss.str().c_str(), nullptr);
+				}
+
+				nvgEndFrame(vg);
 			}
 
 			{
