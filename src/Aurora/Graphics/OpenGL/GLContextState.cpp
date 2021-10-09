@@ -126,7 +126,7 @@ namespace Aurora
 
 		GLuint GLTexHandle = 0;
 
-		if (UpdateBoundObjectsArr(m_BoundTextures, index, texture, GLTexHandle))
+		if (UpdateBoundObjectsArr(m_BoundTextures, index, texture, GLTexHandle) || true) // FIXME: Temporal RT should not be used here
 		{
 			if(texture != nullptr) {
 				glBindTexture(texture->BindTarget(), GLTexHandle);
