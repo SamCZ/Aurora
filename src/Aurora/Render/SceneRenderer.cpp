@@ -32,9 +32,38 @@ namespace Aurora
 				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 				{EShaderType::Pixel, "Assets/Shaders/PostProcess/sky.fss"},
 		});
+
+		m_RenderSkyCubeShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/Sky/PreethamSky.glsl");
 	}
 
 	SceneRenderer::~SceneRenderer() = default;
+
+	Texture_ptr SceneRenderer::RenderPreethamSky(const Vector2ui& resolution, float turbidity, float azimuth, float inclination)
+	{
+		static auto skyCubeRT = m_RenderManager->CreateRenderTarget("PreethamSky", resolution, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_CubeMap, 1, 6, TextureDesc::EUsage::Default, true);
+
+		static Vector4 lastData = Vector4(-1, -1, -1, -1);
+		Vector4 data = Vector4(turbidity, azimuth, inclination, 1.0f);
+
+		if(lastData == data) return skyCubeRT;
+		lastData = data;
+
+		static auto ub = m_RenderDevice->CreateBuffer(BufferDesc("PreethamSky", sizeof(Vector4), EBufferType::UniformBuffer, EBufferUsage::DynamicCopy));
+
+		m_RenderDevice->WriteBuffer(ub, &data, sizeof(Vector4), 0);
+
+		DispatchState dispatchState;
+		dispatchState.Shader = m_RenderSkyCubeShader;
+		dispatchState.BindTexture("o_CubeMap", skyCubeRT, true);
+		dispatchState.BindUniformBuffer("Uniforms", ub);
+		m_RenderDevice->Dispatch(dispatchState, resolution.x / 32, resolution.y / 32, 6);
+
+		/*BEGIN_UB(Vector4, desc)
+			*desc = Vector4(turbidity, azimuth, inclination, 1.0f);
+		END_CUB(Uniforms)*/
+
+		return skyCubeRT;
+	}
 
 	void SceneRenderer::AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform)
 	{
@@ -255,7 +284,7 @@ namespace Aurora
 			drawState.ClearColorTarget = true;
 			drawState.DepthStencilState.DepthEnable = true;
 			drawState.RasterState.CullMode = ECullMode::Back;
-			drawState.ClearColor = Color(0,96,213);
+			//drawState.ClearColor = Color(0,96,213);
 
 			drawState.ViewPort = camera.Size;
 
@@ -299,8 +328,20 @@ namespace Aurora
 			ImGui::End();
 		}
 
+		static Vector3 skyData = Vector3(2, 0, 0);
+
+		ImGui::Begin("Sky");
+		{
+			ImGui::DragFloat("Turbidity", &skyData.x, 0.1f);
+			ImGui::DragFloat("Azimuth", &skyData.y, 0.1f);
+			ImGui::DragFloat("Inclination", &skyData.z, 0.1f);
+		}
+		ImGui::End();
+
 		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::SRGBA8_UNORM);
-		if(false)
+		auto preetham = RenderPreethamSky({512, 512}, skyData.x, skyData.y, skyData.z);
+
+		if(true)
 		{ // Sky render
 			DrawCallState drawState;
 			drawState.Shader = m_SkyShader;
@@ -313,6 +354,7 @@ namespace Aurora
 
 			drawState.BindTarget(0, skyRT);
 			drawState.BindTexture("DepthTexture", depthRT);
+			drawState.BindTexture("SkyCube", preetham);
 
 			BEGIN_UB(SkyConstants, skyConstants)
 				skyConstants->InvProjection = glm::inverse(camera.Projection);

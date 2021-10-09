@@ -3,6 +3,7 @@
 in vec2 TexCoord;
 
 uniform sampler2D DepthTexture;
+uniform samplerCube SkyCube;
 
 out vec4 FragColor;
 
@@ -111,7 +112,9 @@ void main()
 
     //planetCenter = rayOrigin;
 
-    float depth = texelFetch(DepthTexture, ivec2(gl_FragCoord.xy), 0).r;
+    FragColor = texture(SkyCube, rayDir);
+    return;
+    /*float depth = texelFetch(DepthTexture, ivec2(gl_FragCoord.xy), 0).r;
     float dstToSurface = linearize_depth(depth, 0.1f, 2000.0f);
 
     vec2 hitInfo = raySphere(planetCenter, atmosphereRadius, rayOrigin, rayDir);
@@ -128,5 +131,5 @@ void main()
     }
 
     FragColor.rgb = color;
-    FragColor.a = 1;
+    FragColor.a = 1;*/
 }

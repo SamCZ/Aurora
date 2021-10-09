@@ -53,11 +53,14 @@ namespace Aurora
 
 		Shader_ptr m_PBRCompositeShader;
 		Shader_ptr m_SkyShader;
+		Shader_ptr m_RenderSkyCubeShader;
 
 		Entity m_CurrentCameraEntity;
 	public:
 		SceneRenderer(Scene* scene, RenderManager* renderManager, IRenderDevice* renderDevice);
 		~SceneRenderer();
+
+		Texture_ptr RenderPreethamSky(const Vector2ui& resolution, float turbidity, float azimuth, float inclination);
 
 		void AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform);
 
