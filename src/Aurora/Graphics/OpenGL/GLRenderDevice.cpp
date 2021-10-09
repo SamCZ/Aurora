@@ -1227,7 +1227,7 @@ namespace Aurora
 			if(textureDesc.IsUAV && targetTextureBinding->IsUAV) {
 				GLenum format = glTexture->Format().InternalFormat;
 				GLenum access = GL_WRITE_ONLY;
-				bool layered = false;
+				bool layered = textureDesc.DepthOrArraySize > 0;
 				GLint layer = 0;
 
 				switch (targetTextureBinding->Access) {
