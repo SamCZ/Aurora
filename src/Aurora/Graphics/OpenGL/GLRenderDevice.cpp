@@ -1148,6 +1148,9 @@ namespace Aurora
 	{
 		m_ContextState.Invalidate();
 
+		m_LastRasterState = FRasterState();
+		m_LastDepthState = FDepthStencilState();
+
 		m_LastRasterState.FillMode = EFillMode::Solid;
 		m_LastRasterState.CullMode = ECullMode::Front;
 		m_LastRasterState.DepthClipEnable = false;

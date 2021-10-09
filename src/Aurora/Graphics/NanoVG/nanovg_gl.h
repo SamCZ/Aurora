@@ -1251,13 +1251,16 @@ static void glnvg__renderFlush(void* uptr)
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 #if defined NANOVG_GL3
-		glBindVertexArray(0);
+		//glBindVertexArray(0);
 #endif
 		glDisable(GL_CULL_FACE);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glUseProgram(0);
 		glnvg__bindTexture(gl, 0);
 	}
+
+	// FIXME: Move gl calls to GLRenderDevice, because there is a context state and when this binds something,
+	// the next frame will be broken, because of wrong states that this binds.
 
 	// Reset calls
 	gl->nverts = 0;

@@ -239,6 +239,8 @@ namespace Aurora
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			}
 
+			g_Context->m_RenderDevice->InvalidateState();
+
 			{
 				m_RenderManager->EndFrame();
 				CPU_DEBUG_SCOPE("Swap chain")
