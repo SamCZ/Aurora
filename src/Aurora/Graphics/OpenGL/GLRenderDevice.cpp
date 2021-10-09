@@ -955,6 +955,8 @@ namespace Aurora
 			return;
 		}
 
+		glBindVertexArray(m_nVAOEmpty); // FIXME: idk why, but when frustum clips all geometry and nothing renders,then this call happens, it will throw error in non bound Array (maybe it does NanoVG?)
+
 		ApplyDrawCallState(state);
 
 		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
