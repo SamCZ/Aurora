@@ -129,12 +129,12 @@ void main()
 	vec3 cubeTC = GetCubeMapTexCoord();
 
 	float turbidity     =  u_Uniforms.TurbidityAzimuthInclination.x;
-    float azimuth       = u_Uniforms.TurbidityAzimuthInclination.y;
-    float inclination   = u_Uniforms.TurbidityAzimuthInclination.z;
-    vec3 sunDir     	= normalize( vec3( sin(inclination) * cos(azimuth), cos(inclination), sin(inclination) * sin(azimuth) ) );
-    vec3 viewDir  		= cubeTC;
-    vec3 skyLuminance 	= calculateSkyLuminanceRGB( sunDir, viewDir, turbidity );
-    
-    vec4 color = vec4(skyLuminance * 0.05, 1.0);
+	float azimuth       = u_Uniforms.TurbidityAzimuthInclination.y;
+	float inclination   = u_Uniforms.TurbidityAzimuthInclination.z;
+	vec3 sunDir     	= normalize( vec3( sin(inclination) * cos(azimuth), cos(inclination), sin(inclination) * sin(azimuth) ) );
+	vec3 viewDir  		= cubeTC;
+	vec3 skyLuminance 	= calculateSkyLuminanceRGB( sunDir, viewDir, turbidity );
+
+	vec4 color = vec4(skyLuminance * 0.05, 1.0);
 	imageStore(o_CubeMap, ivec3(gl_GlobalInvocationID), color);
 }
