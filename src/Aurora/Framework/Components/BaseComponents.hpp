@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/UUID.hpp"
@@ -17,8 +19,7 @@ namespace Aurora
 
 		TagComponent() = default;
 		TagComponent(const TagComponent& other) = default;
-		TagComponent(const std::string& tag)
-				: Tag(tag) {}
+		TagComponent(std::string tag) : Tag(std::move(tag)) {}
 
 		operator std::string& () { return Tag; }
 		operator const std::string& () const { return Tag; }
@@ -31,7 +32,7 @@ namespace Aurora
 
 		RelationshipComponent() = default;
 		RelationshipComponent(const RelationshipComponent& other) = default;
-		RelationshipComponent(UUID parent) : ParentHandle(parent) {}
+		RelationshipComponent(const UUID& parent) : ParentHandle(parent) {}
 	};
 
 	struct TransformComponent
@@ -134,20 +135,9 @@ namespace Aurora
 		std::shared_ptr<XMesh> Mesh;
 		std::shared_ptr<MaterialSet> MaterialOverrides = std::make_shared<MaterialSet>();
 
-		MeshComponent()
-		{
-			//std::cout << "MeshComponent const" << std::endl;
-		}
-
-		~MeshComponent()
-		{
-			//std::cout << "MeshComponent dest" << std::endl;
-		}
-
-		MeshComponent(const MeshComponent& other) : Mesh(other.Mesh), MaterialOverrides(other.MaterialOverrides)
-		{
-			//std::cout << "MeshComponent copy const" << std::endl;
-		}
+		MeshComponent() = default;
+		~MeshComponent() = default;
+		MeshComponent(const MeshComponent& other) = default;
 
 		std::shared_ptr<Material> GetMaterial(int materialIndex)
 		{

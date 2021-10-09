@@ -12,7 +12,7 @@
 
 #include "Input/GLFW/Manager.hpp"
 
-#include <glad/glad.h>
+#include "Aurora/Graphics/OpenGL/GL.hpp"
 
 namespace Aurora
 {
@@ -155,14 +155,14 @@ namespace Aurora
 
 	}
 
-	void GLAPIENTRY
-	MessageCallback( GLenum source,
-					 GLenum type,
-					 GLuint id,
-					 GLenum severity,
-					 GLsizei length,
-					 const GLchar* message,
-					 const void* userParam )
+	GLFWWindow::~GLFWWindow()
+	{
+#ifdef GLAD_INSTALL_DEBUG
+		gladUninstallGLDebug();
+#endif
+	}
+
+	void MessageCallback(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam)
 	{
 		// Note: disabling flood of notifications through glDebugMessageControl() has no effect,
 		// so we have to filter them out here
@@ -299,18 +299,23 @@ namespace Aurora
 		glfwMakeContextCurrent(m_WindowHandle);
 
 		// This is gonna break after second window is created !
-		if(!gladLoadGL()) {
+		int glVersion;
+		if(!(glVersion = gladLoadGL(glfwGetProcAddress))) {
 			printf("Something went wrong!\n");
 			exit(-1);
 		}
 		// During init, enable debug output
-		//glEnable              ( GL_DEBUG_OUTPUT );
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		glDebugMessageCallback( MessageCallback, 0 );
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+		glDebugMessageCallback( MessageCallback, nullptr );
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
-		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
+#ifdef GLAD_INSTALL_DEBUG
+		gladInstallGLDebug();
+#endif
+
+		glGetString(GL_VERSION);
+		AU_LOG_INFO("OpenGL ", GLAD_VERSION_MAJOR(glVersion), ".", GLAD_VERSION_MINOR(glVersion));
 
 		if(!GLAD_GL_EXT_texture_array) {
 			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");

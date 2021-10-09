@@ -132,6 +132,7 @@ namespace Aurora
 		BufferCache m_UniformBufferCache;
 	public:
 		explicit RenderManager(IRenderDevice *renderDevice);
+		~RenderManager();
 
 		TemporalRenderTarget CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1,
 		                                                uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false);

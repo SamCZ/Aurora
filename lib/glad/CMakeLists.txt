@@ -9,6 +9,6 @@ project(glad VERSION 4.6 LANGUAGES C)
 # Profile: Core
 # Extensions: <all>
 
-add_library(glad STATIC ${PROJECT_SOURCE_DIR}/src/glad.c)
+add_library(glad STATIC ${PROJECT_SOURCE_DIR}/src/gl.c)
 
 target_include_directories(glad PUBLIC ${PROJECT_SOURCE_DIR}/include/)

@@ -60,33 +60,35 @@ namespace Aurora
 		m_RenderDevice->WriteTexture(ssaoNoiseTex, 0, 0, ssaoNoise.data());
 	}
 
-	SceneRenderer::~SceneRenderer() = default;
+	SceneRenderer::~SceneRenderer()
+	{
+		ssaoNoiseTex.reset();
+	}
 
 	Texture_ptr SceneRenderer::RenderPreethamSky(const Vector2ui& resolution, float turbidity, float azimuth, float inclination)
 	{
-		static auto skyCubeRT = m_RenderManager->CreateRenderTarget("PreethamSky", resolution, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_CubeMap, 1, 6, TextureDesc::EUsage::Default, true);
+		if(m_SkyCubeMap == nullptr)
+		{
+			m_SkyCubeMap = m_RenderManager->CreateRenderTarget("PreethamSky", {512, 512}, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_CubeMap, 1, 6, TextureDesc::EUsage::Default, true);
+		}
 
 		static Vector4 lastData = Vector4(-1, -1, -1, -1);
 		Vector4 data = Vector4(turbidity, azimuth, inclination, 1.0f);
 
-		if(lastData == data) return skyCubeRT;
+		if(lastData == data) return m_SkyCubeMap;
 		lastData = data;
-
-		static auto ub = m_RenderDevice->CreateBuffer(BufferDesc("PreethamSky", sizeof(Vector4), EBufferType::UniformBuffer, EBufferUsage::DynamicCopy));
-
-		m_RenderDevice->WriteBuffer(ub, &data, sizeof(Vector4), 0);
 
 		DispatchState dispatchState;
 		dispatchState.Shader = m_RenderSkyCubeShader;
-		dispatchState.BindTexture("o_CubeMap", skyCubeRT, true);
-		dispatchState.BindUniformBuffer("Uniforms", ub);
+		dispatchState.BindTexture("o_CubeMap", m_SkyCubeMap, true);
+
+		BEGIN_UB(Vector4, desc)
+			*desc = data;
+		END_CUB(Uniforms)
+
 		m_RenderDevice->Dispatch(dispatchState, resolution.x / 32, resolution.y / 32, 6);
 
-		/*BEGIN_UB(Vector4, desc)
-			*desc = Vector4(turbidity, azimuth, inclination, 1.0f);
-		END_CUB(Uniforms)*/
-
-		return skyCubeRT;
+		return m_SkyCubeMap;
 	}
 
 	void SceneRenderer::AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Base/Sampler.hpp"
-#include <glad/glad.h>
+#include "GL.hpp"
 
 namespace Aurora
 {

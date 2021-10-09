@@ -39,6 +39,17 @@ namespace Aurora
 		Samplers::ClampClampNearNearestFarLinear = renderDevice->CreateSampler(SamplerDesc(true, false, true, EWrapMode::Clamp, EWrapMode::Clamp));
 	}
 
+	RenderManager::~RenderManager()
+	{
+		Samplers::ClampClampLinearLinear.reset();
+		Samplers::WrapWrapLinearLinear.reset();
+
+		Samplers::ClampClampNearestNearest.reset();
+		Samplers::WrapWrapNearestNearest.reset();
+		Samplers::WrapWrapNearNearestFarLinear.reset();
+		Samplers::ClampClampNearNearestFarLinear.reset();
+	}
+
 	TemporalRenderTarget RenderManager::CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage, bool uav)
 	{
 		TemporalRenderTarget rt;

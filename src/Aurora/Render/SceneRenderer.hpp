@@ -57,6 +57,8 @@ namespace Aurora
 		Shader_ptr m_RenderSkyCubeShader;
 
 		Entity m_CurrentCameraEntity;
+
+		Texture_ptr m_SkyCubeMap;
 	public:
 		SceneRenderer(Scene* scene, RenderManager* renderManager, IRenderDevice* renderDevice);
 		~SceneRenderer();

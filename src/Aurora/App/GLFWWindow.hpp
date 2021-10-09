@@ -25,7 +25,7 @@ namespace Aurora
 		std::vector<std::function<void(int, int)>> m_ResizeListeners;
 	public:
 		GLFWWindow();
-		~GLFWWindow() override = default;
+		~GLFWWindow() override;
 
 		void Initialize(const WindowDefinition& windowDefinition, const IWindow_ptr& parentWindow) override;
 
