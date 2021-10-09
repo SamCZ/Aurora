@@ -178,6 +178,7 @@ namespace Aurora
 			std::static_pointer_cast<Input::Manager>(m_Window->GetInputManager())->Update(frameTime);
 
 			{ // ImGui update
+				CPU_DEBUG_SCOPE("ImGui update");
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
@@ -195,6 +196,9 @@ namespace Aurora
 			}
 
 			{
+				CPU_DEBUG_SCOPE("NanoVG");
+				GPU_DEBUG_SCOPE("NanoVG");
+
 				nvgBeginFrame(vg, m_Window->GetWidth(), m_Window->GetHeight(), 1.0f); // TODO: Fix hdpi devices
 
 				/*nvgBeginPath(vg);

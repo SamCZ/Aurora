@@ -1,0 +1,67 @@
+#include "cb_ssao.h"
+
+out vec4 SSAO;
+in vec2 TexCoord;
+
+uniform sampler2D WorldPositionRT;
+uniform sampler2D NormalWorldRT;
+uniform sampler2D NoiseTex;
+
+vec3 SampleViewSpacePos(vec2 coords)
+{
+	return (ViewMatrix * texture(WorldPositionRT, coords)).xyz;
+}
+
+vec3 SampleViewSpaceNormal(vec2 coords)
+{
+	return normalize(transpose(inverse(mat3(ViewMatrix))) * (texture(NormalWorldRT, coords).rgb * 2.0f - 1.0f));
+}
+
+void main()
+{
+	// get input for SSAO algorithm
+	vec3 fragPos = SampleViewSpacePos(TexCoord);
+	vec3 normal = SampleViewSpaceNormal(TexCoord);
+	vec3 randomVec = normalize(texture(NoiseTex, TexCoord * NoiseScale.xy).xyz);
+
+	// create TBN change-of-basis matrix: from tangent-space to view-space
+	vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+	vec3 bitangent = cross(normal, tangent);
+	mat3 TBN = mat3(tangent, bitangent, normal);
+	// iterate over the sample kernel and calculate occlusion factor
+
+	float occlusion = 0.0f;
+	uint count = 0;
+	for(int i = 0; i < SSAO_SAMPLE_COUNT; ++i)
+	{
+		// get sample position
+		vec3 samplePos = TBN * Samples[i].xyz; // from tangent to view-space
+		samplePos = fragPos.xyz + samplePos * SSAORadius;
+
+		// project sample position (to sample texture) (to get position on screen/texture)
+		vec4 offset = vec4(samplePos, 1.0);
+		offset = ProjectionMatrix * offset; // from view to clip-space
+		offset.xyz /= offset.w; // perspective divide
+
+		offset.xyz = offset.xyz * 0.5f + 0.5f; // transform to range 0.0 - 1.0
+
+		//skip computation if outside screen
+		if (abs(offset.y - 0.5) > 0.5 || abs(offset.x - 0.5) > 0.5) {
+			continue;
+		}
+
+		// get sample depth
+		float sampleDepth = SampleViewSpacePos(offset.xy).z; // get depth value of kernel sample
+
+		///occlusion += abs(sampleDepth - samplePos.z);
+		//return;
+		// range check & accumulate
+		float rangeCheck = smoothstep(0.0, 1.0, SSAORadius / abs(fragPos.z - sampleDepth));
+		occlusion += (sampleDepth >= samplePos.z + SSAOBias ? 1.0 : 0.0) * rangeCheck;
+
+		count++;
+	}
+	occlusion = 1.0 - (occlusion / count);
+
+	SSAO = vec4(occlusion);
+}

@@ -3,9 +3,12 @@
 in vec2 TexCoord;
 in vec3 Normal;
 in mat3 TBN;
+in vec4 WorldPos;
+
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 o_Normals;
 layout(location = 2) out vec4 o_RoughnessMetallicAO;
+layout(location = 3) out vec4 o_WorldPos;
 
 uniform sampler2D BaseColor;
 uniform sampler2D NormalMap;
@@ -22,4 +25,5 @@ void main()
 
 	o_Normals = vec4(N * 0.5f + 0.5f, 1.0f);
 	o_RoughnessMetallicAO = vec4(pbrConstants.Roughness, pbrConstants.Metallic, pbrConstants.AmbientOcclusion, 1);
+	o_WorldPos = WorldPos;
 }

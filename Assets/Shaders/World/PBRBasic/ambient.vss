@@ -4,6 +4,7 @@
 out vec2 TexCoord;
 out vec3 Normal;
 out mat3 TBN;
+out vec4 WorldPos;
 
 layout(location = 0) in vec3 POSITION;
 layout(location = 1) in vec2 TEXCOORD_0;
@@ -20,7 +21,8 @@ void main() {
 	//mat4 ins = gInstances[0];
 	//mat4 ModelMatrix = gInstances[gl_InstanceID].ModelMatrix;
 
-	gl_Position = ProjectionMatrix * ViewMatrix * gInstances[gl_InstanceID] * vec4(POSITION, 1.0);
+	WorldPos = gInstances[gl_InstanceID] * vec4(POSITION, 1.0);
+	gl_Position = ProjectionMatrix * ViewMatrix * WorldPos;
 	TexCoord = TEXCOORD_0;
 	Normal = normalize(NORMAL);
 
