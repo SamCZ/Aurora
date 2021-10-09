@@ -283,6 +283,7 @@ namespace Aurora
 		);
 		static Vector3 lightRotation = Vector3(90, 0, 0);
 
+		if(false)
 		{
 			ImGui::Begin("Atmosphere");
 			{

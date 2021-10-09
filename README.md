@@ -40,3 +40,9 @@
 |------|---------|---------|---------|
 | FMOD_API_DIR | Path to installed fmod api folder. | `C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api` | FMod folder for sound support |
 | BUILD_EXAMPLES | ON / OFF | `OFF` | This will enable / disable examples build |
+
+### OpenGL problems that I found
+
+#### On AMD GPU
+ - GLSL will throw error `#endif not found` if use `#ifdef` in if `#endif` exists.
+ - Ternary operators on `sampler2D` maybe others in fragments shaders will throw very weird error while linking vertex and fragment shader `INVALID_OPERATION`, example: `texture(Side == 2 ? TextureTop : TextureSide, TexCoord)`
