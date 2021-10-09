@@ -38,6 +38,7 @@ namespace Aurora
 		uint MipLevels;
 		uint DepthOrArraySize;
 		TextureDesc::EUsage Usage;
+		bool UnorderedAccessView;
 
 		uint Handle;
 
@@ -62,6 +63,9 @@ namespace Aurora
 
 			if ((uint8_t) Usage < (uint8_t) other.Usage) return -1;
 			if ((uint8_t) Usage > (uint8_t) other.Usage) return 1;
+
+			if (UnorderedAccessView < other.UnorderedAccessView) return -1;
+			if (UnorderedAccessView > other.UnorderedAccessView) return 1;
 
 			return 0;
 		}
@@ -130,23 +134,23 @@ namespace Aurora
 		explicit RenderManager(IRenderDevice *renderDevice);
 
 		TemporalRenderTarget CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1,
-		                                                uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default);
+		                                                uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false);
 
 		TemporalRenderTarget CreateTemporalRenderTarget(const String &name, const Vector2i &size, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1,
-		                                                uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default)
+		                                                uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
 		{
-			return std::move(CreateTemporalRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage));
+			return std::move(CreateTemporalRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav));
 		}
 
 		Texture_ptr
 		CreateRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1, uint depthOrArraySize = 0,
-		                   TextureDesc::EUsage usage = TextureDesc::EUsage::Default);
+		                   TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false);
 
 		Texture_ptr
 		CreateRenderTarget(const String &name, const Vector2i &size, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1, uint depthOrArraySize = 0,
-		                   TextureDesc::EUsage usage = TextureDesc::EUsage::Default)
+		                   TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
 		{
-			return std::move(CreateRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage));
+			return std::move(CreateRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav));
 		}
 
 		void Blit(const Texture_ptr &src, const Texture_ptr &dest);
@@ -173,5 +177,9 @@ namespace Aurora
 #define END_UB(bufferName) \
     m_RenderManager->GetUniformBufferCache().Unmap(cacheIndex); \
     drawState.BindUniformBuffer(#bufferName, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);}
+
+#define END_CUB(bufferName) \
+    m_RenderManager->GetUniformBufferCache().Unmap(cacheIndex); \
+    dispatchState.BindUniformBuffer(#bufferName, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);}
 
 }

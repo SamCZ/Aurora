@@ -39,7 +39,7 @@ namespace Aurora
 		Samplers::ClampClampNearNearestFarLinear = renderDevice->CreateSampler(SamplerDesc(true, false, true, EWrapMode::Clamp, EWrapMode::Clamp));
 	}
 
-	TemporalRenderTarget RenderManager::CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage)
+	TemporalRenderTarget RenderManager::CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage, bool uav)
 	{
 		TemporalRenderTarget rt;
 
@@ -51,6 +51,7 @@ namespace Aurora
 		cacheSort.MipLevels = mipLevels;
 		cacheSort.DepthOrArraySize = depthOrArraySize;
 		cacheSort.Usage = usage;
+		cacheSort.UnorderedAccessView = uav;
 		cacheSort.Handle = 0;
 
 		auto findRT = [this](const RTCacheSort& sort) -> int
@@ -75,12 +76,12 @@ namespace Aurora
 			storage.Name = name;
 			storage.Cache = cacheSort;
 			storage.Cache.Handle = 1;
-			storage.Texture = CreateRenderTarget(name, width, height, format, dimensionType, mipLevels, depthOrArraySize, usage);
+			storage.Texture = CreateRenderTarget(name, width, height, format, dimensionType, mipLevels, depthOrArraySize, usage, uav);
 			storage.LastUseTime = GetTimeInSeconds();
 
 			TemporalRenderTargetStorage& storedTarget = m_TemporalRenderTargets.emplace_back(storage);
 			rt.m_Manager = this;
-			rt.m_Index = m_TemporalRenderTargets.size() - 1;
+			rt.m_Index = (int32_t)m_TemporalRenderTargets.size() - 1;
 			rt.m_Texture = storedTarget.Texture;
 		}
 		else
@@ -107,7 +108,7 @@ namespace Aurora
 		m_Texture = nullptr;
 	}
 
-	Texture_ptr RenderManager::CreateRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage)
+	Texture_ptr RenderManager::CreateRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage, bool uav)
 	{
 		TextureDesc textureDesc;
 		textureDesc.Width = width;
@@ -119,7 +120,7 @@ namespace Aurora
 		textureDesc.Usage = usage;
 		textureDesc.IsRenderTarget = true;
 		textureDesc.Name = name;
-		// TODO: UAvs
+		textureDesc.IsUAV = uav;
 
 		return m_RenderDevice->CreateTexture(textureDesc);
 	}
