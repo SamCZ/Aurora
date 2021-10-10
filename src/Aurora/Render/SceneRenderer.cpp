@@ -335,35 +335,7 @@ namespace Aurora
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
-		static AtmosphereData athLocal = {Vector4(1, 2, 4, 0)};
-		static float scatteringStrength = 1;
-		const Vector3 waveLengths = Vector3(700, 530, 440);
-		athLocal.scatteringCoefficients = Vector4 (
-				pow(400 / waveLengths.x, 4) * scatteringStrength,
-				pow(400 / waveLengths.y, 4) * scatteringStrength,
-				pow(400 / waveLengths.z, 4) * scatteringStrength,
-				0
-		);
-		static Vector3 lightRotation = Vector3(90, 0, 0);
-
-		if(false)
-		{
-			ImGui::Begin("Atmosphere");
-			{
-				ImGui::DragFloat("Planet radius", &athLocal.data0.x, 0.1f);
-				ImGui::DragFloat("Atmosphere radius", &athLocal.data0.y, 0.1f);
-				ImGui::DragFloat("Density FallOff", &athLocal.data0.z, 0.1f);
-				ImGui::DragFloat("Scattering Strength", &scatteringStrength, 0.1f);
-				if(ImGui::DragFloat3("Light rotation", glm::value_ptr(lightRotation), 0.1))
-				{
-					athLocal.LightDirection = Vector4(glm::cos(glm::radians(lightRotation.x)), glm::sin(glm::radians(lightRotation.y)), 0, 0);
-				}
-			}
-			ImGui::End();
-		}
-
 		static Vector3 skyData = Vector3(2, 0, 0);
-
 		ImGui::Begin("Sky");
 		{
 			ImGui::DragFloat("Turbidity", &skyData.x, 0.1f);
@@ -395,14 +367,13 @@ namespace Aurora
 				skyConstants->InvView = cameraTransform.GetTransform();
 				skyConstants->CameraPos = Vector4(cameraTransform.Translation, 1);
 				skyConstants->ViewPort = Vector4(camera.Size, 0, 0);
-				skyConstants->atmosphereData = athLocal;
 			END_UB(SkyConstants)
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
-		static float ssaoRadius = 3.0f;
+		/*static float ssaoRadius = 3.0f;
 		static float ssaoBias = 0.025f;
 
 		ImGui::Begin("SSAO");
@@ -453,7 +424,7 @@ namespace Aurora
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
 			m_RenderManager->GetUniformBufferCache().Reset();
-		}
+		}*/
 
 		{ // Composite Deferred renderer
 			DrawCallState drawState;
@@ -470,7 +441,7 @@ namespace Aurora
 			drawState.BindTexture("NormalsRT", normalsRT);
 			drawState.BindTexture("RoughnessMetallicAORT", roughnessMetallicAORT);
 			drawState.BindTexture("SkyRT", skyRT);
-			drawState.BindTexture("SSAORT", ssaoRT);
+			//drawState.BindTexture("SSAORT", ssaoRT);
 
 			glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -487,7 +458,7 @@ namespace Aurora
 		roughnessMetallicAORT.Free();
 		worldPosRT.Free();
 		depthRT.Free();
-		ssaoRT.Free();
+		//ssaoRT.Free();
 	}
 
 	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType)
