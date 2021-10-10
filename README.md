@@ -50,5 +50,5 @@
 ### OpenGL problems that I found
 
 #### On AMD GPU
- - GLSL will throw error `#endif not found` if use `#ifdef` in if `#endif` exists.
+ - GLSL will throw error `#endif not found` if use `#ifdef` even if `#endif` exists.
  - Ternary operators on `sampler2D` maybe others in fragments shaders will throw very weird error while linking vertex and fragment shader `INVALID_OPERATION`, example: `texture(Side == 2 ? TextureTop : TextureSide, TexCoord)`
