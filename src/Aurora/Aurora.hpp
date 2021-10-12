@@ -33,6 +33,7 @@ namespace Aurora
 		RenderManager* m_RenderManager;
 		ResourceManager* m_ResourceManager;
 		Input::IManager* m_InputManager;
+		RmlUI* m_RmlUI;
 
 		AppContext* m_AppContext;
 	public:

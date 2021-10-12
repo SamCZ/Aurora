@@ -25,7 +25,7 @@ namespace Aurora
 		uint32_t BufferIndex;
 		uint32_t Offset;
 		uint32_t SemanticIndex;
-		int Stride;
+		uint32_t Stride;
 		bool IsInstanced;
 		bool Normalized;
 	};

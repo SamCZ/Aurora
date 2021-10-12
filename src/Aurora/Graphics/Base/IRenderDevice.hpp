@@ -294,7 +294,7 @@ namespace Aurora
 		virtual InputLayout_ptr CreateInputLayout(const std::vector<VertexAttributeDesc>& desc) = 0;
 		// Drawing
 		virtual void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
-		virtual void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
+		virtual void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args, bool bindState = true) = 0;
 		virtual void DrawIndirect(const DrawCallState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
 
 		virtual void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) = 0;

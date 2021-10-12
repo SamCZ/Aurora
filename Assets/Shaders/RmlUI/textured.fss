@@ -1,0 +1,30 @@
+in vec2 TexCoord;
+in vec4 Color;
+out vec4 FragColor;
+
+uniform sampler2D Texture;
+
+uniform Scissors
+{
+	vec4 sRect;
+	vec4 sSettings;
+};
+
+#define StartX sRect.x
+#define StartY sRect.y
+#define EndX sRect.z
+#define EndY sRect.w
+#define ScissorEnabled sSettings.x > 0.5
+#define ScreenHeight sSettings.y
+#define RealPixelX gl_FragCoord.x
+#define RealPixelY (ScreenHeight - gl_FragCoord.y)
+
+void main()
+{
+	if(ScissorEnabled && (
+	(RealPixelX < StartX || RealPixelX > EndX) ||
+	(RealPixelY < StartY || RealPixelY > EndY)
+	)) discard;
+
+	FragColor = texture(Texture, TexCoord) * Color;
+}

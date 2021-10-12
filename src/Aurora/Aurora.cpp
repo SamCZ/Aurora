@@ -16,6 +16,8 @@
 #include "Aurora/Graphics/RenderManager.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
+#include "Aurora/RmlUI/RmlUI.hpp"
+
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -23,6 +25,8 @@
 #include "Aurora/Graphics/NanoVG/nanovg.h"
 #define NANOVG_GL3_IMPLEMENTATION
 #include "Aurora/Graphics/NanoVG/nanovg_gl.h"
+
+#include <TracyOpenGL.hpp>
 
 namespace Aurora
 {
@@ -40,7 +44,8 @@ namespace Aurora
 		m_RenderManager(nullptr),
 		m_ResourceManager(nullptr),
 		m_InputManager(nullptr),
-		m_AppContext(nullptr)
+		m_AppContext(nullptr),
+		m_RmlUI(nullptr)
 	{
 
 	}
@@ -53,6 +58,7 @@ namespace Aurora
 
 		delete m_AppContext;
 		delete g_Context;
+		delete m_RmlUI;
 		delete m_ResourceManager;
 		delete m_RenderManager;
 		delete m_RenderDevice;
@@ -126,6 +132,10 @@ namespace Aurora
 		g_Context->m_RenderManager = m_RenderManager;
 		g_Context->m_ResourceManager = m_ResourceManager;
 
+		// Init RmlUI
+		m_RmlUI = new RmlUI("RmlContext");
+		g_Context->m_RmlUI = m_RmlUI;
+
 		vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES); //NVG_DEBUG
 		nvgCreateFont(vg, "default", "../Assets/Fonts/GROBOLD.ttf");
 
@@ -190,6 +200,11 @@ namespace Aurora
 			}
 
 			{
+				CPU_DEBUG_SCOPE("RmlUI update");
+				m_RmlUI->Update();
+			}
+
+			{
 				CPU_DEBUG_SCOPE("Game render");
 				GPU_DEBUG_SCOPE("Game render");
 				m_AppContext->Render();
@@ -234,6 +249,12 @@ namespace Aurora
 				}
 
 				nvgEndFrame(vg);
+			}
+
+			{
+				CPU_DEBUG_SCOPE("RmlUI render");
+				GPU_DEBUG_SCOPE("RmlUI render");
+				m_RmlUI->Render();
 			}
 
 			{

@@ -34,3 +34,4 @@ if(WIN32)
 endif()
 
 target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json EnTT TracyClient tinygltf ImGui TracyClient ndNewton glslang)
+target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)

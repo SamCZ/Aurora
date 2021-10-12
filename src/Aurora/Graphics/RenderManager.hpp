@@ -132,24 +132,25 @@ namespace Aurora
 		BufferCache m_UniformBufferCache;
 	public:
 		explicit RenderManager(IRenderDevice *renderDevice);
+
 		~RenderManager();
 
 		TemporalRenderTarget CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1,
-		                                                uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false);
+														uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false);
 
 		TemporalRenderTarget CreateTemporalRenderTarget(const String &name, const Vector2i &size, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1,
-		                                                uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
+														uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
 		{
 			return std::move(CreateTemporalRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav));
 		}
 
 		Texture_ptr
 		CreateRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1, uint depthOrArraySize = 0,
-		                   TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false);
+						   TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false);
 
 		Texture_ptr
 		CreateRenderTarget(const String &name, const Vector2i &size, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1, uint depthOrArraySize = 0,
-		                   TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
+						   TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
 		{
 			return std::move(CreateRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav));
 		}
@@ -183,4 +184,9 @@ namespace Aurora
     m_RenderManager->GetUniformBufferCache().Unmap(cacheIndex); \
     dispatchState.BindUniformBuffer(#bufferName, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);}
 
+#define BEGIN_UBW(type, name) \
+    { type l_BufferData = {}; type* name = &l_BufferData; auto l_BufferDataSize = sizeof(type);
+
+#define END_UBW(state, buffer, uniformBufferName) \
+     GetEngine()->GetRenderDevice()->WriteBuffer(buffer, &l_BufferData, l_BufferDataSize, 0); state.BindUniformBuffer(uniformBufferName, buffer); }
 }

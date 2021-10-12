@@ -463,7 +463,7 @@ namespace Aurora
 
 	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType)
 	{
-		CPU_DEBUG_SCOPE("SceneRenderer::RenderPass")
+		//CPU_DEBUG_SCOPE(String("RenderPass [") + PassTypesToString[(int)passType] + "]")
 		GPU_DEBUG_SCOPE(String("RenderPass [") + PassTypesToString[(int)passType] + "]");
 
 		std::vector<DrawArguments> drawArgs;
@@ -552,7 +552,7 @@ namespace Aurora
 					drawArgs.emplace_back(drawArguments);
 				}
 
-				m_RenderDevice->DrawIndexed(drawCallState, drawArgs);
+				m_RenderDevice->DrawIndexed(drawCallState, drawArgs, false);
 			}
 
 			if(i != modelContexts.size() - 1)

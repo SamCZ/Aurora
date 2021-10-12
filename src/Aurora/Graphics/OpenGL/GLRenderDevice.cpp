@@ -969,7 +969,7 @@ namespace Aurora
 
 	#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
+	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args, bool bindState)
 	{
 		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
 			AU_LOG_ERROR("Cannot draw with these arguments !");
@@ -977,7 +977,7 @@ namespace Aurora
 			return;
 		}
 
-		//ApplyDrawCallState(state);
+		if(bindState) ApplyDrawCallState(state);
 
 		CHECK_GL_ERROR();
 
