@@ -38,7 +38,8 @@ namespace Aurora
 		Shader_ptr m_ColorShader;
 		Shader_ptr m_TexturedShader;
 
-		InputLayout_ptr m_InputLayout;
+		InputLayout_ptr m_ColorInputLayout;
+		InputLayout_ptr m_TexturedInputLayout;
 		Buffer_ptr m_VertexBuffer;
 		Buffer_ptr m_IndexBuffer;
 		Buffer_ptr m_VertexUniformBuffer;

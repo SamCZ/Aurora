@@ -15,19 +15,24 @@ namespace Aurora
 	: m_Width(0), m_Height(0), m_TransformEnabled(false), m_RegisteredCustomTextures(), m_Scissors(), m_Transform(glm::identity<Matrix4>())
 	{
 		m_ColorShader = GetEngine()->GetResourceManager()->LoadShader("RmlUIColored", {
-			{EShaderType::Vertex, "Assets/Shaders/RmlUI/vertex.vss"},
-			{EShaderType::Pixel, "Assets/Shaders/RmlUI/color.fss"},
+			{EShaderType::Vertex, "Assets/Shaders/RmlUI/vs_color.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/RmlUI/ps_color.fss"},
 		});
 
 		m_TexturedShader = GetEngine()->GetResourceManager()->LoadShader("RmlUITextured", {
-			{EShaderType::Vertex, "Assets/Shaders/RmlUI/vertex.vss"},
-			{EShaderType::Pixel, "Assets/Shaders/RmlUI/textured.fss"},
+			{EShaderType::Vertex, "Assets/Shaders/RmlUI/vs_textured.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/RmlUI/ps_textured.fss"},
 		});
 
-		m_InputLayout = GetEngine()->GetRenderDevice()->CreateInputLayout({
+		m_ColorInputLayout = GetEngine()->GetRenderDevice()->CreateInputLayout({
+			VertexAttributeDesc{"in_Pos", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, position), 0, sizeof(Rml::Vertex), false, false},
+			VertexAttributeDesc{"in_Color", GraphicsFormat::R32_UINT, 0, offsetof(Rml::Vertex, colour), 1, sizeof(Rml::Vertex), false, false}
+		});
+
+		m_TexturedInputLayout = GetEngine()->GetRenderDevice()->CreateInputLayout({
 			VertexAttributeDesc{"in_Pos", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, position), 0, sizeof(Rml::Vertex), false, false},
 			VertexAttributeDesc{"in_Color", GraphicsFormat::R32_UINT, 0, offsetof(Rml::Vertex, colour), 1, sizeof(Rml::Vertex), false, false},
-			VertexAttributeDesc{"in_TexCoord", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, tex_coord), 2, sizeof(Rml::Vertex), false, false}
+			VertexAttributeDesc{"in_TexCoord", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, tex_coord), 2, sizeof(Rml::Vertex), false, true}
 		});
 
 		m_VertexBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("RmlVertexBuffer", sizeof(Rml::Vertex) * 3000, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw));
@@ -52,7 +57,7 @@ namespace Aurora
 		DrawCallState drawCallState;
 		drawCallState.ViewPort = screenSize;
 		drawCallState.Shader = texture ? m_TexturedShader : m_ColorShader;
-		drawCallState.InputLayoutHandle = m_InputLayout;
+		drawCallState.InputLayoutHandle = texture ? m_TexturedInputLayout : m_ColorInputLayout;
 
 		drawCallState.SetVertexBuffer(0, m_VertexBuffer);
 		drawCallState.SetIndexBuffer(m_IndexBuffer, EIndexBufferFormat::Uint32);
@@ -63,14 +68,14 @@ namespace Aurora
 			drawCallState.BindSampler("Texture", Samplers::WrapWrapNearNearestFarLinear);
 		}
 
+		drawCallState.DepthStencilState.DepthEnable = false;
 		drawCallState.ClearColorTarget = false;
 		drawCallState.ClearDepthTarget = false;
 
-		drawCallState.DepthStencilState.DepthEnable = false;
 		drawCallState.RasterState.CullMode = ECullMode::None;
 
 		BEGIN_UBW(VertexUniform, desc);
-			desc->Projection = glm::ortho(0.0f, (float)screenSize.x, (float)screenSize.y, 0.0f, -1.0f, 1.0f);
+			desc->Projection = glm::ortho(0.0f, (float)screenSize.x, (float)screenSize.y, 0.0f, 0.0f, 1.0f);
 			if(m_TransformEnabled)
 			{
 				desc->ModelMat = m_Transform * glm::translate(Vector3(translation.x, translation.y, 0));

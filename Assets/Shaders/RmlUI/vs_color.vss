@@ -2,7 +2,6 @@ layout(location = 0) in vec2 in_Pos;
 layout(location = 1) in uint in_Color;
 layout(location = 2) in vec2 in_TexCoord;
 
-out vec2 TexCoord;
 out vec4 Color;
 
 out gl_PerVertex
@@ -17,7 +16,6 @@ uniform VertexUniform
 };
 
 void main() {
-	gl_Position = Projection * ModelMat * vec4(in_Pos.x, in_Pos.y, -0.1, 1.0);
-	TexCoord = in_TexCoord;
+	gl_Position = Projection * ModelMat * vec4(in_Pos.x, in_Pos.y, 0, 1.0);
 	Color = vec4((in_Color & 0x000000FFu) >> 0u, (in_Color & 0x0000FF00u) >> 8u, (in_Color & 0x00FF0000u) >> 16u, (in_Color & 0xFF000000u)>> 24u) / vec4(256.0f);
 }
