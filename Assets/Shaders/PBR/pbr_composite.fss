@@ -39,9 +39,9 @@ void main()
 
 	FragColor.rgb = albedoFlags.rgb * d;
 
-	//float ssao = texelFetch(SSAORT, ivec2(gl_FragCoord.xy), 0).r;
+	float ssao = texelFetch(SSAORT, ivec2(gl_FragCoord.xy), 0).r;
 	//float scaledAO = 1.0 - saturate((1.0 - ssao) * 2.0f);
-	//FragColor.rgb *= ssao;
+	FragColor.rgb *= ssao;
 
 	FragColor.a = 1;
 }

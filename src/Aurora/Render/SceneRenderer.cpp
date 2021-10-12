@@ -58,6 +58,10 @@ namespace Aurora
 		desc.ImageFormat = GraphicsFormat::RGB32_FLOAT;
 		ssaoNoiseTex = m_RenderDevice->CreateTexture(desc);
 		m_RenderDevice->WriteTexture(ssaoNoiseTex, 0, 0, ssaoNoise.data());
+
+		m_BlurShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/Effects/KernelBlur.glsl");
+		m_ClearShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/Effects/Clear.glsl");
+		m_BlurAvgShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/Effects/KernelBlurAverage.glsl");
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -373,7 +377,7 @@ namespace Aurora
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
-		/*static float ssaoRadius = 3.0f;
+		static float ssaoRadius = 3.0f;
 		static float ssaoBias = 0.025f;
 
 		ImGui::Begin("SSAO");
@@ -383,7 +387,7 @@ namespace Aurora
 		}
 		ImGui::End();
 
-		auto ssaoRT = m_RenderManager->CreateTemporalRenderTarget("SSAO", camera.Size, GraphicsFormat::SRGBA8_UNORM);
+		auto ssaoRT = m_RenderManager->CreateTemporalRenderTarget("SSAO", camera.Size, GraphicsFormat::RGBA8_UNORM, EDimensionType::TYPE_2D, 1, 0, TextureDesc::EUsage::Default, true);
 		{ // SSAO
 			DrawCallState drawState;
 			drawState.Shader = m_SSAOShader;
@@ -424,7 +428,7 @@ namespace Aurora
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
 			m_RenderManager->GetUniformBufferCache().Reset();
-		}*/
+		}
 
 		{ // Composite Deferred renderer
 			DrawCallState drawState;
@@ -441,7 +445,7 @@ namespace Aurora
 			drawState.BindTexture("NormalsRT", normalsRT);
 			drawState.BindTexture("RoughnessMetallicAORT", roughnessMetallicAORT);
 			drawState.BindTexture("SkyRT", skyRT);
-			//drawState.BindTexture("SSAORT", ssaoRT);
+			drawState.BindTexture("SSAORT", ssaoRT);
 
 			glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -452,13 +456,41 @@ namespace Aurora
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
+		auto ssaoBlurredRT = m_RenderManager->CreateTemporalRenderTarget("SSAOBlurred", camera.Size, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_2D, 1, 0, TextureDesc::EUsage::Default, true);
+		auto ssaoBlurredFinal = m_RenderManager->CreateTemporalRenderTarget("SSAOBlurredFinal", camera.Size, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_2D, 1, 0, TextureDesc::EUsage::Default, true);
+		{
+			DispatchState dispatchState;
+			dispatchState.Shader = m_ClearShader;
+			dispatchState.BindTexture("TextureSrc", ssaoBlurredRT, true);
+			m_RenderDevice->Dispatch(dispatchState, ssaoBlurredRT->GetDesc().Width / 32, ssaoBlurredRT->GetDesc().Height / 32, 1);
+		}
+
+		{
+			DispatchState dispatchState;
+			dispatchState.Shader = m_BlurShader;
+			dispatchState.BindTexture("TextureSrc", ssaoRT, true);
+			dispatchState.BindTexture("TextureDst", ssaoBlurredRT, true, TextureBinding::EAccess::ReadAndWrite);
+			m_RenderDevice->Dispatch(dispatchState, ssaoRT->GetDesc().Width / 16, ssaoRT->GetDesc().Height / 16, 4);
+		}
+
+		{
+			DispatchState dispatchState;
+			dispatchState.Shader = m_BlurAvgShader;
+			dispatchState.BindTexture("TextureSrc", ssaoBlurredRT, true);
+			dispatchState.BindTexture("TextureDst", ssaoBlurredFinal, true, TextureBinding::EAccess::ReadAndWrite);
+			m_RenderDevice->Dispatch(dispatchState, ssaoRT->GetDesc().Width / 32, ssaoRT->GetDesc().Height / 32, 1);
+		}
+
+		ssaoBlurredRT.Free();
+		ssaoBlurredFinal.Free();
+
 		skyRT.Free();
 		albedoAndFlagsRT.Free();
 		normalsRT.Free();
 		roughnessMetallicAORT.Free();
 		worldPosRT.Free();
 		depthRT.Free();
-		//ssaoRT.Free();
+		ssaoRT.Free();
 	}
 
 	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType)
