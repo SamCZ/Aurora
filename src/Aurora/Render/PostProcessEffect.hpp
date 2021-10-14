@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Aurora/Core/Object.hpp"
+#include "Aurora/Graphics/RenderManager.hpp"
 
 namespace Aurora
 {
@@ -23,6 +24,8 @@ namespace Aurora
 		{
 			return m_Material;
 		}
+
+		//TemporalRenderTarget& CopyCurrentRT(uint index) const;
 
 	protected:
 		void SetMaterial(std::shared_ptr<Material> material) { m_Material = std::move(material); }

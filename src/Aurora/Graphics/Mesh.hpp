@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Aurora/Core/Object.hpp"
 #include "Base/Buffer.hpp"
 #include "Base/InputLayout.hpp"
 #include "Base/PrimitiveType.hpp"
@@ -11,9 +12,10 @@ namespace Aurora
 {
 	class Entity;
 
-	class XMesh
+	class XMesh : public ObjectBase
 	{
 	public:
+		CLASS_OBJ(XMesh, ObjectBase)
 		struct PrimitiveSection
 		{
 			struct Range

@@ -69,7 +69,7 @@ namespace Aurora
 	{
 		if(m_SkyCubeMap == nullptr)
 		{
-			m_SkyCubeMap = m_RenderManager->CreateRenderTarget("PreethamSky", {512, 512}, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_CubeMap, 1, 6, TextureDesc::EUsage::Default, true);
+			m_SkyCubeMap = m_RenderManager->CreateRenderTarget("PreethamSky", {512, 512}, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_CubeMap, 5, 6, TextureDesc::EUsage::Default, true);
 		}
 
 		static Vector4 lastData = Vector4(-1, -1, -1, -1);
@@ -87,6 +87,7 @@ namespace Aurora
 		END_CUB(Uniforms)
 
 		m_RenderDevice->Dispatch(dispatchState, resolution.x / 32, resolution.y / 32, 6);
+		m_RenderDevice->GenerateMipmaps(m_SkyCubeMap);
 
 		return m_SkyCubeMap;
 	}

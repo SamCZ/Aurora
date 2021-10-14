@@ -7,6 +7,7 @@ namespace Aurora
 	class IRenderDevice;
 	class IWindow;
 	class RmlUI;
+	class VgRender;
 
 	namespace Input
 	{
@@ -23,6 +24,7 @@ namespace Aurora
 		IWindow* m_Window;
 		Input::IManager* m_InputManager;
 		RmlUI* m_RmlUI;
+		VgRender* m_VgRender;
 	public:
 		[[nodiscard]] inline ResourceManager* GetResourceManager() const { return m_ResourceManager; }
 		[[nodiscard]] inline RenderManager* GetRenderManager() const { return m_RenderManager; }
@@ -30,6 +32,7 @@ namespace Aurora
 		[[nodiscard]] inline IWindow* GetWindow() const { return m_Window; }
 		[[nodiscard]] inline Input::IManager* GetInputManager() const { return m_InputManager; }
 		[[nodiscard]] inline RmlUI* GetRmlUI() const { return m_RmlUI; }
+		[[nodiscard]] inline VgRender* GetVgRender() const { return m_VgRender; }
 	};
 
 	extern AuroraContext* GetEngine();

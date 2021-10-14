@@ -22,6 +22,7 @@ namespace Aurora
 		virtual void Init() {}
 		virtual void Update(double delta) {}
 		virtual void Render() {}
+		virtual void RenderVg() {}
 	};
 
 	class AuroraEngine
@@ -34,6 +35,7 @@ namespace Aurora
 		ResourceManager* m_ResourceManager;
 		Input::IManager* m_InputManager;
 		RmlUI* m_RmlUI;
+		VgRender* m_VgRender;
 
 		AppContext* m_AppContext;
 	public:

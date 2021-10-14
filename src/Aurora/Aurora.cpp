@@ -18,13 +18,11 @@
 
 #include "Aurora/RmlUI/RmlUI.hpp"
 
+#include "Aurora/Render/VgRender.hpp"
+
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-
-#include "Aurora/Graphics/NanoVG/nanovg.h"
-#define NANOVG_GL3_IMPLEMENTATION
-#include "Aurora/Graphics/NanoVG/nanovg_gl.h"
 
 #include <TracyOpenGL.hpp>
 
@@ -50,14 +48,12 @@ namespace Aurora
 
 	}
 
-	struct NVGcontext* vg;
-
 	AuroraEngine::~AuroraEngine()
 	{
-		nvgDeleteGL3(vg);
 
 		delete m_AppContext;
 		delete g_Context;
+		delete m_VgRender;
 		delete m_RmlUI;
 		delete m_ResourceManager;
 		delete m_RenderManager;
@@ -136,8 +132,10 @@ namespace Aurora
 		m_RmlUI = new RmlUI("RmlContext");
 		g_Context->m_RmlUI = m_RmlUI;
 
-		vg = nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES); //NVG_DEBUG
-		nvgCreateFont(vg, "default", "../Assets/Fonts/GROBOLD.ttf");
+		// Init NanoVG render
+		m_VgRender = new VgRender();
+		g_Context->m_VgRender = m_VgRender;
+		m_VgRender->LoadFont("default", "Assets/Fonts/LatoLatin-Bold.ttf");
 
 		// Init App context
 		m_AppContext = appContext;
@@ -214,7 +212,7 @@ namespace Aurora
 				CPU_DEBUG_SCOPE("NanoVG");
 				GPU_DEBUG_SCOPE("NanoVG");
 
-				nvgBeginFrame(vg, m_Window->GetWidth(), m_Window->GetHeight(), 1.0f); // TODO: Fix hdpi devices
+				m_VgRender->Begin(m_Window->GetSize(), 1.0f); // TODO: Fix hdpi devices
 
 				/*nvgBeginPath(vg);
 				nvgRect(vg, 100,100, 120,30);
@@ -234,21 +232,16 @@ namespace Aurora
 					nvgRestore(vg);
 				}*/
 
+				m_AppContext->RenderVg();
+
 				{
 					std::stringstream ss;
-					ss << "FPS: " << FPS << std::endl;
+					ss << "FPS: " << FPS;
 
-					nvgFontSize(vg, 16);
-					nvgFontFace(vg, "default");
-
-					nvgFontBlur(vg, 0);
-					nvgGlobalAlpha(vg, 1.0f);
-					nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-					nvgFillColor(vg, nvgRGBAf(1, 1, 1, 1));
-					nvgText(vg, 10, 10, ss.str().c_str(), nullptr);
+					m_VgRender->DrawText(ss.str(), {5, 200}, Color::black(), 16);
 				}
 
-				nvgEndFrame(vg);
+				m_VgRender->End();
 			}
 
 			{
