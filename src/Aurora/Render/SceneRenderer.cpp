@@ -555,6 +555,9 @@ namespace Aurora
 				m_RenderDevice->DrawIndexed(drawCallState, drawArgs, false);
 			}
 
+			drawCallState.ClearDepthTarget = false;
+			drawCallState.ClearColorTarget = false;
+
 			if(i != modelContexts.size() - 1)
 			{
 				if(modelContexts[i + 1].Material != mat)
