@@ -15,6 +15,8 @@
 #include "Shaders/PostProcess/cb_sky.h"
 #include "Shaders/PostProcess/cb_ssao.h"
 
+#include "PostProcessEffect.hpp"
+
 #include <imgui.h>
 #include <random>
 
@@ -385,7 +387,7 @@ namespace Aurora
 		ImGui::End();
 
 		auto ssaoRT = m_RenderManager->CreateTemporalRenderTarget("SSAO", camera.Size, GraphicsFormat::SRGBA8_UNORM);
-		{ // SSAO
+		if(false) { // SSAO
 			DrawCallState drawState;
 			drawState.Shader = m_SSAOShader;
 			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
@@ -427,7 +429,9 @@ namespace Aurora
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}*/
 
-		{ // Composite Deferred renderer
+		auto compositedRT = m_RenderManager->CreateTemporalRenderTarget("CompositedRT", camera.Size, GraphicsFormat::RGBA8_UNORM);
+
+		{ // Composite Deferred renderer and HRD
 			DrawCallState drawState;
 			drawState.Shader = m_PBRCompositeShader;
 			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
@@ -444,14 +448,33 @@ namespace Aurora
 			drawState.BindTexture("SkyRT", skyRT);
 			//drawState.BindTexture("SSAORT", ssaoRT);
 
-			glEnable(GL_FRAMEBUFFER_SRGB);
+			drawState.BindTarget(0, compositedRT);
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
-
-			glDisable(GL_FRAMEBUFFER_SRGB);
-
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
+
+		auto ppRT = m_RenderManager->CreateTemporalRenderTarget("PP Intermediate", compositedRT->GetDesc().GetSize(), compositedRT->GetDesc().ImageFormat);
+		{ // PP's
+			Texture_ptr currentInput = compositedRT;
+			Texture_ptr currentOutput = ppRT;
+
+			for(const auto& ppe : camera.PostProcessEffects)
+			{
+				if(!ppe->CanRender()) continue;
+				GPU_DEBUG_SCOPE("PostProcess [" + String(ppe->GetTypeName()) + "]");
+				ppe->Render(currentInput, currentOutput);
+				m_RenderManager->Blit(currentOutput, currentInput);
+			}
+
+			{ // Blit to screen
+				glEnable(GL_FRAMEBUFFER_SRGB);
+				m_RenderManager->Blit(currentInput);
+				glDisable(GL_FRAMEBUFFER_SRGB);
+			}
+		}
+		ppRT.Free();
+		compositedRT.Free();
 
 		skyRT.Free();
 		albedoAndFlagsRT.Free();

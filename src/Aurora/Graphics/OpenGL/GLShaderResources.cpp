@@ -2,6 +2,7 @@
 #include <cstring>
 #include <iostream>
 
+#include "Aurora/Core/assert.hpp"
 #include "GLShaderProgram.hpp"
 
 namespace Aurora
@@ -94,6 +95,8 @@ namespace Aurora
 
 			glGetActiveUniform(program, i, MaxNameLength, &NameLen, &size, &dataType, Name.data());
 			CHECK_GL_ERROR_AND_THROW("Unable to get active uniform");
+
+			au_assert(dataType > 0);
 
 			switch (dataType)
 			{

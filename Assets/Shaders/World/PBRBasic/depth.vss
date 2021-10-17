@@ -2,6 +2,7 @@
 #include "../instancing.h"
 
 out vec2 TexCoord;
+out vec4 WorldPos;
 
 layout(location = 0) in vec3 POSITION;
 layout(location = 1) in vec2 TEXCOORD_0;
@@ -12,6 +13,7 @@ out gl_PerVertex
 };
 
 void main() {
-	gl_Position = ProjectionViewMatrix * gInstances[gl_InstanceID] * vec4(POSITION, 1.0);
+	WorldPos = INST_TRANSFORM * vec4(POSITION, 1.0);
+	gl_Position = ProjectionViewMatrix * WorldPos;
 	TexCoord = TEXCOORD_0;
 }

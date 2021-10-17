@@ -7,4 +7,8 @@ namespace Aurora
 	{
 		return <#initializer#>;
 	}*/
+	bool PostProcessEffect::CanRender() const
+	{
+		return Enabled();
+	}
 }

@@ -4,7 +4,14 @@
 
 #define MAX_INSTANCES 1024
 
-layout(std140) uniformbuffer Instances
+struct InstanceData
+{
+	mat4 Transform;
+};
+
+uniformbuffer Instances
 {
 	mat4 gInstances[MAX_INSTANCES];
 };
+
+#define INST_TRANSFORM gInstances[gl_InstanceID]
