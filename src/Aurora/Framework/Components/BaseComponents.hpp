@@ -12,6 +12,7 @@
 namespace Aurora
 {
 	class Material;
+	AU_CLASS(PostProcessEffect);
 
 	struct TagComponent
 	{
@@ -19,7 +20,7 @@ namespace Aurora
 
 		TagComponent() = default;
 		TagComponent(const TagComponent& other) = default;
-		TagComponent(std::string tag) : Tag(std::move(tag)) {}
+		explicit TagComponent(std::string tag) : Tag(std::move(tag)) {}
 
 		operator std::string& () { return Tag; }
 		operator const std::string& () const { return Tag; }
@@ -32,7 +33,7 @@ namespace Aurora
 
 		RelationshipComponent() = default;
 		RelationshipComponent(const RelationshipComponent& other) = default;
-		RelationshipComponent(const UUID& parent) : ParentHandle(parent) {}
+		explicit RelationshipComponent(const UUID& parent) : ParentHandle(parent) {}
 	};
 
 	struct TransformComponent
@@ -67,6 +68,7 @@ namespace Aurora
 		float ZFar = 1000.f;
 		float Fov = 85.0f;
 		Matrix4 Projection = glm::identity<Matrix4>();
+		std::vector<PostProcessEffect_ptr> PostProcessEffects;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& other) = default;

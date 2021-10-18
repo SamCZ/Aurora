@@ -21,7 +21,7 @@ void main() {
 	//mat4 ins = gInstances[0];
 	//mat4 ModelMatrix = gInstances[gl_InstanceID].ModelMatrix;
 
-	WorldPos = gInstances[gl_InstanceID] * vec4(POSITION, 1.0);
+	WorldPos = INST_TRANSFORM * vec4(POSITION, 1.0);
 	gl_Position = ProjectionMatrix * ViewMatrix * WorldPos;
 	TexCoord = TEXCOORD_0;
 	Normal = normalize(NORMAL);
