@@ -23,5 +23,7 @@ namespace Aurora
 		bool LoadFont(const String& name, const Path& path);
 
 		void DrawText(const String& text, const Vector2& pos, Color color, int fontSize);
+
+		NVGcontext* GetVgContext() { return m_VgContext; }
 	};
 }

@@ -140,21 +140,22 @@ namespace Aurora
 
 			if(mesh->m_HasBounds)
 			{
+				AABB aabb;
+
 				if(mesh->m_BoundsPreTransformed)
 				{
-					if(!frustum->IsBoxVisible(mesh->m_Bounds))
-					{
-						continue;
-					}
+					aabb = mesh->m_Bounds;
+
 				}
 				else
 				{
-					AABB transformedAABB = mesh->m_Bounds;
-					transformedAABB *= modelTransform;
-					if(!frustum->IsBoxVisible(transformedAABB))
-					{
-						continue;
-					}
+					aabb = mesh->m_Bounds;
+					aabb *= modelTransform;
+				}
+
+				if(!frustum->IsBoxVisible(aabb))
+				{
+					continue;
 				}
 			}
 			else
