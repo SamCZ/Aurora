@@ -54,6 +54,7 @@ namespace Aurora
 		drawState.ViewPort = output->GetDesc().GetSize();
 
 		drawState.BindTexture("Texture", input);
+		drawState.BindSampler("Texture", Samplers::ClampClampLinearLinear);
 		drawState.BindTarget(0, output);
 
 		BEGIN_UB(Vector4, desc)
