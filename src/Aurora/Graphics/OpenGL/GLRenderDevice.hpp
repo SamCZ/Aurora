@@ -48,6 +48,9 @@ namespace Aurora
 		FRasterState m_LastRasterState;
 		FDepthStencilState m_LastDepthState;
 		InputLayout_ptr m_LastInputLayout;
+
+		// Embedded shaders
+		Shader_ptr m_BlitShader;
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
@@ -85,6 +88,8 @@ namespace Aurora
 		void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 
 		void InvalidateState() override;
+
+		void Blit(const Texture_ptr &src, const Texture_ptr &dest) override;
 	public:
 		void BindShaderResources(const BaseState& state) override;
 		void ApplyDispatchState(const DispatchState& state) override;

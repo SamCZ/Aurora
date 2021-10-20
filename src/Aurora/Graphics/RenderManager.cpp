@@ -138,34 +138,7 @@ namespace Aurora
 
 	void RenderManager::Blit(const Texture_ptr &src, const Texture_ptr &dest)
 	{
-		assert(src != nullptr);
-		assert(src != dest);
-
-		DrawCallState state;
-		state.PrimitiveType = EPrimitiveType::TriangleStrip;
-		state.ClearDepthTarget = false;
-		state.ClearColorTarget = false;
-		state.RasterState.CullMode = ECullMode::None;
-		state.DepthStencilState.DepthEnable = false;
-		state.Shader = m_BlitShader;
-
-		if(dest != nullptr)
-		{
-			state.ViewPort = dest->GetDesc().GetSize();
-			state.BindTarget(0, dest);
-		}
-		else
-		{
-			// Expecting same dest size as src when blitting to back buffer
-			state.ViewPort = src->GetDesc().GetSize();
-		}
-
-		if(src != nullptr)
-		{
-			state.BindTexture("Texture", src);
-		}
-
-		m_RenderDevice->Draw(state, {DrawArguments(4)});
+		m_RenderDevice->Blit(src, dest);
 	}
 
 	void RenderManager::EndFrame()

@@ -302,6 +302,8 @@ namespace Aurora
 
 		virtual void InvalidateState() = 0;
 
+		virtual void Blit(const Texture_ptr &src, const Texture_ptr &dest) = 0;
+
 		///
 
 		virtual void BindShaderResources(const BaseState& state) = 0;

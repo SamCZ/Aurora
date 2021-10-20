@@ -18,6 +18,30 @@
 #include <glslang/Public/ShaderLang.h>
 #endif
 
+static const char* g_BlitVS = R"(
+const vec4 Tri[3] = {
+	vec4(-1, 3, 0, 1),
+	vec4(-1, -1, 0, 1),
+	vec4(3, -1, 0, 1)
+};
+
+void main()
+{
+	gl_Position = Tri[gl_VertexID];
+}
+
+)";
+
+static const char* g_BlitPS = R"(
+layout(location = 0) out vec4 FragColor;
+layout(binding = 0) uniform sampler2D Source;
+
+void main()
+{
+	FragColor = texelFetch(Source, ivec2(gl_FragCoord.xy), 0);
+}
+)";
+
 namespace Aurora
 {
 #ifdef _WIN32
@@ -214,6 +238,13 @@ namespace Aurora
 
 		SetRasterState(m_LastRasterState);
 		SetDepthStencilState(m_LastDepthState);
+
+		{ // Init blit shader
+			ShaderProgramDesc desc("_Blit_Embedded");
+			desc.AddShader(EShaderType::Vertex, g_BlitVS);
+			desc.AddShader(EShaderType::Pixel, g_BlitPS);
+			m_BlitShader = CreateShaderProgram(desc);
+		}
 
 		glFlush();
 	}
@@ -1652,5 +1683,46 @@ namespace Aurora
 			}
 			m_LastDepthState.StencilEnable = depthState.StencilEnable;
 		}
+	}
+
+	void GLRenderDevice::Blit(const Texture_ptr &src, const Texture_ptr &dest)
+	{
+		GPU_DEBUG_SCOPE(dest != nullptr ? "Blit" : "BlitToBackBuffer");
+
+		au_assert(src != nullptr);
+		au_assert(src != dest);
+
+		SetShader(m_BlitShader);
+
+		FRasterState rasterState = m_LastRasterState;
+		rasterState.CullMode = ECullMode::None;
+		SetRasterState(rasterState);
+
+		FDepthStencilState depthStencilState = m_LastDepthState;
+		depthStencilState.DepthEnable = false;
+		SetDepthStencilState(depthStencilState);
+
+		DrawCallState drawCallState;
+		if(dest != nullptr)
+		{
+			au_assert(dest->GetDesc().IsRenderTarget == true);
+
+			drawCallState.ViewPort = dest->GetDesc().GetSize();
+			drawCallState.BindTarget(0, dest);
+		}
+		else
+		{
+			drawCallState.ViewPort = src->GetDesc().GetSize();
+		}
+
+		BindRenderTargets(drawCallState);
+
+		GLTexture* glSrc = GetTexture(src);
+		m_ContextState.BindTexture(0, glSrc);
+		m_ContextState.BindSampler(0, nullptr);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 1);
+		CHECK_GL_ERROR();
 	}
 }
