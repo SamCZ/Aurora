@@ -1386,11 +1386,7 @@ namespace Aurora
 
 		assert(state.ViewPort.x > 0 && state.ViewPort.y > 0);
 
-		if(state.ViewPort != m_LastViewPort)
-		{
-			m_LastViewPort = state.ViewPort;
-			glViewport(0, 0, state.ViewPort.x, state.ViewPort.y);
-		}
+		SetViewPort(state.ViewPort);
 	}
 
 	FrameBuffer_ptr GLRenderDevice::GetCachedFrameBuffer(const DrawCallState &state)
@@ -1765,5 +1761,20 @@ namespace Aurora
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 1);
 		CHECK_GL_ERROR();
+	}
+
+	void GLRenderDevice::SetViewPort(const FViewPort &wp)
+	{
+		if(wp != m_LastViewPort)
+		{
+			m_LastViewPort = wp;
+			glViewport(wp.X, wp.Y, wp.Width, wp.Height);
+			glScissor(wp.X, wp.Y, wp.Width, wp.Height);
+		}
+	}
+
+	const FViewPort &GLRenderDevice::GetCurrentViewPort() const
+	{
+		return m_LastViewPort;
 	}
 }

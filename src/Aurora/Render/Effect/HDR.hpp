@@ -11,7 +11,7 @@ namespace Aurora
 		CLASS_OBJ(HDREffect, PostProcessEffect);
 		AU_CLASS_BODY(HDREffect);
 
-		bool CanRender() const override;
+		[[nodiscard]] bool CanRender() const override;
 
 		void Init() override;
 		void Render(const Texture_ptr& input, const Texture_ptr& output) override;

@@ -44,7 +44,7 @@ namespace Aurora
 
 		GLContextState m_ContextState;
 
-		Vector2i m_LastViewPort;
+		FViewPort m_LastViewPort;
 		FRasterState m_LastRasterState;
 		FDepthStencilState m_LastDepthState;
 		InputLayout_ptr m_LastInputLayout;
@@ -90,6 +90,9 @@ namespace Aurora
 		void InvalidateState() override;
 
 		void Blit(const Texture_ptr &src, const Texture_ptr &dest) override;
+
+		void SetViewPort(const FViewPort& wp) override;
+		[[nodiscard]] const FViewPort& GetCurrentViewPort() const override;
 	public:
 		void BindShaderResources(const BaseState& state) override;
 		void ApplyDispatchState(const DispatchState& state) override;

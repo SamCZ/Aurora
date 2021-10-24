@@ -44,13 +44,7 @@ namespace Aurora
 	{
 		auto mat = FXAAMaterial::SafeCast(GetMaterial());
 
-		DrawCallState drawState;
-		drawState.Shader = mat->m_Shader;
-		drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
-		drawState.ClearDepthTarget = false;
-		drawState.ClearColorTarget = false;
-		drawState.RasterState.CullMode = ECullMode::None;
-		drawState.DepthStencilState.DepthEnable = false;
+		DrawCallState drawState = PrepareState(mat->m_Shader);
 		drawState.ViewPort = output->GetDesc().GetSize();
 
 		drawState.BindTexture("Texture", input);
@@ -62,7 +56,6 @@ namespace Aurora
 			desc->y = output->GetDesc().Height;
 		END_UB(FXAADesc)
 
-		GetEngine()->GetRenderDevice()->Draw(drawState, {DrawArguments(4)});
-		GetEngine()->GetRenderManager()->GetUniformBufferCache().Reset();
+		RenderState(drawState);
 	}
 }

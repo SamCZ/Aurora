@@ -16,6 +16,8 @@
 #include "RasterState.hpp"
 #include "FDepthStencilState.hpp"
 
+#include "../ViewPort.hpp"
+
 namespace Aurora
 {
 	typedef const void* TextureData;
@@ -148,7 +150,7 @@ namespace Aurora
 		EPrimitiveType PrimitiveType;
 
 		FRasterState RasterState;
-		Vector2i ViewPort;
+		FViewPort ViewPort;
 
 		DrawCallState()
 		: BaseState(),
@@ -304,7 +306,8 @@ namespace Aurora
 
 		virtual void Blit(const Texture_ptr &src, const Texture_ptr &dest) = 0;
 
-		///
+		virtual void SetViewPort(const FViewPort& wp) = 0;
+		[[nodiscard]] virtual const FViewPort& GetCurrentViewPort() const = 0;
 
 		virtual void BindShaderResources(const BaseState& state) = 0;
 		virtual void ApplyDispatchState(const DispatchState& state) = 0;
