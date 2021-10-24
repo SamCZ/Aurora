@@ -81,7 +81,7 @@ namespace Aurora
 		m_SwapChain = new GLSwapChain(((GLFWWindow*)m_Window)->GetHandle());
 
 		// Init OpenGL device
-#ifdef AU_TRACY_ENABLED
+#if AU_TRACY_ENABLED
 		TracyGpuContext
 #endif
 		m_RenderDevice = new GLRenderDevice();
@@ -265,7 +265,7 @@ namespace Aurora
 				m_SwapChain->Present(0);
 			}
 
-#ifdef AU_TRACY_ENABLED
+#if AU_TRACY_ENABLED
 			TracyGpuCollect
 #endif
 

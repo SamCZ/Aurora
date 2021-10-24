@@ -25,9 +25,18 @@ const vec4 Tri[3] = {
 	vec4(3, -1, 0, 1)
 };
 
+const vec2 Uvs[3] = {
+	vec2(0, 2),
+	vec2(0, 0),
+	vec2(2, 0)
+};
+
+out vec2 TexCoords;
+
 void main()
 {
 	gl_Position = Tri[gl_VertexID];
+	TexCoords = Uvs[gl_VertexID];
 }
 
 )";
@@ -36,9 +45,12 @@ static const char* g_BlitPS = R"(
 layout(location = 0) out vec4 FragColor;
 layout(binding = 0) uniform sampler2D Source;
 
+in vec2 TexCoords;
+
 void main()
 {
-	FragColor = texelFetch(Source, ivec2(gl_FragCoord.xy), 0);
+	//FragColor = texelFetch(Source, ivec2(gl_FragCoord.xy), 0);
+	FragColor = texture(Source, TexCoords);
 }
 )";
 
@@ -1691,6 +1703,35 @@ namespace Aurora
 
 		au_assert(src != nullptr);
 		au_assert(src != dest);
+
+		/*if(src->GetDesc().IsRenderTarget)
+		{
+			DrawCallState srcState;
+			srcState.BindTarget(0, src);
+			FrameBuffer_ptr srcFramebuffer = GetCachedFrameBuffer(srcState);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, srcFramebuffer->Handle);
+			//glDrawBuffers(GLsizei(srcFramebuffer->NumBuffers), srcFramebuffer->DrawBuffers);
+
+			if(dest)
+			{
+				DrawCallState dstState;
+				dstState.BindTarget(0, dest);
+				FrameBuffer_ptr dstFramebuffer = GetCachedFrameBuffer(dstState);
+
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dstFramebuffer->Handle);
+			}
+			else
+			{
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			}
+
+			glBlitFramebuffer(0, 0, src->GetDesc().Width, src->GetDesc().Height, 0, 0, src->GetDesc().Width, src->GetDesc().Height,  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+			//Just set the read buffer to the target as well otherwise we might get fucked..
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+			return;
+		}*/
 
 		SetShader(m_BlitShader);
 

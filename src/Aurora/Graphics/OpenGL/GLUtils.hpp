@@ -8,12 +8,7 @@
 
 #include "../Base/Format.hpp"
 
-// This needs to added to cmake option as some render debug
-#ifndef OPENGL_ERROR_CHECKING
-#define OPENGL_ERROR_CHECKING
-#endif
-
-#ifdef OPENGL_ERROR_CHECKING
+#if OPENGL_ERROR_CHECKING
 #ifndef CHECK_GL_ERROR_ARG
 #define CHECK_GL_ERROR_ARG(...)                                                                                              \
     do                                                                                                                   \
@@ -49,9 +44,9 @@
     } while (false);
 #endif
 #else
-#define CHECK_GL_ERROR_ARG(...)
-#define CHECK_GL_ERROR(...)
-#define CHECK_GL_ERROR_AND_THROW(...)
+#define CHECK_GL_ERROR_ARG(...) do {} while(false)
+#define CHECK_GL_ERROR(...) do {} while(false)
+#define CHECK_GL_ERROR_AND_THROW(...) do {} while(false)
 #endif
 
 namespace Aurora

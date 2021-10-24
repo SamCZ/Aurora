@@ -21,10 +21,16 @@ target_compile_definitions(Aurora PUBLIC AURORA_PROJECT_DIR="${PROJECT_SOURCE_DI
 
 if(AU_GPU_PROFILE)
     target_compile_definitions(Aurora PUBLIC AU_GPU_PROFILE=1)
+    target_compile_definitions(Aurora PUBLIC OPENGL_ERROR_CHECKING=1)
+else()
+    target_compile_definitions(Aurora PUBLIC AU_GPU_PROFILE=0)
+    target_compile_definitions(Aurora PUBLIC OPENGL_ERROR_CHECKING=0)
 endif()
 
 if(AU_CPU_PROFILE)
     target_compile_definitions(Aurora PUBLIC AU_TRACY_ENABLED=1)
+else()
+    target_compile_definitions(Aurora PUBLIC AU_TRACY_ENABLED=0)
 endif()
 
 target_compile_definitions(Aurora PUBLIC GLSLANG_COMPILER=1)
