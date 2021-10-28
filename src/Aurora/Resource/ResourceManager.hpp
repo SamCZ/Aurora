@@ -48,5 +48,7 @@ namespace Aurora
 		bool LoadJson(const Path &path, nlohmann::json &json);
 
 		Texture_ptr LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo);
+
+		Texture_ptr LoadLutTexture(const Path& path);
 	};
 }

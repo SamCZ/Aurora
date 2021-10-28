@@ -298,4 +298,71 @@ namespace Aurora
 
 		return texture;
 	}
+
+	Texture_ptr ResourceManager::LoadLutTexture(const Path& path)
+	{
+		//Path hashPath = path / ".lut";
+
+		if(m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
+			return m_LoadedTextures[path];
+		}
+
+		auto fileData = LoadFile(path);
+
+		if(fileData.empty()) {
+			return nullptr;
+		}
+
+		Texture_ptr texture = nullptr;
+
+		int width,height,channels_in_file;
+		uint8_t* data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+		if(!data) {
+			AU_LOG_ERROR("Cannot load Lut texture ! ", path.string());
+			return nullptr;
+		}
+
+		int volumeWidth = width / height;
+		int volumeHeight = height;
+		int volumeDepth = volumeWidth;
+
+		if(width % height > 0)
+		{
+			AU_LOG_ERROR("Texture needs to have depth slices multiply of height of the texture ! ", path.string());
+			return nullptr;
+		}
+
+		TextureDesc textureDesc;
+		textureDesc.Width = volumeWidth;
+		textureDesc.Height = volumeHeight;
+		textureDesc.DepthOrArraySize = volumeDepth;
+		textureDesc.DimensionType = EDimensionType::TYPE_3D;
+		textureDesc.MipLevels = 1;
+		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+		textureDesc.Name = path.string();
+		texture = m_RenderDevice->CreateTexture(textureDesc, nullptr);
+
+		auto* slice = new uint8_t[volumeWidth * volumeHeight * 4];
+
+		for (int d = 0; d < volumeDepth; ++d)
+		{
+			for (int y = 0; y < volumeHeight; ++y)
+			{
+				for (int x = 0; x < volumeWidth; ++x)
+				{
+					for (int c = 0; c < 4; ++c)
+					{
+						slice[(x + y * volumeWidth) * 4 + c] = data[((x + d * volumeDepth) + y * width) * 4 + c];
+					}
+				}
+			}
+
+			m_RenderDevice->WriteTexture(texture, 0, d, slice);
+		}
+
+		delete[] slice;
+
+		m_LoadedTextures[path] = texture;
+		return texture;
+	}
 }

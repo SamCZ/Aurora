@@ -353,6 +353,8 @@ namespace Aurora
 
 		if(true)
 		{ // Sky render
+			GPU_DEBUG_SCOPE("Sky render");
+
 			DrawCallState drawState;
 			drawState.Shader = m_SkyShader;
 			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
@@ -433,6 +435,8 @@ namespace Aurora
 		auto compositedRT = m_RenderManager->CreateTemporalRenderTarget("CompositedRT", camera.Size, GraphicsFormat::RGBA8_UNORM);
 
 		{ // Composite Deferred renderer and HRD
+			GPU_DEBUG_SCOPE("PBR Composite");
+
 			DrawCallState drawState;
 			drawState.Shader = m_PBRCompositeShader;
 			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;

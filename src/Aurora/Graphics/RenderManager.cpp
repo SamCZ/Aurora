@@ -14,6 +14,7 @@ namespace Aurora
 		Sampler_ptr WrapWrapLinearLinear;
 
 		Sampler_ptr ClampClampNearestNearest;
+		Sampler_ptr ClampClampClampLinearLinearLinear;
 		Sampler_ptr WrapWrapNearestNearest;
 		Sampler_ptr WrapWrapNearNearestFarLinear;
 		Sampler_ptr ClampClampNearNearestFarLinear;
@@ -34,6 +35,7 @@ namespace Aurora
 		Samplers::WrapWrapLinearLinear = renderDevice->CreateSampler(SamplerDesc(true, true, true, EWrapMode::Wrap, EWrapMode::Wrap));
 		Samplers::WrapWrapNearNearestFarLinear = renderDevice->CreateSampler(SamplerDesc(true, false, true, EWrapMode::Wrap, EWrapMode::Wrap));
 
+		Samplers::ClampClampClampLinearLinearLinear = renderDevice->CreateSampler(SamplerDesc(true, true, false, EWrapMode::Clamp, EWrapMode::Clamp, EWrapMode::Clamp));
 		Samplers::ClampClampNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Clamp, EWrapMode::Clamp));
 		Samplers::WrapWrapNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Wrap, EWrapMode::Wrap));
 		Samplers::ClampClampNearNearestFarLinear = renderDevice->CreateSampler(SamplerDesc(true, false, true, EWrapMode::Clamp, EWrapMode::Clamp));
@@ -44,6 +46,7 @@ namespace Aurora
 		Samplers::ClampClampLinearLinear.reset();
 		Samplers::WrapWrapLinearLinear.reset();
 
+		Samplers::ClampClampClampLinearLinearLinear.reset();
 		Samplers::ClampClampNearestNearest.reset();
 		Samplers::WrapWrapNearestNearest.reset();
 		Samplers::WrapWrapNearNearestFarLinear.reset();

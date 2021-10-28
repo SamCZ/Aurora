@@ -25,6 +25,7 @@ namespace Aurora
 		extern Sampler_ptr WrapWrapNearNearestFarLinear;
 
 		extern Sampler_ptr ClampClampNearestNearest;
+		extern Sampler_ptr ClampClampClampLinearLinearLinear;
 		extern Sampler_ptr WrapWrapNearestNearest;
 		extern Sampler_ptr ClampClampNearNearestFarLinear;
 	}
