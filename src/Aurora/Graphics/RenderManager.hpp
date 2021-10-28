@@ -5,6 +5,7 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Tools/robin_hood.h"
+#include "Aurora/Engine.hpp"
 #include "Base/Format.hpp"
 #include "Base/Texture.hpp"
 #include "Base/ShaderBase.hpp"

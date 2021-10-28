@@ -55,6 +55,7 @@ namespace Aurora
 		Shader_ptr m_SkyShader;
 		Shader_ptr m_SSAOShader;
 		Shader_ptr m_RenderSkyCubeShader;
+		Shader_ptr m_NormalBevelShader;
 
 		Entity m_CurrentCameraEntity;
 

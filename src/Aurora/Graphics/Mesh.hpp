@@ -45,6 +45,7 @@ namespace Aurora
 		AABB m_Bounds;
 		bool m_BoundsPreTransformed = false;
 		bool m_HasBounds = false;
+		Matrix4 m_BaseTransform;
 
 	public:
 		XMesh() = default;

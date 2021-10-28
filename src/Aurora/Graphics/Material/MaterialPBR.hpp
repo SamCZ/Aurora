@@ -14,8 +14,11 @@ namespace Aurora
 		DEFINE_PARAM(MP_ROUGHNESS_MAP);
 		DEFINE_PARAM(MP_METALLIC_MAP);
 		DEFINE_PARAM(MP_AO_MAP);
-	private:
 
+		DEFINE_PARAM(MP_BASE_COLOR);
+
+	private:
+		Buffer_ptr m_PBRBuffer; // TODO: This needs to be only one instance, implement material classes!
 	public:
 		MaterialPBR();
 

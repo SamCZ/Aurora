@@ -260,6 +260,12 @@ namespace Aurora
 				//std::cout << it.first << " - " << it.second.string_value << std::endl;
 			}
 
+			tinygltf::PbrMetallicRoughness pbrData = material.pbrMetallicRoughness;
+
+			Vector3 baseColor = {pbrData.baseColorFactor[0], pbrData.baseColorFactor[1], pbrData.baseColorFactor[2]};
+
+			gameMaterial->SetParamVec3Value(MaterialPBR::MP_BASE_COLOR, baseColor);
+
 			auto baseColorParam = material.values.find("baseColorTexture");
 			if(baseColorParam != material.values.end())
 			{
@@ -369,6 +375,7 @@ namespace Aurora
 				const tinygltf::Mesh& mesh = model.meshes[node.mesh];
 
 				auto gpuMesh = LoadMesh(model, mesh, renderDevice);
+				gpuMesh->m_BaseTransform = transform;
 
 				if(gpuMesh)
 				{

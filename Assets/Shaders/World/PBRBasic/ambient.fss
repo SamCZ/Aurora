@@ -10,7 +10,7 @@ layout(location = 1) out vec4 o_Normals;
 layout(location = 2) out vec4 o_RoughnessMetallicAO;
 layout(location = 3) out vec4 o_WorldPos;
 
-uniform sampler2D BaseColor;
+uniform sampler2D BaseColorMap;
 uniform sampler2D NormalMap;
 
 void main()
@@ -20,7 +20,8 @@ void main()
 
 	vec3 N = normalize(Normal);
 
-	FragColor = texture(BaseColor, TexCoord);
+	FragColor = texture(BaseColorMap, TexCoord);
+	FragColor.rgb += pbrConstants.BaseColor.rgb;
 	FragColor.a = 1;
 
 	o_Normals = vec4(N * 0.5f + 0.5f, 1.0f);

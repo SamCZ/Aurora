@@ -11,6 +11,8 @@ namespace Aurora
 	DECLARE_PARAM(MaterialPBR, MP_METALLIC_MAP);
 	DECLARE_PARAM(MaterialPBR, MP_AO_MAP);
 
+	DECLARE_PARAM(MaterialPBR, MP_BASE_COLOR);
+
 	MaterialPBR::MaterialPBR() : Material()
 	{
 		SetName("PBR");
@@ -20,6 +22,10 @@ namespace Aurora
 		MP_ROUGHNESS_MAP = CreateTextureParam("Roughness Texture");
 		MP_METALLIC_MAP = CreateTextureParam("Metallic Texture");
 		MP_AO_MAP = CreateTextureParam("AO Texture");
+
+		MP_BASE_COLOR = CreateVec3Param("BaseColor", {0, 0, 0});
+
+		m_PBRBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("PBRConstants", sizeof(PBRConstants), EBufferType::UniformBuffer));
 	}
 
 	void MaterialPBR::OnShaderReload(ResourceManager* rsm)
@@ -48,11 +54,16 @@ namespace Aurora
 			}
 			case EPassType::Ambient:
 			{
-				drawState.BindTexture("BaseColor", GetParamTexture(MP_ALBEDO_MAP));
+				drawState.BindTexture("BaseColorMap", GetParamTexture(MP_ALBEDO_MAP));
 				drawState.BindTexture("NormalMap", GetParamTexture(MP_NORMAL_MAP));
 
-				drawState.BindSampler("BaseColor", Samplers::WrapWrapLinearLinear);
+				drawState.BindSampler("BaseColorMap", Samplers::WrapWrapLinearLinear);
 				drawState.BindSampler("NormalMap", Samplers::WrapWrapLinearLinear);
+
+				BEGIN_UBW(PBRConstants, desc)
+					desc->BaseColor = Vector4(GetParamVec3Value(MP_BASE_COLOR), 0);
+				END_UBW(drawState, m_PBRBuffer, "PBRConstants")
+
 				break;
 			}
 		}

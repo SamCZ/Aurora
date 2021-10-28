@@ -3,6 +3,7 @@
 
 uniformbuffer PBRConstants
 {
+	vec4 BaseColor;
 	float Roughness;
 	float Metallic;
 	float AmbientOcclusion;

@@ -14,6 +14,7 @@
 #include "Shaders/ps_common.h"
 #include "Shaders/PostProcess/cb_sky.h"
 #include "Shaders/PostProcess/cb_ssao.h"
+#include "Shaders/PostProcess/cb_normal_bevel.h"
 
 #include "PostProcessEffect.hpp"
 
@@ -60,6 +61,11 @@ namespace Aurora
 		desc.ImageFormat = GraphicsFormat::RGB32_FLOAT;
 		ssaoNoiseTex = m_RenderDevice->CreateTexture(desc);
 		m_RenderDevice->WriteTexture(ssaoNoiseTex, 0, 0, ssaoNoise.data());
+
+		m_NormalBevelShader = GetEngine()->GetResourceManager()->LoadShader("Sky", {
+			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/normal_bevel.fss"},
+		});
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -432,6 +438,39 @@ namespace Aurora
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}*/
 
+		auto smoothNormalsRT = m_RenderManager->CreateTemporalRenderTarget("SmoothNormals", camera.Size, GraphicsFormat::RGBA8_UNORM);
+
+		static bool NormalBevelEnabled = true;
+		static NormalBevelEdgeData bevelEdgeData = {{25, 10, 0.03f, 30.0f}};
+		{
+			ImGui::Begin("EdgeBevel");
+			{
+				ImGui::Checkbox("Enabled##EdgeBevel",&NormalBevelEnabled);
+				ImGui::DragFloat("EdgeOffset", &bevelEdgeData.EdgeData.x, 0.01f);
+				ImGui::DragFloat("EdgeDistance", &bevelEdgeData.EdgeData.y, 0.01f);
+				ImGui::DragFloat("BevelRadius", &bevelEdgeData.EdgeData.z, 0.01f);
+				ImGui::DragFloat("BevelDistance", &bevelEdgeData.EdgeData.w, 0.01f);
+			}
+			ImGui::End();
+		}
+
+		if(NormalBevelEnabled)
+		{ // NormalBevel
+			GPU_DEBUG_SCOPE("NormalBevel");
+
+			DrawCallState drawState = PostProcessEffect::PrepareState(m_NormalBevelShader);
+			drawState.BindTarget(0, smoothNormalsRT);
+			drawState.BindTexture("NormalMap", normalsRT);
+			drawState.BindTexture("DepthMap", depthRT);
+			drawState.ViewPort = camera.Size;
+
+			BEGIN_UB(NormalBevelEdgeData, desc)
+				*desc = bevelEdgeData;
+			END_UB(NormalBevelEdgeData)
+
+			PostProcessEffect::RenderState(drawState);
+		}
+
 		auto compositedRT = m_RenderManager->CreateTemporalRenderTarget("CompositedRT", camera.Size, GraphicsFormat::RGBA8_UNORM);
 
 		{ // Composite Deferred renderer and HRD
@@ -448,7 +487,7 @@ namespace Aurora
 			drawState.ViewPort = camera.Size;
 
 			drawState.BindTexture("AlbedoAndFlagsRT", albedoAndFlagsRT);
-			drawState.BindTexture("NormalsRT", normalsRT);
+			drawState.BindTexture("NormalsRT", NormalBevelEnabled ? smoothNormalsRT : normalsRT);
 			drawState.BindTexture("RoughnessMetallicAORT", roughnessMetallicAORT);
 			drawState.BindTexture("SkyRT", skyRT);
 			//drawState.BindTexture("SSAORT", ssaoRT);
@@ -458,6 +497,8 @@ namespace Aurora
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
+
+
 
 		auto ppRT = m_RenderManager->CreateTemporalRenderTarget("PP Intermediate", compositedRT->GetDesc().GetSize(), compositedRT->GetDesc().ImageFormat);
 		{ // PP's
@@ -478,13 +519,13 @@ namespace Aurora
 				glDisable(GL_FRAMEBUFFER_SRGB);
 			}
 		}
-		ppRT.Free();
-		compositedRT.Free();
-
 		skyRT.Free();
 		albedoAndFlagsRT.Free();
 		normalsRT.Free();
 		roughnessMetallicAORT.Free();
+		smoothNormalsRT.Free();
+		ppRT.Free();
+		compositedRT.Free();
 		worldPosRT.Free();
 		depthRT.Free();
 		//ssaoRT.Free();

@@ -89,11 +89,6 @@ vec3 calculateLight(vec3 rayOrigin, vec3 rayDir, float rayLength)
     return inScatterLight;
 }
 
-float linearize_depth(float d,float zNear,float zFar)
-{
-    return zNear * zFar / (zFar + d * (zNear - zFar));
-}
-
 void main()
 {
     float x = 2.0 * gl_FragCoord.x / ViewPort.x - 1.0;
