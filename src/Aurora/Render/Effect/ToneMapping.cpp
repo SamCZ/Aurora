@@ -14,7 +14,7 @@ namespace Aurora
 
 	void ToneMappingMaterial::OnShaderReload(ResourceManager *rsm)
 	{
-		m_Shader = rsm->LoadShader("FXAA", {
+		m_Shader = rsm->LoadShader("ToneMapping", {
 			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/tone_mapping.fss"},
 		});

@@ -43,7 +43,8 @@ namespace Aurora
 		m_ResourceManager(nullptr),
 		m_InputManager(nullptr),
 		m_AppContext(nullptr),
-		m_RmlUI(nullptr)
+		m_RmlUI(nullptr),
+		m_VgRender(nullptr)
 	{
 
 	}

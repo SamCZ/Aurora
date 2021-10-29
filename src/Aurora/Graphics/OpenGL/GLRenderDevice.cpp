@@ -1384,7 +1384,7 @@ namespace Aurora
 			m_CurrentFrameBuffer = framebuffer;
 		}
 
-		assert(state.ViewPort.x > 0 && state.ViewPort.y > 0);
+		assert(state.ViewPort.X > 0 && state.ViewPort.Y > 0);
 
 		SetViewPort(state.ViewPort);
 	}

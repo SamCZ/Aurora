@@ -8,13 +8,13 @@ out gl_PerVertex
 	vec4 gl_Position;
 };
 
-layout (location = 0) out vec2 TexCoords;
+out vec2 TexCoords;
 
-layout (location = 1) out vec2 v_rgbNW;
-layout (location = 2) out vec2 v_rgbNE;
-layout (location = 3) out vec2 v_rgbSW;
-layout (location = 4) out vec2 v_rgbSE;
-layout (location = 5) out vec2 v_rgbM;
+out vec2 v_rgbNW;
+out vec2 v_rgbNE;
+out vec2 v_rgbSW;
+out vec2 v_rgbSE;
+out vec2 v_rgbM;
 
 void texcoords(vec2 fragCoord, vec2 resolution,
 out vec2 v_rgbNW, out vec2 v_rgbNE,
