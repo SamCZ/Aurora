@@ -69,7 +69,7 @@ namespace Aurora
 		template<typename T>
 		void RemoveComponent()
 		{
-			HZ_CORE_ASSERT(HasComponent<T>(), "Entity doesn't have component!");
+			//assert(HasComponent<T>(), "Entity doesn't have component!");
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 

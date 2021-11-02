@@ -3,16 +3,64 @@
 #include <tuple>
 #include "Entity.hpp"
 
+#include "Aurora/Engine.hpp"
+#include "Aurora/Logger/Logger.hpp"
+#include "Aurora/Physics/PhysicsWorld.hpp"
+
 namespace Aurora
 {
 	Scene::Scene()
 	{
-
+		m_Registry.on_construct<BodyComponent>().connect<&Scene::OnBodyComponentAdded>(this);
+		m_Registry.on_destroy<BodyComponent>().connect<&Scene::OnBodyComponentDestroyed>(this);
 	}
 
 	Scene::~Scene()
 	{
 		m_Registry.clear();
+	}
+
+	void Scene::OnBodyComponentAdded(entt::registry &registry, entt::entity entity)
+	{
+		const BodyComponent& bodyComponent = registry.get<BodyComponent>(entity);
+
+		if(bodyComponent.Body == nullptr)
+		{
+			AU_LOG_ERROR("Body pointer is null !");
+			return;
+		}
+
+		//GetEngine()->GetPhysicsWorld()->AddBody(bodyComponent.Body);
+	}
+
+	void Scene::OnBodyComponentDestroyed(entt::registry &registry, entt::entity entity)
+	{
+		const BodyComponent& bodyComponent = registry.get<BodyComponent>(entity);
+
+		if(bodyComponent.Body == nullptr)
+		{
+			AU_LOG_ERROR("Body pointer is null !");
+			return;
+		}
+
+		//GetEngine()->GetPhysicsWorld()->DeleteBody(bodyComponent.Body);
+	}
+
+	void Scene::SetEntityCollider(Entity entity, const BaseColliderComponent &colliderComponent)
+	{
+		BodyComponent* bodyComponent = nullptr;
+
+		if(!entity.HasComponent<BodyComponent>())
+		{
+			bodyComponent = &entity.AddComponent<BodyComponent>();
+			//bodyComponent->Body = new ndBodyDynamic();
+		}
+		else
+		{
+			bodyComponent = &entity.GetComponent<BodyComponent>();
+		}
+
+
 	}
 
 	void Scene::Tick(double delta)
@@ -51,8 +99,8 @@ namespace Aurora
 	Entity Scene::CreateEntity(const std::string &name)
 	{
 		auto entity = Entity{ m_Registry.create(), this };
-		auto& idComponent = entity.AddComponent<UUID>();
-		idComponent = UUID::Generate();
+		auto& idComponent = entity.AddComponent<UUID64>();
+		idComponent = UUID64::Generate();
 
 		entity.AddComponent<TransformComponent>();
 		if (!name.empty())

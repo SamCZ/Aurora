@@ -5,13 +5,13 @@ namespace Aurora
 	static std::atomic_int32_t GlobalCounter32{0};
 	static std::atomic_int64_t GlobalCounter64{0};
 
-	UUID::UUID() : m_UUID(0) {}
-	UUID::UUID(uint64_t uuid) : m_UUID(uuid) {}
-	UUID::UUID(const UUID& other) : m_UUID(other.m_UUID) {}
+	UUID64::UUID64() : UUID64(0) {}
+	UUID64::UUID64(uint64_t uuid) : m_UUID(uuid) {}
+	UUID64::UUID64(const UUID64& other) : m_UUID(other.m_UUID) {}
 
-	UUID UUID::Generate()
+	UUID64 UUID64::Generate()
 	{
-		return UUID(GlobalCounter64.fetch_add(1) + 1);
+		return UUID64(GlobalCounter64.fetch_add(1) + 1);
 	}
 
 	UUID32::UUID32() : m_UUID(0) {}

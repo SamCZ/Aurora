@@ -9,6 +9,8 @@
 
 // Some components were acquired from Hazel(Cherno game engine)
 
+class ndBodyDynamic;
+
 namespace Aurora
 {
 	class Material;
@@ -28,12 +30,12 @@ namespace Aurora
 
 	struct RelationshipComponent
 	{
-		UUID ParentHandle = 0;
-		std::vector<UUID> Children;
+		UUID64 ParentHandle = 0;
+		std::vector<UUID64> Children;
 
 		RelationshipComponent() = default;
 		RelationshipComponent(const RelationshipComponent& other) = default;
-		explicit RelationshipComponent(const UUID& parent) : ParentHandle(parent) {}
+		explicit RelationshipComponent(const UUID64& parent) : ParentHandle(parent) {}
 	};
 
 	struct TransformComponent
@@ -163,5 +165,31 @@ namespace Aurora
 
 			return nullptr;
 		}
+	};
+
+	struct BodyComponent
+	{
+		ndBodyDynamic* Body;
+	};
+
+	struct BaseColliderComponent
+	{
+		Vector3 Offset;
+	};
+
+	struct BoxColliderComponent : BaseColliderComponent
+	{
+		AABB BoundingBox;
+	};
+
+	struct SphereColliderComponent : BaseColliderComponent
+	{
+		float Radius;
+	};
+
+	struct MeshColliderComponent : BaseColliderComponent
+	{
+		int test;
+		// TODO
 	};
 }

@@ -17,6 +17,47 @@ float saturate(float val)
 
 #include "../PostProcess/tonemappers.glsl"
 
+// Normal Distribution Function: Trowbridge-Reitz GGX
+float computeNormalDistrib(vec3 normal, vec3 halfVec, float roughness) {
+	float sqrRough  = roughness * roughness;
+	float frthRough = sqrRough * sqrRough;
+
+	float halfVecAngle    = max(dot(halfVec, normal), 0.0);
+	float sqrHalfVecAngle = halfVecAngle * halfVecAngle;
+
+	float divider = (sqrHalfVecAngle * (frthRough - 1.0) + 1.0);
+	divider       = PI * divider * divider;
+
+	return frthRough / max(divider, 0.001);
+}
+
+// Fresnel: Shlick
+vec3 computeFresnel(float cosTheta, vec3 baseReflectivity) {
+	// Optimized exponent version, from: http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
+	return baseReflectivity + (1.0 - baseReflectivity) * pow(2.0, (-5.55473 * cosTheta - 6.98316) * cosTheta);
+}
+
+// Shlick-Beckmann for Geometry part
+float computeGeomShlickGGX(float angle, float roughness) {
+	float incrRough   = (roughness + 1.0);
+	float roughFactor = (incrRough * incrRough) / 8.0;
+
+	float denom = angle * (1.0 - roughFactor) + roughFactor;
+
+	return angle / denom;
+}
+
+// Geometry: Smith's Shlick GGX
+float computeGeometry(vec3 normal, vec3 viewDir, vec3 lightDir, float roughness) {
+	float viewAngle  = max(dot(viewDir, normal), 0.0);
+	float lightAngle = max(dot(lightDir, normal), 0.0);
+
+	float viewGeom  = computeGeomShlickGGX(viewAngle, roughness);
+	float lightGeom = computeGeomShlickGGX(lightAngle, roughness);
+
+	return viewGeom * lightGeom;
+}
+
 void main()
 {
 	vec4 albedoFlags = texelFetch(AlbedoAndFlagsRT, ivec2(gl_FragCoord.xy), 0);

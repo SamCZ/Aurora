@@ -26,6 +26,10 @@
 
 #include <TracyOpenGL.hpp>
 
+#include "Aurora/Physics/PhysicsWorld.hpp"
+
+#undef DrawText
+
 namespace Aurora
 {
 	static AuroraContext* g_Context = nullptr;
@@ -44,15 +48,16 @@ namespace Aurora
 		m_InputManager(nullptr),
 		m_AppContext(nullptr),
 		m_RmlUI(nullptr),
-		m_VgRender(nullptr)
+		m_VgRender(nullptr),
+		m_PhysicsWorld(nullptr)
 	{
 
 	}
 
 	AuroraEngine::~AuroraEngine()
 	{
-
 		delete m_AppContext;
+		delete m_PhysicsWorld;
 		delete g_Context;
 		delete m_VgRender;
 		delete m_RmlUI;
@@ -138,6 +143,10 @@ namespace Aurora
 		g_Context->m_VgRender = m_VgRender;
 		m_VgRender->LoadFont("default", "Assets/Fonts/LatoLatin-Bold.ttf");
 
+		// Init Physics world
+		m_PhysicsWorld = new PhysicsWorld();
+		g_Context->m_PhysicsWorld = m_PhysicsWorld;
+
 		// Init App context
 		m_AppContext = appContext;
 		m_AppContext->Init();
@@ -191,6 +200,11 @@ namespace Aurora
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
+			}
+
+			{
+				CPU_DEBUG_SCOPE("Physics update");
+				m_PhysicsWorld->Update(delta);
 			}
 
 			{

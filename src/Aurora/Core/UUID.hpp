@@ -42,16 +42,16 @@ namespace Aurora
 		}
 	};
 
-	class UUID
+	class UUID64
 	{
 	private:
 		uint64_t m_UUID;
 	public:
-		UUID();
-		UUID(uint64_t uuid);
-		UUID(const UUID& other);
+		UUID64();
+		UUID64(uint64_t uuid);
+		UUID64(const UUID64& other);
 
-		static UUID Generate();
+		static UUID64 Generate();
 
 		operator uint64_t () { return m_UUID; }
 		operator const uint64_t () const { return m_UUID; }
@@ -76,9 +76,9 @@ namespace Aurora
 namespace std
 {
 	template <>
-	struct hash<Aurora::UUID>
+	struct hash<Aurora::UUID64>
 	{
-		std::size_t operator()(const Aurora::UUID& uuid) const
+		std::size_t operator()(const Aurora::UUID64& uuid) const
 		{
 			return hash<uint64_t>()((uint64_t)uuid);
 		}

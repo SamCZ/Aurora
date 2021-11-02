@@ -1384,8 +1384,6 @@ namespace Aurora
 			m_CurrentFrameBuffer = framebuffer;
 		}
 
-		assert(state.ViewPort.X > 0 && state.ViewPort.Y > 0);
-
 		SetViewPort(state.ViewPort);
 	}
 
@@ -1765,6 +1763,9 @@ namespace Aurora
 
 	void GLRenderDevice::SetViewPort(const FViewPort &wp)
 	{
+		au_assert(wp.Width > 0);
+		au_assert(wp.Height > 0);
+
 		if(wp != m_LastViewPort)
 		{
 			m_LastViewPort = wp;

@@ -36,6 +36,7 @@ namespace Aurora
 		Input::IManager* m_InputManager;
 		RmlUI* m_RmlUI;
 		VgRender* m_VgRender;
+		PhysicsWorld* m_PhysicsWorld;
 
 		AppContext* m_AppContext;
 	public:

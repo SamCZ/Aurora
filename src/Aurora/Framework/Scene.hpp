@@ -5,7 +5,7 @@
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Memory/Aum.hpp"
 #include "Actor.hpp"
-#include "Components/BaseComponents.hpp"
+#include "BaseComponents.hpp"
 
 namespace Aurora
 {
@@ -22,6 +22,9 @@ namespace Aurora
 	public:
 		Scene();
 		~Scene();
+
+		void OnBodyComponentAdded(entt::registry& registry, entt::entity entity);
+		void OnBodyComponentDestroyed(entt::registry& registry, entt::entity entity);
 
 		Entity CreateEntity(const std::string& name);
 
@@ -49,5 +52,7 @@ namespace Aurora
 		{
 			return &m_ActorMemory;
 		}
+
+		void SetEntityCollider(Entity entity, const BaseColliderComponent& colliderComponent);
 	};
 }

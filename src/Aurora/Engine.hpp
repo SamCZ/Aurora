@@ -8,6 +8,7 @@ namespace Aurora
 	class IWindow;
 	class RmlUI;
 	class VgRender;
+	class PhysicsWorld;
 
 	namespace Input
 	{
@@ -25,6 +26,7 @@ namespace Aurora
 		Input::IManager* m_InputManager;
 		RmlUI* m_RmlUI;
 		VgRender* m_VgRender;
+		PhysicsWorld* m_PhysicsWorld;
 	public:
 		[[nodiscard]] inline ResourceManager* GetResourceManager() const { return m_ResourceManager; }
 		[[nodiscard]] inline RenderManager* GetRenderManager() const { return m_RenderManager; }
@@ -33,6 +35,7 @@ namespace Aurora
 		[[nodiscard]] inline Input::IManager* GetInputManager() const { return m_InputManager; }
 		[[nodiscard]] inline RmlUI* GetRmlUI() const { return m_RmlUI; }
 		[[nodiscard]] inline VgRender* GetVgRender() const { return m_VgRender; }
+		[[nodiscard]] inline PhysicsWorld* GetPhysicsWorld() const { return m_PhysicsWorld; }
 	};
 
 	extern AuroraContext* GetEngine();
