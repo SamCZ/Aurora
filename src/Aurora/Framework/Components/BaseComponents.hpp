@@ -58,6 +58,12 @@ namespace Aurora
 					* glm::toMat4(glm::quat(glm::radians(Rotation)))
 					* glm::scale(glm::mat4(1.0f), Scale);
 		}
+
+		void SetFromMatrix(const Matrix4& mat)
+		{
+			glm::DecomposeTransform(mat, Translation, Rotation, Scale);
+			Rotation = glm::degrees(Rotation);
+		}
 	};
 
 	struct CameraComponent

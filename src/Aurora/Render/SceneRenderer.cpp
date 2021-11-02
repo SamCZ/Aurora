@@ -354,7 +354,7 @@ namespace Aurora
 		}
 		ImGui::End();
 
-		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::SRGBA8_UNORM);
+		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		auto preetham = RenderPreethamSky({512, 512}, skyData.x, skyData.y, skyData.z);
 
 		if(true)
@@ -514,9 +514,9 @@ namespace Aurora
 			}
 
 			{ // Blit to screen
-				glEnable(GL_FRAMEBUFFER_SRGB);
+				//glEnable(GL_FRAMEBUFFER_SRGB);
 				m_RenderManager->Blit(currentInput);
-				glDisable(GL_FRAMEBUFFER_SRGB);
+				//glDisable(GL_FRAMEBUFFER_SRGB);
 			}
 		}
 		skyRT.Free();

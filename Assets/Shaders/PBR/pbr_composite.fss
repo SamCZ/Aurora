@@ -1,3 +1,5 @@
+#include "../ps_common.h"
+
 in vec2 TexCoord;
 
 uniform sampler2D AlbedoAndFlagsRT;
@@ -36,8 +38,9 @@ void main()
 
 	vec3 N = normalize(normals.xyz * 2.0f - 1.0f);
 
-	float d = dot(N, normalize(vec3(0.5f, 0.5f, 0.5f)));
+	float d = dot(N, normalize(vec3(0, 1, 0)));
 	d = max(d, 0.2f);
+	d = min(1, d);
 
 	FragColor.rgb = albedoFlags.rgb * d;
 
@@ -45,7 +48,8 @@ void main()
 	//float scaledAO = 1.0 - saturate((1.0 - ssao) * 2.0f);
 	//FragColor.rgb *= ssao;
 
-	FragColor.rgb = Tonemap(FragColor.rgb, 1, 4);
+	//FragColor.rgb = Tonemap(FragColor.rgb, 3, 4);
+	FragColor = fromLinear(FragColor);
 
 	FragColor.a = 1;
 }

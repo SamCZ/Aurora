@@ -238,7 +238,6 @@ namespace Aurora
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
 
-		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 		glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
 
@@ -260,6 +259,8 @@ namespace Aurora
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_FALSE);
 
 		GLFWmonitor* primary = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vidMode = glfwGetVideoMode(primary);
@@ -340,7 +341,7 @@ namespace Aurora
 
 
 
-
+		glDisable(GL_FRAMEBUFFER_SRGB);
 	}
 
 	void GLFWWindow::Show()

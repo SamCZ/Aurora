@@ -1,6 +1,8 @@
 #pragma once
 #include "common.h"
-/*
+
+
+#if !defined(SHADER_ENGINE_SIDE)
 // Converts a color from linear light gamma to sRGB gamma
 vec4 fromLinear(vec4 linearRGB)
 {
@@ -8,7 +10,7 @@ vec4 fromLinear(vec4 linearRGB)
 	vec3 higher = vec3(1.055)*pow(linearRGB.rgb, vec3(1.0/2.4)) - vec3(0.055);
 	vec3 lower = linearRGB.rgb * vec3(12.92);
 
-	return vec4(mix(higher, lower, cutoff), linearRGB.a);
+	return vec4(mix(higher, lower, vec3(cutoff)), linearRGB.a);
 }
 
 // Converts a color from sRGB gamma to linear light gamma
@@ -18,8 +20,9 @@ vec4 toLinear(vec4 sRGB)
 	vec3 higher = pow((sRGB.rgb + vec3(0.055))/vec3(1.055), vec3(2.4));
 	vec3 lower = sRGB.rgb/vec3(12.92);
 
-	return vec4(mix(higher, lower, cutoff), sRGB.a);
-}*/
+	return vec4(mix(higher, lower, vec3(cutoff)), sRGB.a);
+}
+#endif
 
 const float near_plane = 0.1f;
 const float far_plane = 2000.0f;
