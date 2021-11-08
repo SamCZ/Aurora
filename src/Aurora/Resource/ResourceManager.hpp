@@ -13,6 +13,7 @@ namespace Aurora
 		struct TextureLoadInfo
 		{
 				bool SRGB = true;
+				bool Bindless = false;
 		};
 
 	class ResourceManager

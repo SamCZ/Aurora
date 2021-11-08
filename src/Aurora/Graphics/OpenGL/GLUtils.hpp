@@ -102,6 +102,10 @@ namespace Aurora
 			GET_GL_TYPE(GL_FLOAT_MAT4x2, float, 4 * 2, GraphicsFormat::Unknown)
 			GET_GL_TYPE(GL_FLOAT_MAT4x3, float, 4 * 3, GraphicsFormat::Unknown)
 
+
+			GET_GL_TYPE(GL_UNSIGNED_INT64_NV, uint64_t , 1, GraphicsFormat::Unknown)
+			GET_GL_TYPE(GL_UNSIGNED_INT64_AMD, uint64_t , 1, GraphicsFormat::Unknown)
+
 			default:
 				AU_LOG_FATAL("Unknown opengl type for size conversion: ", glType);
 				return {};

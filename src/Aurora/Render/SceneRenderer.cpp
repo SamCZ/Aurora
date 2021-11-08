@@ -15,6 +15,7 @@
 #include "Shaders/PostProcess/cb_sky.h"
 #include "Shaders/PostProcess/cb_ssao.h"
 #include "Shaders/PostProcess/cb_normal_bevel.h"
+#include "Shaders/PBR/cb_pbr.h"
 
 #include "PostProcessEffect.hpp"
 
@@ -489,8 +490,13 @@ namespace Aurora
 			drawState.BindTexture("AlbedoAndFlagsRT", albedoAndFlagsRT);
 			drawState.BindTexture("NormalsRT", NormalBevelEnabled ? smoothNormalsRT : normalsRT);
 			drawState.BindTexture("RoughnessMetallicAORT", roughnessMetallicAORT);
+			drawState.BindTexture("WorldPosRT", worldPosRT);
 			drawState.BindTexture("SkyRT", skyRT);
 			//drawState.BindTexture("SSAORT", ssaoRT);
+
+			BEGIN_UB(PBRDesc, desc)
+				desc->CameraPos = Vector4(cameraTransform.Translation, 0.0);
+			END_UB(PBRDesc)
 
 			drawState.BindTarget(0, compositedRT);
 

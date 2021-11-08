@@ -271,6 +271,7 @@ namespace Aurora
 		textureDesc.MipLevels = textureDesc.GetMipLevelCount();
 		textureDesc.ImageFormat = format;
 		textureDesc.Name = path.string();
+		textureDesc.UseAsBindless = textureLoadInfo.Bindless;
 		texture = m_RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)

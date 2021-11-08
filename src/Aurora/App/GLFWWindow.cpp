@@ -256,7 +256,7 @@ namespace Aurora
 		}
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -301,7 +301,7 @@ namespace Aurora
 
 		// This is gonna break after second window is created !
 		int glVersion;
-		if(!(glVersion = gladLoadGL(glfwGetProcAddress))) {
+		if(!(glVersion = gladLoadGL())) {
 			printf("Something went wrong!\n");
 			exit(-1);
 		}
@@ -317,10 +317,14 @@ namespace Aurora
 #endif
 
 		glGetString(GL_VERSION);
-		AU_LOG_INFO("OpenGL ", GLAD_VERSION_MAJOR(glVersion), ".", GLAD_VERSION_MINOR(glVersion));
+		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
 
 		if(!GLAD_GL_EXT_texture_array) {
 			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
+		}
+
+		if(!GLAD_GL_NV_gpu_shader5) {
+			AU_LOG_ERROR("GLAD_GL_NV_gpu_shader5 not found !");
 		}
 
 		// Handling

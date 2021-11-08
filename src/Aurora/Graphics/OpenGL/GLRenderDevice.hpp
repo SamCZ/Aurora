@@ -68,6 +68,8 @@ namespace Aurora
 		void ClearTextureFloat(const Texture_ptr& texture, const Color& clearColor) override;
 		void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) override;
 		void GenerateMipmaps(const Texture_ptr& texture) override;
+		void* GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb) override;
+		bool MakeTextureHandleResident(const Texture_ptr& texture, bool enabled) override;
 		// Buffers
 		Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) override;
 		void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize, size_t offset) override;

@@ -276,6 +276,10 @@ namespace Aurora
 		virtual void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) = 0;
 		virtual void GenerateMipmaps(const Texture_ptr& texture) = 0;
 		inline Texture_ptr CreateTexture(const TextureDesc& desc) { return CreateTexture(desc, nullptr); }
+
+		virtual void* GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb) = 0;
+		virtual bool MakeTextureHandleResident(const Texture_ptr& texture, bool enabled) = 0;
+
 		// Buffers
 		virtual Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) = 0;
 		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize, size_t offset) = 0;

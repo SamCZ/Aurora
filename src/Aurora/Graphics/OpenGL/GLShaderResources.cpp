@@ -96,6 +96,8 @@ namespace Aurora
 			glGetActiveUniform(program, i, MaxNameLength, &NameLen, &size, &dataType, Name.data());
 			CHECK_GL_ERROR_AND_THROW("Unable to get active uniform");
 
+
+
 			au_assert(dataType > 0);
 
 			switch (dataType)
@@ -146,6 +148,12 @@ namespace Aurora
 					// Note that glGetUniformLocation(program, name) is equivalent to
 					// glGetProgramResourceLocation(program, GL_UNIFORM, name);
 					// The latter is only available in GL 4.4 and GLES 3.1
+
+					if(std::string(Name.data()).find("_bindless") != std::string::npos)
+					{
+						AU_LOG_INFO("BINDLESS ", Name.data(), " - ", UniformLocation);
+						continue;
+					}
 
 					// clang-format off
 					const auto ResourceType =

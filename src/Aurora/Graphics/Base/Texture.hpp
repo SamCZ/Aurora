@@ -52,6 +52,8 @@ namespace Aurora
 		Color ClearValue;
 		bool UseClearValue;
 
+		bool UseAsBindless;
+
 		TextureDesc() :
 				ImageFormat(GraphicsFormat::Unknown),
 				Width(0),
@@ -65,7 +67,7 @@ namespace Aurora
 				IsUAV(false),
 				IsRenderTarget(false),
 				DisableGPUsSync(false),
-				UseClearValue(false), ClearValue(0) { }
+				UseClearValue(false), ClearValue(0), UseAsBindless(false) { }
 
 		[[nodiscard]] inline Vector2i GetSize() const noexcept { return {Width, Height}; }
 

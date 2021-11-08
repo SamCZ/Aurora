@@ -465,13 +465,21 @@ namespace Aurora
 		}*/
 
 		std::vector<GLuint> compiledShaders;
-		for(const auto& it : shaderDescriptions) {
+		for(const auto& it : shaderDescriptions)
+		{
 			const auto& shaderDesc = it.second;
 			const auto& type = shaderDesc.Type;
 
 			std::string source;
 
-			source += "#version 430 core\n";
+			source += "#version 450 core\n";
+
+			if(type == EShaderType::Pixel)
+			{
+				source += "#extension GL_ARB_bindless_texture : enable\n";
+				source += "#extension GL_ARB_gpu_shader_int64 : enable\n";
+			}
+
 			source += "layout(std140) uniform;\n";
 
 			if(type == EShaderType::Vertex) {
@@ -482,7 +490,7 @@ namespace Aurora
 
 			source += shaderDesc.Source;
 
-			std::string glslSourcePreprocessed;
+			/*std::string glslSourcePreprocessed;
 			EShMessages        messages = (EShMessages)(EShMsgAST);
 			{
 				EShLanguage        ShLang = ShaderTypeToShLanguage(type);
@@ -490,7 +498,7 @@ namespace Aurora
 
 				Shader->setEnvInput(::glslang::EShSourceGlsl, ShLang, ::glslang::EShClientOpenGL, 450);
 				Shader->setEnvClient(::glslang::EShClientOpenGL, ::glslang::EShTargetOpenGL_450);
-				Shader->setEnvTarget(::glslang::EShTargetSpv, ::glslang::EShTargetSpv_1_0);
+				//Shader->setEnvTarget(::glslang::EShTargetSpv, ::glslang::EShTargetSpv_1_0);
 				Shader->setEntryPoint("main");
 				//Shader->setSourceEntryPoint("main");
 
@@ -503,14 +511,14 @@ namespace Aurora
 
 				TBuiltInResource Resources = InitResources();
 				IncluderImpl includer;
-				if(!Shader->preprocess(&Resources, 100, ECoreProfile, false, true, messages, &glslSourcePreprocessed, includer))
+				if(!Shader->preprocess(&Resources, 450, ECoreProfile, false, false, messages, &glslSourcePreprocessed, includer))
 				{
 					AU_LOG_FATAL("Failed to preprocess shader: \n", Shader->getInfoLog(), Shader->getInfoDebugLog());
 				}
-			}
+			}*/
 
 			std::string error;
-			GLuint shaderID = CompileShaderRaw(glslSourcePreprocessed, type, &error);
+			GLuint shaderID = CompileShaderRaw(source, type, &error);
 
 			if(shaderID == 0) {
 				AU_LOG_ERROR("Cannot compile shader ", ShaderType_ToString(type), " in program ", desc.GetName(), "!\n", error);
@@ -686,7 +694,7 @@ namespace Aurora
 
 			CHECK_GL_ERROR();
 		}
-		else if (desc.SampleCount > 1)
+		else if (desc.SampleCount > 1 && !desc.UseAsBindless)
 		{
 			AU_LOG_FATAL("Multisample is not supported !");
 			AU_LOG_FATAL("Multisample is not supported !");
@@ -707,6 +715,8 @@ namespace Aurora
 			bindTarget = GL_TEXTURE_2D;
 			glBindTexture(bindTarget, handle);
 
+			//glTexParameteri(bindTarget, GL_TEXTURE_SPARSE_ARB, GL_TRUE);
+
 			glTexStorage2D(
 					bindTarget,
 					(GLsizei)desc.MipLevels,
@@ -717,7 +727,7 @@ namespace Aurora
 			CHECK_GL_ERROR();
 		}
 
-		if (desc.SampleCount == 1)
+		if (desc.SampleCount == 1 && !desc.UseAsBindless)
 		{
 			glTexParameteri(bindTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(bindTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -726,6 +736,15 @@ namespace Aurora
 
 		glObjectLabel(GL_TEXTURE, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
 		CHECK_GL_ERROR();
+
+		GLuint64 bHandle = 0;
+		GLuint64 bHandleSrgb = 0;
+
+		if(desc.UseAsBindless)
+		{
+			bHandle = glGetTextureHandleARB(handle);
+			CHECK_GL_ERROR();
+		}
 
 		glBindTexture(bindTarget, 0);
 
@@ -760,12 +779,18 @@ namespace Aurora
 				CHECK_GL_ERROR();
 			}
 
+			if(desc.UseAsBindless)
+			{
+				bHandleSrgb = glGetTextureHandleARB(srgbView);
+				CHECK_GL_ERROR();
+			}
+
 			glBindTexture(bindTarget, 0);
 		}
 
 		// TODO: Write @textureData
 
-		return std::make_shared<GLTexture>(desc, formatMapping, handle, srgbView, bindTarget);
+		return std::make_shared<GLTexture>(desc, formatMapping, handle, srgbView, bindTarget, bHandle, bHandleSrgb);
 	}
 
 	void GLRenderDevice::WriteTexture(const Texture_ptr &texture, uint32_t mipLevel, uint32_t subresource, const void *data)
@@ -831,6 +856,49 @@ namespace Aurora
 		glBindTexture(glTexture->BindTarget(), glTexture->Handle());
 		glGenerateMipmap(glTexture->BindTarget());
 		glBindTexture(glTexture->BindTarget(), 0);
+	}
+
+	void* GLRenderDevice::GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb)
+	{
+		if(texture == nullptr) return nullptr;
+
+		GLTexture* glTexture = GetTexture(texture);
+
+		if(texture->GetDesc().ImageFormat == GraphicsFormat::SRGBA8_UNORM && srgb)
+		{
+			return &glTexture->m_BindlessSrgbHandle;
+		}
+
+		return &glTexture->m_BindlessHandle;
+	}
+
+	bool GLRenderDevice::MakeTextureHandleResident(const Texture_ptr& texture, bool enabled)
+	{
+		if(texture == nullptr) return false;
+
+		GLTexture* glTexture = GetTexture(texture);
+
+		if(!glTexture->GetDesc().UseAsBindless)
+			return false;
+
+		if(enabled)
+		{
+			glMakeTextureHandleResidentARB(glTexture->m_BindlessHandle);
+			if(glTexture->m_BindlessSrgbHandle != 0)
+			{
+				glMakeTextureHandleResidentARB(glTexture->m_BindlessSrgbHandle);
+			}
+		}
+		else
+		{
+			glMakeTextureHandleNonResidentARB(glTexture->m_BindlessHandle);
+			if(glTexture->m_BindlessSrgbHandle != 0)
+			{
+				glMakeTextureHandleNonResidentARB(glTexture->m_BindlessSrgbHandle);
+			}
+		}
+
+		return true;
 	}
 
 	Buffer_ptr GLRenderDevice::CreateBuffer(const BufferDesc &desc, const void *data)
