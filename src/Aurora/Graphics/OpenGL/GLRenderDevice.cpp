@@ -470,31 +470,17 @@ namespace Aurora
 			const auto& shaderDesc = it.second;
 			const auto& type = shaderDesc.Type;
 
-			std::string source;
+			std::stringstream ss;
 
-			source += "#version 450 core\n";
+			ss << "#version 450 core\n";
+			ss << "layout(std140) uniform;\n";
+			ss << shaderDesc.Source;
 
-			if(type == EShaderType::Pixel)
-			{
-				source += "#extension GL_ARB_bindless_texture : enable\n";
-				source += "#extension GL_ARB_gpu_shader_int64 : enable\n";
-			}
-
-			source += "layout(std140) uniform;\n";
-
-			if(type == EShaderType::Vertex) {
-				//source += "#extension GL_KHR_vulkan_glsl : enable\n";
-				//source += "#define gl_VertexID gl_VertexIndex\n";
-				//source += "#define gl_InstanceID gl_InstanceIndex\n";
-			}
-
-			source += shaderDesc.Source;
-
-			/*std::string glslSourcePreprocessed;
-			EShMessages        messages = (EShMessages)(EShMsgAST);
+			std::string glslSourcePreprocessed;
+			EShMessages messages = (EShMessages)(EShMsgAST);
 			{
 				EShLanguage        ShLang = ShaderTypeToShLanguage(type);
-				::glslang::TShader* Shader = new ::glslang::TShader(ShLang);
+				auto* Shader = new ::glslang::TShader(ShLang);
 
 				Shader->setEnvInput(::glslang::EShSourceGlsl, ShLang, ::glslang::EShClientOpenGL, 450);
 				Shader->setEnvClient(::glslang::EShClientOpenGL, ::glslang::EShTargetOpenGL_450);
@@ -502,10 +488,11 @@ namespace Aurora
 				Shader->setEntryPoint("main");
 				//Shader->setSourceEntryPoint("main");
 
+				String source = ss.str();
 
 				const char* ShaderStrings[]       = {source.c_str()};
 				const int   ShaderStringLengths[] = {static_cast<int>(source.length())};
-				const char* Names[]               = {"yo"};
+				const char* Names[]               = {"main"};
 				Shader->setStringsWithLengthsAndNames(ShaderStrings, ShaderStringLengths, Names, 1);
 				Shader->setAutoMapBindings(true);
 
@@ -515,10 +502,18 @@ namespace Aurora
 				{
 					AU_LOG_FATAL("Failed to preprocess shader: \n", Shader->getInfoLog(), Shader->getInfoDebugLog());
 				}
-			}*/
+			}
+
+			if(type == EShaderType::Pixel && shaderDesc.EnableBindless)
+			{
+				String ext;
+				ext += "#extension GL_ARB_bindless_texture : enable\n";
+				ext += "#extension GL_ARB_gpu_shader_int64 : enable\n";
+				glslSourcePreprocessed.insert(18, ext);
+			}
 
 			std::string error;
-			GLuint shaderID = CompileShaderRaw(source, type, &error);
+			GLuint shaderID = CompileShaderRaw(glslSourcePreprocessed, type, &error);
 
 			if(shaderID == 0) {
 				AU_LOG_ERROR("Cannot compile shader ", ShaderType_ToString(type), " in program ", desc.GetName(), "!\n", error);

@@ -9,6 +9,7 @@
 
 #include "InputLayout.hpp"
 #include "TypeBase.hpp"
+#include "Aurora/Logger/Logger.hpp"
 
 namespace Aurora
 {
@@ -126,14 +127,15 @@ namespace Aurora
 		EShaderType Type;
 		std::string Source;
 		ShaderMacros Macros;
+		bool EnableBindless;
 
-		ShaderDesc() : Type(EShaderType::Unknown), Source(), Macros()
+		ShaderDesc() : Type(EShaderType::Unknown), Source(), Macros(), EnableBindless(false)
 		{
 
 		}
 
-		explicit ShaderDesc(EShaderType type, std::string source, ShaderMacros macros)
-				: Type(type), Source(std::move(source)), Macros(std::move(macros)) { }
+		ShaderDesc(EShaderType type, std::string source, ShaderMacros macros, bool enableBindless)
+				: Type(type), Source(std::move(source)), Macros(std::move(macros)), EnableBindless(enableBindless) { }
 	};
 
 	class ShaderProgramDesc
@@ -160,19 +162,21 @@ namespace Aurora
 		{
 			if(shaderDesc.Type == EShaderType::Unknown)
 			{
-				//AU_LOG_WARNING("Cannot add Unknown shader type to ", Name, " ! Skipping...")
+				AU_LOG_WARNING("Cannot add Unknown shader type to ", Name, " ! Skipping...");
+				return;
 			}
 
 			if(ShaderDescriptions.contains(shaderDesc.Type)) {
-				//AU_LOG_WARNING("Shader ", ShaderType_ToString(shaderDesc.Type), " already exists in program ", Name, " ! Skipping...")
+				AU_LOG_WARNING("Shader ", ShaderType_ToString(shaderDesc.Type), " already exists in program ", Name, " ! Skipping...");
+				return;
 			}
 
 			ShaderDescriptions[shaderDesc.Type] = shaderDesc;
 		}
 
-		inline void AddShader(const EShaderType& shaderType, const std::string& source, const ShaderMacros& macros = {})
+		inline void AddShader(const EShaderType& shaderType, const std::string& source, const ShaderMacros& macros = {}, bool enableBindless = false)
 		{
-			AddShader(ShaderDesc(shaderType, source, macros));
+			AddShader(ShaderDesc(shaderType, source, macros, enableBindless));
 		}
 
 		[[nodiscard]] inline bool HasShader(const EShaderType& shaderType) const noexcept { return ShaderDescriptions.contains(shaderType); }
