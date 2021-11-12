@@ -309,7 +309,7 @@ namespace Aurora
 		auto albedoAndFlagsRT = m_RenderManager->CreateTemporalRenderTarget("Albedo", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		auto normalsRT = m_RenderManager->CreateTemporalRenderTarget("Normals", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		auto roughnessMetallicAORT = m_RenderManager->CreateTemporalRenderTarget("RoughnessMetallicAO", camera.Size, GraphicsFormat::RGBA8_UNORM);
-		auto worldPosRT = m_RenderManager->CreateTemporalRenderTarget("WorldPosition", camera.Size, GraphicsFormat::RGBA32_FLOAT);
+		//auto worldPosRT = m_RenderManager->CreateTemporalRenderTarget("WorldPosition", camera.Size, GraphicsFormat::RGBA32_FLOAT);
 
 		auto depthRT = m_RenderManager->CreateTemporalRenderTarget("Depth", camera.Size, GraphicsFormat::D32);
 
@@ -338,7 +338,7 @@ namespace Aurora
 			drawState.BindTarget(0, albedoAndFlagsRT);
 			drawState.BindTarget(1, normalsRT);
 			drawState.BindTarget(2, roughnessMetallicAORT);
-			drawState.BindTarget(3, worldPosRT);
+			//drawState.BindTarget(3, worldPosRT);
 
 			m_RenderDevice->BindRenderTargets(drawState);
 			m_RenderDevice->ClearRenderTargets(drawState);
@@ -490,7 +490,7 @@ namespace Aurora
 			drawState.BindTexture("AlbedoAndFlagsRT", albedoAndFlagsRT);
 			drawState.BindTexture("NormalsRT", NormalBevelEnabled ? smoothNormalsRT : normalsRT);
 			drawState.BindTexture("RoughnessMetallicAORT", roughnessMetallicAORT);
-			drawState.BindTexture("WorldPosRT", worldPosRT);
+			//drawState.BindTexture("WorldPosRT", worldPosRT);
 			drawState.BindTexture("SkyRT", skyRT);
 			//drawState.BindTexture("SSAORT", ssaoRT);
 
@@ -532,7 +532,7 @@ namespace Aurora
 		smoothNormalsRT.Free();
 		ppRT.Free();
 		compositedRT.Free();
-		worldPosRT.Free();
+		//worldPosRT.Free();
 		depthRT.Free();
 		//ssaoRT.Free();
 	}

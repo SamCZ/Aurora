@@ -468,12 +468,37 @@ namespace Aurora
 		for(const auto& it : shaderDescriptions)
 		{
 			const auto& shaderDesc = it.second;
-			const auto& type = shaderDesc.Type;
+			EShaderType type = shaderDesc.Type;
 
 			std::stringstream ss;
 
 			ss << "#version 450 core\n";
 			ss << "layout(std140) uniform;\n";
+
+			switch (type)
+			{
+				case EShaderType::Vertex:
+					ss << "#define SHADER_VERTEX\n";
+					break;
+				case EShaderType::Hull:
+					ss << "#define SHADER_HULL\n";
+					break;
+				case EShaderType::Domain:
+					ss << "#define SHADER_DOMAIN\n";
+					break;
+				case EShaderType::Geometry:
+					ss << "#define SHADER_GEOMETRY\n";
+					break;
+				case EShaderType::Pixel:
+					ss << "#define SHADER_PIXEL\n";
+					break;
+				case EShaderType::Compute:
+					ss << "#define SHADER_COMPUTE\n";
+					break;
+				default:
+					break;
+			}
+
 			ss << shaderDesc.Source;
 
 			std::string glslSourcePreprocessed;

@@ -10,13 +10,17 @@ namespace Aurora
 
 	void ndEntityNotify::OnApplyExternalForce(dInt32 threadIndex, dFloat32 timestep)
 	{
-		ndBodyDynamic* const dynamicBody = GetBody()->GetAsBodyDynamic();
-		if (dynamicBody)
+		ndBodyKinematic* const body = GetBody()->GetAsBodyKinematic();
+		dAssert(body);
+		if (body->GetInvMass() > 0.0f)
 		{
-			dVector massMatrix(dynamicBody->GetMassMatrix());
+			dVector massMatrix(body->GetMassMatrix());
 			dVector force(GetGravity().Scale(massMatrix.m_w));
-			dynamicBody->SetForce(force);
-			dynamicBody->SetTorque(dVector::m_zero);
+			body->SetForce(force);
+			body->SetTorque(dVector::m_zero);
+
+			//dVector L(body->CalculateAngularMomentum());
+			//dTrace(("%f %f %f\n", L.m_x, L.m_y, L.m_z));
 		}
 	}
 
