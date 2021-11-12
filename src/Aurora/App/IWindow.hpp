@@ -3,9 +3,9 @@
 #include <memory>
 #include <string>
 
-#include "Aurora/Core/Common.hpp"
+#include "Aurora/Core/String.hpp"
 #include "Aurora/Core/Vector.hpp"
-#include "Aurora/Graphics/ISwapChain.hpp"
+#include "Aurora/Graphics/Base/SwapChain.hpp"
 
 #include "CursorMode.hpp"
 

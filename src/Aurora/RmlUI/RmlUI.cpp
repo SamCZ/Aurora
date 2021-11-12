@@ -4,10 +4,12 @@
 #include <RmlUi/Core.h>
 #include <RmlUi/Debugger.h>
 
-#include "ShellSystemInterface.hpp"
-#include "ShellRenderInterfaceOpenGl.hpp"
+#include "RmShellSystemInterface.hpp"
+#include "RmShellRenderInterfaceOpenGL.hpp"
 
-#include "Aurora/AuroraEngine.hpp"
+#include "Aurora/Aurora.hpp"
+#include "Aurora/App/IWindow.hpp"
+#include "Aurora/Logger/Logger.hpp"
 
 namespace Aurora
 {
@@ -39,7 +41,6 @@ namespace Aurora
 		{
 			/*if (auto* instancer = SoundEventListener::CreateInstancer(value, element))
 				return instancer;
-
 			if (auto* instancer = CustomEventListener::CreateInstancer(value, element))
 				return instancer;*/
 
@@ -54,11 +55,8 @@ namespace Aurora
 		void OnDocumentUnload(Rml::ElementDocument* document) override
 		{
 			auto* rmlContext = static_cast<RmlContext*>(document->GetContext());
-			std::weak_ptr<RmlUI> uiWeak = rmlContext->GetOwnerSubsystem();
-
-			if(auto ui = uiWeak.lock()) {
-				ui->OnDocumentUnload(document);
-			}
+			RmlUI* uiWeak = rmlContext->GetOwnerSubsystem();
+			uiWeak->OnDocumentUnload(document);
 		}
 	};
 
@@ -67,14 +65,12 @@ namespace Aurora
 	static RmlEventListenerInstancer RmlEventListenerInstancerInstance;
 	static RmlPlugin RmlPluginInstance;
 
-
-
 	RmlUI::RmlUI(const std::string& name) : m_RmlContext(nullptr), m_DebuggerInitialized(false), m_Enabled(true)
 	{
 		if (rmlInstanceCounter.fetch_add(1) == 0)
 		{
-			Rml::SetRenderInterface(new ShellRenderInterfaceOpenGL());
-			Rml::SetSystemInterface(new ShellSystemInterface());
+			Rml::SetRenderInterface(new RmShellRenderInterfaceOpenGL());
+			Rml::SetSystemInterface(new RmShellSystemInterface());
 			//Rml::SetFileInterface(new Detail::RmlFile(context_));
 			Rml::Initialise();
 			Rml::Factory::RegisterEventListenerInstancer(&RmlEventListenerInstancerInstance);
@@ -83,7 +79,7 @@ namespace Aurora
 		}
 
 		m_RmlContext = static_cast<RmlContext*>(Rml::CreateContext(name, GetDesiredCanvasSize()));
-		m_RmlContext->SetOwnerSubsystem(this->weak_from_this());
+		m_RmlContext->SetOwnerSubsystem(this);
 	}
 
 	RmlUI::~RmlUI()
@@ -91,7 +87,9 @@ namespace Aurora
 		if (m_RmlContext != nullptr)
 		{
 			if (!Rml::RemoveContext(m_RmlContext->GetName()))
+			{
 				AU_LOG_FATAL("Removal of RmlUI context {} failed.", m_RmlContext->GetName());
+			}
 		}
 		m_RmlContext = nullptr;
 
@@ -152,7 +150,7 @@ namespace Aurora
 
 	void RmlUI::Render()
 	{
-		auto* shellRenderInterfaceOpenGl = static_cast<ShellRenderInterfaceOpenGL*>(Rml::GetRenderInterface());
+		auto* shellRenderInterfaceOpenGl = static_cast<RmShellRenderInterfaceOpenGL*>(Rml::GetRenderInterface());
 
 		shellRenderInterfaceOpenGl->PrepareRenderBuffer();
 		m_RmlContext->Render();
@@ -190,15 +188,9 @@ namespace Aurora
 
 	Rml::Vector2i RmlUI::GetDesiredCanvasSize() const
 	{
-		auto currentThreadContext = AuroraEngine::GetCurrentThreadContext();
+		auto windowSize = GetEngine()->GetWindow()->GetSize();
 
-		if(currentThreadContext != nullptr) {
-			auto contextSize = currentThreadContext->GetWindow()->GetSize();
-
-			return {contextSize.x, contextSize.y};
-		}
-
-		return {300, 300};
+		return {windowSize.x, windowSize.y};
 	}
 
 	bool RmlUI::IsHovered() const

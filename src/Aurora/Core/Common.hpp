@@ -8,65 +8,8 @@
 #include <vector>
 #include <map>
 #include <iostream>
-#include "Types.hpp"
 #include "../Logger/Logger.hpp"
-
-#define BASE_OF(TypeName, BaseClass) typename std::enable_if<std::is_base_of<BaseClass, TypeName>::value>::type* = nullptr
-
-#define BITF(bit) 1 << bit
-
-#define AU_CLASS(A) \
-class A;\
-\
-typedef std::shared_ptr<A> A ## _ptr;\
-typedef std::weak_ptr<A> A ## _wptr;\
-typedef std::shared_ptr<const A> A ## _conptr;\
-typedef std::weak_ptr<const A> A ## _wconptr;\
-\
-class A
-
-#define AU_STRUCT(A) \
-struct A;\
-\
-typedef std::shared_ptr<A> A ## _ptr;\
-typedef std::weak_ptr<A> A ## _wptr;\
-typedef std::shared_ptr<const A> A ## _conptr;\
-typedef std::weak_ptr<const A> A ## _wconptr;\
-\
-struct A
-
-#ifndef AU_ENUM
-#   define AU_ENUM(enum_name, num_type) enum class enum_name : num_type
-#endif
-
-#ifndef AU_ENUM_FLAGS
-#   define AU_ENUM_FLAGS(enum_name, num_type) enum class enum_name : num_type;\
-    inline enum_name operator|(enum_name a, enum_name b)\
-    {\
-        return static_cast<enum_name>(static_cast<num_type>(a) | static_cast<num_type>(b));\
-    }\
-    inline bool operator &(enum_name a, enum_name b)\
-    {\
-        return (static_cast<num_type>(a) & static_cast<num_type>(b)) != 0;\
-    }\
-    inline enum_name& operator |=(enum_name& a, enum_name b)\
-    {\
-        return a = a | b;\
-    }\
-    AU_ENUM(enum_name, num_type)
-#endif
-
-#define AU_CLASS_BODY(classname)                                       \
-public:                                                                \
-template<typename... Args>                                             \
-static std::shared_ptr<classname> New(Args&& ...args)                  \
-{                                                                      \
-	return std::make_shared<classname>(std::forward<Args>(args)...);   \
-}                                                                      \
-
-
-
-
+#include "Types.hpp"
 
 template<typename T>
 class SharedFromThis : public std::enable_shared_from_this<T>
@@ -118,38 +61,6 @@ inline bool VectorContains(std::vector<T>& vector, T& data)
 	return std::find(vector.begin(), vector.end(), data) != vector.end();
 }
 
-inline std::vector<std::string> SplitString(const std::string& str, char delimiter)
-{
-	std::vector<std::string> list;
-	std::stringstream buffer;
-
-	for (char c : str) {
-		if(c == delimiter) {
-			if(buffer.tellp() != 0) {
-				list.push_back(buffer.str());
-				buffer.str("");
-			}
-		} else {
-			buffer << c;
-		}
-	}
-
-	if(buffer.tellp() != 0) {
-		list.push_back(buffer.str());
-	}
-
-	return list;
-}
-
-template<typename T>
-inline String PointerToString(T* pointer)
-{
-	const void * address = static_cast<const void*>(pointer);
-	std::stringstream ss;
-	ss << address;
-	return ss.str();
-}
-
 struct dotted : std::numpunct<char> {
 	char do_thousands_sep()   const override { return ' '; }  // separate with dots
 	std::string do_grouping() const override { return "\3"; } // groups of 3 digits
@@ -159,7 +70,7 @@ struct dotted : std::numpunct<char> {
 };
 
 template<typename T>
-inline String Stringify(T val)
+inline std::string Stringify(T val)
 {
 	std::ostringstream oss;
 	dotted::imbue(oss);

@@ -3,15 +3,11 @@
 
 namespace Aurora
 {
-
 	PhysicsWorld::PhysicsWorld() : ndWorld()
 	{
 		ClearCache();
 		SetContactNotify(new ndContactCallback());
 	}
 
-	PhysicsWorld::~PhysicsWorld()
-	{
-
-	}
+	PhysicsWorld::~PhysicsWorld() = default;
 }

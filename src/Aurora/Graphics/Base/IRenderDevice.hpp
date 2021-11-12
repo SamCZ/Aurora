@@ -4,8 +4,6 @@
 #include <map>
 #include <array>
 
-#include "RenderBase.hpp"
-
 #include "ShaderBase.hpp"
 #include "Texture.hpp"
 #include "Sampler.hpp"
@@ -18,14 +16,7 @@
 #include "RasterState.hpp"
 #include "FDepthStencilState.hpp"
 
-#if defined(AURORA_OPENGL) || true
-#include "../OpenGL/GLRenderGroupScope.hpp"
-#define CAT_(a, b) a ## b
-#define CAT(a, b) CAT_(a, b)
-#define GPU_DEBUG_SCOPE(name) ::Aurora::GLRenderGroupScope CAT(_GPU_Debug_Scope_, __LINE__)(name);
-#else
-#define GPU_DEBUG_SCOPE(name)
-#endif
+#include "../ViewPort.hpp"
 
 namespace Aurora
 {
@@ -72,14 +63,21 @@ namespace Aurora
 		IndexBufferBinding(Buffer_ptr buffer, EIndexBufferFormat format) : Buffer(std::move(buffer)), Format(format) {}
 	};
 
+	struct UniformBufferBinding
+	{
+		Buffer_ptr Buffer = nullptr;
+		uint32_t Offset = 0;
+		uint32_t Size = 0;
+	};
+
 	struct StateResources
 	{
 		static constexpr uint8_t MaxBoundTextures = 8;
 
-		std::map<std::string, TextureBinding> BoundTextures;
-		std::map<std::string, Sampler_ptr> BoundSamplers;
-		std::map<std::string, Buffer_ptr> BoundUniformBuffers;
-		std::map<std::string, Buffer_ptr> SSBOBuffers;
+		std::map<std::string, TextureBinding> BoundTextures{};
+		std::map<std::string, Sampler_ptr> BoundSamplers{};
+		std::map<std::string, UniformBufferBinding> BoundUniformBuffers{};
+		std::map<std::string, Buffer_ptr> SSBOBuffers{};
 
 		virtual void ResetResources()
 		{
@@ -99,9 +97,9 @@ namespace Aurora
 			BoundSamplers[name] = sampler;
 		}
 
-		inline void BindUniformBuffer(const std::string& name, const Buffer_ptr& uniformBuffer)
+		inline void BindUniformBuffer(const std::string& name, const Buffer_ptr& uniformBuffer, uint32_t offset = 0, uint32_t size = 0)
 		{
-			BoundUniformBuffers[name] = uniformBuffer;
+			BoundUniformBuffers[name] = {uniformBuffer, offset, size};
 		}
 
 		inline void BindSSBOBuffer(const std::string& name, const Buffer_ptr& ssbo)
@@ -135,7 +133,7 @@ namespace Aurora
 
 		InputLayout_ptr InputLayoutHandle;
 
-		std::map<uint8_t, Buffer_ptr> VertexBuffers;
+		std::map<uint32_t, Buffer_ptr> VertexBuffers;
 		bool HasAnyRenderTarget;
 		FDepthStencilState DepthStencilState;
 
@@ -152,7 +150,7 @@ namespace Aurora
 		EPrimitiveType PrimitiveType;
 
 		FRasterState RasterState;
-		Vector2i ViewPort;
+		FViewPort ViewPort;
 
 		DrawCallState()
 		: BaseState(),
@@ -165,6 +163,7 @@ namespace Aurora
 		  HasAnyRenderTarget(false),
 		  RasterState(),
 		  InputLayoutHandle(nullptr),
+		  VertexBuffers(),
 		  ClearColorTarget(true),
 		  ClearDepthTarget(true),
 		  ClearStencilTarget(false),
@@ -172,7 +171,7 @@ namespace Aurora
 		  ClearStencil(0),
 		  ClearColor(0, 0, 0, 0),
 		  DepthStencilState(),
-		  ViewPort() { }
+		  ViewPort(0, 0) { }
 
 		inline void ResetTargets()
 		{
@@ -200,7 +199,7 @@ namespace Aurora
 			IndexBuffer = IndexBufferBinding(std::move(buffer), format);
 		}
 
-		inline void SetVertexBuffer(uint8_t slot, Buffer_ptr buffer)
+		inline void SetVertexBuffer(uint32_t slot, Buffer_ptr buffer)
 		{
 			VertexBuffers[slot] = std::move(buffer);
 		}
@@ -216,7 +215,7 @@ namespace Aurora
 			RenderTargets[slot] = TargetBinding(std::move(texture), index, mipSlice);
 		}
 
-		void BindDepthTarget(Texture_ptr depthTarget, uint32_t depthIndex, uint32_t depthMipSlice)
+		void BindDepthTarget(const Texture_ptr& depthTarget, uint32_t depthIndex, uint32_t depthMipSlice)
 		{
 			DepthTarget = depthTarget;
 			DepthIndex = depthIndex;
@@ -239,7 +238,7 @@ namespace Aurora
 	{
 		uint32_t VertexCount;
 		uint32_t InstanceCount;
-		uint32_t StartIndexLocation;
+		size_t StartIndexLocation;
 		uint32_t StartVertexLocation;
 		uint32_t StartInstanceLocation;
 
@@ -277,16 +276,20 @@ namespace Aurora
 		virtual void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) = 0;
 		virtual void GenerateMipmaps(const Texture_ptr& texture) = 0;
 		inline Texture_ptr CreateTexture(const TextureDesc& desc) { return CreateTexture(desc, nullptr); }
+
+		virtual void* GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb) = 0;
+		virtual bool MakeTextureHandleResident(const Texture_ptr& texture, bool enabled) = 0;
+
 		// Buffers
 		virtual Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) = 0;
-		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) = 0;
+		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize, size_t offset) = 0;
 		virtual void ClearBufferUInt(const Buffer_ptr& buffer, uint32_t clearValue) = 0;
 		virtual void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) = 0;
 		virtual void* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) = 0;
 
 		template<typename T> T* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
 		{
-			reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
+			return reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
 		}
 
 		virtual void UnmapBuffer(const Buffer_ptr& buffer) = 0;
@@ -297,12 +300,27 @@ namespace Aurora
 		virtual InputLayout_ptr CreateInputLayout(const std::vector<VertexAttributeDesc>& desc) = 0;
 		// Drawing
 		virtual void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
-		virtual void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) = 0;
+		virtual void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args, bool bindState = true) = 0;
 		virtual void DrawIndirect(const DrawCallState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
 
 		virtual void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) = 0;
 		virtual void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) = 0;
 
 		virtual void InvalidateState() = 0;
+
+		virtual void Blit(const Texture_ptr &src, const Texture_ptr &dest) = 0;
+
+		virtual void SetViewPort(const FViewPort& wp) = 0;
+		[[nodiscard]] virtual const FViewPort& GetCurrentViewPort() const = 0;
+
+		virtual void BindShaderResources(const BaseState& state) = 0;
+		virtual void ApplyDispatchState(const DispatchState& state) = 0;
+		virtual void ApplyDrawCallState(const DrawCallState& state) = 0;
+		virtual void BindShaderInputs(const DrawCallState &state) = 0;
+		virtual void BindRenderTargets(const DrawCallState &state) = 0;
+		virtual void SetBlendState(const DrawCallState &state) = 0;
+		virtual void SetRasterState(const FRasterState& rasterState) = 0;
+		virtual void ClearRenderTargets(const DrawCallState &state) = 0;
+		virtual void SetDepthStencilState(FDepthStencilState state) = 0;
 	};
 }

@@ -1,0 +1,56 @@
+#include "../ps_common.h"
+#include "cb_pbr.h"
+
+in vec2 TexCoord;
+
+uniform sampler2D AlbedoAndFlagsRT;
+uniform sampler2D NormalsRT;
+uniform sampler2D RoughnessMetallicAORT;
+uniform sampler2D SkyRT;
+uniform sampler2D SSAORT;
+
+out vec4 FragColor;
+
+float saturate(float val)
+{
+	return clamp(val, 0, 1);
+}
+
+#include "../PostProcess/tonemappers.glsl"
+
+void main()
+{
+	vec4 albedoFlags = texelFetch(AlbedoAndFlagsRT, ivec2(gl_FragCoord.xy), 0);
+	vec4 normals = texelFetch(NormalsRT, ivec2(gl_FragCoord.xy), 0);
+	vec4 RMA = texelFetch(RoughnessMetallicAORT, ivec2(gl_FragCoord.xy), 0);
+
+	if(albedoFlags.a == 0)
+	{
+		FragColor = texelFetch(SkyRT, ivec2(gl_FragCoord.xy), 0);
+		return;
+	}
+
+	vec3 albedo = albedoFlags.rgb;
+	uint flags = uint(albedoFlags.a);
+
+	float roughness = RMA.x;
+	float metallic = RMA.y;
+	float ao = RMA.z;
+
+	vec3 N = normalize(normals.xyz * 2.0f - 1.0f);
+
+	float d = dot(N, normalize(vec3(0, 1, 0)));
+	d = max(d, 0.2f);
+	d = min(1, d);
+
+	FragColor.rgb = albedoFlags.rgb * d;
+
+	//float ssao = texelFetch(SSAORT, ivec2(gl_FragCoord.xy), 0).r;
+	//float scaledAO = 1.0 - saturate((1.0 - ssao) * 2.0f);
+	//FragColor.rgb *= ssao;
+
+	//FragColor.rgb = Tonemap(FragColor.rgb, 3, 4);
+	FragColor = fromLinear(FragColor);
+
+	FragColor.a = 1;
+}

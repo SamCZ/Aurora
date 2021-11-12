@@ -1,5 +1,4 @@
 #include "Layer.hpp"
-#include <cassert>
 
 namespace Aurora
 {
@@ -9,7 +8,7 @@ namespace Aurora
 	{
 		m_Layers.clear();
 
-		assert(layerNames.size() < sizeof(uint32_t) * 8);
+		au_assert(layerNames.size() <= 8);
 
 		for (uint32_t i = 0; i < layerNames.size(); ++i) {
 			m_Layers[(LayerEnum)i] = layerNames[i];
@@ -24,9 +23,7 @@ namespace Aurora
 			}
 		}
 
-#ifdef DEBUG
-		throw std::runtime_error("Cannot find layer by name: " + name);
-#endif
+		AU_LOG_WARNING("Cannot find layer by name: ", name);
 
 		return Layer0;
 	}
@@ -36,9 +33,7 @@ namespace Aurora
 		auto it = m_Layers.find(id);
 
 		if(it == m_Layers.end()) {
-#ifdef DEBUG
-			throw std::runtime_error("Cannot find layer by id: " + std::to_string(id));
-#endif
+			AU_LOG_WARNING("Cannot find layer by id: ", std::to_string(id));
 			return "Unknown";
 		}
 

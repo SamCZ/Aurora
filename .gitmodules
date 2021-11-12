@@ -6,10 +6,6 @@
 	path = lib/glfw
 	url = git@github.com:glfw/glfw.git
 	branch = master
-[submodule "assimp"]
-	path = lib/assimp
-	url = git@github.com:assimp/assimp.git
-	branch = master
 [submodule "nlohmann_json"]
 	path = lib/nlohmann_json
 	url = git@github.com:nlohmann/json.git
@@ -37,3 +33,6 @@
 [submodule "entt"]
 	path = lib/entt
 	url = git@github.com:skypjack/entt.git
+[submodule "glslang"]
+	path = lib/glslang
+	url = https://github.com/KhronosGroup/glslang.git

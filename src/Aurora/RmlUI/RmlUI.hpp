@@ -8,25 +8,21 @@
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Core.h>
 
-#include "Aurora/Core/Vector.hpp"
-#include "Aurora/Core/Common.hpp"
-
 namespace Aurora
 {
 	class RmlContext;
 
-	AU_CLASS(RmlUI) : public SharedFromThis<RmlUI>
+	class RmlUI
 	{
 		friend class RmlContext;
 		friend class RmlPlugin;
-
 	private:
 		RmlContext* m_RmlContext;
 		bool m_DebuggerInitialized;
 		bool m_Enabled;
 	public:
 		explicit RmlUI(const std::string& name);
-		~RmlUI() override;
+		~RmlUI();
 	public:
 		Rml::ElementDocument* LoadDocument(const std::string& path);
 		void SetDebuggerVisible(bool visible);
@@ -55,9 +51,9 @@ namespace Aurora
 	{
 	public:
 		explicit RmlContext(const std::string& name) : Rml::Context(name) { }
-		void SetOwnerSubsystem(std::weak_ptr<RmlUI> ui) { m_ContextSystem = std::move(ui); }
-		[[nodiscard]] std::weak_ptr<RmlUI> GetOwnerSubsystem() const { return m_ContextSystem; }
+		void SetOwnerSubsystem(RmlUI* ui) { m_ContextSystem = ui; }
+		[[nodiscard]] RmlUI* GetOwnerSubsystem() const { return m_ContextSystem; }
 	private:
-		std::weak_ptr<RmlUI> m_ContextSystem;
+		RmlUI* m_ContextSystem;
 	};
 }

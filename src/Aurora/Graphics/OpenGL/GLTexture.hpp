@@ -17,10 +17,13 @@ namespace Aurora
 		GLuint m_Handle;
 		GLuint m_SRGBHandle;
 
+		GLuint64 m_BindlessHandle;
+		GLuint64 m_BindlessSrgbHandle;
+
 		GLenum m_BindTarget;
 		bool m_UsedInFrameBuffers;
 	public:
-		GLTexture(TextureDesc desc, FormatMapping formatMapping, GLuint handle, GLuint srgbHandle, GLenum bindTarget);
+		GLTexture(TextureDesc desc, FormatMapping formatMapping, GLuint handle, GLuint srgbHandle, GLenum bindTarget, GLuint64 bindlessHandle, GLuint64 bindlessSrgbHandle);
 		~GLTexture() override;
 
 		[[nodiscard]] inline const FormatMapping& Format() const noexcept { return m_FormatMapping; }

@@ -36,7 +36,7 @@ namespace Aurora
 		void BindTexture(BindIndex index, GLTexture* texture);
 		void BindSampler(BindIndex index, GLSampler* sampler);
 		void BindImage(BindIndex index, GLTexture* texture, GLint mipLevel, GLboolean isLayered, GLint layer, GLenum access, GLenum format);
-		void BindUniformBuffer(BindIndex index, GLBuffer* buffer);
+		void BindUniformBuffer(BindIndex index, GLBuffer* buffer, uint32_t offset, uint32_t size);
 		void BindStorageBlock(BindIndex index, GLBuffer* buffer);
 	};
 }

@@ -70,7 +70,7 @@ namespace Aurora::Input
             {
                 m_Configurations.clear();
 #ifdef DEBUG
-				AU_LOG_INFO("Cleared input configurations, loading new")
+				AU_LOG_INFO("Cleared input configurations, loading new");
 #endif
 
                 for (auto itCategory = jConfig.begin(); itCategory != jConfig.end(); ++itCategory)
@@ -113,7 +113,7 @@ namespace Aurora::Input
                         }
                     }
 #ifdef DEBUG
-					AU_LOG_INFO("\t", itCategory.key(), ": ", actionCount, " actions with ", inputSourceCount, " input sources total")
+					AU_LOG_INFO("\t", itCategory.key(), ": ", actionCount, " actions with ", inputSourceCount, " input sources total");
 #endif
                 }
                 return;

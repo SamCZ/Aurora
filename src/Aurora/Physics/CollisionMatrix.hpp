@@ -1,8 +1,7 @@
 #pragma once
 
-#include "cstdint"
-#include "vector"
-#include "../Framework/Layer.hpp"
+#include <vector>
+#include "Aurora/Framework/Layer.hpp"
 
 namespace Aurora
 {

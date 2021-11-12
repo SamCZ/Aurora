@@ -1,16 +1,18 @@
 #pragma once
 
+#include <cstdint>
+
 namespace Aurora
 {
-	enum class EFillMode : unsigned char
+	enum class EFillMode : uint8_t
 	{
-		Solid,
+		Solid = 0,
 		Line
 	};
 
-	enum class ECullMode : unsigned char
+	enum class ECullMode : uint8_t
 	{
-		Back,
+		Back = 0,
 		Front,
 		None
 	};
@@ -19,13 +21,13 @@ namespace Aurora
 	{
 		EFillMode    FillMode;
 		ECullMode    CullMode;
-		bool FrontCounterClockwise{};
+		bool FrontCounterClockwise;
 		bool DepthClipEnable;
-		bool ScissorEnable{};
-		bool MultisampleEnable{};
-		int DepthBias{};
-		float DepthBiasClamp{};
-		float SlopeScaledDepthBias{};
+		bool ScissorEnable;
+		bool MultisampleEnable;
+		int DepthBias;
+		float DepthBiasClamp;
+		float SlopeScaledDepthBias;
 
 		FRasterState()
 		: FillMode(EFillMode::Solid),

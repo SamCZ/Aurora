@@ -42,6 +42,7 @@ namespace Aurora
 		if(NewObject == nullptr) {
 			bool state = CurrentObjectID != -1;
 			CurrentObjectID = -1;
+			NewGLHandle = 0;
 			return state;
 		}
 
@@ -125,7 +126,7 @@ namespace Aurora
 
 		GLuint GLTexHandle = 0;
 
-		if (UpdateBoundObjectsArr(m_BoundTextures, index, texture, GLTexHandle))
+		if (UpdateBoundObjectsArr(m_BoundTextures, index, texture, GLTexHandle) || true) // FIXME: Temporal RT should not be used here
 		{
 			if(texture != nullptr) {
 				glBindTexture(texture->BindTarget(), GLTexHandle);
@@ -160,12 +161,19 @@ namespace Aurora
 #endif
 	}
 
-	void GLContextState::BindUniformBuffer(GLContextState::BindIndex index, GLBuffer *buffer)
+	void GLContextState::BindUniformBuffer(GLContextState::BindIndex index, GLBuffer *buffer, uint32_t offset, uint32_t size)
 	{
 		GLuint GLBufferHandle = 0;
-		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle))
+		if (UpdateBoundObjectsArr(m_BoundUniformBuffers, index, buffer, GLBufferHandle) || (buffer != nullptr)) // TODO: Fix this for buffer cache, when only offset and size is changed
 		{
-			glBindBufferBase(GL_UNIFORM_BUFFER, index, GLBufferHandle);
+			if(buffer == nullptr || size == buffer->GetDesc().ByteSize)
+			{
+				glBindBufferBase(GL_UNIFORM_BUFFER, index, GLBufferHandle);
+			}
+			else
+			{
+				glBindBufferRange(GL_UNIFORM_BUFFER, index, GLBufferHandle, offset, size);
+			}
 			CHECK_GL_ERROR("Failed to bind uniform buffer to slot ", index);
 		}
 	}

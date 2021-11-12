@@ -1,4 +1,5 @@
 #include "CollisionMatrix.hpp"
+#include <iostream>
 
 namespace Aurora
 {

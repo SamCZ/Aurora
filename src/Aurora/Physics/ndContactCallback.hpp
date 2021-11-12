@@ -12,7 +12,7 @@ namespace Aurora
 		{
 		public:
 			ndMaterialKey()
-			:m_key(0) { }
+				:m_key(0) { }
 
 			ndMaterialKey(dUnsigned64 low, dUnsigned64 high) : m_lowKey(dUnsigned32(dMin(low, high))) ,m_highKey(dUnsigned32(dMax(low, high))) { }
 

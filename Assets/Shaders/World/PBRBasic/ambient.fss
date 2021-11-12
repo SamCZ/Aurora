@@ -1,0 +1,30 @@
+#include "cb_pbr.h"
+
+in vec2 TexCoord;
+in vec3 Normal;
+in mat3 TBN;
+in vec4 WorldPos;
+
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 o_Normals;
+layout(location = 2) out vec4 o_RoughnessMetallicAO;
+layout(location = 3) out vec4 o_WorldPos;
+
+uniform sampler2D BaseColorMap;
+uniform sampler2D NormalMap;
+
+void main()
+{
+	//vec3 normalColor = texture(NormalMap, TexCoord).rgb * 2.0f - 1.0f;
+	//vec3 normal = normalize(TBN * normalColor);
+
+	vec3 N = normalize(Normal);
+
+	FragColor = texture(BaseColorMap, TexCoord);
+	FragColor.rgb += pbrConstants.BaseColor.rgb;
+	FragColor.a = 1;
+
+	o_Normals = vec4(N * 0.5f + 0.5f, 1.0f);
+	o_RoughnessMetallicAO = vec4(pbrConstants.Roughness, pbrConstants.Metallic, pbrConstants.AmbientOcclusion, 1);
+	o_WorldPos = WorldPos;
+}

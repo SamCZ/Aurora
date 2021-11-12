@@ -29,15 +29,15 @@ public:
 	}
 
 	inline explicit WorkerThread(std::function<void()> threadFunc, std::string threadName = "")
-	:
-		m_ThreadName(std::move(threadName)),
-		m_ThreadFunction(std::move(threadFunc)),
-		m_Thread([this] { Run(); }),
-		m_ReadyState(false),
-		m_ProcessedState(false),
-		m_DestroyState(false),
-		m_Mutex(),
-		m_ConditionVariable()
+			:
+			m_ThreadName(std::move(threadName)),
+			m_ThreadFunction(std::move(threadFunc)),
+			m_Thread([this] { Run(); }),
+			m_ReadyState(false),
+			m_ProcessedState(false),
+			m_DestroyState(false),
+			m_Mutex(),
+			m_ConditionVariable()
 	{
 
 	}

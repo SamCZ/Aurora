@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BoundingBox.hpp"
+#include "AABB.hpp"
 
 namespace Aurora
 {
@@ -15,7 +15,7 @@ namespace Aurora
 
 		// http://iquilezles.org/www/articles/frustumcorrect/frustumcorrect.htm
 		[[nodiscard]] bool IsBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const;
-		[[nodiscard]] bool IsBoxVisible(const BoundingBox& boundingBox) const;
+		[[nodiscard]] bool IsBoxVisible(const AABB& boundingBox) const;
 
 	private:
 		enum Planes
@@ -89,13 +89,13 @@ namespace Aurora
 		for (int i = 0; i < Count; i++)
 		{
 			if ((glm::dot(m_planes[i], glm::vec4(minp.x, minp.y, minp.z, 1.0f)) < 0.0) &&
-				(glm::dot(m_planes[i], glm::vec4(maxp.x, minp.y, minp.z, 1.0f)) < 0.0) &&
-				(glm::dot(m_planes[i], glm::vec4(minp.x, maxp.y, minp.z, 1.0f)) < 0.0) &&
-				(glm::dot(m_planes[i], glm::vec4(maxp.x, maxp.y, minp.z, 1.0f)) < 0.0) &&
-				(glm::dot(m_planes[i], glm::vec4(minp.x, minp.y, maxp.z, 1.0f)) < 0.0) &&
-				(glm::dot(m_planes[i], glm::vec4(maxp.x, minp.y, maxp.z, 1.0f)) < 0.0) &&
-				(glm::dot(m_planes[i], glm::vec4(minp.x, maxp.y, maxp.z, 1.0f)) < 0.0) &&
-				(glm::dot(m_planes[i], glm::vec4(maxp.x, maxp.y, maxp.z, 1.0f)) < 0.0))
+			    (glm::dot(m_planes[i], glm::vec4(maxp.x, minp.y, minp.z, 1.0f)) < 0.0) &&
+			    (glm::dot(m_planes[i], glm::vec4(minp.x, maxp.y, minp.z, 1.0f)) < 0.0) &&
+			    (glm::dot(m_planes[i], glm::vec4(maxp.x, maxp.y, minp.z, 1.0f)) < 0.0) &&
+			    (glm::dot(m_planes[i], glm::vec4(minp.x, minp.y, maxp.z, 1.0f)) < 0.0) &&
+			    (glm::dot(m_planes[i], glm::vec4(maxp.x, minp.y, maxp.z, 1.0f)) < 0.0) &&
+			    (glm::dot(m_planes[i], glm::vec4(minp.x, maxp.y, maxp.z, 1.0f)) < 0.0) &&
+			    (glm::dot(m_planes[i], glm::vec4(maxp.x, maxp.y, maxp.z, 1.0f)) < 0.0))
 			{
 				return false;
 			}
@@ -113,7 +113,7 @@ namespace Aurora
 		return true;
 	}
 
-	inline bool Frustum::IsBoxVisible(const BoundingBox& boundingBox) const
+	inline bool Frustum::IsBoxVisible(const AABB& boundingBox) const
 	{
 		return IsBoxVisible(boundingBox.GetMin(), boundingBox.GetMax());
 	}
@@ -123,7 +123,7 @@ namespace Aurora
 	{
 		float D = glm::dot(glm::vec3(m_planes[a]), crosses[ij2k<b, c>::k]);
 		glm::vec3 res = glm::mat3(crosses[ij2k<b, c>::k], -crosses[ij2k<a, c>::k], crosses[ij2k<a, b>::k]) *
-						glm::vec3(m_planes[a].w, m_planes[b].w, m_planes[c].w);
+		                glm::vec3(m_planes[a].w, m_planes[b].w, m_planes[c].w);
 		return res * (-1.0f / D);
 	}
 }

@@ -2,6 +2,7 @@
 
 #include <ndContact.h>
 #include <ndShapeInstance.h>
+#include "CollisionMatrix.hpp"
 
 namespace Aurora
 {
@@ -28,21 +29,18 @@ namespace Aurora
 		const ndBodyKinematic* const body0 = contactJoint->GetBody0();
 		const ndBodyKinematic* const body1 = contactJoint->GetBody1();
 
-		const ndShapeInstance& instanceShape0 = body0->GetCollisionShape();
-		const ndShapeInstance& instanceShape1 = body1->GetCollisionShape();
+		const volatile ndShapeInstance& instanceShape0 = body0->GetCollisionShape();
+		const volatile ndShapeInstance& instanceShape1 = body1->GetCollisionShape();
 
-		// TODO: Collision matrix
-		/*if ((instanceShape0.GetUserDataID() == m_dedris) && (instanceShape1.GetUserDataID() == m_dedris))
-		{
-			return false;
-		}**/
-
-		if(instanceShape0.m_shapeMaterial.m_userId == instanceShape1.m_shapeMaterial.m_userId)
+		if(instanceShape0.m_shapeMaterial.m_userId == 0 || instanceShape1.m_shapeMaterial.m_userId == 0)
 		{
 			return false;
 		}
 
-		return true;
+		LayerEnum l0 = (LayerEnum)(instanceShape0.m_shapeMaterial.m_userId - 1);
+		LayerEnum l1 = (LayerEnum)(instanceShape1.m_shapeMaterial.m_userId - 1);
+
+		return CollisionMatrix::CanCollide(l0, l1);
 	}
 
 	void ndContactCallback::OnContactCallback(dInt32 threadIndex, const ndContact *const contactJoint, dFloat32 timestep)

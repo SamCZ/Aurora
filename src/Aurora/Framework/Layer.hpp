@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Aurora/Core/Common.hpp"
+#include <map>
+#include "Aurora/Core/Types.hpp"
+#include "Aurora/Core/String.hpp"
 
 namespace Aurora
 {

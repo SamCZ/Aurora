@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Aurora/Core/Common.hpp"
 #include "../Base/IRenderDevice.hpp"
 #include "GL.hpp"
 #include "GLContextState.hpp"
+#include "Aurora/Tools/robin_hood.h"
 
 namespace Aurora
 {
-	AU_CLASS(FrameBuffer)
+	class FrameBuffer
 	{
 	public:
 		GLuint Handle;
@@ -28,6 +28,8 @@ namespace Aurora
 		}
 	};
 
+	typedef std::shared_ptr<FrameBuffer> FrameBuffer_ptr;
+
 	class GLRenderDevice : public IRenderDevice
 	{
 	public:
@@ -38,14 +40,17 @@ namespace Aurora
 		GLuint m_nVAOEmpty;
 		GLuint m_LastVao;
 		FrameBuffer_ptr m_CurrentFrameBuffer = nullptr;
-		std::map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
+		robin_hood::unordered_map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
 
 		GLContextState m_ContextState;
 
-		Vector2i m_LastViewPort;
+		FViewPort m_LastViewPort;
 		FRasterState m_LastRasterState;
 		FDepthStencilState m_LastDepthState;
 		InputLayout_ptr m_LastInputLayout;
+
+		// Embedded shaders
+		Shader_ptr m_BlitShader;
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
@@ -63,9 +68,11 @@ namespace Aurora
 		void ClearTextureFloat(const Texture_ptr& texture, const Color& clearColor) override;
 		void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) override;
 		void GenerateMipmaps(const Texture_ptr& texture) override;
+		void* GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb) override;
+		bool MakeTextureHandleResident(const Texture_ptr& texture, bool enabled) override;
 		// Buffers
 		Buffer_ptr CreateBuffer(const BufferDesc& desc, const void* data) override;
-		void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize) override;
+		void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize, size_t offset) override;
 		void ClearBufferUInt(const Buffer_ptr& buffer, uint32_t clearValue) override;
 		void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) override;
 		void* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) override;
@@ -76,32 +83,30 @@ namespace Aurora
 		InputLayout_ptr CreateInputLayout(const std::vector<VertexAttributeDesc>& desc) override;
 		// Drawing
 		void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) override;
-		void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args) override;
+		void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args, bool bindState) override;
 		void DrawIndirect(const DrawCallState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 
 		void Dispatch(const DispatchState& state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ) override;
 		void DispatchIndirect(const DispatchState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 
 		void InvalidateState() override;
+
+		void Blit(const Texture_ptr &src, const Texture_ptr &dest) override;
+
+		void SetViewPort(const FViewPort& wp) override;
+		[[nodiscard]] const FViewPort& GetCurrentViewPort() const override;
 	public:
-		void BindShaderResources(const BaseState& state);
+		void BindShaderResources(const BaseState& state) override;
+		void ApplyDispatchState(const DispatchState& state) override;
+		void ApplyDrawCallState(const DrawCallState& state) override;
+		void BindShaderInputs(const DrawCallState &state) override;
+		void BindRenderTargets(const DrawCallState &state) override;
+		void SetBlendState(const DrawCallState &state) override;
+		void SetRasterState(const FRasterState& rasterState) override;
+		void ClearRenderTargets(const DrawCallState &state) override;
+		void SetDepthStencilState(FDepthStencilState state) override;
 
-		void ApplyDispatchState(const DispatchState& state);
-		void ApplyDrawCallState(const DrawCallState& state);
-
-		void BindShaderInputs(const DrawCallState &state);
-
-		void BindRenderTargets(const DrawCallState &state);
-
-		FrameBuffer_ptr GetCachedFrameBuffer(const DrawCallState &state);
 		void NotifyTextureDestroy(class GLTexture* texture);
-
-		void SetBlendState(const DrawCallState &state);
-
-		void SetRasterState(const FRasterState& rasterState);
-
-		void ClearRenderTargets(const DrawCallState &state);
-
-		void SetDepthStencilState(FDepthStencilState state);
+		FrameBuffer_ptr GetCachedFrameBuffer(const DrawCallState &state);
 	};
 }

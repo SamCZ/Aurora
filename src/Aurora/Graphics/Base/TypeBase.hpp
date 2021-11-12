@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aurora/Core/UniqueIdentifier.hpp"
+#include "Aurora/Core/UUID.hpp"
 
 namespace Aurora
 {

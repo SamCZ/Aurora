@@ -24,8 +24,10 @@ namespace Aurora
 		GraphicsFormat Format;
 		uint32_t BufferIndex;
 		uint32_t Offset;
-		bool IsInstanced;
 		uint32_t SemanticIndex;
+		uint32_t Stride;
+		bool IsInstanced;
+		bool Normalized;
 	};
 
 	typedef std::map<uint32_t, ShaderInputVariable> ShaderInputVariables_t;
@@ -46,10 +48,10 @@ namespace Aurora
 	private:
 		std::vector<VertexAttributeDesc> m_Descriptors;
 	public:
-		inline BasicInputLayout(std::vector<VertexAttributeDesc> descriptors) : m_Descriptors(std::move(descriptors))
+		inline explicit BasicInputLayout(std::vector<VertexAttributeDesc> descriptors) : m_Descriptors(std::move(descriptors))
 		{
 		}
-		~BasicInputLayout() = default;
+		~BasicInputLayout() override = default;
 
 		inline const std::vector<VertexAttributeDesc>& GetDescriptors() const noexcept override { return m_Descriptors; }
 		inline bool GetDescriptor(int index, VertexAttributeDesc& out_desc) const noexcept override

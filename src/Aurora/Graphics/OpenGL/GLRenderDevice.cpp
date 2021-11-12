@@ -1,21 +1,155 @@
-#include <Aurora/Core/Crc.hpp>
 #include "GLRenderDevice.hpp"
 
 #include "GLConversions.hpp"
 
-#include <TracyOpenGL.hpp>
 #include <algorithm>
-
-//#define TRACE_GPU 1
-
-#ifdef TRACE_GPU
-#define TR_SCOPE(name) TracyGpuZone(name)
-#else
-#define TR_SCOPE(name)
+#ifdef _WIN32
+#include <Windows.h>
+#include <wrl.h>
 #endif
+
+#include <cstdint>
+#include <Aurora/Core/assert.hpp>
+#include <Aurora/Core/String.hpp>
+#include <Aurora/Core/Profiler.hpp>
+
+
+#ifdef GLSLANG_COMPILER
+#include <glslang/Public/ShaderLang.h>
+#endif
+
+static const char* g_BlitVS = R"(
+const vec4 Tri[3] = {
+	vec4(-1, 3, 0, 1),
+	vec4(-1, -1, 0, 1),
+	vec4(3, -1, 0, 1)
+};
+
+const vec2 Uvs[3] = {
+	vec2(0, 2),
+	vec2(0, 0),
+	vec2(2, 0)
+};
+
+out vec2 TexCoords;
+
+void main()
+{
+	gl_Position = Tri[gl_VertexID];
+	TexCoords = Uvs[gl_VertexID];
+}
+
+)";
+
+static const char* g_BlitPS = R"(
+layout(location = 0) out vec4 FragColor;
+layout(binding = 0) uniform sampler2D Source;
+
+in vec2 TexCoords;
+
+void main()
+{
+	//FragColor = texelFetch(Source, ivec2(gl_FragCoord.xy), 0);
+	FragColor = texture(Source, TexCoords);
+}
+)";
 
 namespace Aurora
 {
+#ifdef _WIN32
+	inline bool GetSSE42Support()
+	{
+		int cpui[4];
+		__cpuidex(cpui, 1, 0);
+		return !!(cpui[2] & 0x100000);
+	}
+
+	static const bool CpuSupportsSSE42 = GetSSE42Support();
+#endif
+
+	static uint64_t CrcTable[256];
+
+	class CrcHash
+	{
+	private:
+		uint64_t m_crc;
+	public:
+		inline CrcHash() : m_crc(0)
+		{
+			uint64_t poly = 0xC96C5795D7870F42;
+
+			for (int i = 0; i < 256; ++i)
+			{
+				uint64_t crc = i;
+
+				for (uint32_t j = 0; j < 8; ++j)
+				{
+					// is current coefficient set?
+					if (crc & 1)
+					{
+						// yes, then assume it gets zero'd (by implied x^64 coefficient of dividend)
+						crc >>= 1;
+
+						// and add rest of the divisor
+						crc ^= poly;
+					}
+					else
+					{
+						// no? then move to next coefficient
+						crc >>= 1;
+					}
+				}
+
+				CrcTable[i] = crc;
+			}
+		}
+
+		inline uint64_t Get()
+		{
+			return m_crc;
+		}
+
+#ifdef _WIN32_DISABLED
+		template<size_t size> __forceinline void AddBytesSSE42(void* p)
+		{
+			static_assert(size % 4 == 0, "Size of hashable types must be multiple of 4");
+
+			auto* data = (uint32_t*)p;
+
+			const size_t numIterations = size / sizeof(uint32_t);
+			for (size_t i = 0; i < numIterations; i++)
+			{
+				crc = _mm_crc32_u32(crc, data[i]);
+			}
+		}
+#endif
+
+		inline void AddBytes(char *p, uint64_t size)
+		{
+			for (uint64_t idx = 0; idx < size; idx++)
+			{
+				uint8_t index = p[idx] ^ m_crc;
+				uint64_t lookup = CrcTable[index];
+
+				m_crc >>= 8;
+				m_crc ^= lookup;
+			}
+		}
+
+		template<typename T>
+		void Add(const T &value)
+		{
+#ifdef _WIN32_DISABLED
+			if (CpuSupportsSSE42)
+				AddBytesSSE42<sizeof(value)>((void*)&value);
+			else
+				AddBytes((char*)&value, sizeof(value));
+#else
+			AddBytes((char *) &value, sizeof(value));
+#endif
+		}
+	};
+
 	GLBuffer* GetBuffer(const Buffer_ptr& buffer)
 	{
 		return static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
@@ -54,12 +188,16 @@ namespace Aurora
 	{
 		glDeleteVertexArrays(1, &m_nVAO);
 		glDeleteVertexArrays(1, &m_nVAOEmpty);
+#ifdef GLSLANG_COMPILER
+		glslang::FinalizeProcess();
+#endif
 	}
 
 	void GLRenderDevice::Init()
 	{
-		TracyGpuContext
-
+#ifdef GLSLANG_COMPILER
+		glslang::InitializeProcess();
+#endif
 		glGenVertexArrays(1, &m_nVAO);
 		glGenVertexArrays(1, &m_nVAOEmpty);
 		glBindVertexArray(m_nVAO);
@@ -77,12 +215,238 @@ namespace Aurora
         AU_LOG_INFO("GPU Vendor: ", vendor);
         AU_LOG_INFO("GPU Renderer: ", renderer);
 
+		{
+			GLint size;
+			glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &size);
+			AU_LOG_INFO("GL_MAX_SHADER_STORAGE_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
+		}
+
+		{
+			GLint size;
+			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &size);
+			AU_LOG_INFO("GL_MAX_VERTEX_UNIFORM_COMPONENTS is ", size);
+		}
+
+		{
+			GLint size;
+			glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &size);
+			AU_LOG_INFO("GL_MAX_UNIFORM_BLOCK_SIZE is ", size, " bytes", "(", FormatBytes(size), ")");
+			AU_LOG_INFO("Max instances: ", (size / sizeof(Matrix4)));
+		}
+
+		{
+			GLint size;
+			glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &size);
+			AU_LOG_INFO("GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT is ", size);
+		}
+
+#ifdef GLSLANG_COMPILER
+		AU_LOG_INFO("GLSL Version ", glslang::GetGlslVersionString());
+#endif
+
+		glDisable(GL_MULTISAMPLE);
+
+		InvalidateState();
+
 		SetRasterState(m_LastRasterState);
 		SetDepthStencilState(m_LastDepthState);
+
+		{ // Init blit shader
+			ShaderProgramDesc desc("_Blit_Embedded");
+			desc.AddShader(EShaderType::Vertex, g_BlitVS);
+			desc.AddShader(EShaderType::Pixel, g_BlitPS);
+			m_BlitShader = CreateShaderProgram(desc);
+		}
+
+		glFlush();
+	}
+#ifdef GLSLANG_COMPILER
+	EShLanguage ShaderTypeToShLanguage(EShaderType ShaderType)
+	{
+		switch (ShaderType)
+		{
+			case EShaderType::Vertex:           return EShLangVertex;
+			case EShaderType::Hull:             return EShLangTessControl;
+			case EShaderType::Domain:           return EShLangTessEvaluation;
+			case EShaderType::Geometry:         return EShLangGeometry;
+			case EShaderType::Pixel:            return EShLangFragment;
+			case EShaderType::Compute:          return EShLangCompute;
+			case EShaderType::Amplification:    return EShLangTaskNV;
+			case EShaderType::Mesh:             return EShLangMeshNV;
+			case EShaderType::RayGen:          return EShLangRayGen;
+			case EShaderType::RayMiss:         return EShLangMiss;
+			case EShaderType::RayClosestHit:  return EShLangClosestHit;
+			case EShaderType::RayAnyHit:      return EShLangAnyHit;
+			case EShaderType::RayIntersection: return EShLangIntersect;
+			case EShaderType::Callable:         return EShLangCallable;
+			default:
+				AU_LOG_FATAL("Unexpected shader type");
+				return EShLangCount;
+		}
 	}
 
+	TBuiltInResource InitResources()
+	{
+		TBuiltInResource Resources;
+
+		Resources.maxLights                                 = 32;
+		Resources.maxClipPlanes                             = 6;
+		Resources.maxTextureUnits                           = 32;
+		Resources.maxTextureCoords                          = 32;
+		Resources.maxVertexAttribs                          = 64;
+		Resources.maxVertexUniformComponents                = 4096;
+		Resources.maxVaryingFloats                          = 64;
+		Resources.maxVertexTextureImageUnits                = 32;
+		Resources.maxCombinedTextureImageUnits              = 80;
+		Resources.maxTextureImageUnits                      = 32;
+		Resources.maxFragmentUniformComponents              = 4096;
+		Resources.maxDrawBuffers                            = 32;
+		Resources.maxVertexUniformVectors                   = 128;
+		Resources.maxVaryingVectors                         = 8;
+		Resources.maxFragmentUniformVectors                 = 16;
+		Resources.maxVertexOutputVectors                    = 16;
+		Resources.maxFragmentInputVectors                   = 15;
+		Resources.minProgramTexelOffset                     = -8;
+		Resources.maxProgramTexelOffset                     = 7;
+		Resources.maxClipDistances                          = 8;
+		Resources.maxComputeWorkGroupCountX                 = 65535;
+		Resources.maxComputeWorkGroupCountY                 = 65535;
+		Resources.maxComputeWorkGroupCountZ                 = 65535;
+		Resources.maxComputeWorkGroupSizeX                  = 1024;
+		Resources.maxComputeWorkGroupSizeY                  = 1024;
+		Resources.maxComputeWorkGroupSizeZ                  = 64;
+		Resources.maxComputeUniformComponents               = 1024;
+		Resources.maxComputeTextureImageUnits               = 16;
+		Resources.maxComputeImageUniforms                   = 8;
+		Resources.maxComputeAtomicCounters                  = 8;
+		Resources.maxComputeAtomicCounterBuffers            = 1;
+		Resources.maxVaryingComponents                      = 60;
+		Resources.maxVertexOutputComponents                 = 64;
+		Resources.maxGeometryInputComponents                = 64;
+		Resources.maxGeometryOutputComponents               = 128;
+		Resources.maxFragmentInputComponents                = 128;
+		Resources.maxImageUnits                             = 8;
+		Resources.maxCombinedImageUnitsAndFragmentOutputs   = 8;
+		Resources.maxCombinedShaderOutputResources          = 8;
+		Resources.maxImageSamples                           = 0;
+		Resources.maxVertexImageUniforms                    = 0;
+		Resources.maxTessControlImageUniforms               = 0;
+		Resources.maxTessEvaluationImageUniforms            = 0;
+		Resources.maxGeometryImageUniforms                  = 0;
+		Resources.maxFragmentImageUniforms                  = 8;
+		Resources.maxCombinedImageUniforms                  = 8;
+		Resources.maxGeometryTextureImageUnits              = 16;
+		Resources.maxGeometryOutputVertices                 = 256;
+		Resources.maxGeometryTotalOutputComponents          = 1024;
+		Resources.maxGeometryUniformComponents              = 1024;
+		Resources.maxGeometryVaryingComponents              = 64;
+		Resources.maxTessControlInputComponents             = 128;
+		Resources.maxTessControlOutputComponents            = 128;
+		Resources.maxTessControlTextureImageUnits           = 16;
+		Resources.maxTessControlUniformComponents           = 1024;
+		Resources.maxTessControlTotalOutputComponents       = 4096;
+		Resources.maxTessEvaluationInputComponents          = 128;
+		Resources.maxTessEvaluationOutputComponents         = 128;
+		Resources.maxTessEvaluationTextureImageUnits        = 16;
+		Resources.maxTessEvaluationUniformComponents        = 1024;
+		Resources.maxTessPatchComponents                    = 120;
+		Resources.maxPatchVertices                          = 32;
+		Resources.maxTessGenLevel                           = 64;
+		Resources.maxViewports                              = 16;
+		Resources.maxVertexAtomicCounters                   = 0;
+		Resources.maxTessControlAtomicCounters              = 0;
+		Resources.maxTessEvaluationAtomicCounters           = 0;
+		Resources.maxGeometryAtomicCounters                 = 0;
+		Resources.maxFragmentAtomicCounters                 = 8;
+		Resources.maxCombinedAtomicCounters                 = 8;
+		Resources.maxAtomicCounterBindings                  = 1;
+		Resources.maxVertexAtomicCounterBuffers             = 0;
+		Resources.maxTessControlAtomicCounterBuffers        = 0;
+		Resources.maxTessEvaluationAtomicCounterBuffers     = 0;
+		Resources.maxGeometryAtomicCounterBuffers           = 0;
+		Resources.maxFragmentAtomicCounterBuffers           = 1;
+		Resources.maxCombinedAtomicCounterBuffers           = 1;
+		Resources.maxAtomicCounterBufferSize                = 16384;
+		Resources.maxTransformFeedbackBuffers               = 4;
+		Resources.maxTransformFeedbackInterleavedComponents = 64;
+		Resources.maxCullDistances                          = 8;
+		Resources.maxCombinedClipAndCullDistances           = 8;
+		Resources.maxSamples                                = 4;
+		Resources.maxMeshOutputVerticesNV                   = 256;
+		Resources.maxMeshOutputPrimitivesNV                 = 512;
+		Resources.maxMeshWorkGroupSizeX_NV                  = 32;
+		Resources.maxMeshWorkGroupSizeY_NV                  = 1;
+		Resources.maxMeshWorkGroupSizeZ_NV                  = 1;
+		Resources.maxTaskWorkGroupSizeX_NV                  = 32;
+		Resources.maxTaskWorkGroupSizeY_NV                  = 1;
+		Resources.maxTaskWorkGroupSizeZ_NV                  = 1;
+		Resources.maxMeshViewCountNV                        = 4;
+
+		Resources.limits.nonInductiveForLoops                 = 1;
+		Resources.limits.whileLoops                           = 1;
+		Resources.limits.doWhileLoops                         = 1;
+		Resources.limits.generalUniformIndexing               = 1;
+		Resources.limits.generalAttributeMatrixVectorIndexing = 1;
+		Resources.limits.generalVaryingIndexing               = 1;
+		Resources.limits.generalSamplerIndexing               = 1;
+		Resources.limits.generalVariableIndexing              = 1;
+		Resources.limits.generalConstantMatrixVectorIndexing  = 1;
+
+		return Resources;
+	}
+
+	class IncluderImpl : public ::glslang::TShader::Includer
+	{
+	public:
+		IncluderImpl()
+		{}
+
+		// For the "system" or <>-style includes; search the "system" paths.
+		virtual IncludeResult* includeSystem(const char* headerName,
+		                                     const char* /*includerName*/,
+		                                     size_t /*inclusionDepth*/)
+		{
+			std::cout << "Trying to include (System) " << headerName << std::endl;
+
+			/*const char* test = "yo\nnasdsdfsdf";
+
+			auto* pNewInclude =
+					new IncludeResult{
+							headerName,
+							reinterpret_cast<const char*>(test),
+							strlen(test),
+							nullptr};
+
+			return pNewInclude;*/
+			return nullptr;
+		}
+
+		// For the "local"-only aspect of a "" include. Should not search in the
+		// "system" paths, because on returning a failure, the parser will
+		// call includeSystem() to look in the "system" locations.
+		virtual IncludeResult* includeLocal(const char* headerName,
+		                                    const char* includerName,
+		                                    size_t      inclusionDepth)
+		{
+			std::cout << "Trying to include (Local) " << headerName << std::endl;
+			return nullptr;
+		}
+
+		// Signals that the parser will no longer use the contents of the
+		// specified IncludeResult.
+		virtual void releaseInclude(IncludeResult* IncldRes)
+		{
+			delete IncldRes;
+		}
+
+	private:
+
+	};
+#endif
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
 	{
+		CPU_DEBUG_SCOPE("CreateShaderProgram");
+
 		const auto& shaderDescriptions = desc.GetShaderDescriptions();
 
 		if(shaderDescriptions.empty()) {
@@ -100,28 +464,81 @@ namespace Aurora
 			return nullptr;
 		}*/
 
-		// Compile shaders
-
 		std::vector<GLuint> compiledShaders;
-		for(const auto& it : shaderDescriptions) {
+		for(const auto& it : shaderDescriptions)
+		{
 			const auto& shaderDesc = it.second;
-			const auto& type = shaderDesc.Type;
+			EShaderType type = shaderDesc.Type;
 
-			std::string source;
+			std::stringstream ss;
 
-			source += "#version 430 core\n";
-			source += "layout(std140) uniform;\n";
+			ss << "#version 450 core\n";
+			ss << "layout(std140) uniform;\n";
 
-			if(type == EShaderType::Vertex) {
-				//source += "#extension GL_KHR_vulkan_glsl : enable\n";
-				//source += "#define gl_VertexID gl_VertexIndex\n";
-				//source += "#define gl_InstanceID gl_InstanceIndex\n";
+			switch (type)
+			{
+				case EShaderType::Vertex:
+					ss << "#define SHADER_VERTEX\n";
+					break;
+				case EShaderType::Hull:
+					ss << "#define SHADER_HULL\n";
+					break;
+				case EShaderType::Domain:
+					ss << "#define SHADER_DOMAIN\n";
+					break;
+				case EShaderType::Geometry:
+					ss << "#define SHADER_GEOMETRY\n";
+					break;
+				case EShaderType::Pixel:
+					ss << "#define SHADER_PIXEL\n";
+					break;
+				case EShaderType::Compute:
+					ss << "#define SHADER_COMPUTE\n";
+					break;
+				default:
+					break;
 			}
 
-			source += shaderDesc.Source;
+			ss << shaderDesc.Source;
+
+			std::string glslSourcePreprocessed;
+			EShMessages messages = (EShMessages)(EShMsgAST);
+			{
+				EShLanguage        ShLang = ShaderTypeToShLanguage(type);
+				auto* Shader = new ::glslang::TShader(ShLang);
+
+				Shader->setEnvInput(::glslang::EShSourceGlsl, ShLang, ::glslang::EShClientOpenGL, 450);
+				Shader->setEnvClient(::glslang::EShClientOpenGL, ::glslang::EShTargetOpenGL_450);
+				//Shader->setEnvTarget(::glslang::EShTargetSpv, ::glslang::EShTargetSpv_1_0);
+				Shader->setEntryPoint("main");
+				//Shader->setSourceEntryPoint("main");
+
+				String source = ss.str();
+
+				const char* ShaderStrings[]       = {source.c_str()};
+				const int   ShaderStringLengths[] = {static_cast<int>(source.length())};
+				const char* Names[]               = {"main"};
+				Shader->setStringsWithLengthsAndNames(ShaderStrings, ShaderStringLengths, Names, 1);
+				Shader->setAutoMapBindings(true);
+
+				TBuiltInResource Resources = InitResources();
+				IncluderImpl includer;
+				if(!Shader->preprocess(&Resources, 450, ECoreProfile, false, false, messages, &glslSourcePreprocessed, includer))
+				{
+					AU_LOG_FATAL("Failed to preprocess shader: \n", Shader->getInfoLog(), Shader->getInfoDebugLog());
+				}
+			}
+
+			if(type == EShaderType::Pixel && shaderDesc.EnableBindless)
+			{
+				String ext;
+				ext += "#extension GL_ARB_bindless_texture : enable\n";
+				ext += "#extension GL_ARB_gpu_shader_int64 : enable\n";
+				glslSourcePreprocessed.insert(18, ext);
+			}
 
 			std::string error;
-			GLuint shaderID = CompileShaderRaw(source, type, &error);
+			GLuint shaderID = CompileShaderRaw(glslSourcePreprocessed, type, &error);
 
 			if(shaderID == 0) {
 				AU_LOG_ERROR("Cannot compile shader ", ShaderType_ToString(type), " in program ", desc.GetName(), "!\n", error);
@@ -238,7 +655,6 @@ namespace Aurora
 
 	void GLRenderDevice::SetShader(const Shader_ptr &shader)
 	{
-		TR_SCOPE("SetShader");
 		m_ContextState.SetShader(GetShader(shader));
 	}
 
@@ -252,7 +668,7 @@ namespace Aurora
 		GLenum bindTarget = GL_NONE;
 		uint32_t numLayers = 1;
 
-		if (desc.IsCubeMap)
+		if (desc.DimensionType == EDimensionType::TYPE_CubeMap)
 		{
 			bindTarget = GL_TEXTURE_CUBE_MAP;
 			glBindTexture(bindTarget, handle);
@@ -268,7 +684,7 @@ namespace Aurora
 
 			CHECK_GL_ERROR();
 		}
-		else if (desc.IsArray)
+		else if (desc.DimensionType == EDimensionType::TYPE_2DArray)
 		{
 			bindTarget = GL_TEXTURE_2D_ARRAY;
 			glBindTexture(bindTarget, handle);
@@ -284,7 +700,7 @@ namespace Aurora
 
 			CHECK_GL_ERROR();
 		}
-		else if (desc.DepthOrArraySize > 0)
+		else if (desc.DimensionType == EDimensionType::TYPE_3D)
 		{
 			bindTarget = GL_TEXTURE_3D;
 			glBindTexture(bindTarget, handle);
@@ -298,8 +714,10 @@ namespace Aurora
 
 			CHECK_GL_ERROR();
 		}
-		else if (desc.SampleCount > 1)
+		else if (desc.SampleCount > 1 && !desc.UseAsBindless)
 		{
+			AU_LOG_FATAL("Multisample is not supported !");
+			AU_LOG_FATAL("Multisample is not supported !");
 			//bindTarget = GL_TEXTURE_2D_MULTISAMPLE;
 			glBindTexture(bindTarget, handle);
 
@@ -317,6 +735,8 @@ namespace Aurora
 			bindTarget = GL_TEXTURE_2D;
 			glBindTexture(bindTarget, handle);
 
+			//glTexParameteri(bindTarget, GL_TEXTURE_SPARSE_ARB, GL_TRUE);
+
 			glTexStorage2D(
 					bindTarget,
 					(GLsizei)desc.MipLevels,
@@ -327,7 +747,7 @@ namespace Aurora
 			CHECK_GL_ERROR();
 		}
 
-		if (desc.SampleCount == 1)
+		if (desc.SampleCount == 1 && !desc.UseAsBindless)
 		{
 			glTexParameteri(bindTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(bindTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -336,6 +756,15 @@ namespace Aurora
 
 		glObjectLabel(GL_TEXTURE, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
 		CHECK_GL_ERROR();
+
+		GLuint64 bHandle = 0;
+		GLuint64 bHandleSrgb = 0;
+
+		if(desc.UseAsBindless)
+		{
+			bHandle = glGetTextureHandleARB(handle);
+			CHECK_GL_ERROR();
+		}
 
 		glBindTexture(bindTarget, 0);
 
@@ -359,7 +788,7 @@ namespace Aurora
 
 			glBindTexture(bindTarget, srgbView);
 
-			String srgbName = desc.Name + "_SRGB";
+			std::string srgbName = desc.Name + "_SRGB";
 			glObjectLabel(GL_TEXTURE, srgbView, static_cast<GLsizei>(srgbName.size()), srgbName.c_str());
 
 			if (desc.SampleCount == 1)
@@ -370,12 +799,18 @@ namespace Aurora
 				CHECK_GL_ERROR();
 			}
 
+			if(desc.UseAsBindless)
+			{
+				bHandleSrgb = glGetTextureHandleARB(srgbView);
+				CHECK_GL_ERROR();
+			}
+
 			glBindTexture(bindTarget, 0);
 		}
 
 		// TODO: Write @textureData
 
-		return std::make_shared<GLTexture>(desc, formatMapping, handle, srgbView, bindTarget);
+		return std::make_shared<GLTexture>(desc, formatMapping, handle, srgbView, bindTarget, bHandle, bHandleSrgb);
 	}
 
 	void GLRenderDevice::WriteTexture(const Texture_ptr &texture, uint32_t mipLevel, uint32_t subresource, const void *data)
@@ -389,11 +824,11 @@ namespace Aurora
 		uint32_t width = std::max<uint32_t>(1, desc.Width >> mipLevel);
 		uint32_t height = std::max<uint32_t>(1, desc.Height >> mipLevel);
 
-		if(desc.IsCubeMap)
+		if(desc.DimensionType == EDimensionType::TYPE_CubeMap)
 		{
 			glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + subresource, (GLint)mipLevel, 0, 0, (GLsizei)width, (GLsizei)height, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
 			CHECK_GL_ERROR();
-		} else if (desc.IsArray || desc.DepthOrArraySize > 0)
+		} else if (desc.DimensionType == EDimensionType::TYPE_2DArray || desc.DepthOrArraySize > 0)
 		{
 			glTexSubImage3D(glTexture->BindTarget(), GLint(mipLevel), 0, 0, (GLint)subresource, (GLsizei)width, (GLsizei)height, 1/*depth*/, glTexture->Format().BaseFormat, glTexture->Format().Type, data);
 			CHECK_GL_ERROR();
@@ -443,17 +878,64 @@ namespace Aurora
 		glBindTexture(glTexture->BindTarget(), 0);
 	}
 
+	void* GLRenderDevice::GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb)
+	{
+		if(texture == nullptr) return nullptr;
+
+		GLTexture* glTexture = GetTexture(texture);
+
+		if(texture->GetDesc().ImageFormat == GraphicsFormat::SRGBA8_UNORM && srgb)
+		{
+			return &glTexture->m_BindlessSrgbHandle;
+		}
+
+		return &glTexture->m_BindlessHandle;
+	}
+
+	bool GLRenderDevice::MakeTextureHandleResident(const Texture_ptr& texture, bool enabled)
+	{
+		if(texture == nullptr) return false;
+
+		GLTexture* glTexture = GetTexture(texture);
+
+		if(!glTexture->GetDesc().UseAsBindless)
+			return false;
+
+		if(enabled)
+		{
+			glMakeTextureHandleResidentARB(glTexture->m_BindlessHandle);
+			if(glTexture->m_BindlessSrgbHandle != 0)
+			{
+				glMakeTextureHandleResidentARB(glTexture->m_BindlessSrgbHandle);
+			}
+		}
+		else
+		{
+			glMakeTextureHandleNonResidentARB(glTexture->m_BindlessHandle);
+			if(glTexture->m_BindlessSrgbHandle != 0)
+			{
+				glMakeTextureHandleNonResidentARB(glTexture->m_BindlessSrgbHandle);
+			}
+		}
+
+		return true;
+	}
+
 	Buffer_ptr GLRenderDevice::CreateBuffer(const BufferDesc &desc, const void *data)
 	{
 		GLuint handle = 0;
 		GLenum bindTarget = ConvertBufferType(desc.Type);
 		GLenum usage = ConvertUsage(desc.Usage);
+		void* mappedData = nullptr;
 
 		if(desc.Type != EBufferType::TextureBuffer) {
 			glGenBuffers(1, &handle);
 			glBindBuffer(bindTarget, handle);
 
 			glObjectLabel(GL_BUFFER, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
+
+			//glBufferStorage(bindTarget, desc.ByteSize, data, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+			//mappedData = glMapBufferRange(bindTarget, 0, desc.ByteSize, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 
 			glBufferData(bindTarget, desc.ByteSize, data, usage);
 			CHECK_GL_ERROR();
@@ -471,11 +953,14 @@ namespace Aurora
 			glBindTexture(GL_TEXTURE_BUFFER, GL_NONE);
 		}
 
-		return std::make_shared<GLBuffer>(desc, handle, bindTarget, usage);
+		auto buffer = std::make_shared<GLBuffer>(desc, handle, bindTarget, usage);
+		buffer->m_MappedData = mappedData;
+		return buffer;
 	}
 
-	void GLRenderDevice::WriteBuffer(const Buffer_ptr &buffer, const void *data, size_t dataSize)
+	void GLRenderDevice::WriteBuffer(const Buffer_ptr &buffer, const void *data, size_t dataSize, size_t offset)
 	{
+		CPU_DEBUG_SCOPE("GLRenderDevice::WriteBuffer")
 		if(buffer == nullptr) {
 			return;
 		}
@@ -484,12 +969,15 @@ namespace Aurora
 
 		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
 
-		assert(glBuffer->GetDesc().ByteSize >= dataSize);
+		au_assert(glBuffer->GetDesc().ByteSize >= dataSize);
 
 		if (dataSize > glBuffer->GetDesc().ByteSize)
 			dataSize = glBuffer->GetDesc().ByteSize;
 
-		glBufferSubData(glBuffer->BindTarget(), 0, GLsizeiptr(dataSize), data);
+		//memcpy(glBuffer->m_MappedData, data, dataSize);
+		//glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+
+		glBufferSubData(glBuffer->BindTarget(), offset, GLsizeiptr(dataSize), data);
 		CHECK_GL_ERROR();
 
 		glBindBuffer(glBuffer->BindTarget(), GL_NONE);
@@ -538,8 +1026,9 @@ namespace Aurora
 		}
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
-		GLvoid* pMappedData = glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
-		return pMappedData;
+		return glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
+		//GLvoid* pMappedData = glMapBufferRange(glBuffer->BindTarget(), 0, glBuffer->GetDesc().ByteSize, GL_MAP_WRITE_BIT);//GL_MAP_UNSYNCHRONIZED_BIT
+		//return glBuffer->m_MappedData;
 	}
 
 	void GLRenderDevice::UnmapBuffer(const Buffer_ptr& buffer)
@@ -597,6 +1086,8 @@ namespace Aurora
 			return;
 		}
 
+		glBindVertexArray(m_nVAOEmpty); // FIXME: idk why, but when frustum clips all geometry and nothing renders,then this call happens, it will throw error in non bound Array (maybe it does NanoVG?)
+
 		ApplyDrawCallState(state);
 
 		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
@@ -607,17 +1098,17 @@ namespace Aurora
 		}
 	}
 
-	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args)
-	{
-		TR_SCOPE("DrawIndexed");
+	#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args, bool bindState)
+	{
 		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
 			AU_LOG_ERROR("Cannot draw with these arguments !");
 			throw;
 			return;
 		}
 
-		ApplyDrawCallState(state);
+		if(bindState) ApplyDrawCallState(state);
 
 		CHECK_GL_ERROR();
 
@@ -627,12 +1118,12 @@ namespace Aurora
 		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
 
 		for(const auto& drawArg : args) {
-			uint32_t indexOffset = drawArg.StartIndexLocation * 4 + state.IndexBufferOffset;
-
 			if(drawArg.InstanceCount > 1) {
-				glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
+				//glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
+				glDrawElementsInstanced(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount));
 			} else {
-				glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(indexOffset), GLint(drawArg.StartVertexLocation));
+				//glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLint(drawArg.StartVertexLocation));
+				glDrawElements(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation));
 			}
 		}
 
@@ -647,7 +1138,6 @@ namespace Aurora
 
 	void GLRenderDevice::ApplyDrawCallState(const DrawCallState &state)
 	{
-		TR_SCOPE("ApplyDrawCallState");
 		SetShader(state.Shader);
 
 		BindShaderInputs(state);
@@ -665,11 +1155,6 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
 	{
-		TR_SCOPE("BindShaderInputs");
-
-		//if(state.InputLayoutHandle == m_LastInputLayout) return;
-		//m_LastInputLayout = state.InputLayoutHandle;
-
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
 
@@ -686,13 +1171,21 @@ namespace Aurora
 			glBindVertexArray(m_nVAO);
 		}
 
+		if(state.InputLayoutHandle == m_LastInputLayout) return;
+		m_LastInputLayout = state.InputLayoutHandle;
+
 		for(const auto& var : inputVars) {
 			uint8_t location = var.first;
 			const ShaderInputVariable& inputVariable = var.second;
 			VertexAttributeDesc layoutAttribute;
 
-			if(!state.InputLayoutHandle->GetDescriptorBySemanticID(location, layoutAttribute)) {
+			/*if(!state.InputLayoutHandle->GetDescriptorBySemanticID(location, layoutAttribute)) {
 				AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader !");
+				continue;
+			}*/
+
+			if(!state.InputLayoutHandle->GetDescriptorByName(inputVariable.Name, layoutAttribute)) {
+				AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader (" , inputVariable.Name, ") !");
 				continue;
 			}
 
@@ -709,27 +1202,35 @@ namespace Aurora
 
 			glEnableVertexAttribArray(GLuint(location));
 
-			if(formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT) {
+			if(formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT || formatMapping.Type == GL_UNSIGNED_SHORT || formatMapping.Type == GL_SHORT) {
 				glVertexAttribIPointer(
 						GLuint(location),
 						GLint(formatMapping.Components),
 						formatMapping.Type,
-						GLsizei(glBuffer->GetDesc().Stride),
+						GLsizei(layoutAttribute.Stride),
 						(const void*)size_t(layoutAttribute.Offset));
 			} else {
 				glVertexAttribPointer(
-						GLuint(location), // location
+						GLuint(location),
 						GLint(formatMapping.Components),
 						formatMapping.Type,
-						GL_FALSE,// Is normalized
-						GLsizei(glBuffer->GetDesc().Stride),
+						layoutAttribute.Normalized ? GL_TRUE : GL_FALSE,
+						GLsizei(layoutAttribute.Stride),
 						(const void*)size_t(layoutAttribute.Offset));
 			}
 
-			glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
+			//glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
 		}
 
 		//glBindBuffer(GL_ARRAY_BUFFER, GL_NONE); Do not do this, android render will fail !
+
+		if(m_LastInputLayout != nullptr)
+		{
+			if(inputVars.size() == m_LastInputLayout->GetDescriptors().size())
+			{
+				return;
+			}
+		}
 
 		static GLint nMaxVertexAttrs = 0;
 		if(nMaxVertexAttrs == 0)
@@ -776,8 +1277,16 @@ namespace Aurora
 
 	void GLRenderDevice::InvalidateState()
 	{
-		TR_SCOPE("InvalidateState");
 		m_ContextState.Invalidate();
+
+		m_LastRasterState = FRasterState();
+		m_LastDepthState = FDepthStencilState();
+
+		m_LastRasterState.FillMode = EFillMode::Solid;
+		m_LastRasterState.CullMode = ECullMode::Front;
+		m_LastRasterState.DepthClipEnable = false;
+
+		m_LastDepthState.DepthEnable = false;
 	}
 
 	void GLRenderDevice::ApplyDispatchState(const DispatchState &state)
@@ -788,8 +1297,6 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderResources(const BaseState& state)
 	{
-		TR_SCOPE("BindShaderResources");
-
 		CHECK_GL_ERROR();
 
 		if(state.Shader == nullptr) return;
@@ -851,7 +1358,7 @@ namespace Aurora
 			if(textureDesc.IsUAV && targetTextureBinding->IsUAV) {
 				GLenum format = glTexture->Format().InternalFormat;
 				GLenum access = GL_WRITE_ONLY;
-				bool layered = false;
+				bool layered = textureDesc.DepthOrArraySize > 0;
 				GLint layer = 0;
 
 				switch (targetTextureBinding->Access) {
@@ -884,13 +1391,29 @@ namespace Aurora
 		for(const auto& uniformResource : shader->GetGLResource().GetUniformBlocks()) {
 			auto uniformBufferIt = state.BoundUniformBuffers.find(uniformResource.Name);
 
-			Buffer_ptr uniformBufferHandle = nullptr;
+			UniformBufferBinding uniformBinding;
 
 			if(uniformBufferIt != state.BoundUniformBuffers.end()) {
-				uniformBufferHandle = uniformBufferIt->second;
+				uniformBinding = uniformBufferIt->second;
 			}
 
-			m_ContextState.BindUniformBuffer(uniformResource.Binding, GetBuffer(uniformBufferHandle));
+			GLBuffer* glBuffer = nullptr;
+
+			if(uniformBinding.Size == 0 && uniformBinding.Buffer != nullptr)
+			{
+				uniformBinding.Size = uniformBinding.Buffer->GetDesc().ByteSize;
+			}
+
+			if(uniformBinding.Buffer != nullptr)
+			{
+				glBuffer = GetBuffer(uniformBinding.Buffer);
+			}
+			else
+			{
+				continue;
+			}
+
+			m_ContextState.BindUniformBuffer(uniformResource.Binding, glBuffer, uniformBinding.Offset, uniformBinding.Size);
 		}
 
 
@@ -932,7 +1455,6 @@ namespace Aurora
 
 	void GLRenderDevice::BindRenderTargets(const DrawCallState &state)
 	{
-		TR_SCOPE("BindRenderTargets");
 		FrameBuffer_ptr framebuffer = GetCachedFrameBuffer(state);
 
 		if (framebuffer != m_CurrentFrameBuffer)
@@ -950,17 +1472,11 @@ namespace Aurora
 			m_CurrentFrameBuffer = framebuffer;
 		}
 
-		if(state.ViewPort != m_LastViewPort)
-		{
-			m_LastViewPort = state.ViewPort;
-			glViewport(0, 0, state.ViewPort.x, state.ViewPort.y);
-		}
+		SetViewPort(state.ViewPort);
 	}
 
 	FrameBuffer_ptr GLRenderDevice::GetCachedFrameBuffer(const DrawCallState &state)
 	{
-		TR_SCOPE("GetCachedFrameBuffer");
-
 		if(!state.HasAnyRenderTarget) {
 			return nullptr;
 		}
@@ -986,7 +1502,7 @@ namespace Aurora
 		glGenFramebuffers(1, &framebuffer->Handle);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->Handle);
 
-		String fbName = "Cached framebuffer " + std::to_string(hash);
+		std::string fbName = "Cached framebuffer " + std::to_string(hash);
 		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
 
 		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
@@ -1081,70 +1597,94 @@ namespace Aurora
 
 	void GLRenderDevice::SetBlendState(const DrawCallState &state)
 	{
-		TR_SCOPE("SetBlendState")
 		// TODO: Blend state
 	}
 
 	void GLRenderDevice::SetRasterState(const FRasterState& rasterState)
 	{
-		TR_SCOPE("SetRasterState");
 		// TODO: Call gl commands only on change of values !
 
-		switch (rasterState.FillMode)
+		if(m_LastRasterState.FillMode != rasterState.FillMode)
 		{
-			case EFillMode::Line:
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				break;
-			case EFillMode::Solid:
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				break;
+			switch (rasterState.FillMode)
+			{
+				case EFillMode::Line:
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					break;
+				case EFillMode::Solid:
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+					break;
 
-			default:
-				AU_LOG_WARNING("Unknown fill mode specified");
-				break;
+				default:
+					AU_LOG_WARNING("Unknown fill mode specified");
+					break;
+			}
+			m_LastRasterState.FillMode = rasterState.FillMode;
 		}
 
-		switch (rasterState.CullMode)
+		if(m_LastRasterState.CullMode != rasterState.CullMode)
 		{
-			case ECullMode::Back:
-				glCullFace(GL_BACK);
-				glEnable(GL_CULL_FACE);
-				break;
-			case ECullMode::Front:
-				glCullFace(GL_FRONT);
-				glEnable(GL_CULL_FACE);
-				break;
-			case ECullMode::None:
-				glDisable(GL_CULL_FACE);
-				break;
-			default:
-				AU_LOG_WARNING("Unknown cullMode");
+			switch (rasterState.CullMode)
+			{
+				case ECullMode::Back:
+					glCullFace(GL_BACK);
+					glEnable(GL_CULL_FACE);
+					break;
+				case ECullMode::Front:
+					glCullFace(GL_FRONT);
+					glEnable(GL_CULL_FACE);
+					break;
+				case ECullMode::None:
+					glDisable(GL_CULL_FACE);
+					break;
+				default:
+					AU_LOG_WARNING("Unknown cullMode");
+			}
+			m_LastRasterState.CullMode = rasterState.CullMode;
 		}
 
-		glFrontFace(rasterState.FrontCounterClockwise ? GL_CCW : GL_CW);
-
-		if (rasterState.DepthClipEnable)
+		if(m_LastRasterState.FrontCounterClockwise != rasterState.FrontCounterClockwise)
 		{
-			glEnable(GL_DEPTH_CLAMP);
-		}
-		else
-		{
-			glDisable(GL_DEPTH_CLAMP);
+			glFrontFace(rasterState.FrontCounterClockwise ? GL_CCW : GL_CW);
+			m_LastRasterState.FrontCounterClockwise = rasterState.FrontCounterClockwise;
 		}
 
-		if (rasterState.ScissorEnable)
+		if(m_LastRasterState.DepthClipEnable)
 		{
-			glEnable(GL_SCISSOR_TEST);
-		}
-		else
-		{
-			glDisable(GL_SCISSOR_TEST);
+			if (rasterState.DepthClipEnable)
+			{
+				glEnable(GL_DEPTH_CLAMP);
+			}
+			else
+			{
+				glDisable(GL_DEPTH_CLAMP);
+			}
+			m_LastRasterState.DepthClipEnable = rasterState.DepthClipEnable;
 		}
 
-		if (rasterState.DepthBias != 0 || rasterState.SlopeScaledDepthBias != 0.f)
+		if(m_LastRasterState.ScissorEnable != rasterState.ScissorEnable)
 		{
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonOffset(rasterState.SlopeScaledDepthBias, float(rasterState.DepthBias));
+			if (rasterState.ScissorEnable)
+			{
+				glEnable(GL_SCISSOR_TEST);
+			}
+			else
+			{
+				glDisable(GL_SCISSOR_TEST);
+			}
+			m_LastRasterState.ScissorEnable = rasterState.ScissorEnable;
+		}
+
+		if(m_LastRasterState.DepthBias != rasterState.DepthBias || m_LastRasterState.SlopeScaledDepthBias != rasterState.SlopeScaledDepthBias)
+		{
+			if (rasterState.DepthBias != 0 || rasterState.SlopeScaledDepthBias != 0.f)
+			{
+				glEnable(GL_POLYGON_OFFSET_FILL);
+				glPolygonOffset(rasterState.SlopeScaledDepthBias, float(rasterState.DepthBias));
+			}
+
+			m_LastRasterState.DepthBias = rasterState.DepthBias;
+			m_LastRasterState.SlopeScaledDepthBias = rasterState.SlopeScaledDepthBias;
 		}
 
 		if(rasterState.MultisampleEnable != m_LastRasterState.MultisampleEnable)
@@ -1166,8 +1706,6 @@ namespace Aurora
 
 	void GLRenderDevice::ClearRenderTargets(const DrawCallState &renderState)
 	{
-		TR_SCOPE("ClearRenderTargets");
-
 		uint32_t nClearBitField = 0;
 		if (renderState.ClearColorTarget)
 		{
@@ -1195,12 +1733,8 @@ namespace Aurora
 
 	void GLRenderDevice::SetDepthStencilState(FDepthStencilState depthState)
 	{
-		TR_SCOPE("SetDepthStencilState");
-
-		if(std::memcmp(&depthState, &m_LastDepthState, sizeof(depthState)) != 0)
+		if(m_LastDepthState.DepthEnable != depthState.DepthEnable || m_LastDepthState.DepthWriteMask != depthState.DepthWriteMask || m_LastDepthState.DepthFunc != depthState.DepthFunc)
 		{
-			m_LastDepthState = depthState;
-
 			if (depthState.DepthEnable)
 			{
 				glEnable(GL_DEPTH_TEST);
@@ -1211,6 +1745,15 @@ namespace Aurora
 			{
 				glDisable(GL_DEPTH_TEST);
 			}
+
+			m_LastDepthState.DepthEnable = depthState.DepthEnable;
+			m_LastDepthState.DepthWriteMask = depthState.DepthWriteMask;
+			m_LastDepthState.DepthFunc = depthState.DepthFunc;
+		}
+
+		if(m_LastDepthState.StencilEnable != depthState.StencilEnable)
+		{
+			//TODO: Other props needs to be checked too, but I think that we will never user stencil
 
 			if (depthState.StencilEnable)
 			{
@@ -1232,6 +1775,95 @@ namespace Aurora
 			{
 				glDisable(GL_STENCIL_TEST);
 			}
+			m_LastDepthState.StencilEnable = depthState.StencilEnable;
 		}
+	}
+
+	void GLRenderDevice::Blit(const Texture_ptr &src, const Texture_ptr &dest)
+	{
+		GPU_DEBUG_SCOPE(dest != nullptr ? "Blit" : "BlitToBackBuffer");
+
+		au_assert(src != nullptr);
+		au_assert(src != dest);
+
+		/*if(src->GetDesc().IsRenderTarget)
+		{
+			DrawCallState srcState;
+			srcState.BindTarget(0, src);
+			FrameBuffer_ptr srcFramebuffer = GetCachedFrameBuffer(srcState);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, srcFramebuffer->Handle);
+			//glDrawBuffers(GLsizei(srcFramebuffer->NumBuffers), srcFramebuffer->DrawBuffers);
+
+			if(dest)
+			{
+				DrawCallState dstState;
+				dstState.BindTarget(0, dest);
+				FrameBuffer_ptr dstFramebuffer = GetCachedFrameBuffer(dstState);
+
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dstFramebuffer->Handle);
+			}
+			else
+			{
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			}
+
+			glBlitFramebuffer(0, 0, src->GetDesc().Width, src->GetDesc().Height, 0, 0, src->GetDesc().Width, src->GetDesc().Height,  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+			//Just set the read buffer to the target as well otherwise we might get fucked..
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+			return;
+		}*/
+
+		SetShader(m_BlitShader);
+
+		FRasterState rasterState = m_LastRasterState;
+		rasterState.CullMode = ECullMode::None;
+		SetRasterState(rasterState);
+
+		FDepthStencilState depthStencilState = m_LastDepthState;
+		depthStencilState.DepthEnable = false;
+		SetDepthStencilState(depthStencilState);
+
+		DrawCallState drawCallState;
+		if(dest != nullptr)
+		{
+			au_assert(dest->GetDesc().IsRenderTarget == true);
+
+			drawCallState.ViewPort = dest->GetDesc().GetSize();
+			drawCallState.BindTarget(0, dest);
+		}
+		else
+		{
+			drawCallState.ViewPort = src->GetDesc().GetSize();
+		}
+
+		BindRenderTargets(drawCallState);
+
+		GLTexture* glSrc = GetTexture(src);
+		m_ContextState.BindTexture(0, glSrc);
+		m_ContextState.BindSampler(0, nullptr);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+		//glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 1);
+		CHECK_GL_ERROR();
+	}
+
+	void GLRenderDevice::SetViewPort(const FViewPort &wp)
+	{
+		au_assert(wp.Width > 0);
+		au_assert(wp.Height > 0);
+
+		if(wp != m_LastViewPort)
+		{
+			m_LastViewPort = wp;
+			glViewport(wp.X, wp.Y, wp.Width, wp.Height);
+			glScissor(wp.X, wp.Y, wp.Width, wp.Height);
+		}
+	}
+
+	const FViewPort &GLRenderDevice::GetCurrentViewPort() const
+	{
+		return m_LastViewPort;
 	}
 }

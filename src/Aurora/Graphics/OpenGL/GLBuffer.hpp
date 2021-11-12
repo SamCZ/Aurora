@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Base/Buffer.hpp"
-#include <glad/glad.h>
+#include "GL.hpp"
 
 namespace Aurora
 {
@@ -13,6 +13,8 @@ namespace Aurora
 		GLenum m_BindTarget;
 		GLenum m_Usage;
 	public:
+		void* m_MappedData = nullptr;
+
 		GLBuffer(BufferDesc desc, GLuint handle, GLenum bindTarget, GLenum usage);
 		~GLBuffer() override;
 

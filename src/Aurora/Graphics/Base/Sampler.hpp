@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "Aurora/Core/Color.hpp"
+#include "Aurora/Graphics/Color.hpp"
 #include "TypeBase.hpp"
 
 namespace Aurora
@@ -33,6 +33,17 @@ namespace Aurora
 				BorderColor(1, 1, 1, 1)
 		{
 			WrapMode[0] = WrapMode[1] = WrapMode[2] = EWrapMode::Clamp;
+		}
+
+		SamplerDesc(bool minFilter, bool magFilter, bool mipFilter, EWrapMode wrapX, EWrapMode wrapY, EWrapMode wrapZ = EWrapMode::Clamp)
+		: MinFilter(minFilter), MagFilter(magFilter), MipFilter(mipFilter),MipBias(0),
+		  Anisotropy(1),
+		  ShadowCompare(false),
+		  BorderColor(1, 1, 1, 1)
+		{
+			WrapMode[0] = wrapX;
+			WrapMode[1] = wrapY;
+			WrapMode[2] = wrapZ;
 		}
 	};
 

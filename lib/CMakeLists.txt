@@ -54,94 +54,6 @@ if(FMOD_SUPPORTED)
 endif()
 
 #------------------------------
-# ASSIMP
-# Model loading library
-#------------------------------
-if(NOT TARGET assimp)
-    IF (CMAKE_BUILD_TYPE MATCHES Debug AND NOT PLATFORM_ANDROID)
-        set(BUILD_SHARED_LIBS ON)
-    ELSE()
-        set(BUILD_SHARED_LIBS OFF)
-    ENDIF()
-
-    set(BUILD_SHARED_LIBS ON)
-
-    cmake_policy(SET CMP0077 NEW) # set() overrides option()
-
-    set(ASM686 OFF)
-    set(AMD64 ON)
-    set(ASSIMP_BUILD_ZLIB ON)
-    set(ASSIMP_BUILD_TESTS OFF)
-    set(ZLIB_AMD64 ON)
-    set(ASSIMP_NO_EXPORT ON)
-    set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
-    set(ASSIMP_BUILD_FBX_IMPORTER ON)
-    set(ASSIMP_BUILD_COLLADA_IMPORTER OFF)
-    set(ASSIMP_BUILD_DRACO OFF)
-    add_subdirectory(assimp)
-
-    set_property(TARGET assimp PROPERTY FOLDER "GameLib")
-
-    if(BUILD_SHARED_LIBS)
-        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-            if(WIN32)
-                if(MSVC)
-                    if(CMAKE_GENERATOR MATCHES "Visual Studio")
-                        set(AURORA_DLL_TO_COPY
-                                ${AURORA_DLL_TO_COPY}
-                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/Debug/assimp-vc142-mtd.dll
-                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
-                    else()
-                        set(AURORA_DLL_TO_COPY
-                                ${AURORA_DLL_TO_COPY}
-                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mtd.dll
-                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
-                    endif()
-                else(MSVC)
-                    set(AURORA_DLL_TO_COPY
-                            ${AURORA_DLL_TO_COPY}
-                            ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.dll
-                            CACHE INTERNAL "AURORA_DLL_TO_COPY")
-                endif(MSVC)
-            else(WIN32)
-                set(AURORA_DLL_TO_COPY
-                        ${AURORA_DLL_TO_COPY}
-                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimpd.so
-                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
-            endif(WIN32)
-        else()
-            if(WIN32)
-                if(MSVC)
-                    if(CMAKE_GENERATOR MATCHES "Visual Studio")
-                        set(AURORA_DLL_TO_COPY
-                                ${AURORA_DLL_TO_COPY}
-                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/Release/assimp-vc142-mt.dll
-                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
-                    else()
-                        set(AURORA_DLL_TO_COPY
-                                ${AURORA_DLL_TO_COPY}
-                                ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/assimp-vc142-mt.dll
-                                CACHE INTERNAL "AURORA_DLL_TO_COPY")
-                    endif()
-                else(MSVC)
-                    set(AURORA_DLL_TO_COPY
-                            ${AURORA_DLL_TO_COPY}
-                            ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.dll
-                            CACHE INTERNAL "AURORA_DLL_TO_COPY")
-                endif(MSVC)
-            else(WIN32)
-                set(AURORA_DLL_TO_COPY
-                        ${AURORA_DLL_TO_COPY}
-                        ${CMAKE_CURRENT_BINARY_DIR}/assimp/bin/libassimp.so
-                        CACHE INTERNAL "AURORA_DLL_TO_COPY")
-            endif(WIN32)
-        endif()
-    endif()
-
-    set(BUILD_SHARED_LIBS OFF)
-endif()
-
-#------------------------------
 # ImGui
 # Debug window render lib
 #------------------------------
@@ -192,6 +104,7 @@ if(NOT TARGET newton-dynamics)
     set(NEWTON_BUILD_SINGLE_THREADED OFF)
     set(NEWTON_DOUBLE_PRECISION OFF)
     set(NEWTON_ENABLE_AVX ON)
+    set(NEWTON_ENABLE_AVX2_SOLVER ON)
     set(NEWTON_BUILD_CREATE_SUB_PROJECTS OFF)
     set(NEWTON_STATIC_RUNTIME_LIBRARIES ON)
     add_subdirectory(newton-dynamics/newton-4.00)
@@ -203,6 +116,11 @@ endif()
 # UI render library
 #------------------------------
 if(NOT TARGET tracy)
+    if(AU_CPU_PROFILE)
+        set(TRACY_ENABLE ON)
+    else()
+        set(TRACY_ENABLE OFF)
+    endif()
     add_subdirectory(tracy)
     set_property(TARGET TracyClient PROPERTY FOLDER "GameLib")
     if(WIN32)
@@ -232,4 +150,11 @@ endif()
 if(NOT TARGET EnTT)
     add_subdirectory(entt)
     set_property(TARGET EnTT PROPERTY FOLDER "GameLib")
+endif()
+
+if(NOT TARGET glslang)
+    set(SKIP_GLSLANG_INSTALL ON)
+    set(ENABLE_HLSL OFF)
+    set(BUILD_EXTERNAL OFF)
+    add_subdirectory(glslang)
 endif()

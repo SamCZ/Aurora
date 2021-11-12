@@ -12,13 +12,16 @@
 
 #include "Input/GLFW/Manager.hpp"
 
-#include <glad/glad.h>
-
-#include "Aurora/AuroraEngine.hpp"
+#include "Aurora/Graphics/OpenGL/GL.hpp"
 
 namespace Aurora
 {
+	double GetTimeInSeconds()
+	{
+		return glfwGetTime();
+	}
 
+#ifdef RML_UI_ENABLED
 	static const std::unordered_map<unsigned, uint16_t> RmlKeyMap {
 			{ GLFW_KEY_SPACE, Rml::Input::KI_SPACE },
 			{ GLFW_KEY_0, Rml::Input::KI_0 },
@@ -144,7 +147,7 @@ namespace Aurora
 			//{ GLFW_KEY_VOLUME_DOWN, Rml::Input::KI_VOLUME_DOWN },
 			//{ GLFW_KEY_VOLUME_UP, Rml::Input::KI_VOLUME_UP },
 	};
-
+#endif
 	GLFWWindow::GLFWWindow() : IWindow(), m_WindowHandle(nullptr), m_Focused(false),
 							   m_CursorMode(ECursorMode::Normal), m_InputManager(Input::Manager_ptr(new Input::Manager(this))),
 							   m_SwapChain(nullptr), m_Vsync(true)
@@ -152,14 +155,14 @@ namespace Aurora
 
 	}
 
-	void GLAPIENTRY
-	MessageCallback( GLenum source,
-					 GLenum type,
-					 GLuint id,
-					 GLenum severity,
-					 GLsizei length,
-					 const GLchar* message,
-					 const void* userParam )
+	GLFWWindow::~GLFWWindow()
+	{
+#ifdef GLAD_INSTALL_DEBUG
+		gladUninstallGLDebug();
+#endif
+	}
+
+	void MessageCallback(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam)
 	{
 		// Note: disabling flood of notifications through glDebugMessageControl() has no effect,
 		// so we have to filter them out here
@@ -235,7 +238,11 @@ namespace Aurora
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 		glfwWindowHint(GLFW_REFRESH_RATE, GLFW_DONT_CARE);
 
-		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+		glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+
+
+		//glfwWindowHint(GLFW_DEPTH_BITS, 32);
+		//glfwWindowHint(GLFW_STENCIL_BITS, 0);
 
 		//glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 		//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
@@ -249,9 +256,11 @@ namespace Aurora
 		}
 
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+		glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_FALSE);
 
 		GLFWmonitor* primary = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vidMode = glfwGetVideoMode(primary);
@@ -291,21 +300,31 @@ namespace Aurora
 		glfwMakeContextCurrent(m_WindowHandle);
 
 		// This is gonna break after second window is created !
-		if(!gladLoadGL()) {
+		int glVersion;
+		if(!(glVersion = gladLoadGL())) {
 			printf("Something went wrong!\n");
 			exit(-1);
 		}
 		// During init, enable debug output
-		//glEnable              ( GL_DEBUG_OUTPUT );
+#if OPENGL_ERROR_CHECKING
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		glDebugMessageCallback( MessageCallback, 0 );
-		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+		glDebugMessageCallback( MessageCallback, nullptr );
+		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+#endif
+#ifdef GLAD_INSTALL_DEBUG
+		gladInstallGLDebug();
+#endif
 
-		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor)
+		glGetString(GL_VERSION);
+		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
 
 		if(!GLAD_GL_EXT_texture_array) {
 			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
+		}
+
+		if(!GLAD_GL_NV_gpu_shader5) {
+			AU_LOG_ERROR("GLAD_GL_NV_gpu_shader5 not found !");
 		}
 
 		// Handling
@@ -326,7 +345,7 @@ namespace Aurora
 
 
 
-
+		glDisable(GL_FRAMEBUFFER_SRGB);
 	}
 
 	void GLFWWindow::Show()
@@ -474,9 +493,10 @@ namespace Aurora
 		for(auto& listener : window->m_ResizeListeners) {
 			if(listener) listener(width, height);
 		}
-
+#ifdef RML_UI_ENABLED
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		GameUI->GetRmlContext()->SetDimensions({width, height});
+#endif
 	}
 
 	void GLFWWindow::OnFocusCallback(GLFWwindow *rawWindow, int focused)
@@ -487,7 +507,7 @@ namespace Aurora
 
 		//TODO: Call callbacks
 	}
-
+#ifdef RML_UI_ENABLED
 	int ModifiersGLFWToRml(int modifier)
 	{
 		int rmlModifiers = 0;
@@ -499,7 +519,7 @@ namespace Aurora
 			rmlModifiers |= Rml::Input::KeyModifier::KM_SHIFT;
 		return rmlModifiers;
 	}
-
+#endif
 	int currentMods = 0;
 
 	void GLFWWindow::OnKeyCallback(GLFWwindow *rawWindow, int key, int scancode, int action, int mods)
@@ -521,7 +541,7 @@ namespace Aurora
 
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnKeyChange(key, scancode, pressed);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 
@@ -541,6 +561,7 @@ namespace Aurora
 		} else {
 			GameUI->GetRmlContext()->ProcessKeyUp((Rml::Input::KeyIdentifier)rmlkey->second, ModifiersGLFWToRml(mods));
 		}
+#endif
 	}
 
 	void GLFWWindow::OnCursorPosCallBack(GLFWwindow *rawWindow, double xpos, double ypos)
@@ -549,20 +570,22 @@ namespace Aurora
 
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseMove(newPosition);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		GameUI->GetRmlContext()->ProcessMouseMove(xpos, ypos, ModifiersGLFWToRml(currentMods));
+#endif
 	}
 
 	void GLFWWindow::OnMouseScrollCallback(GLFWwindow *rawWindow, double xoffset, double yoffset)
 	{
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseWheel({xoffset, yoffset});
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		GameUI->GetRmlContext()->ProcessMouseWheel(-yoffset, ModifiersGLFWToRml(currentMods));
+#endif
 	}
 
 	int MouseButtonGLFWToRml(int button)
@@ -599,7 +622,7 @@ namespace Aurora
 
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseButton(button, pressed);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 		if(pressed)
@@ -608,6 +631,7 @@ namespace Aurora
 		} else {
 			GameUI->GetRmlContext()->ProcessMouseButtonUp(MouseButtonGLFWToRml(button), ModifiersGLFWToRml(currentMods));
 		}
+#endif
 	}
 
 	void GLFWWindow::CharModsCallback(GLFWwindow *rawWindow, uint32_t codepoint, int mods)
@@ -615,13 +639,14 @@ namespace Aurora
 		auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
 		auto c = CodepointToUtf8(codepoint);
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnTextInput(c);
-
+#ifdef RML_UI_ENABLED
 		// Rml
 		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
 
 		std::string str;
 		for (const auto &item : c) str += (char)item;
 		GameUI->GetRmlContext()->ProcessTextInput(str);
+#endif
 	}
 }
 #endif

@@ -1,0 +1,68 @@
+#include "cb_normal_bevel.h"
+#include "../ps_common.h"
+
+#define POISSON_32
+#include "normal_bevel_kernels.glsl"
+
+in vec2 TexCoord;
+layout(location = 0) out vec4 FragColor;
+
+uniform sampler2D DepthMap;
+uniform sampler2D NormalMap;
+//uniform sampler2D Mask; // For masking
+
+void main()
+{
+	vec4 normal_raw = texture(NormalMap, TexCoord);
+	vec3 normal = normalize(normal_raw.rgb * 2.0 - 1.0);
+
+	float depth_raw = texture(DepthMap, TexCoord).r;
+	float depth = LinearizeDepth(depth_raw);
+
+	if(normal_raw.a == 0) {
+		FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+		return;
+	}
+
+	//skip frag if depth is too close or too far
+	if (depth_raw == 1.0 || depth_raw == 0.0 || depth > BevelDistance) {
+		FragColor = vec4(normal_raw.rgb, 1.0);
+		return;
+	}
+
+	//scale offset by depth
+	float offset = BevelRadius / depth;
+	float offset_edge = offset * EdgeOffset;
+	vec3 normal_sum = normal;// 0.0
+	//float depth_sum = depth;
+	int samplers = SamplersCount;// * depth;
+
+	int added = 0;
+	for (int i = 0; i < samplers; ++i)
+	{
+		vec2 uvs_off = TexCoord + offset * PoissonDisks[i];
+
+		//skip computation if outside screen
+		if (abs(uvs_off.y - 0.5) > 0.5 || abs(uvs_off.x - 0.5) > 0.5) {
+			continue;
+		}
+
+		float depth_off = LinearizeDepth(texture(DepthMap, uvs_off).r);
+
+		float depth_diff = abs(depth - depth_off);
+
+		float offset_depth_diff = depth_diff - offset_edge;
+
+		if (offset_depth_diff > 0) {
+			uvs_off = mix(uvs_off, TexCoord, clamp((depth_diff - offset_edge) * EdgeDistance, 0.0, 1.0));//offset
+		}
+
+		vec3 normal_off = texture(NormalMap, uvs_off).rgb * 2.0 - 1.0;
+		normal_sum += normal_off;
+		added++;
+	}
+
+	normal_sum = normal_sum / (added + 1);
+
+	FragColor = vec4(normalize(normal_sum) * 0.5 + 0.5, 1.0);
+}
