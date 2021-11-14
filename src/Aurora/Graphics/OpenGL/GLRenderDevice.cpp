@@ -1087,6 +1087,7 @@ namespace Aurora
 		}
 
 		glBindVertexArray(m_nVAOEmpty); // FIXME: idk why, but when frustum clips all geometry and nothing renders,then this call happens, it will throw error in non bound Array (maybe it does NanoVG?)
+		m_LastVao = m_nVAOEmpty;
 
 		ApplyDrawCallState(state);
 
@@ -1701,6 +1702,12 @@ namespace Aurora
 			{
 				glDisable(GL_MULTISAMPLE);
 			}
+		}
+
+		if(rasterState.LineWidth != m_LastRasterState.LineWidth)
+		{
+			m_LastRasterState.LineWidth = rasterState.LineWidth;
+			glLineWidth(rasterState.LineWidth);
 		}
 	}
 

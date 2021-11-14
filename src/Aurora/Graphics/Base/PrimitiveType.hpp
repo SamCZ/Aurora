@@ -7,6 +7,7 @@ namespace Aurora
 		PointList = 0,
 		TriangleList,
 		TriangleStrip,
+		LineList,
 		Patch1ControlPoint,
 		Patch3ControlPoint
 	};

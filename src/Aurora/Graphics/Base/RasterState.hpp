@@ -28,6 +28,7 @@ namespace Aurora
 		int DepthBias;
 		float DepthBiasClamp;
 		float SlopeScaledDepthBias;
+		float LineWidth;
 
 		FRasterState()
 		: FillMode(EFillMode::Solid),
@@ -38,6 +39,7 @@ namespace Aurora
 		  MultisampleEnable(false),
 		  DepthBias(0),
 		  DepthBiasClamp(0),
-		  SlopeScaledDepthBias(0) { }
+		  SlopeScaledDepthBias(0),
+		  LineWidth(1.0f) { }
 	};
 }
