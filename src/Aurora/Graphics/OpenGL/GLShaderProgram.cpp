@@ -7,7 +7,7 @@ namespace Aurora
 	GLShaderProgram::GLShaderProgram(GLuint handle, ShaderProgramDesc desc)
 	: m_Desc(std::move(desc)), m_Handle(handle), m_Resources(), m_HasInputLayout(false), m_InputVariables()
 	{
-		std::cout << "Loading uniforms for " << m_Desc.GetName() << std::endl;
+		//std::cout << "Loading uniforms for " << m_Desc.GetName() << std::endl;
 		m_Resources.LoadUniforms(m_Handle);
 
 		if(m_Desc.HasShader(EShaderType::Vertex)) { // Get input attributes

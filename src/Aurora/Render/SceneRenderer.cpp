@@ -15,6 +15,7 @@
 #include "Shaders/PostProcess/cb_sky.h"
 #include "Shaders/PostProcess/cb_ssao.h"
 #include "Shaders/PostProcess/cb_normal_bevel.h"
+#include "Shaders/PostProcess/ub_bloom.h"
 #include "Shaders/PBR/cb_pbr.h"
 
 #include "PostProcessEffect.hpp"
@@ -67,6 +68,11 @@ namespace Aurora
 			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/normal_bevel.fss"},
 		});
+
+		m_HDRShader = GetEngine()->GetResourceManager()->LoadShader("HDR", "Assets/Shaders/fs_quad.vss", "Assets/Shaders/PostProcess/hdr.fss");
+
+		m_BloomShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/PostProcess/bloom.glsl");
+		m_BloomDescBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("BloomDesc", sizeof(BloomDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -287,6 +293,19 @@ namespace Aurora
 		return a + f * (b - a);
 	}
 
+	std::vector<float> CalcRations(const CameraComponent& camera, float lambda, uint8_t splits)
+	{
+		auto ratios = std::vector<float>(splits);
+		float logArgument = (camera.ZFar / camera.ZNear);
+		float uniArgument = (camera.ZFar - camera.ZNear);
+		for (uint8_t i = 1; i <= splits; ++i) {
+			float parameter = static_cast<float>(i) / static_cast<float>(splits);
+			double result = (lambda * (camera.ZNear * std::pow(logArgument, parameter))) + ((1.0f - lambda)*(camera.ZNear + uniArgument * parameter));
+			ratios[i-1] = static_cast<float>(result);
+		}
+		return ratios;
+	}
+
 	void SceneRenderer::Render(entt::entity cameraEntityID)
 	{
 		CPU_DEBUG_SCOPE("SceneRenderer::Render")
@@ -300,13 +319,35 @@ namespace Aurora
 		Matrix4 projectionViewMatrix = projectionMatrix * viewMatrix;
 
 		Frustum frustum(projectionViewMatrix);
+		AABB frustumBounds = frustum.GetBounds();
 
 		PrepareRender(&frustum);
 		SortVisibleEntities();
 
+		{ // Prepare lights
+			auto view = m_Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
+
+			uint8_t splitCount = 4;
+			std::vector<float> splits = CalcRations(camera, 1.0f, splitCount);
+
+			for(entt::entity entity : view)
+			{
+				const TransformComponent& transformComponent = view.get<TransformComponent>(entity);
+				const DirectionalLightComponent& directionalLightComponent = view.get<DirectionalLightComponent>(entity);
+
+				Matrix4 lightViewMatrix = transformComponent.GetTransform();
+
+				/*it will be a few mofor (uint8_t i = 0; i < splitCount; ++i)
+				{
+					std::cout << splits[i] << std::endl;
+				}
+				std::cout << "------------" << std::endl;*/
+			}
+		}
+
 		// Actual render
 
-		auto albedoAndFlagsRT = m_RenderManager->CreateTemporalRenderTarget("Albedo", camera.Size, GraphicsFormat::RGBA8_UNORM);
+		auto albedoAndFlagsRT = m_RenderManager->CreateTemporalRenderTarget("Albedo", camera.Size, GraphicsFormat::RGBA16_FLOAT);
 		auto normalsRT = m_RenderManager->CreateTemporalRenderTarget("Normals", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		auto roughnessMetallicAORT = m_RenderManager->CreateTemporalRenderTarget("RoughnessMetallicAO", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		//auto worldPosRT = m_RenderManager->CreateTemporalRenderTarget("WorldPosition", camera.Size, GraphicsFormat::RGBA32_FLOAT);
@@ -472,7 +513,7 @@ namespace Aurora
 			PostProcessEffect::RenderState(drawState);
 		}
 
-		auto compositedRT = m_RenderManager->CreateTemporalRenderTarget("CompositedRT", camera.Size, GraphicsFormat::RGBA8_UNORM);
+		auto compositedRT = m_RenderManager->CreateTemporalRenderTarget("CompositedRT", camera.Size, GraphicsFormat::RGBA16_FLOAT);
 
 		{ // Composite Deferred renderer and HRD
 			GPU_DEBUG_SCOPE("PBR Composite");
@@ -504,11 +545,147 @@ namespace Aurora
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
+		albedoAndFlagsRT.Free();
+		roughnessMetallicAORT.Free();
+		smoothNormalsRT.Free();
 
+		TemporalRenderTarget bloomRTs[3];
+		if(m_BloomSettings.Enabled)
+		{ // Bloom
+			GPU_DEBUG_SCOPE("Bloom");
 
-		auto ppRT = m_RenderManager->CreateTemporalRenderTarget("PP Intermediate", compositedRT->GetDesc().GetSize(), compositedRT->GetDesc().ImageFormat);
+			Vector2ui bloomTexSize = camera.Size / 2u;
+			bloomTexSize += Vector2ui(m_BloomComputeWorkgroupSize - (bloomTexSize.x % m_BloomComputeWorkgroupSize), m_BloomComputeWorkgroupSize - (bloomTexSize.y % m_BloomComputeWorkgroupSize));
+
+			TextureDesc mipDesc;
+			mipDesc.Width = bloomTexSize.x;
+			mipDesc.Height = bloomTexSize.y;
+
+			uint32_t mips = mipDesc.GetMipLevelCount() - 2 - 2;
+
+			for (int i = 0; i < 3; ++i)
+			{
+				std::string texName = "BloomCompute #" + std::to_string(i);
+
+				bloomRTs[i] = m_RenderManager->CreateTemporalRenderTarget(texName, bloomTexSize, GraphicsFormat::RGBA16_FLOAT, EDimensionType::TYPE_2D, mips, 0, TextureDesc::EUsage::Default, true);
+			}
+
+			uint32_t workGroupsX = bloomTexSize.x / m_BloomComputeWorkgroupSize;
+			uint32_t workGroupsY = bloomTexSize.y / m_BloomComputeWorkgroupSize;
+
+			BloomDesc bloomDesc;
+			bloomDesc.Params = { m_BloomSettings.Threshold, m_BloomSettings.Threshold - m_BloomSettings.Knee, m_BloomSettings.Knee * 2.0f, 0.25f / m_BloomSettings.Knee };
+			bloomDesc.LodAndMode.x = 0;
+			bloomDesc.LodAndMode.y = BLOOM_MODE_PREFILTER;
+
+			DispatchState dispatchState;
+			dispatchState.Shader = m_BloomShader;
+			dispatchState.BindUniformBuffer("BloomDesc", m_BloomDescBuffer);
+			dispatchState.BindSampler("u_Texture", Samplers::ClampClampLinearLinear);
+			dispatchState.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
+
+			GetEngine()->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+
+			dispatchState.BindTexture("u_Texture", compositedRT);
+			dispatchState.BindTexture("u_BloomTexture", compositedRT);
+			dispatchState.BindTexture("o_Image", bloomRTs[0], true);
+
+			// Prefilter
+			GetEngine()->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+
+			// Downsample
+			bloomDesc.LodAndMode.y = BLOOM_MODE_DOWNSAMPLE;
+
+			for (uint32_t i = 1; i < mips; i++)
+			{
+				auto[mipWidth, mipHeight] = bloomRTs[0]->GetDesc().GetMipSize(i);
+
+				workGroupsX = (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize);
+				workGroupsY = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
+
+				{ // Ping
+					//Output
+					dispatchState.BindTexture("o_Image", bloomRTs[1], true, Aurora::TextureBinding::EAccess::Write, i);
+					// Input
+					bloomDesc.LodAndMode.x = (float)i - 1.0f;
+					GetEngine()->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+
+					dispatchState.BindTexture("u_Texture", bloomRTs[0]);
+					GetEngine()->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+				}
+
+				{ // Pong
+					//Output
+					dispatchState.BindTexture("o_Image", bloomRTs[0], true, Aurora::TextureBinding::EAccess::Write, i);
+
+					// Input
+					bloomDesc.LodAndMode.x = (float)i;
+					GetEngine()->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+					dispatchState.BindTexture("u_Texture", bloomRTs[1]);
+					GetEngine()->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+				}
+			}
+
+			// Upsample first
+			bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE_FIRST;
+
+			{ // Upsample First
+				//Output
+				dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mips - 1);
+
+				// Input
+				bloomDesc.LodAndMode.x--;
+				GetEngine()->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+				dispatchState.BindTexture("u_Texture", bloomRTs[0]);
+
+				auto [mipWidth, mipHeight] = bloomRTs[2]->GetDesc().GetMipSize(mips - 1);
+				workGroupsX = (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize);
+				workGroupsY = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
+
+				GetEngine()->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+			}
+
+			// Upsample
+			bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE;
+
+			for (int32_t mip = mips - 2; mip >= 0; mip--)
+			{
+				auto [mipWidth, mipHeight] = bloomRTs[2]->GetDesc().GetMipSize(mip);
+				workGroupsX = (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize);
+				workGroupsY = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
+
+				//Output
+				dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mip);
+
+				// Input
+				bloomDesc.LodAndMode.x = mip;
+				GetEngine()->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+				dispatchState.BindTexture("u_Texture", bloomRTs[0]);
+				dispatchState.BindTexture("u_BloomTexture", bloomRTs[2]);
+
+				GetEngine()->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+			}
+		}
+
+		auto finalSceneRT = m_RenderManager->CreateTemporalRenderTarget("FinalSceneRT", camera.Size, GraphicsFormat::RGBA8_UNORM);
+		{ // HDR and GammaCorrection
+			GPU_DEBUG_SCOPE("HDR");
+			DrawCallState drawState = PostProcessEffect::PrepareState(m_HDRShader);
+			drawState.ViewPort = camera.Size;
+			drawState.BindTarget(0, finalSceneRT);
+			drawState.BindTexture("SceneHRDTexture", compositedRT);
+			drawState.BindSampler("SceneHRDTexture", Samplers::ClampClampNearestNearest);
+
+			if(m_BloomSettings.Enabled) drawState.BindTexture("BloomTexture", bloomRTs[2]);
+			drawState.BindSampler("BloomTexture", Samplers::ClampClampLinearLinear);
+			PostProcessEffect::RenderState(drawState);
+		}
+
+		if(m_BloomSettings.Enabled) for (int i = 0; i < 3; ++i) bloomRTs[i].Free();
+
+		auto ppRT = m_RenderManager->CreateTemporalRenderTarget("PP Intermediate", camera.Size, finalSceneRT->GetDesc().ImageFormat);
 		{ // PP's
-			Texture_ptr currentInput = compositedRT;
+			Texture_ptr currentInput = finalSceneRT;
 			Texture_ptr currentOutput = ppRT;
 
 			for(const auto& ppe : camera.PostProcessEffects)
@@ -525,11 +702,9 @@ namespace Aurora
 				//glDisable(GL_FRAMEBUFFER_SRGB);
 			}
 		}
+		finalSceneRT.Free();
 		skyRT.Free();
-		albedoAndFlagsRT.Free();
 		normalsRT.Free();
-		roughnessMetallicAORT.Free();
-		smoothNormalsRT.Free();
 		ppRT.Free();
 		compositedRT.Free();
 		//worldPosRT.Free();

@@ -225,6 +225,8 @@ namespace Aurora
 
 		m_ShaderPrograms[multipath] = shaderProgram;
 
+		AU_LOG_INFO("Loaded shader: ", name);
+
 		return shaderProgram;
 	}
 

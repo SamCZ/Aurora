@@ -16,8 +16,6 @@ float saturate(float val)
 	return clamp(val, 0, 1);
 }
 
-#include "../PostProcess/tonemappers.glsl"
-
 void main()
 {
 	vec4 albedoFlags = texelFetch(AlbedoAndFlagsRT, ivec2(gl_FragCoord.xy), 0);
@@ -50,7 +48,5 @@ void main()
 	//FragColor.rgb *= ssao;
 
 	//FragColor.rgb = Tonemap(FragColor.rgb, 3, 4);
-	FragColor = fromLinear(FragColor);
-
 	FragColor.a = 1;
 }

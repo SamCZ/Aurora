@@ -292,6 +292,12 @@ namespace Aurora
 			return reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
 		}
 
+		inline void WriteBuffer(const Buffer_ptr& buffer, const void* data)
+		{
+			if(buffer)
+				WriteBuffer(buffer, data, buffer->GetDesc().ByteSize, 0);
+		}
+
 		virtual void UnmapBuffer(const Buffer_ptr& buffer) = 0;
 		inline Buffer_ptr CreateBuffer(const BufferDesc& desc) { return CreateBuffer(desc, nullptr); }
 		// Samplers

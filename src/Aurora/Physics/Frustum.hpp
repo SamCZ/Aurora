@@ -13,6 +13,8 @@ namespace Aurora
 		// m = ProjectionMatrix * ViewMatrix
 		explicit Frustum(glm::mat4 m);
 
+		[[nodiscard]] AABB GetBounds() const;
+
 		// http://iquilezles.org/www/articles/frustumcorrect/frustumcorrect.htm
 		[[nodiscard]] bool IsBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const;
 		[[nodiscard]] bool IsBoxVisible(const AABB& boundingBox) const;
@@ -39,6 +41,8 @@ namespace Aurora
 		template<Planes a, Planes b, Planes c>
 		glm::vec3 intersection(const glm::vec3* crosses) const;
 
+		void Init();
+
 		glm::vec4   m_planes[Count]{};
 		glm::vec3   m_points[8]{};
 	};
@@ -53,22 +57,27 @@ namespace Aurora
 		m_planes[Near]   = m[3] + m[2];
 		m_planes[Far]    = m[3] - m[2];
 
+		Init();
+	}
+
+	inline void Frustum::Init()
+	{
 		glm::vec3 crosses[Combinations] = {
-				glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Right])),
-				glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Bottom])),
-				glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Top])),
-				glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Near])),
-				glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Far])),
-				glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Bottom])),
-				glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Top])),
-				glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Near])),
-				glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Far])),
-				glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Top])),
-				glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Near])),
-				glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Far])),
-				glm::cross(glm::vec3(m_planes[Top]),    glm::vec3(m_planes[Near])),
-				glm::cross(glm::vec3(m_planes[Top]),    glm::vec3(m_planes[Far])),
-				glm::cross(glm::vec3(m_planes[Near]),   glm::vec3(m_planes[Far]))
+			glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Right])),
+			glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Bottom])),
+			glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Top])),
+			glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Near])),
+			glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Far])),
+			glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Bottom])),
+			glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Top])),
+			glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Near])),
+			glm::cross(glm::vec3(m_planes[Right]),  glm::vec3(m_planes[Far])),
+			glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Top])),
+			glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Near])),
+			glm::cross(glm::vec3(m_planes[Bottom]), glm::vec3(m_planes[Far])),
+			glm::cross(glm::vec3(m_planes[Top]),    glm::vec3(m_planes[Near])),
+			glm::cross(glm::vec3(m_planes[Top]),    glm::vec3(m_planes[Far])),
+			glm::cross(glm::vec3(m_planes[Near]),   glm::vec3(m_planes[Far]))
 		};
 
 		m_points[0] = intersection<Left,  Bottom, Near>(crosses);
@@ -79,7 +88,18 @@ namespace Aurora
 		m_points[5] = intersection<Left,  Top,    Far>(crosses);
 		m_points[6] = intersection<Right, Bottom, Far>(crosses);
 		m_points[7] = intersection<Right, Top,    Far>(crosses);
+	}
 
+	inline AABB Frustum::GetBounds() const
+	{
+		AABB aabb = AABB(Vector3(std::numeric_limits<float>::max()), Vector3(std::numeric_limits<float>::min()));
+
+		for (auto m_plane : m_planes)
+		{
+			aabb.Extend(m_plane);
+		}
+
+		return aabb;
 	}
 
 // http://iquilezles.org/www/articles/frustumcorrect/frustumcorrect.htm

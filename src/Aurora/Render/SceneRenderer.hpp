@@ -38,6 +38,16 @@ namespace Aurora
 
 	class SceneRenderer
 	{
+	public:
+		struct BloomSettings
+		{
+			bool Enabled = true;
+			float Threshold = 1.0f;
+			float Knee = 0.1f;
+			float UpsampleScale = 1.0f;
+			float Intensity = 1.0f;
+			float DirtIntensity = 1.0f;
+		};
 	private:
 		Scene* m_Scene;
 		RenderManager* m_RenderManager;
@@ -56,6 +66,17 @@ namespace Aurora
 		Shader_ptr m_SSAOShader;
 		Shader_ptr m_RenderSkyCubeShader;
 		Shader_ptr m_NormalBevelShader;
+		Shader_ptr m_HDRShader;
+
+		// Bloom
+		Shader_ptr m_BloomShader;
+		const int m_BloomComputeWorkgroupSize = 16;
+		/*Texture_ptr m_BloomTempRT[3];
+		Vector2ui m_BloomTempRTSize;
+		Vector3ui m_BloomGroupSize;*/
+		Buffer_ptr m_BloomDescBuffer;
+		BloomSettings m_BloomSettings;
+		//
 
 		Entity m_CurrentCameraEntity;
 
@@ -75,5 +96,7 @@ namespace Aurora
 
 		void Render(entt::entity cameraEntityID);
 		void RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext>& modelContexts, EPassType passType);
+
+		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
 	};
 }

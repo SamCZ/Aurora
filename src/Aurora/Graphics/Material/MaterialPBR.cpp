@@ -61,7 +61,7 @@ namespace Aurora
 				drawState.BindSampler("NormalMap", Samplers::WrapWrapLinearLinear);
 
 				BEGIN_UBW(PBRConstants, desc)
-					desc->BaseColor = Vector4(GetParamVec3Value(MP_BASE_COLOR), 0);
+					desc->BaseColor = Vector4(GetParamVec3Value(MP_BASE_COLOR) * 20.0f, 0);
 				END_UBW(drawState, m_PBRBuffer, "PBRConstants")
 
 				break;

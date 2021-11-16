@@ -44,6 +44,10 @@ namespace Aurora
 		}
 
 		Shader_ptr LoadShader(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros& macros = {});
+		inline Shader_ptr LoadShader(const String& name, const Path& vertexShader, const Path& fragmentShader, const ShaderMacros& macros = {})
+		{
+			return LoadShader(name, { {EShaderType::Vertex, vertexShader}, {EShaderType::Pixel, fragmentShader} }, macros);
+		}
 		Shader_ptr LoadComputeShader(const Path& path, const ShaderMacros& macros = {});
 
 		bool LoadJson(const Path &path, nlohmann::json &json);

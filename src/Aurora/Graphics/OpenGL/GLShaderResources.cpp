@@ -5,6 +5,8 @@
 #include "Aurora/Core/assert.hpp"
 #include "GLShaderProgram.hpp"
 
+#define GL_RESOURCE_LOG 0
+
 namespace Aurora
 {
 	struct BasicUniform
@@ -151,7 +153,9 @@ namespace Aurora
 
 					if(std::string(Name.data()).find("_bindless") != std::string::npos)
 					{
+#if GL_RESOURCE_LOG
 						AU_LOG_INFO("BINDLESS ", Name.data(), " - ", UniformLocation);
+#endif
 						continue;
 					}
 
@@ -232,9 +236,9 @@ namespace Aurora
 					// clang-format on
 
 					RemoveArrayBrackets(Name.data());
-
+#if GL_RESOURCE_LOG
 					std::cout << "Image: " << Name.data() << std::endl;
-
+#endif
 					m_Images.push_back(
 							{
 									*NamesPool.emplace(Name.data()).first,
@@ -384,9 +388,9 @@ namespace Aurora
 					GLint offset = BlockUniformOffsets[j];
 					blockSizeFromVars += uniform.Size * uniform.ArraySize;
 				}
-
+#if GL_RESOURCE_LOG
 				std::cout << Name.data() << " : " << dataSize << "(" << blockSizeFromVars << ")" << std::endl;
-
+#endif
 				std::vector<ShaderVariable> shaderVariables;
 
 				for (GLint j = 0; j < blockUniformCount; ++j) {
@@ -418,12 +422,12 @@ namespace Aurora
 						shaderVariables.emplace_back(variable);
 					}
 				}
-
+#if GL_RESOURCE_LOG
 				for (const auto& storedVar : shaderVariables)
 				{
 					std::cout << " - " << storedVar.Name << " - size " << storedVar.Size << " - offset " << storedVar.Offset << std::endl;
 				}
-
+#endif
 				m_UniformBlocks.push_back({
 												*NamesPool.emplace(Name.data()).first,
 												ShaderResourceType::ConstantBuffer,
@@ -450,9 +454,9 @@ namespace Aurora
 
 			auto SBIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, Name.data());
 			CHECK_GL_ERROR_AND_THROW("Unable to get shader storage block index\n");
-
+#if GL_RESOURCE_LOG
 			std::cout << "Storage block: " << Name.data() << std::endl;
-
+#endif
 			bool  IsNewBlock    = true;
 			int32_t ArraySize     = 1;
 			auto* OpenBacketPtr = strchr(Name.data(), '[');

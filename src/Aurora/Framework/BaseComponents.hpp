@@ -86,9 +86,9 @@ namespace Aurora
 			Projection = glm::perspective(glm::radians(Fov), (float)Size.x / (float)Size.y, ZNear, ZFar);
 		}
 
-		void SetupOrthographicProjection(float left, float right, float bottom, float top)
+		void SetupOrthographicProjection(float left, float right, float bottom, float top, float near, float far)
 		{
-			Projection = glm::ortho(left, right, bottom, top);
+			//Projection = glm::ortho(left, right, bottom, top, near, far);
 		}
 
 		[[nodiscard]] Matrix4 GetProjectionViewMatrix(const TransformComponent& transformComponent) const
@@ -190,6 +190,37 @@ namespace Aurora
 	struct MeshColliderComponent : BaseColliderComponent
 	{
 		int test;
+		// TODO
+	};
+
+	enum class EShadowMode : uint8_t
+	{
+		None = 0,
+		Hard,
+		Soft
+	};
+
+	struct LightComponent
+	{
+		float Intensity = 1.0f;
+		Color LightColor = Color::white();
+		EShadowMode ShadowMode = EShadowMode::Soft;
+		float Near = 1.0f;
+		float Far  = 500.0f;
+	};
+
+	struct DirectionalLightComponent : LightComponent
+	{
+
+	};
+
+	struct PointLightComponent : LightComponent
+	{
+		// TODO
+	};
+
+	struct SpotLightComponent : LightComponent
+	{
 		// TODO
 	};
 }

@@ -1,0 +1,25 @@
+#include "../ps_common.h"
+#include "tonemappers.glsl"
+
+out vec4 FragColor;
+in vec2 TexCoord;
+
+uniform sampler2D SceneHRDTexture;
+uniform sampler2D BloomTexture;
+
+void main()
+{
+	vec4 sceneColor = texture(SceneHRDTexture, TexCoord);
+	vec4 bloomColor = texture(BloomTexture, TexCoord);
+
+	const float gamma = 2.2;
+
+	FragColor = sceneColor;
+	FragColor += bloomColor;
+	FragColor.rgb = Reinhard(FragColor.rgb);
+	FragColor.a = 1.0f;
+
+	FragColor.rgb = pow(FragColor.rgb, vec3(1.0 / gamma));
+
+	//FragColor = fromLinear(FragColor);
+}

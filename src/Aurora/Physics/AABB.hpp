@@ -49,7 +49,7 @@ namespace Aurora
 			return os;
 		}
 
-		AABB& operator*=(const Matrix4& matrix)
+		void Transform(const Matrix4& matrix)
 		{
 			Vector3 corners[8];
 
@@ -62,8 +62,8 @@ namespace Aurora
 			corners[6] = Vector3(m_Max.x, m_Max.y, m_Min.z);
 			corners[7] = m_Max;
 
-			Vector3 min = Vector3(1) * std::numeric_limits<float>::infinity();
-			Vector3 max = Vector3(1) * -std::numeric_limits<float>::infinity();
+			auto min = Vector3(std::numeric_limits<float>::max());
+			auto max = Vector3(std::numeric_limits<float>::min());
 
 			for(auto & corner : corners) {
 				Vector4 transformed = matrix * Vector4(corner, 1.0);
@@ -72,8 +72,19 @@ namespace Aurora
 			}
 
 			Set(min, max);
+		}
 
+		AABB& operator*=(const Matrix4& matrix)
+		{
+			Transform(matrix);
 			return *this;
+		}
+
+		AABB operator*(const Matrix4& matrix)
+		{
+			AABB copy = *this;
+			copy.Transform(matrix);
+			return copy;
 		}
 	private:
 		static bool Clip(double denom, double numer, double t[]);
