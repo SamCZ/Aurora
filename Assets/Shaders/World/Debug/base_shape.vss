@@ -1,0 +1,11 @@
+#include "../../vs_common.h"
+
+out vec4 Color;
+
+layout(location = 0) in vec3 POSITION;
+layout(location = 1) in uint COLOR;
+
+void main() {
+	gl_Position = ProjectionMatrix * ViewMatrix * vec4(POSITION, 1.0);
+	Color = vec4((COLOR & 0x000000FFu) >> 0u, (COLOR & 0x0000FF00u) >> 8u, (COLOR & 0x00FF0000u) >> 16u, (COLOR & 0xFF000000u)>> 24u) / vec4(256.0f);
+}

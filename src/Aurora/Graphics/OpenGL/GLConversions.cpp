@@ -64,6 +64,8 @@ namespace Aurora
 				return GL_TRIANGLES;
 			case EPrimitiveType::TriangleStrip:
 				return GL_TRIANGLE_STRIP;
+			case EPrimitiveType::LineList:
+				return GL_LINES;
 			default: AU_LOG_FATAL("Unsupported primitive type %d", (int)primType);
 		}
 

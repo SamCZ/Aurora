@@ -9,6 +9,7 @@
 #include "Aurora/Framework/Entity.hpp"
 #include "Aurora/Physics/Frustum.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
+#include "Aurora/Graphics/DShape.hpp"
 
 #include "Shaders/vs_common.h"
 #include "Shaders/ps_common.h"
@@ -69,6 +70,8 @@ namespace Aurora
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/normal_bevel.fss"},
 		});
 
+		DShapes::Init();
+
 		m_HDRShader = GetEngine()->GetResourceManager()->LoadShader("HDR", "Assets/Shaders/fs_quad.vss", "Assets/Shaders/PostProcess/hdr.fss");
 
 		m_BloomShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/PostProcess/bloom.glsl");
@@ -78,6 +81,7 @@ namespace Aurora
 	SceneRenderer::~SceneRenderer()
 	{
 		ssaoNoiseTex.reset();
+		DShapes::Destroy();
 	}
 
 	Texture_ptr SceneRenderer::RenderPreethamSky(const Vector2ui& resolution, float turbidity, float azimuth, float inclination)
@@ -369,7 +373,7 @@ namespace Aurora
 			drawState.ClearColorTarget = true;
 			drawState.DepthStencilState.DepthEnable = true;
 			drawState.RasterState.CullMode = ECullMode::Back;
-			//drawState.ClearColor = Color(0,96,213);
+			drawState.ClearColor = Color(255, 255, 255, 0);
 
 			drawState.ViewPort = camera.Size;
 
@@ -542,6 +546,33 @@ namespace Aurora
 			drawState.BindTarget(0, compositedRT);
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
+			m_RenderManager->GetUniformBufferCache().Reset();
+		}
+
+		{ // Debug shapes
+			GPU_DEBUG_SCOPE("Debug Shapes");
+			DrawCallState drawState;
+
+			BEGIN_UB(BaseVSData, baseVsData)
+				baseVsData->ProjectionMatrix = projectionMatrix;
+				baseVsData->ViewMatrix = viewMatrix;
+				baseVsData->ProjectionViewMatrix = projectionViewMatrix;
+			END_UB(BaseVSData)
+
+			drawState.ClearDepthTarget = false;
+			drawState.ClearColorTarget = false;
+			drawState.DepthStencilState.DepthEnable = true;
+			drawState.RasterState.CullMode = ECullMode::Back;
+
+			drawState.ViewPort = camera.Size;
+
+			drawState.BindDepthTarget(depthRT, 0, 0);
+			drawState.BindTarget(0, compositedRT);
+
+			m_RenderDevice->BindRenderTargets(drawState);
+			// Render debug shapes
+			DShapes::Render(drawState);
+
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
