@@ -12,16 +12,30 @@ namespace Aurora
 		AllocateMemoryBlock();
 	}
 
+	Aum::Aum(MemSize objectSize, MemSize objectCount) : m_BlockSize((objectSize + MemSizeOf) * objectCount)
+	{
+		AllocateMemoryBlock();
+	}
+
 	Aum::~Aum()
+	{
+		DestroyMemory();
+	}
+
+	void Aum::DestroyMemory()
 	{
 		for (const auto &item : m_Memory)
 		{
 			delete[] item.Memory;
 		}
+
+		m_Memory.clear();
 	}
 
 	Aum::MemoryBlock& Aum::AllocateMemoryBlock()
 	{
+		DestroyMemory();
+
 		MemoryBlock memoryBlock;
 		memoryBlock.Memory = new uint8_t[m_BlockSize];
 		memoryBlock.Fragments.emplace_back(MemoryFragment{memoryBlock.Memory, memoryBlock.Memory + m_BlockSize, m_BlockSize});
@@ -32,9 +46,9 @@ namespace Aurora
 		return m_Memory.emplace_back(memoryBlock);
 	}
 
-	void* Aum::AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator framentIt, MemSize size)
+	void* Aum::AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator fragmentIt, MemSize size)
 	{
-		MemoryFragment& fragment = *framentIt;
+		MemoryFragment& fragment = *fragmentIt;
 
 		MemPtr begin = fragment.Begin;
 
@@ -50,12 +64,15 @@ namespace Aurora
 
 		// Change fragment size and if remaining is 0 then delete fragment
 		fragment.Begin = newMemoryStart + size;
-		fragment.Size -= size;
+		fragment.Size -= size + MemSizeOf;
 		au_assert(fragment.Size >= 0);
 		if(fragment.Size == 0)
 		{
-			memoryBlock.Fragments.erase(framentIt);
+			memoryBlock.Fragments.erase(fragmentIt);
 		}
+
+		// FIXME: when new block is allocated the memory is somehow invalid
+		// TODO: Move the sizes to another struct to get rid of paddings
 
 		// Return new memory
 		return newMemoryStart;
@@ -64,6 +81,7 @@ namespace Aurora
 	void* Aum::Alloc(MemSize size)
 	{
 		au_assert(size);
+		// Add sizeof uint32 for additional info
 		size += MemSizeOf;
 		au_assert(size <= m_BlockSize);
 

@@ -3,9 +3,9 @@
 // Heavily adapted from https://www.shadertoy.com/view/llSSDR
 //
 
-const float PI = 3.141592;
+const float PI = 3.14159265359;
 
-layout(rgba32f) restrict writeonly uniform imageCube o_CubeMap;
+layout(rgba16f) restrict writeonly uniform imageCube o_CubeMap;
 
 uniform Uniforms
 {

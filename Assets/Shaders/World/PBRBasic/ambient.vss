@@ -26,9 +26,9 @@ void main() {
 	TexCoord = TEXCOORD_0;
 	Normal = normalize(NORMAL);
 
-	/*vec3 T = normalize((ModelMatrix * vec4(TANGENT.xyz, 0.0)).xyz);
-	vec3 B = normalize((ModelMatrix * vec4(cross(Normal, TANGENT.xyz) * TANGENT.w, 0.0)).xyz);
-	vec3 N = normalize((ModelMatrix * vec4(Normal, 0.0)).xyz);
+	/*vec3 T = normalize((INST_TRANSFORM * vec4(TANGENT.xyz, 0.0)).xyz);
+	vec3 B = normalize((INST_TRANSFORM * vec4(cross(Normal, TANGENT.xyz) * TANGENT.w, 0.0)).xyz);
+	vec3 N = normalize((INST_TRANSFORM * vec4(Normal, 0.0)).xyz);
 
 	TBN = mat3(T, B, N);*/
 }

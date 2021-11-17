@@ -1,5 +1,6 @@
 #include "../ps_common.h"
 #include "cb_pbr.h"
+#include "pbr.glsl"
 
 in vec2 TexCoord;
 
@@ -9,11 +10,29 @@ uniform sampler2D RoughnessMetallicAORT;
 uniform sampler2D SkyRT;
 uniform sampler2D SSAORT;
 
+uniform sampler2D DepthMap;
+
+uniform samplerCube PreFilteredMap;
+uniform samplerCube IrradianceConvolutionMap;
+uniform sampler2D BrdfLutMap;
+
 out vec4 FragColor;
 
 float saturate(float val)
 {
 	return clamp(val, 0, 1);
+}
+
+vec3 GetSceneWorldPos()
+{
+	ivec2 texel = ivec2(gl_FragCoord.xy);
+	vec4 clipSpaceLocation;
+	clipSpaceLocation.xy = TexCoord * 2.0f - 1.0f;
+	clipSpaceLocation.z = texelFetch(DepthMap, texel, 0).r;
+	clipSpaceLocation.w = 1.0f;
+
+	vec4 homogenousLocation = u_InvProjectionView * clipSpaceLocation;
+	return homogenousLocation.xyz / homogenousLocation.w;
 }
 
 void main()
@@ -28,25 +47,82 @@ void main()
 		return;
 	}
 
+	vec3 WorldPos = GetSceneWorldPos();
+
 	vec3 albedo = albedoFlags.rgb;
 	uint flags = uint(albedoFlags.a);
 
-	float roughness = RMA.x;
-	float metallic = RMA.y;
-	float ao = RMA.z;
+	float roughness = TestOptions.x;
+	float metallic = TestOptions.y;
+	float ao = TestOptions.z;
 
 	vec3 N = normalize(normals.xyz * 2.0f - 1.0f);
+	vec3 V = normalize(CameraPos.xyz - WorldPos);
+	vec3 R = reflect(-V, N);
 
-	float d = dot(N, normalize(vec3(0, 1, 0)));
-	d = max(d, 0.2f);
-	d = min(1, d);
+	vec3 F0 = vec3(0.04);
+	F0 = mix(F0, clamp(albedo, 0, 1), metallic);
 
-	FragColor.rgb = albedoFlags.rgb * d;
+	vec3 Lo = vec3(0.0);
+	//Dir light
 
-	//float ssao = texelFetch(SSAORT, ivec2(gl_FragCoord.xy), 0).r;
-	//float scaledAO = 1.0 - saturate((1.0 - ssao) * 2.0f);
-	//FragColor.rgb *= ssao;
+	vec3 g_DirLight = normalize(vec3(0.5, 0.5, 0.5));
+	vec3 g_DirLightColor = vec3(1, 1, 1);
+	float g_DirLightIntensity = 1.0f;
 
-	//FragColor.rgb = Tonemap(FragColor.rgb, 3, 4);
+	{
+		vec3 L = normalize(g_DirLight);
+		vec3 H = normalize(V + L);
+		vec3 radiance     = g_DirLightColor * g_DirLightIntensity * 1.0;
+
+		// Cook-Torrance BRDF
+		float NDF = DistributionGGX(N, H, roughness);
+		float G   = GeometrySmith(N, V, L, roughness);
+		vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
+
+		vec3 nominator    = NDF * G * F;
+		float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // 0.001 to prevent divide by zero.
+		vec3 specular = nominator / denominator;
+
+		// kS is equal to Fresnel
+		vec3 kS = F;
+		// for energy conservation, the diffuse and specular light can't
+		// be above 1.0 (unless the surface emits light); to preserve this
+		// relationship the diffuse component (kD) should equal 1.0 - kS.
+		vec3 kD = vec3(1.0) - kS;
+		// multiply kD by the inverse metalness such that only non-metals
+		// have diffuse lighting, or a linear blend if partly metal (pure metals
+		// have no diffuse light).
+		kD *= 1.0 - metallic;
+
+		// scale light by NdotL
+		float NdotL = max(dot(N, L), 0.0);
+
+		// add to outgoing radiance Lo
+		Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+	}
+
+	// ambient lighting (we now use IBL as the ambient term)
+	vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+
+	vec3 kS = F;
+	vec3 kD = 1.0 - kS;
+	kD *= 1.0 - metallic;
+
+	vec3 irradiance = texture(IrradianceConvolutionMap, N).rgb;
+	vec3 diffuse = irradiance * albedo;
+
+	const float MAX_REFLECTION_LOD = 4.0;
+
+	vec3 prefilteredColor = textureLod(PreFilteredMap, R, roughness * MAX_REFLECTION_LOD).rgb;
+
+	vec2 brdf  = texture(BrdfLutMap, vec2(max(dot(N, V), 0.0), roughness)).rg;
+	vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+	//vec3 specular = prefilteredColor * F;
+	vec3 ambient = (kD * diffuse + specular) * ao;
+
+	vec3 color = ambient + Lo;
+
+	FragColor.rgb = color;
 	FragColor.a = 1;
 }

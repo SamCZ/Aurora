@@ -30,8 +30,12 @@ namespace Aurora
 		MemSize m_BlockSize;
 		std::vector<MemoryBlock> m_Memory;
 	public:
-		Aum(MemSize blockSize = 8388608); // 8MB Default block
+		explicit Aum(MemSize blockSize = 8388608); // 8MB Default block
+		Aum(MemSize objectSize, MemSize objectCount); // 8MB Default block
 		~Aum();
+
+		Aum(const Aum& left) = delete;
+		Aum & operator=(const Aum&) = delete;
 
 		void* Alloc(MemSize size);
 
@@ -72,13 +76,14 @@ namespace Aurora
 		{
 			return m_Memory[index].Memory;
 		}
-		[[nodiscard]] MemSize GetMemoryBlockSize(MemSize index) const
+		[[nodiscard]] MemSize GetMemoryBlockSize() const
 		{
 			return m_BlockSize;
 		}
 
 	private:
 		MemoryBlock& AllocateMemoryBlock();
+		void DestroyMemory();
 		void* AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator framentIt, MemSize size);
 	};
 }
