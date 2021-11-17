@@ -15,6 +15,28 @@
 
 namespace Aurora
 {
+	/*struct AuGLTFFileSystem
+	{
+		bool FileExistsFunction(const std::string &abs_filename, void *)
+		{
+
+		}
+
+		std::string ExpandFilePathFunction(const std::string &, void *)
+		{
+
+		}
+
+		bool ReadWholeFileFunction(std::vector<unsigned char> *, std::string *, const std::string &, void *)
+		{
+
+		}
+
+		bool WriteWholeFileFunction(std::string *, const std::string &, const std::vector<unsigned char> &, void *)
+		{
+
+		}
+	};*/
 
 	Texture_ptr GLTFImageToTexture(tinygltf::Image& image, IRenderDevice* renderDevice)
 	{
@@ -252,12 +274,12 @@ namespace Aurora
 
 			for(const auto& it : material.values)
 			{
-				//std::cout << it.first << " - " << it.second.TextureIndex() << std::endl;
+				std::cout << it.first << " - " << it.second.TextureIndex() << std::endl;
 			}
 
 			for(const auto& it : material.additionalValues)
 			{
-				//std::cout << it.first << " - " << it.second.string_value << std::endl;
+				std::cout << it.first << " - " << it.second.string_value << std::endl;
 			}
 
 			tinygltf::PbrMetallicRoughness pbrData = material.pbrMetallicRoughness;
@@ -266,22 +288,32 @@ namespace Aurora
 
 			gameMaterial->SetParamVec3Value(MaterialPBR::MP_BASE_COLOR, baseColor);
 
-			auto baseColorParam = material.values.find("baseColorTexture");
-			if(baseColorParam != material.values.end())
+			auto LoadTexture = [&model, &renderDevice](int textureIndex) -> Texture_ptr
 			{
-				tinygltf::Texture& texture = model.textures[baseColorParam->second.TextureIndex()];
-				tinygltf::Image &image = model.images[texture.source];
+				if(textureIndex < 0) return nullptr;
+				tinygltf::Texture& texture = model.textures[textureIndex];
+				tinygltf::Image &image = model.images[textureIndex];
+				return GLTFImageToTexture(image, renderDevice);
+			};
 
-				//section.BaseColor = GLTFImageToTexture(image, renderDevice);
-				gameMaterial->SetParamTexture(MaterialPBR::MP_ALBEDO_MAP, GLTFImageToTexture(image, renderDevice));
+			if(pbrData.baseColorTexture.index >= 0)
+			{
+				gameMaterial->SetParamTexture(MaterialPBR::MP_ALBEDO_MAP, LoadTexture(pbrData.baseColorTexture.index));
 			}
 
 			if(material.normalTexture.index >= 0)
 			{
-				tinygltf::Texture& texture = model.textures[material.normalTexture.index];
-				tinygltf::Image &image = model.images[texture.source];
-				//section.NormalMap = GLTFImageToTexture(image, renderDevice);
-				gameMaterial->SetParamTexture(MaterialPBR::MP_NORMAL_MAP, GLTFImageToTexture(image, renderDevice));
+				gameMaterial->SetParamTexture(MaterialPBR::MP_NORMAL_MAP, LoadTexture(material.normalTexture.index));
+			}
+
+			if(pbrData.metallicRoughnessTexture.index >= 0)
+			{
+				gameMaterial->SetParamTexture(MaterialPBR::MP_METALLIC_ROUGNESS_MAP, LoadTexture(pbrData.metallicRoughnessTexture.index));
+			}
+
+			if(material.emissiveTexture.index >= 0)
+			{
+				gameMaterial->SetParamTexture(MaterialPBR::MP_EMISSION_MAP, LoadTexture(material.emissiveTexture.index));
 			}
 
 			gpuMesh->Materials->SetMaterial(i, gameMaterial);
@@ -300,6 +332,8 @@ namespace Aurora
 	std::vector<std::shared_ptr<XMesh>> GLTFLoader::LoadMeshFile(const Path &path, IRenderDevice* renderDevice)
 	{
 		tinygltf::TinyGLTF loader;
+
+		//loader.SetFsCallbacks();
 
 		std::string err;
 		std::string warn;
@@ -343,31 +377,31 @@ namespace Aurora
 		}
 
 		const tinygltf::Scene &scene = model.scenes[model.defaultScene];
-
+		
 		std::function<void(tinygltf::Model& model, tinygltf::Node& node)> LoadNode;
 		LoadNode = [&LoadNode, &meshes, renderDevice](tinygltf::Model& model, tinygltf::Node& node)
 		{
-			std::cout << node.name << std::endl;
+			//std::cout << node.name << std::endl;
 
 			auto transform = glm::identity<Matrix4>();
 
 			if(!node.translation.empty())
 			{
 				transform *= glm::translate(Vector3(node.translation[0], node.translation[1], node.translation[2]));
-				std::cout << "transform: x=" << node.translation[0] << ", y=" << node.translation[1] << ", z=" << node.translation[2] << std::endl;
+				//std::cout << "transform: x=" << node.translation[0] << ", y=" << node.translation[1] << ", z=" << node.translation[2] << std::endl;
 			}
 
 			if(!node.rotation.empty())
 			{
 				Quaternion quaternion(static_cast<float>(node.rotation[3]), static_cast<float>(node.rotation[0]), static_cast<float>(node.rotation[1]), static_cast<float>(node.rotation[2]));
 				transform *= glm::toMat4(quaternion);
-				std::cout << "rotation: " << glm::to_string(quaternion) << std::endl;
+				//std::cout << "rotation: " << glm::to_string(quaternion) << std::endl;
 			}
 
 			if(!node.scale.empty())
 			{
 				transform *= glm::scale(Vector3(node.scale[0], node.scale[1], node.scale[2]));
-				std::cout << "scale: x=" << node.scale[0] << ", y=" << node.scale[1] << ", z=" << node.scale[2] << std::endl;
+				//std::cout << "scale: x=" << node.scale[0] << ", y=" << node.scale[1] << ", z=" << node.scale[2] << std::endl;
 			}
 
 			if ((node.mesh >= 0) && (node.mesh < model.meshes.size()))
@@ -382,7 +416,7 @@ namespace Aurora
 					meshes.push_back(std::shared_ptr<XMesh>(gpuMesh));
 				}
 
-				std::cout << " - Mesh " << mesh.name << std::endl;
+				//std::cout << " - Mesh " << mesh.name << std::endl;
 			}
 
 			for (size_t i = 0; i < node.children.size(); i++)

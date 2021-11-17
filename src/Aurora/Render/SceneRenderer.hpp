@@ -42,7 +42,7 @@ namespace Aurora
 		struct BloomSettings
 		{
 			bool Enabled = true;
-			float Threshold = 1.0f;
+			float Threshold = 1.1f;
 			float Knee = 0.1f;
 			float UpsampleScale = 1.0f;
 			float Intensity = 1.0f;
@@ -68,6 +68,9 @@ namespace Aurora
 		Shader_ptr m_NormalBevelShader;
 		Shader_ptr m_HDRShader;
 
+		Shader_ptr m_PreFilterShader;
+		Shader_ptr m_IRRCShader;
+
 		// Bloom
 		Shader_ptr m_BloomShader;
 		const int m_BloomComputeWorkgroupSize = 16;
@@ -81,11 +84,17 @@ namespace Aurora
 		Entity m_CurrentCameraEntity;
 
 		Texture_ptr m_SkyCubeMap;
+		Texture_ptr m_PreFilteredMap;
+		Texture_ptr m_IRRCMap;
+		Texture_ptr m_BrdfMap;
 	public:
 		SceneRenderer(Scene* scene, RenderManager* renderManager, IRenderDevice* renderDevice);
 		~SceneRenderer();
 
 		Texture_ptr RenderPreethamSky(const Vector2ui& resolution, float turbidity, float azimuth, float inclination);
+		Texture_ptr RenderPrefilterEnvMap(const Texture_ptr& envMap);
+		Texture_ptr RenderIRRConvMap(const Texture_ptr& envMap);
+		void CreateBrdfMap();
 
 		void AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform);
 

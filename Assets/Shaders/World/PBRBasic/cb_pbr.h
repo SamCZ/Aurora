@@ -8,4 +8,5 @@ uniformbuffer PBRConstants
 	float Metallic;
 	float AmbientOcclusion;
 	float _Padding0;
+	vec4 EmissionFactor;
 } pbrConstants;

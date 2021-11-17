@@ -28,6 +28,8 @@ namespace Aurora
 {
 	Texture_ptr ssaoNoiseTex = nullptr;
 
+	const int PBRMipLevelCount = 5;
+
 	SceneRenderer::SceneRenderer(Scene *scene, RenderManager* renderManager, IRenderDevice* renderDevice)
 	: m_Scene(scene), m_RenderDevice(renderDevice), m_RenderManager(renderManager)
 	{
@@ -76,6 +78,11 @@ namespace Aurora
 
 		m_BloomShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/PostProcess/bloom.glsl");
 		m_BloomDescBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("BloomDesc", sizeof(BloomDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+
+		m_PreFilterShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/PBR/PreFilter.glsl");
+		m_IRRCShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/PBR/IrradianceConvolution.glsl");
+
+		CreateBrdfMap();
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -84,11 +91,24 @@ namespace Aurora
 		DShapes::Destroy();
 	}
 
+	void SceneRenderer::CreateBrdfMap()
+	{
+		if(m_BrdfMap == nullptr)
+		{
+			m_BrdfMap = m_RenderManager->CreateRenderTarget("BrdfLut", {512, 512}, GraphicsFormat::RG16_FLOAT, EDimensionType::TYPE_2D, 1, 0, TextureDesc::EUsage::Default, true);
+		}
+
+		DispatchState dispatchState;
+		dispatchState.Shader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/PBR/BRDF.glsl");
+		dispatchState.BindTexture("o_Image", m_BrdfMap, true);
+		m_RenderDevice->Dispatch(dispatchState, 16, 16, 1);
+	}
+
 	Texture_ptr SceneRenderer::RenderPreethamSky(const Vector2ui& resolution, float turbidity, float azimuth, float inclination)
 	{
 		if(m_SkyCubeMap == nullptr)
 		{
-			m_SkyCubeMap = m_RenderManager->CreateRenderTarget("PreethamSky", {512, 512}, GraphicsFormat::RGBA32_FLOAT, EDimensionType::TYPE_CubeMap, 5, 6, TextureDesc::EUsage::Default, true);
+			m_SkyCubeMap = m_RenderManager->CreateRenderTarget("PreethamSky", resolution, GraphicsFormat::RGBA16_FLOAT, EDimensionType::TYPE_CubeMap, 5, 6, TextureDesc::EUsage::Default, true);
 		}
 
 		static Vector4 lastData = Vector4(-1, -1, -1, -1);
@@ -105,10 +125,68 @@ namespace Aurora
 			*desc = data;
 		END_CUB(Uniforms)
 
-		m_RenderDevice->Dispatch(dispatchState, resolution.x / 32, resolution.y / 32, 6);
-		m_RenderDevice->GenerateMipmaps(m_SkyCubeMap);
+		{
+			GPU_DEBUG_SCOPE("RenderPreethamSky");
+			m_RenderDevice->Dispatch(dispatchState, resolution.x / 32, resolution.y / 32, 6);
+			m_RenderDevice->GenerateMipmaps(m_SkyCubeMap);
+		}
+
+		RenderPrefilterEnvMap(m_SkyCubeMap);
+		RenderIRRConvMap(m_SkyCubeMap);
 
 		return m_SkyCubeMap;
+	}
+
+	Texture_ptr SceneRenderer::RenderPrefilterEnvMap(const Texture_ptr &envMap)
+	{
+		if(m_PreFilteredMap == nullptr)
+		{
+			m_PreFilteredMap = m_RenderManager->CreateRenderTarget("PrefilterEnvMap", envMap->GetDesc().GetSize(), GraphicsFormat::RGBA16_FLOAT, EDimensionType::TYPE_CubeMap, PBRMipLevelCount, 6, TextureDesc::EUsage::Default, true);
+		}
+
+		DispatchState dispatchState;
+		dispatchState.Shader = m_PreFilterShader;
+		dispatchState.BindTexture("_EnvironmentMap", envMap);
+
+		uint32_t faceResolution = m_PreFilteredMap->GetDesc().Width;
+
+		GPU_DEBUG_SCOPE("RenderPrefilterEnvMap");
+
+		for (int mip = 0; mip < PBRMipLevelCount; ++mip)
+		{
+			GPU_DEBUG_SCOPE("Compute [mip=" + std::to_string(mip) + "]");
+
+			float roughness = (float)mip / (float)(PBRMipLevelCount - 1);
+
+			BEGIN_UB(Vector4, desc)
+				*desc = Vector4(roughness, faceResolution, 0, 0);
+			END_CUB(PreFilterDesc)
+
+			auto[width, height] = m_PreFilteredMap->GetDesc().GetMipSize(mip);
+			dispatchState.BindTexture("o_CubeMap", m_PreFilteredMap, true, TextureBinding::EAccess::Write, mip);
+			m_RenderDevice->Dispatch(dispatchState, width / 32, height / 32, 6);
+		}
+
+		return m_PreFilteredMap;
+	}
+
+	Texture_ptr SceneRenderer::RenderIRRConvMap(const Texture_ptr &envMap)
+	{
+		GPU_DEBUG_SCOPE("RenderIRRConvMap");
+		if(m_IRRCMap == nullptr)
+		{
+			m_IRRCMap = m_RenderManager->CreateRenderTarget("IRRCEnvMap", envMap->GetDesc().GetSize(), GraphicsFormat::RGBA16_FLOAT, EDimensionType::TYPE_CubeMap, 1, 6, TextureDesc::EUsage::Default, true);
+		}
+
+		Vector2ui size = m_IRRCMap->GetDesc().GetSize();
+
+		DispatchState dispatchState;
+		dispatchState.Shader = m_IRRCShader;
+		dispatchState.BindTexture("_EnvironmentMap", envMap);
+		dispatchState.BindTexture("o_CubeMap", m_IRRCMap, true);
+		m_RenderDevice->Dispatch(dispatchState, size.x / 32, size.y / 32, 6);
+
+		return m_IRRCMap;
 	}
 
 	void SceneRenderer::AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform)
@@ -519,6 +597,14 @@ namespace Aurora
 
 		auto compositedRT = m_RenderManager->CreateTemporalRenderTarget("CompositedRT", camera.Size, GraphicsFormat::RGBA16_FLOAT);
 
+		static Vector4 testOptions(1, 1, 1, 0);
+
+		ImGui::Begin("Test PBR options");
+		ImGui::DragFloat("roughness", &testOptions.x, 0.01f, 0, 1);
+		ImGui::DragFloat("metallic", &testOptions.y, 0.01f, 0, 1);
+		ImGui::DragFloat("ao", &testOptions.z, 0.01f, 0, 1);
+		ImGui::End();
+
 		{ // Composite Deferred renderer and HRD
 			GPU_DEBUG_SCOPE("PBR Composite");
 
@@ -539,8 +625,20 @@ namespace Aurora
 			drawState.BindTexture("SkyRT", skyRT);
 			//drawState.BindTexture("SSAORT", ssaoRT);
 
+			drawState.BindTexture("DepthMap", depthRT);
+
+			drawState.BindTexture("PreFilteredMap", m_PreFilteredMap);
+			drawState.BindTexture("IrradianceConvolutionMap", m_IRRCMap);
+			drawState.BindTexture("BrdfLutMap", m_BrdfMap);
+
+			drawState.BindSampler("PreFilteredMap", Samplers::ClampClampLinearLinear);
+			drawState.BindSampler("IrradianceConvolutionMap", Samplers::ClampClampLinearLinear);
+			drawState.BindSampler("BrdfLutMap", Samplers::ClampClampLinearLinear);
+
 			BEGIN_UB(PBRDesc, desc)
+				desc->u_InvProjectionView = glm::inverse(projectionViewMatrix);
 				desc->CameraPos = Vector4(cameraTransform.Translation, 0.0);
+				desc->TestOptions = testOptions;
 			END_UB(PBRDesc)
 
 			drawState.BindTarget(0, compositedRT);
