@@ -158,7 +158,7 @@ namespace Aurora
 			}
 
 			// After 10 seconds we destroy old temporal render targets
-			if(currentTime - storedTarget.LastUseTime > 10 * 1000)
+			if(currentTime - storedTarget.LastUseTime > 10)
 			{
 				AU_LOG_INFO("Deleting TempRT ", storedTarget.Name);
 				m_TemporalRenderTargets.erase(m_TemporalRenderTargets.begin() + i);

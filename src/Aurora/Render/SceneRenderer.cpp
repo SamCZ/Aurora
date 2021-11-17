@@ -113,7 +113,7 @@ namespace Aurora
 
 	void SceneRenderer::AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform)
 	{
-		CPU_DEBUG_SCOPE("SceneRenderer::AddVisibleEntity")
+		CPU_DEBUG_SCOPE("SceneRenderer::AddVisibleEntity");
 		entt::entity visibleEntityID = m_VisibleEntitiesRegistry.create();
 		VisibleEntity& visibleEntity = m_VisibleEntitiesRegistry.emplace<VisibleEntity>(visibleEntityID);
 		visibleEntity.Material = material;
@@ -130,7 +130,7 @@ namespace Aurora
 
 	void SceneRenderer::PrepareRender(Frustum* frustum)
 	{
-		CPU_DEBUG_SCOPE("SceneRenderer::PrepareRender")
+		CPU_DEBUG_SCOPE("SceneRenderer::PrepareRender");
 		m_VisibleEntities.clear();
 		m_VisibleEntitiesRegistry.clear();
 		m_VisibleTypeCounters.clear();
@@ -197,7 +197,7 @@ namespace Aurora
 
 	void SceneRenderer::SortVisibleEntities()
 	{
-		CPU_DEBUG_SCOPE("SceneRenderer::SortVisibleEntities")
+		CPU_DEBUG_SCOPE("SceneRenderer::SortVisibleEntities");
 		// Sort by material base
 		std::sort(m_VisibleEntities.begin(), m_VisibleEntities.end(), [this](const entt::entity current, const entt::entity other) -> bool {
 			const auto& currentEntt = m_VisibleEntitiesRegistry.get<VisibleEntity>(current);
@@ -312,7 +312,7 @@ namespace Aurora
 
 	void SceneRenderer::Render(entt::entity cameraEntityID)
 	{
-		CPU_DEBUG_SCOPE("SceneRenderer::Render")
+		CPU_DEBUG_SCOPE("SceneRenderer::Render");
 		assert(m_Scene);
 
 		m_CurrentCameraEntity = Entity(cameraEntityID, m_Scene);
@@ -593,6 +593,7 @@ namespace Aurora
 			mipDesc.Height = bloomTexSize.y;
 
 			uint32_t mips = mipDesc.GetMipLevelCount() - 2 - 2;
+			//mips -= mips / 3;
 
 			for (int i = 0; i < 3; ++i)
 			{

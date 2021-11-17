@@ -960,7 +960,7 @@ namespace Aurora
 
 	void GLRenderDevice::WriteBuffer(const Buffer_ptr &buffer, const void *data, size_t dataSize, size_t offset)
 	{
-		CPU_DEBUG_SCOPE("GLRenderDevice::WriteBuffer")
+		CPU_DEBUG_SCOPE("GLRenderDevice::WriteBuffer");
 		if(buffer == nullptr) {
 			return;
 		}

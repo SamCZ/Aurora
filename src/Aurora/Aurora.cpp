@@ -76,6 +76,8 @@ namespace Aurora
 		Logger::AddSink<std_sink>();
 		Logger::AddSink<file_sink>("latest-log.txt");
 
+		LocalProfileScope::Reset("GameInit");
+
 		glfwInit();
 
 		// Init and create window
@@ -162,6 +164,7 @@ namespace Aurora
 
 		while(!m_Window->IsShouldClose())
 		{
+			LocalProfileScope::Reset("GameFrame");
 			double currentTime = glfwGetTime();
 			double frameTime = currentTime - lastTime;
 			double delta = frameTime;
@@ -179,6 +182,7 @@ namespace Aurora
 
 					ss << m_Window->GetOriginalTitle();
 					ss << " - " << frameRate << " fps, " << avgFrameTimeMs << "ms";
+					ss << " (LF: " << LocalProfileScope::GetLastFrameTimings().GetElapsedTimeInMilliseconds() << "ms)";
 
 					m_Window->SetTitle(ss.str());
 
@@ -276,7 +280,7 @@ namespace Aurora
 
 			{
 				m_RenderManager->EndFrame();
-				CPU_DEBUG_SCOPE("Swap chain")
+				CPU_DEBUG_SCOPE("Swap chain");
 				m_SwapChain->Present(0);
 			}
 

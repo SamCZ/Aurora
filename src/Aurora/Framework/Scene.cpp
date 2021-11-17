@@ -4,7 +4,7 @@
 #include "Entity.hpp"
 
 #include "Aurora/Engine.hpp"
-#include "Aurora/Logger/Logger.hpp"
+#include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Physics/PhysicsWorld.hpp"
 
 namespace Aurora
@@ -65,6 +65,7 @@ namespace Aurora
 
 	void Scene::Tick(double delta)
 	{
+		AU_CPU_DEBUG_SCOPE("Scene::Tick");
 		for(uint i = m_Actors.size(); i --> 0;)
 		{
 			Actor* actor = m_Actors[i];
