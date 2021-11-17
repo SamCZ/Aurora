@@ -24,7 +24,7 @@ void main() {
 	WorldPos = INST_TRANSFORM * vec4(POSITION, 1.0);
 	gl_Position = ProjectionMatrix * ViewMatrix * WorldPos;
 	TexCoord = TEXCOORD_0;
-	Normal = normalize(NORMAL);
+	Normal = (INST_TRANSFORM * vec4(NORMAL, 0.0)).xyz;
 
 	/*vec3 T = normalize((INST_TRANSFORM * vec4(TANGENT.xyz, 0.0)).xyz);
 	vec3 B = normalize((INST_TRANSFORM * vec4(cross(Normal, TANGENT.xyz) * TANGENT.w, 0.0)).xyz);

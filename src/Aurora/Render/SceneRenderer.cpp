@@ -37,7 +37,7 @@ namespace Aurora
 
 		m_PBRCompositeShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
 				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
-				{EShaderType::Pixel, "Assets/Shaders/PBR/pbr_composite.fss"},
+				{EShaderType::Pixel, "Assets/Shaders/PBR/PBRComposite.fss"},
 		});
 
 		m_SSAOShader = GetEngine()->GetResourceManager()->LoadShader("SSAO", {
@@ -182,9 +182,10 @@ namespace Aurora
 
 		DispatchState dispatchState;
 		dispatchState.Shader = m_IRRCShader;
+		dispatchState.BindSampler("_EnvironmentMap", Samplers::ClampClampNearestNearest);
 		dispatchState.BindTexture("_EnvironmentMap", envMap);
 		dispatchState.BindTexture("o_CubeMap", m_IRRCMap, true);
-		m_RenderDevice->Dispatch(dispatchState, size.x / 32, size.y / 32, 6);
+		m_RenderDevice->Dispatch(dispatchState, size.x / 16, size.y / 16, 6);
 
 		return m_IRRCMap;
 	}
@@ -406,6 +407,8 @@ namespace Aurora
 		PrepareRender(&frustum);
 		SortVisibleEntities();
 
+		const DirectionalLightComponent* mainDirLight = nullptr;
+		const TransformComponent* mainDirLightTransform = nullptr;
 		{ // Prepare lights
 			auto view = m_Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
 
@@ -424,6 +427,10 @@ namespace Aurora
 					std::cout << splits[i] << std::endl;
 				}
 				std::cout << "------------" << std::endl;*/
+
+				mainDirLight = &directionalLightComponent;
+				mainDirLightTransform = &transformComponent;
+				break;
 			}
 		}
 
@@ -479,7 +486,17 @@ namespace Aurora
 		ImGui::End();
 
 		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::RGBA8_UNORM);
-		auto preetham = RenderPreethamSky({512, 512}, skyData.x, skyData.y, skyData.z);
+
+		float azimuth = 0;
+		float inclination = 0;
+
+		if(mainDirLightTransform)
+		{
+			azimuth = glm::radians(mainDirLightTransform->Rotation.x);
+			inclination = glm::radians(mainDirLightTransform->Rotation.y);
+		}
+
+		auto preetham = RenderPreethamSky({128, 128}, skyData.x, azimuth, inclination);
 
 		if(true)
 		{ // Sky render
@@ -508,59 +525,6 @@ namespace Aurora
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
-
-		/*static float ssaoRadius = 3.0f;
-		static float ssaoBias = 0.025f;
-
-		ImGui::Begin("SSAO");
-		{
-			ImGui::DragFloat("Bias", &ssaoBias, 0.01f);
-			ImGui::DragFloat("Radius", &ssaoRadius, 0.01f);
-		}
-		ImGui::End();
-
-		auto ssaoRT = m_RenderManager->CreateTemporalRenderTarget("SSAO", camera.Size, GraphicsFormat::SRGBA8_UNORM);
-		if(false) { // SSAO
-			DrawCallState drawState;
-			drawState.Shader = m_SSAOShader;
-			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
-			drawState.ClearDepthTarget = false;
-			drawState.ClearColorTarget = true;
-			drawState.RasterState.CullMode = ECullMode::None;
-			drawState.DepthStencilState.DepthEnable = false;
-			drawState.ViewPort = camera.Size;
-
-			drawState.BindTarget(0, ssaoRT);
-			drawState.BindTexture("WorldPositionRT", worldPosRT);
-			drawState.BindTexture("NormalWorldRT", normalsRT);
-			drawState.BindTexture("NoiseTex", ssaoNoiseTex);
-
-			std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-			std::default_random_engine generator;
-			std::vector<glm::vec4> ssaoKernel;
-			for (unsigned int i = 0; i < SSAO_SAMPLE_COUNT; ++i)
-			{
-				glm::vec4 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator), 1);
-				sample = glm::normalize(sample);
-				sample *= randomFloats(generator);
-				float scale = float(i) / float(SSAO_SAMPLE_COUNT);
-
-				// scale samples s.t. they're more aligned to center of kernel
-				scale = lerp(0.1f, 1.0f, scale * scale);
-				sample *= scale;
-				ssaoKernel.push_back(sample);
-			}
-
-			BEGIN_UB(SSAODesc, desc)
-				desc->ProjectionMatrix = projectionMatrix;
-				desc->ViewMatrix = viewMatrix;
-				desc->NoiseData = vec4((Vector2)camera.Size / 4.0f, ssaoRadius, ssaoBias);
-				memcpy(desc->Samples, ssaoKernel.data(), ssaoKernel.size() * sizeof(Vector4));
-			END_UB(SSAODesc);
-
-			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
-			m_RenderManager->GetUniformBufferCache().Reset();
-		}*/
 
 		auto smoothNormalsRT = m_RenderManager->CreateTemporalRenderTarget("SmoothNormals", camera.Size, GraphicsFormat::RGBA8_UNORM);
 
@@ -640,6 +604,15 @@ namespace Aurora
 				desc->CameraPos = Vector4(cameraTransform.Translation, 0.0);
 				desc->TestOptions = testOptions;
 			END_UB(PBRDesc)
+
+			if(mainDirLight && mainDirLightTransform)
+			{
+				BEGIN_UB(DirectionalLight, desc)
+					desc->Direction = mainDirLightTransform->Forward;
+					desc->Radiance = mainDirLight->LightColor;
+					desc->Multiplier = mainDirLight->Intensity;
+				END_UB(DirectionalLight)
+			}
 
 			drawState.BindTarget(0, compositedRT);
 

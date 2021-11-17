@@ -8,3 +8,13 @@ uniformbuffer PBRDesc
 	vec4 CameraPos;
 	vec4 TestOptions;
 };
+
+uniformbuffer DirectionalLight
+{
+	vec3 Direction;
+#if defined(SHADER_ENGINE_SIDE)
+	float Padding0;
+#endif
+	vec3 Radiance;
+	float Multiplier;
+} g_DirLight;
