@@ -5,6 +5,7 @@
 uniformbuffer PBRDesc
 {
 	mat4 u_InvProjectionView;
+	mat4 u_DirLightProjectionViewMatrix;
 	vec4 CameraPos;
 	vec4 TestOptions;
 };
