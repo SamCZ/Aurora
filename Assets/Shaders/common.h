@@ -10,7 +10,9 @@ using namespace Aurora;
 
 typedef Matrix4 mat4;
 typedef Vector4 vec4;
+typedef Vector3 vec3;
 typedef Vector2 vec2;
+typedef glm::mat4x3 mat4x3;
 #endif
 
 #if !defined(SHADER_ENGINE_SIDE)

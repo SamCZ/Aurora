@@ -1,9 +1,11 @@
 in vec2 TexCoord;
 
 //layout(location = 0) out float LinearDepth;
+layout(location = 0) out vec4 ColorMask;
 
 void main()
 {
 	// TODO: Alpha discarding
 	//LinearDepth = gl_FragCoord.z;
+	ColorMask = vec4(1.0);
 }

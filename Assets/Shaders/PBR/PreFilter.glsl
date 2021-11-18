@@ -101,13 +101,15 @@ void main()
 		vec3 H = ImportanceSampleGGX(Xi, N, Roughness);
 		vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
+		float HdotV = dot(H, V);
+
 		float NdotL = max(dot(N, L), 0.0);
 		if(NdotL > 0.0)
 		{
+			HdotV = max(HdotV, 0.0f);
 			// sample from the environment's mip level based on roughness/pdf
 			float D   = DistributionGGX(N, H, Roughness);
 			float NdotH = max(dot(N, H), 0.0);
-			float HdotV = max(dot(H, V), 0.0);
 			float pdf = D * NdotH / (4.0 * HdotV) + 0.0001;
 
 			float resolution = CubeMapFaceSize; // resolution of source cubemap (per face)

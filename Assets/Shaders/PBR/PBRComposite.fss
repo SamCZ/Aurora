@@ -14,6 +14,7 @@ layout(binding = 4) uniform sampler2D DepthMap;
 layout(binding = 5) uniform samplerCube PreFilteredMap;
 layout(binding = 6) uniform samplerCube IrradianceConvolutionMap;
 layout(binding = 7) uniform sampler2D BrdfLutMap;
+layout(binding = 8) uniform sampler2D DirLightDepthMap;
 
 out vec4 FragColor;
 
@@ -32,6 +33,64 @@ vec3 GetSceneWorldPos()
 
 	vec4 homogenousLocation = u_InvProjectionView * clipSpaceLocation;
 	return homogenousLocation.xyz / homogenousLocation.w;
+}
+
+float SampleShadowMap(sampler2D shadowMap, ivec2 coords, float compare)
+{
+	return step(compare, texelFetch(shadowMap, coords, 0).r);
+}
+
+float DoShadowMappingLinear(vec3 worldPos, ivec2 offset, vec3 projCoords)
+{
+	float currentDepth = projCoords.z;
+	vec2 fracPart = fract(projCoords.xy);
+
+	ivec2 shadowCoord = ivec2(projCoords.xy * textureSize(DirLightDepthMap, 0)) + offset;
+
+	const float g_bias = 0.001f;
+
+	float blTexel = SampleShadowMap(DirLightDepthMap, shadowCoord, currentDepth - g_bias);
+	float brTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(-1, 0), currentDepth - g_bias);
+	float tlTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(0, 1), currentDepth - g_bias);
+	float trTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(1, 1), currentDepth - g_bias);
+
+	float mixA = mix(blTexel, tlTexel, fracPart.y);
+	float mixB = mix(brTexel, trTexel, fracPart.y);
+
+	return 1.0 - mix(mixA, mixB, fracPart.x);
+}
+
+float DoShadowMapping(vec3 worldPos, vec3 normal)
+{
+	vec4 fragPosLightSpace = u_DirLightProjectionViewMatrix * vec4(worldPos, 1.0);
+	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+	projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+	for(int i = 0; i < 3; i++) {
+		if(projCoords[i] > 1.0 || projCoords[i] < 0.0) {
+			return 0;
+		}
+	}
+
+	float currentDepth = projCoords.z;
+
+	float bias = 0.001f;
+
+	float shadow = 0.0;
+
+	vec2 texelSize = 1.0 / textureSize(DirLightDepthMap, 0);
+	for(int x = -1; x <= 1; ++x)
+	{
+		for(int y = -1; y <= 1; ++y)
+		{
+			//float pcfDepth = texelFetch(DirLightDepthMap, ivec2((projCoords.xy + vec2(x, y) * texelSize) * textureSize(DirLightDepthMap, 0)), 0).r;
+			//shadow += currentDepth - bias > pcfDepth ? currentDepth : 0.0;
+			shadow += DoShadowMappingLinear(worldPos, ivec2(x, y), projCoords);
+		}
+	}
+	shadow /= 9.0;
+
+	return shadow;
 }
 
 void main()
@@ -65,14 +124,10 @@ void main()
 	vec3 Lo = vec3(0.0);
 	//Dir light
 
-	vec3 g_DirLight = normalize(vec3(0.5, 0.5, 0.5));
-	vec3 g_DirLightColor = vec3(1, 1, 1);
-	float g_DirLightIntensity = 1.0f;
-
 	{
-		vec3 L = normalize(g_DirLight);
+		vec3 L = normalize(g_DirLight.Direction);
 		vec3 H = normalize(V + L);
-		vec3 radiance     = g_DirLightColor * g_DirLightIntensity * 1.0;
+		vec3 radiance = g_DirLight.Radiance * g_DirLight.Multiplier;
 
 		// Cook-Torrance BRDF
 		float NDF = DistributionGGX(N, H, roughness);
@@ -98,8 +153,10 @@ void main()
 		float NdotL = max(dot(N, L), 0.0);
 
 		// add to outgoing radiance Lo
-		Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+		//Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+		Lo += (albedo + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 	}
+
 
 	// ambient lighting (we now use IBL as the ambient term)
 	vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
@@ -121,6 +178,9 @@ void main()
 	vec3 ambient = (kD * diffuse + specular) * ao;
 
 	vec3 color = ambient + Lo;
+
+	//color = vec3(DoShadowMappingLinear(WorldPos, ivec2(0, 0)));
+	color = mix(color, color * 0.5, DoShadowMapping(WorldPos, N));
 
 	FragColor.rgb = color;
 	FragColor.a = 1;

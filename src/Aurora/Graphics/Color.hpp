@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <sstream>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace Aurora
 {
@@ -33,6 +35,16 @@ namespace Aurora
 		static constexpr Color black() { return {0, 0, 0}; }
 		static constexpr Color white() { return {255, 255, 255}; }
 		static constexpr Color zero() { return {0, 0, 0, 0}; }
+
+		operator glm::vec3() const
+		{
+			return {r / 255.0f, g / 255.0f, b / 255.0f};
+		}
+
+		operator glm::vec4() const
+		{
+			return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+		}
 	};
 
 	static std::ostream& operator<<(std::ostream& os, const Color& color)

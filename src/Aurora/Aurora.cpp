@@ -273,7 +273,19 @@ namespace Aurora
 				CPU_DEBUG_SCOPE("ImGui render");
 				GPU_DEBUG_SCOPE("ImGui render");
 				ImGui::Render();
-				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+				static bool canRender = true;
+
+				if(canRender)
+					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+				if(GLFWWindow* window = dynamic_cast<GLFWWindow*>(m_Window))
+				{
+					if(glfwGetKey(window->GetHandle(), GLFW_KEY_I) == GLFW_PRESS)
+					{
+						canRender = !canRender;
+					}
+				}
 			}
 
 			g_Context->m_RenderDevice->InvalidateState();

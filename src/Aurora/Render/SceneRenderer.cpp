@@ -10,6 +10,7 @@
 #include "Aurora/Physics/Frustum.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Graphics/DShape.hpp"
+#include "Aurora/Graphics/OpenGL/GLTexture.hpp"
 
 #include "Shaders/vs_common.h"
 #include "Shaders/ps_common.h"
@@ -37,7 +38,7 @@ namespace Aurora
 
 		m_PBRCompositeShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
 				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
-				{EShaderType::Pixel, "Assets/Shaders/PBR/pbr_composite.fss"},
+				{EShaderType::Pixel, "Assets/Shaders/PBR/PBRComposite.fss"},
 		});
 
 		m_SSAOShader = GetEngine()->GetResourceManager()->LoadShader("SSAO", {
@@ -182,6 +183,7 @@ namespace Aurora
 
 		DispatchState dispatchState;
 		dispatchState.Shader = m_IRRCShader;
+		dispatchState.BindSampler("_EnvironmentMap", Samplers::ClampClampNearestNearest);
 		dispatchState.BindTexture("_EnvironmentMap", envMap);
 		dispatchState.BindTexture("o_CubeMap", m_IRRCMap, true);
 		m_RenderDevice->Dispatch(dispatchState, size.x / 16, size.y / 16, 6);
@@ -403,9 +405,13 @@ namespace Aurora
 		Frustum frustum(projectionViewMatrix);
 		AABB frustumBounds = frustum.GetBounds();
 
-		PrepareRender(&frustum);
-		SortVisibleEntities();
+		int32_t dirLightShadowMapResolution = 2048;
+		//auto dirLightShadowColorMask = m_RenderManager->CreateTemporalRenderTarget("DirLightMask", {dirLightShadowMapResolution, dirLightShadowMapResolution}, GraphicsFormat::RGBA8_UNORM);
+		auto dirLightDepthRt = m_RenderManager->CreateTemporalRenderTarget("DirLightDepth", {dirLightShadowMapResolution, dirLightShadowMapResolution}, GraphicsFormat::D32);
 
+		const DirectionalLightComponent* mainDirLight = nullptr;
+		const TransformComponent* mainDirLightTransform = nullptr;
+		Matrix4 dirLightProjectionView;
 		{ // Prepare lights
 			auto view = m_Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
 
@@ -417,17 +423,64 @@ namespace Aurora
 				const TransformComponent& transformComponent = view.get<TransformComponent>(entity);
 				const DirectionalLightComponent& directionalLightComponent = view.get<DirectionalLightComponent>(entity);
 
-				Matrix4 lightViewMatrix = transformComponent.GetTransform();
+				Matrix4 lightViewMatrix = glm::inverse(transformComponent.GetTransform());
 
 				/*it will be a few mofor (uint8_t i = 0; i < splitCount; ++i)
 				{
 					std::cout << splits[i] << std::endl;
 				}
 				std::cout << "------------" << std::endl;*/
+
+				mainDirLight = &directionalLightComponent;
+				mainDirLightTransform = &transformComponent;
+
+				{ // Render from dir light perspective
+					float near_plane = 1.0f, far_plane = 500.0f;
+					glm::mat4 dirLightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+
+					dirLightProjectionView = dirLightProjection * lightViewMatrix;
+
+					m_CurrentCameraEntity = Entity(entity, m_Scene);
+
+					Frustum dirLightFrustum(dirLightProjection * lightViewMatrix);
+					PrepareRender(&dirLightFrustum);
+					SortVisibleEntities();
+
+					DrawCallState drawState;
+					drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
+
+					BEGIN_UB(BaseVSData, baseVsData)
+						baseVsData->ProjectionMatrix = dirLightProjection;
+						baseVsData->ViewMatrix = lightViewMatrix;
+						baseVsData->ProjectionViewMatrix = dirLightProjection * lightViewMatrix;
+					END_UB(BaseVSData)
+
+					drawState.ClearDepthTarget = true;
+					drawState.ClearColorTarget = false;
+					drawState.DepthStencilState.DepthEnable = true;
+					drawState.RasterState.CullMode = ECullMode::Front;
+					drawState.ClearColor = Color(255, 255, 255, 0);
+
+					drawState.ViewPort = FViewPort(dirLightShadowMapResolution, dirLightShadowMapResolution);
+
+					RenderSet globalRenderSet = BuildRenderSet();
+					drawState.BindDepthTarget(dirLightDepthRt, 0, 0);
+					//drawState.BindTarget(0, dirLightShadowColorMask);
+
+					m_RenderDevice->BindRenderTargets(drawState);
+					m_RenderDevice->ClearRenderTargets(drawState);
+					RenderPass(drawState, globalRenderSet, EPassType::Depth);
+					m_RenderManager->GetUniformBufferCache().Reset();
+				}
+
+				break;
 			}
 		}
 
+		m_CurrentCameraEntity = Entity(cameraEntityID, m_Scene);
 		// Actual render
+		PrepareRender(&frustum);
+		SortVisibleEntities();
 
 		auto albedoAndFlagsRT = m_RenderManager->CreateTemporalRenderTarget("Albedo", camera.Size, GraphicsFormat::RGBA16_FLOAT);
 		auto normalsRT = m_RenderManager->CreateTemporalRenderTarget("Normals", camera.Size, GraphicsFormat::RGBA8_UNORM);
@@ -478,8 +531,18 @@ namespace Aurora
 		}
 		ImGui::End();
 
-		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::SRGBA8_UNORM);
-		auto preetham = RenderPreethamSky({128, 128}, skyData.x, skyData.y, skyData.z);
+		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::RGBA8_UNORM);
+
+		float azimuth = 0;
+		float inclination = 0;
+
+		if(mainDirLightTransform)
+		{
+			azimuth = glm::radians(mainDirLightTransform->Rotation.x);
+			inclination = glm::radians(mainDirLightTransform->Rotation.y);
+		}
+
+		auto preetham = RenderPreethamSky({128, 128}, skyData.x, azimuth, inclination);
 
 		if(true)
 		{ // Sky render
@@ -508,59 +571,6 @@ namespace Aurora
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
-
-		/*static float ssaoRadius = 3.0f;
-		static float ssaoBias = 0.025f;
-
-		ImGui::Begin("SSAO");
-		{
-			ImGui::DragFloat("Bias", &ssaoBias, 0.01f);
-			ImGui::DragFloat("Radius", &ssaoRadius, 0.01f);
-		}
-		ImGui::End();
-
-		auto ssaoRT = m_RenderManager->CreateTemporalRenderTarget("SSAO", camera.Size, GraphicsFormat::SRGBA8_UNORM);
-		if(false) { // SSAO
-			DrawCallState drawState;
-			drawState.Shader = m_SSAOShader;
-			drawState.PrimitiveType = EPrimitiveType::TriangleStrip;
-			drawState.ClearDepthTarget = false;
-			drawState.ClearColorTarget = true;
-			drawState.RasterState.CullMode = ECullMode::None;
-			drawState.DepthStencilState.DepthEnable = false;
-			drawState.ViewPort = camera.Size;
-
-			drawState.BindTarget(0, ssaoRT);
-			drawState.BindTexture("WorldPositionRT", worldPosRT);
-			drawState.BindTexture("NormalWorldRT", normalsRT);
-			drawState.BindTexture("NoiseTex", ssaoNoiseTex);
-
-			std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-			std::default_random_engine generator;
-			std::vector<glm::vec4> ssaoKernel;
-			for (unsigned int i = 0; i < SSAO_SAMPLE_COUNT; ++i)
-			{
-				glm::vec4 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator), 1);
-				sample = glm::normalize(sample);
-				sample *= randomFloats(generator);
-				float scale = float(i) / float(SSAO_SAMPLE_COUNT);
-
-				// scale samples s.t. they're more aligned to center of kernel
-				scale = lerp(0.1f, 1.0f, scale * scale);
-				sample *= scale;
-				ssaoKernel.push_back(sample);
-			}
-
-			BEGIN_UB(SSAODesc, desc)
-				desc->ProjectionMatrix = projectionMatrix;
-				desc->ViewMatrix = viewMatrix;
-				desc->NoiseData = vec4((Vector2)camera.Size / 4.0f, ssaoRadius, ssaoBias);
-				memcpy(desc->Samples, ssaoKernel.data(), ssaoKernel.size() * sizeof(Vector4));
-			END_UB(SSAODesc);
-
-			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
-			m_RenderManager->GetUniformBufferCache().Reset();
-		}*/
 
 		auto smoothNormalsRT = m_RenderManager->CreateTemporalRenderTarget("SmoothNormals", camera.Size, GraphicsFormat::RGBA8_UNORM);
 
@@ -597,7 +607,7 @@ namespace Aurora
 
 		auto compositedRT = m_RenderManager->CreateTemporalRenderTarget("CompositedRT", camera.Size, GraphicsFormat::RGBA16_FLOAT);
 
-		static Vector4 testOptions(1, 1, 1, 0);
+		static Vector4 testOptions(1, 0, 0.25f, 0);
 
 		ImGui::Begin("Test PBR options");
 		ImGui::DragFloat("roughness", &testOptions.x, 0.01f, 0, 1);
@@ -626,6 +636,10 @@ namespace Aurora
 			//drawState.BindTexture("SSAORT", ssaoRT);
 
 			drawState.BindTexture("DepthMap", depthRT);
+			drawState.BindSampler("DepthMap", Samplers::ClampClampNearestNearest);
+
+			drawState.BindTexture("DirLightDepthMap", dirLightDepthRt);
+			drawState.BindSampler("DirLightDepthMap", Samplers::ClampClampNearestNearest);
 
 			drawState.BindTexture("PreFilteredMap", m_PreFilteredMap);
 			drawState.BindTexture("IrradianceConvolutionMap", m_IRRCMap);
@@ -637,15 +651,32 @@ namespace Aurora
 
 			BEGIN_UB(PBRDesc, desc)
 				desc->u_InvProjectionView = glm::inverse(projectionViewMatrix);
+				desc->u_DirLightProjectionViewMatrix = dirLightProjectionView;
 				desc->CameraPos = Vector4(cameraTransform.Translation, 0.0);
 				desc->TestOptions = testOptions;
 			END_UB(PBRDesc)
+
+			if(mainDirLight && mainDirLightTransform)
+			{
+				BEGIN_UB(DirectionalLight, desc)
+					desc->Direction = mainDirLightTransform->Forward;
+					desc->Radiance = mainDirLight->LightColor;
+					desc->Multiplier = mainDirLight->Intensity;
+				END_UB(DirectionalLight)
+			}
 
 			drawState.BindTarget(0, compositedRT);
 
 			m_RenderDevice->Draw(drawState, {DrawArguments(4)});
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
+
+
+		Texture_ptr tex = dirLightDepthRt;
+		ImGui::Image((ImTextureID)((GLTexture*)tex.get())->Handle(), ImVec2(512, 512));
+
+		dirLightDepthRt.Free();
+		//dirLightShadowColorMask.Free();
 
 		{ // Debug shapes
 			GPU_DEBUG_SCOPE("Debug Shapes");
