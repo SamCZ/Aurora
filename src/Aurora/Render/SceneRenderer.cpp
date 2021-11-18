@@ -164,7 +164,7 @@ namespace Aurora
 
 			auto[width, height] = m_PreFilteredMap->GetDesc().GetMipSize(mip);
 			dispatchState.BindTexture("o_CubeMap", m_PreFilteredMap, true, TextureBinding::EAccess::Write, mip);
-			m_RenderDevice->Dispatch(dispatchState, width / 32, height / 32, 6);
+			m_RenderDevice->Dispatch(dispatchState, (int)glm::ceil(width / 16.0f), (int)glm::ceil(height / 16.0f), 6);
 		}
 
 		return m_PreFilteredMap;
@@ -184,7 +184,7 @@ namespace Aurora
 		dispatchState.Shader = m_IRRCShader;
 		dispatchState.BindTexture("_EnvironmentMap", envMap);
 		dispatchState.BindTexture("o_CubeMap", m_IRRCMap, true);
-		m_RenderDevice->Dispatch(dispatchState, size.x / 32, size.y / 32, 6);
+		m_RenderDevice->Dispatch(dispatchState, size.x / 16, size.y / 16, 6);
 
 		return m_IRRCMap;
 	}
@@ -478,8 +478,8 @@ namespace Aurora
 		}
 		ImGui::End();
 
-		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::RGBA8_UNORM);
-		auto preetham = RenderPreethamSky({512, 512}, skyData.x, skyData.y, skyData.z);
+		auto skyRT = m_RenderManager->CreateTemporalRenderTarget("Sky", camera.Size, GraphicsFormat::SRGBA8_UNORM);
+		auto preetham = RenderPreethamSky({128, 128}, skyData.x, skyData.y, skyData.z);
 
 		if(true)
 		{ // Sky render

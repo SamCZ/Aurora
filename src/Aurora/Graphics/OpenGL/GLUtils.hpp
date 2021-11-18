@@ -25,6 +25,7 @@
         auto err = glGetError();                                                                                         \
         if (err != GL_NO_ERROR)                                                                                          \
         {                                                                                                                \
+            __builtin_trap();                                                                                                        \
         	AU_LOG_ERROR("\nGL Error Code: ", err);                                                                            \
         	throw std::runtime_error("OpenGL Error !");                                                                 \
         }                                                                                                                \
