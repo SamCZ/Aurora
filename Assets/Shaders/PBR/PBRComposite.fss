@@ -4,18 +4,18 @@
 
 in vec2 TexCoord;
 
-uniform sampler2D AlbedoAndFlagsRT;
-uniform sampler2D NormalsRT;
-uniform sampler2D RoughnessMetallicAORT;
-uniform sampler2D SkyRT;
-uniform sampler2D SSAORT;
+layout(binding = 0) uniform sampler2D AlbedoAndFlagsRT;
+layout(binding = 1) uniform sampler2D NormalsRT;
+layout(binding = 2) uniform sampler2D RoughnessMetallicAORT;
+layout(binding = 3) uniform sampler2D SkyRT;
+layout(binding = 4) uniform sampler2D SSAORT;
 
-uniform sampler2D DepthMap;
+layout(binding = 5) uniform sampler2D DepthMap;
 
-uniform samplerCube PreFilteredMap;
-uniform samplerCube IrradianceConvolutionMap;
-uniform sampler2D BrdfLutMap;
-uniform sampler2D DirLightDepthMap;
+layout(binding = 6) uniform samplerCube PreFilteredMap;
+layout(binding = 7) uniform samplerCube IrradianceConvolutionMap;
+layout(binding = 8) uniform sampler2D BrdfLutMap;
+layout(binding = 9) uniform sampler2D DirLightDepthMap;
 
 out vec4 FragColor;
 
