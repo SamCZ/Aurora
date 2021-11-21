@@ -76,7 +76,7 @@ namespace Aurora
 
 		BEGIN_UBW(VertexUniform, desc);
 			desc->Projection = glm::ortho(0.0f, (float)screenSize.x, (float)screenSize.y, 0.0f, 0.0f, 1.0f);
-			std::cout << glm::to_string(desc->Projection) << std::endl;
+
 			if(m_TransformEnabled)
 			{
 				desc->ModelMat = m_Transform * glm::translate(Vector3(translation.x, translation.y, 0));
