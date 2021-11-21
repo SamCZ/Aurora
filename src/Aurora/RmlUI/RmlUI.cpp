@@ -6,6 +6,7 @@
 
 #include "RmShellSystemInterface.hpp"
 #include "RmShellRenderInterfaceOpenGL.hpp"
+#include "RmlUIFileInterface.hpp"
 
 #include "Aurora/Aurora.hpp"
 #include "Aurora/App/IWindow.hpp"
@@ -71,7 +72,7 @@ namespace Aurora
 		{
 			Rml::SetRenderInterface(new RmShellRenderInterfaceOpenGL());
 			Rml::SetSystemInterface(new RmShellSystemInterface());
-			//Rml::SetFileInterface(new Detail::RmlFile(context_));
+			Rml::SetFileInterface(new RmlUIFileInterface());
 			Rml::Initialise();
 			Rml::Factory::RegisterEventListenerInstancer(&RmlEventListenerInstancerInstance);
 			Rml::Factory::RegisterContextInstancer(&RmlContextInstancerInstance);
@@ -99,12 +100,12 @@ namespace Aurora
 			Rml::Factory::RegisterEventListenerInstancer(nullptr); // Set to a static object instance because there is no getter to delete it.
 			auto* renderer = Rml::GetRenderInterface();
 			auto* system = Rml::GetSystemInterface();
-			//auto* file = Rml::GetFileInterface();
+			auto* file = Rml::GetFileInterface();
 			Rml::ReleaseTextures();
 			Rml::Shutdown();
 			delete renderer;
 			delete system;
-			//delete file;
+			delete file;
 		}
 	}
 

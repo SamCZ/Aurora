@@ -19,6 +19,10 @@ target_compile_definitions(Aurora PUBLIC AURORA_OPENGL=1)
 target_compile_definitions(Aurora PUBLIC SHADER_ENGINE_SIDE=1)
 target_compile_definitions(Aurora PUBLIC AURORA_PROJECT_DIR="${PROJECT_SOURCE_DIR}")
 
+target_compile_definitions(Aurora PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE)
+target_compile_definitions(Aurora PUBLIC GLM_ENABLE_EXPERIMENTAL)
+target_compile_definitions(Aurora PUBLIC GLM_EXT_INCLUDED)
+
 if(AU_GPU_PROFILE)
     target_compile_definitions(Aurora PUBLIC AU_GPU_PROFILE=1)
     target_compile_definitions(Aurora PUBLIC OPENGL_ERROR_CHECKING=1)

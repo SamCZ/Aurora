@@ -8,35 +8,42 @@
 #define TINYGLTF_NO_INCLUDE_JSON
 #include <tiny_gltf.h>
 
+#include <Aurora/Engine.hpp>
 #include <Aurora/Core/Common.hpp>
+#include <Aurora/Resource/ResourceManager.hpp>
 #include <Aurora/Graphics/Mesh.hpp>
 #include <Aurora/Graphics/Base/IRenderDevice.hpp>
 #include <Aurora/Graphics/Material/MaterialPBR.hpp>
 
 namespace Aurora
 {
-	/*struct AuGLTFFileSystem
+	struct AuGLTFFileSystem
 	{
-		bool FileExistsFunction(const std::string &abs_filename, void *)
+		static bool FileExistsFunction(const std::string &abs_filename, void* userData)
 		{
-
+			(void)userData;
+			return GetEngine()->GetResourceManager()->FileExists(abs_filename);
 		}
 
-		std::string ExpandFilePathFunction(const std::string &, void *)
+		static std::string ExpandFilePathFunction(const std::string& filepath, void* userData)
 		{
-
+			return tinygltf::ExpandFilePath(filepath, userData);
 		}
 
-		bool ReadWholeFileFunction(std::vector<unsigned char> *, std::string *, const std::string &, void *)
+		static bool ReadWholeFileFunction(std::vector<unsigned char>* out, std::string* err, const std::string& filepath, void* userData)
 		{
-
+			(void)userData;
+			*out = GetEngine()->GetResourceManager()->LoadFile(filepath);
+			return !out->empty();
 		}
 
-		bool WriteWholeFileFunction(std::string *, const std::string &, const std::vector<unsigned char> &, void *)
+		static bool WriteWholeFileFunction(std::string *, const std::string &, const std::vector<unsigned char> &, void* userData)
 		{
-
+			(void)userData;
+			AU_LOG_WARNING("WriteWholeFileFunction is not implemented !");
+			return false;
 		}
-	};*/
+	};
 
 	Texture_ptr GLTFImageToTexture(tinygltf::Image& image, IRenderDevice* renderDevice)
 	{
@@ -333,7 +340,14 @@ namespace Aurora
 	{
 		tinygltf::TinyGLTF loader;
 
-		//loader.SetFsCallbacks();
+		tinygltf::FsCallbacks fsCallbacks = {
+			&AuGLTFFileSystem::FileExistsFunction,
+			&AuGLTFFileSystem::ExpandFilePathFunction,
+			&AuGLTFFileSystem::ReadWholeFileFunction,
+			&AuGLTFFileSystem::WriteWholeFileFunction,
+			nullptr
+		};
+		loader.SetFsCallbacks(fsCallbacks);
 
 		std::string err;
 		std::string warn;
