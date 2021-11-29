@@ -56,9 +56,20 @@ namespace Aurora
 
 		[[nodiscard]] Matrix4 GetTransform() const
 		{
-			return  glm::translate(glm::mat4(1.0f), Translation)
-					* glm::toMat4(glm::quat(glm::radians(Rotation)))
-					* glm::scale(glm::mat4(1.0f), Scale);
+			const glm::mat4 transformX = glm::rotate(glm::mat4(1.0f),
+				glm::radians(Rotation.x),
+				glm::vec3(1.0f, 0.0f, 0.0f));
+			const glm::mat4 transformY = glm::rotate(glm::mat4(1.0f),
+				glm::radians(Rotation.y),
+				glm::vec3(0.0f, 1.0f, 0.0f));
+			const glm::mat4 transformZ = glm::rotate(glm::mat4(1.0f),
+				glm::radians(Rotation.z),
+				glm::vec3(0.0f, 0.0f, 1.0f));
+
+			// Y * X * Z
+			const glm::mat4 roationMatrix = transformY * transformX * transformZ;
+
+			return  glm::translate(glm::mat4(1.0f), Translation) * roationMatrix * glm::scale(glm::mat4(1.0f), Scale);
 		}
 
 		void SetFromMatrix(const Matrix4& mat)
