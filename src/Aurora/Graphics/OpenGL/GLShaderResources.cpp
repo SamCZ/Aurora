@@ -170,20 +170,28 @@ namespace Aurora
 
 					RemoveArrayBrackets(Name.data());
 
-					m_Samplers.push_back(
-							{*NamesPool.emplace(Name.data()).first,
+					for (GLint arr_ind = 0; arr_ind < size; ++arr_ind)
+					{
+						std::string strName = Name.data();
+
+						if(size > 1)
+						{
+							strName += "[" + std::to_string(arr_ind) + "]";
+						}
+
+						m_Samplers.push_back(
+							{*NamesPool.emplace(strName).first,
 							 ResourceType,
 							 m_SamplerBinding,
 							 static_cast<uint32_t>(size),
 							 UniformLocation,
 							 dataType}
-					);
+						);
 
-					for (GLint arr_ind = 0; arr_ind < size; ++arr_ind)
-					{
 						// glProgramUniform1i is not available in GLES3.0
-						glUniform1i(UniformLocation + arr_ind, m_SamplerBinding++);
+						glUniform1i(UniformLocation + arr_ind, m_SamplerBinding);
 						CHECK_GL_ERROR_ARG("Failed to set binding point for sampler uniform '", Name.data(), '\'');
+						m_SamplerBinding++;
 					}
 
 					break;
