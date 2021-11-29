@@ -124,6 +124,11 @@ namespace Aurora
 		Rml::Debugger::SetVisible(visible);
 	}
 
+	void RmlUI::ToggleDebuggerVisible()
+	{
+		SetDebuggerVisible(!Rml::Debugger::IsVisible());
+	}
+
 	bool RmlUI::LoadFont(const std::string &resourceName, bool fallback)
 	{
 		return Rml::LoadFontFace(resourceName, fallback);

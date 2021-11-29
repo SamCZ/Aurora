@@ -40,9 +40,16 @@ namespace Aurora
 		if(!file) return 0;
 		auto* handle = (AuRmlFileHandle*)file;
 
-		std::memcpy(buffer, handle->Data.data() + handle->Pos, size);
+		size_t maxRead = size;
+		if(handle->Pos + size > handle->Length)
+		{
+			maxRead = size - ((handle->Pos + size) - handle->Length);
+		}
 
-		return size;
+		std::memcpy(buffer, handle->Data.data() + handle->Pos, maxRead);
+		handle->Pos += maxRead;
+
+		return maxRead;
 	}
 
 	bool RmlUIFileInterface::Seek(Rml::FileHandle file, long offset, int origin)

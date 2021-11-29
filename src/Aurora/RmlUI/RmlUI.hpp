@@ -26,6 +26,7 @@ namespace Aurora
 	public:
 		Rml::ElementDocument* LoadDocument(const std::string& path);
 		void SetDebuggerVisible(bool visible);
+		void ToggleDebuggerVisible();
 		bool LoadFont(const std::string& resourceName, bool fallback = false);
 		Rml::Context* GetRmlContext() const;
 		void SetScale(float scale);
