@@ -7,6 +7,11 @@
 
 namespace Aurora
 {
+	GLBuffer* GetBuffer(const Buffer_ptr& buffer);
+	GLTexture* GetTexture(const Texture_ptr& texture);
+	GLSampler* GetSampler(const Sampler_ptr& sampler);
+	GLShaderProgram* GetShader(const Shader_ptr& shader);
+
 	class FrameBuffer
 	{
 	public:
@@ -51,6 +56,8 @@ namespace Aurora
 
 		// Embedded shaders
 		Shader_ptr m_BlitShader;
+
+		EGpuVendor m_GpuVendor;
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
@@ -95,6 +102,8 @@ namespace Aurora
 
 		void SetViewPort(const FViewPort& wp) override;
 		[[nodiscard]] const FViewPort& GetCurrentViewPort() const override;
+
+		size_t GetUsedGPUMemory() override;
 	public:
 		void BindShaderResources(const BaseState& state) override;
 		void ApplyDispatchState(const DispatchState& state) override;
