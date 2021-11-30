@@ -16,10 +16,10 @@ void main()
 
 	FragColor = sceneColor;
 	FragColor += bloomColor;
-	FragColor.rgb = Reinhard(FragColor.rgb);
+	//FragColor.rgb = Reinhard(FragColor.rgb);
 	FragColor.a = 1.0f;
 
-	FragColor.rgb = pow(FragColor.rgb, vec3(1.0 / gamma));
+	//FragColor.rgb = pow(FragColor.rgb, vec3(1.0 / gamma));
 
-	//FragColor = fromLinear(FragColor);
+	FragColor = fromLinear(FragColor);
 }

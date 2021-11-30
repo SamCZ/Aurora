@@ -216,6 +216,7 @@ namespace Aurora
 		float Intensity = 1.0f;
 		Color LightColor = Color::white();
 		EShadowMode ShadowMode = EShadowMode::Soft;
+		float ShadowIntensity = 0.5f;
 		float Near = 1.0f;
 		float Far  = 500.0f;
 	};

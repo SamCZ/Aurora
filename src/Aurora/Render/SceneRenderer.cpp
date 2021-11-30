@@ -84,6 +84,23 @@ namespace Aurora
 		m_IRRCShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/PBR/IrradianceConvolution.glsl");
 
 		CreateBrdfMap();
+
+		// Init cascades
+		m_DirCascadeSettings.NumOfCascades = 1;
+		m_DirCascadeSettings.CascadeResolutions = {
+			2048, 1024, 512, 256, 256
+		};
+
+		m_DirCascadeTextures.reserve(m_DirCascadeSettings.NumOfCascades + 1);
+		m_DirCascadesMatrices.resize(m_DirCascadeSettings.NumOfCascades + 1);
+		m_DirCascadesDistances.resize(m_DirCascadeSettings.NumOfCascades);
+		for (int i = 0; i < m_DirCascadeSettings.NumOfCascades; ++i)
+		{
+			uint16_t currentResolution = m_DirCascadeSettings.CascadeResolutions[i];
+			m_DirCascadeTextures.push_back(m_RenderManager->CreateRenderTarget("DirLightCascadeDepth[" + std::to_string(i) + "]", {currentResolution, currentResolution}, GraphicsFormat::D32));
+		}
+
+		m_DirCascadeUniformBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("CascadeDesc", sizeof(CascadeDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
 	}
 
 	SceneRenderer::~SceneRenderer()
@@ -91,6 +108,12 @@ namespace Aurora
 		ssaoNoiseTex.reset();
 		DShapes::Destroy();
 	}
+
+	class Test
+	{
+		String Name;
+		int Cislo;
+	};
 
 	void SceneRenderer::CreateBrdfMap()
 	{
@@ -372,14 +395,89 @@ namespace Aurora
 		return modelContexts;
 	}
 
-	float lerp(float a, float b, float f)
+	std::vector<glm::vec4> GetFrustumCornersWorldSpace(const glm::mat4& projectionView)
 	{
-		return a + f * (b - a);
+		const auto inv = glm::inverse(projectionView);
+
+		std::vector<glm::vec4> frustumCorners;
+		for (unsigned int x = 0; x < 2; ++x)
+		{
+			for (unsigned int y = 0; y < 2; ++y)
+			{
+				for (unsigned int z = 0; z < 2; ++z)
+				{
+					const glm::vec4 pt =
+						inv * glm::vec4(
+							2.0f * x - 1.0f,
+							2.0f * y - 1.0f,
+							2.0f * z - 1.0f,
+							1.0f);
+					frustumCorners.push_back(pt / pt.w);
+				}
+			}
+		}
+
+		return frustumCorners;
+	}
+
+	std::pair<glm::mat4, glm::mat4> GetLightSpaceMatrix(const CameraComponent* mainCamera, const Matrix4& cameraViewMatrix, const Vector3& lightDir, const float nearPlane, const float farPlane)
+	{
+		const auto proj = glm::perspective(glm::radians(mainCamera->Fov), (float)mainCamera->Size.x / (float)mainCamera->Size.y, nearPlane, farPlane);
+		const auto corners = GetFrustumCornersWorldSpace(proj * cameraViewMatrix);
+
+		glm::vec3 center = glm::vec3(0, 0, 0);
+		for (const auto& v : corners)
+		{
+			center += glm::vec3(v);
+		}
+		center /= corners.size();
+
+		const auto lightView = glm::lookAt(center + lightDir, center, glm::vec3(0.0f, 1.0f, 0.0f));
+
+		float minX = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::min();
+		float minY = std::numeric_limits<float>::max();
+		float maxY = std::numeric_limits<float>::min();
+		float minZ = std::numeric_limits<float>::max();
+		float maxZ = std::numeric_limits<float>::min();
+		for (const auto& v : corners)
+		{
+			const auto trf = lightView * v;
+			minX = std::min(minX, trf.x);
+			maxX = std::max(maxX, trf.x);
+			minY = std::min(minY, trf.y);
+			maxY = std::max(maxY, trf.y);
+			minZ = std::min(minZ, trf.z);
+			maxZ = std::max(maxZ, trf.z);
+		}
+
+		// Tune this parameter according to the scene
+		constexpr float zMult = 2.0f;
+		if (minZ < 0)
+		{
+			minZ *= zMult;
+		}
+		else
+		{
+			minZ /= zMult;
+		}
+		if (maxZ < 0)
+		{
+			maxZ /= zMult;
+		}
+		else
+		{
+			maxZ *= zMult;
+		}
+
+		const glm::mat4 lightProjection = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+
+		return std::make_pair(lightProjection, lightView);
 	}
 
 	std::vector<float> CalcRations(const CameraComponent& camera, float lambda, uint8_t splits)
 	{
-		auto ratios = std::vector<float>(splits);
+		/*auto ratios = std::vector<float>(splits);
 		float logArgument = (camera.ZFar / camera.ZNear);
 		float uniArgument = (camera.ZFar - camera.ZNear);
 		for (uint8_t i = 1; i <= splits; ++i) {
@@ -387,7 +485,35 @@ namespace Aurora
 			double result = (lambda * (camera.ZNear * std::pow(logArgument, parameter))) + ((1.0f - lambda)*(camera.ZNear + uniArgument * parameter));
 			ratios[i-1] = static_cast<float>(result);
 		}
-		return ratios;
+		return ratios;*/
+		float cameraFarPlane = camera.ZFar;
+
+		return {cameraFarPlane / 25.0f};
+		//return {cameraFarPlane / 50.0f, cameraFarPlane / 25.0f, cameraFarPlane / 10.0f, cameraFarPlane / 2.0f};
+	}
+
+	std::vector<std::pair<glm::mat4, glm::mat4>> SceneRenderer::GetLightSpaceMatrices(std::vector<float> rations, const CameraComponent* mainCamera, const Matrix4& cameraViewMatrix, const Vector3& lightDir)
+	{
+		std::vector<std::pair<glm::mat4, glm::mat4>> ret;
+		for (size_t i = 0; i < rations.size() + 1; ++i)
+		{
+			if (i == 0)
+			{
+				ret.push_back(GetLightSpaceMatrix(mainCamera, cameraViewMatrix, lightDir, mainCamera->ZNear, rations[i]));
+				m_DirCascadesDistances[i] = rations[i];
+			}
+			else if (i < rations.size())
+			{
+				ret.push_back(GetLightSpaceMatrix(mainCamera, cameraViewMatrix, lightDir, rations[i - 1], rations[i]));
+				m_DirCascadesDistances[i] = rations[i];
+			}
+			else
+			{
+				ret.push_back(GetLightSpaceMatrix(mainCamera, cameraViewMatrix, lightDir, rations[i - 1], mainCamera->ZFar));
+				m_DirCascadesDistances[i] = mainCamera->ZFar;
+			}
+		}
+		return ret;
 	}
 
 	void SceneRenderer::Render(entt::entity cameraEntityID)
@@ -405,25 +531,22 @@ namespace Aurora
 		Frustum frustum(projectionViewMatrix);
 		AABB frustumBounds = frustum.GetBounds();
 
-		int32_t dirLightShadowMapResolution = 2048;
 		//auto dirLightShadowColorMask = m_RenderManager->CreateTemporalRenderTarget("DirLightMask", {dirLightShadowMapResolution, dirLightShadowMapResolution}, GraphicsFormat::RGBA8_UNORM);
-		auto dirLightDepthRt = m_RenderManager->CreateTemporalRenderTarget("DirLightDepth", {dirLightShadowMapResolution, dirLightShadowMapResolution}, GraphicsFormat::D32);
 
 		const DirectionalLightComponent* mainDirLight = nullptr;
 		const TransformComponent* mainDirLightTransform = nullptr;
-		Matrix4 dirLightProjectionView;
 		{ // Prepare lights
 			auto view = m_Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
 
-			uint8_t splitCount = 4;
-			std::vector<float> splits = CalcRations(camera, 1.0f, splitCount);
+			std::vector<float> rations = CalcRations(camera, 0.95f, m_DirCascadeSettings.NumOfCascades);
 
 			for(entt::entity entity : view)
 			{
 				const TransformComponent& transformComponent = view.get<TransformComponent>(entity);
 				const DirectionalLightComponent& directionalLightComponent = view.get<DirectionalLightComponent>(entity);
 
-				Matrix4 lightViewMatrix = glm::inverse(transformComponent.GetTransform());
+				auto splitData = GetLightSpaceMatrices(rations, &camera, viewMatrix, transformComponent.Forward);
+
 
 				/*it will be a few mofor (uint8_t i = 0; i < splitCount; ++i)
 				{
@@ -434,15 +557,17 @@ namespace Aurora
 				mainDirLight = &directionalLightComponent;
 				mainDirLightTransform = &transformComponent;
 
+				glEnable(GL_DEPTH_CLAMP);
+
+				for (int i = 0; i < m_DirCascadeSettings.NumOfCascades; ++i)
 				{ // Render from dir light perspective
-					float near_plane = 1.0f, far_plane = 500.0f;
-					glm::mat4 dirLightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
-
-					dirLightProjectionView = dirLightProjection * lightViewMatrix;
-
 					m_CurrentCameraEntity = Entity(entity, m_Scene);
 
-					Frustum dirLightFrustum(dirLightProjection * lightViewMatrix);
+					auto[dirProj, dirView] = splitData[i];
+
+					m_DirCascadesMatrices[i] = dirProj * dirView;
+
+					Frustum dirLightFrustum(dirProj * dirView);
 					PrepareRender(&dirLightFrustum);
 					SortVisibleEntities();
 
@@ -450,28 +575,29 @@ namespace Aurora
 					drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
 
 					BEGIN_UB(BaseVSData, baseVsData)
-						baseVsData->ProjectionMatrix = dirLightProjection;
-						baseVsData->ViewMatrix = lightViewMatrix;
-						baseVsData->ProjectionViewMatrix = dirLightProjection * lightViewMatrix;
+						baseVsData->ProjectionMatrix = dirProj;
+						baseVsData->ViewMatrix = dirView;
+						baseVsData->ProjectionViewMatrix = m_DirCascadesMatrices[i];
 					END_UB(BaseVSData)
 
 					drawState.ClearDepthTarget = true;
 					drawState.ClearColorTarget = false;
 					drawState.DepthStencilState.DepthEnable = true;
-					drawState.RasterState.CullMode = ECullMode::Front;
+					drawState.RasterState.CullMode = ECullMode::Back;
 					drawState.ClearColor = Color(255, 255, 255, 0);
 
-					drawState.ViewPort = FViewPort(dirLightShadowMapResolution, dirLightShadowMapResolution);
+					drawState.ViewPort = FViewPort(m_DirCascadeSettings.CascadeResolutions[i], m_DirCascadeSettings.CascadeResolutions[i]);
 
 					RenderSet globalRenderSet = BuildRenderSet();
-					drawState.BindDepthTarget(dirLightDepthRt, 0, 0);
-					//drawState.BindTarget(0, dirLightShadowColorMask);
+					drawState.BindDepthTarget(m_DirCascadeTextures[i], 0, 0);
 
 					m_RenderDevice->BindRenderTargets(drawState);
 					m_RenderDevice->ClearRenderTargets(drawState);
 					RenderPass(drawState, globalRenderSet, EPassType::Depth);
 					m_RenderManager->GetUniformBufferCache().Reset();
 				}
+
+				glDisable(GL_DEPTH_CLAMP);
 
 				break;
 			}
@@ -638,8 +764,11 @@ namespace Aurora
 			drawState.BindTexture("DepthMap", depthRT);
 			drawState.BindSampler("DepthMap", Samplers::ClampClampNearestNearest);
 
-			drawState.BindTexture("DirLightDepthMap", dirLightDepthRt);
-			drawState.BindSampler("DirLightDepthMap", Samplers::ClampClampNearestNearest);
+			for (int i = 0; i < m_DirCascadeSettings.NumOfCascades; ++i)
+			{
+				drawState.BindTexture("DirCascadeMaps[" + std::to_string(i) + "]", m_DirCascadeTextures[i]);
+				drawState.BindSampler("DirCascadeMaps[" + std::to_string(i) + "]", Samplers::ClampClampNearestNearest);
+			}
 
 			drawState.BindTexture("PreFilteredMap", m_PreFilteredMap);
 			drawState.BindTexture("IrradianceConvolutionMap", m_IRRCMap);
@@ -651,10 +780,18 @@ namespace Aurora
 
 			BEGIN_UB(PBRDesc, desc)
 				desc->u_InvProjectionView = glm::inverse(projectionViewMatrix);
-				desc->u_DirLightProjectionViewMatrix = dirLightProjectionView;
+				desc->u_ViewMatrix = viewMatrix;
 				desc->CameraPos = Vector4(cameraTransform.Translation, 0.0);
 				desc->TestOptions = testOptions;
 			END_UB(PBRDesc)
+
+			BEGIN_UBW(CascadeDesc, desc)
+				memcpy(desc->u_CascadeMatrices, m_DirCascadesMatrices.data(), sizeof(Matrix4) * (m_DirCascadeSettings.NumOfCascades + 1));
+				for (int i = 0; i < m_DirCascadeSettings.NumOfCascades; ++i)
+				{
+					desc->u_CascadeDistances[i] = {m_DirCascadesDistances[i], m_DirCascadeTextures[i]->GetDesc().Width};
+				}
+			END_UBW(drawState, m_DirCascadeUniformBuffer, "CascadeDesc");
 
 			if(mainDirLight && mainDirLightTransform)
 			{
@@ -662,6 +799,8 @@ namespace Aurora
 					desc->Direction = mainDirLightTransform->Forward;
 					desc->Radiance = mainDirLight->LightColor;
 					desc->Multiplier = mainDirLight->Intensity;
+					desc->Multiplier = mainDirLight->Intensity;
+					desc->ShadowIntensity =  {mainDirLight->ShadowIntensity, 0};
 				END_UB(DirectionalLight)
 			}
 
@@ -672,10 +811,14 @@ namespace Aurora
 		}
 
 
-		Texture_ptr tex = dirLightDepthRt;
-		ImGui::Image((ImTextureID)((GLTexture*)tex.get())->Handle(), ImVec2(512, 512));
-
-		dirLightDepthRt.Free();
+		ImGui::Begin("Cascade textures");
+		for (int i = 0; i < m_DirCascadeSettings.NumOfCascades; ++i)
+		{
+			Texture_ptr tex = m_DirCascadeTextures[i];
+			GLuint texHandle = ((GLTexture*)tex.get())->Handle();
+			ImGui::Image(reinterpret_cast<ImTextureID>(texHandle), ImVec2(glm::min<float>(512, tex->GetDesc().Width), glm::min<float>(512, tex->GetDesc().Width)));
+		}
+		ImGui::End();
 		//dirLightShadowColorMask.Free();
 
 		{ // Debug shapes

@@ -80,6 +80,8 @@ namespace Aurora
 
 		glfwInit();
 
+		g_Context = new AuroraContext();
+
 		// Init and create window
 		m_Window = new GLFWWindow();
 		m_Window->Initialize(windowDefinition, nullptr);
@@ -129,7 +131,6 @@ namespace Aurora
 		}
 
 		// Init global context
-		g_Context = new AuroraContext();
 		g_Context->m_Window = m_Window;
 		g_Context->m_InputManager = m_Window->GetInputManager().get();
 		g_Context->m_RenderDevice = m_RenderDevice;
@@ -256,8 +257,49 @@ namespace Aurora
 				{
 					std::stringstream ss;
 					ss << "FPS: " << FPS;
+					m_VgRender->DrawText(ss.str(), {5, 55}, Color::black(), 12);
+				}
 
-					m_VgRender->DrawText(ss.str(), {5, 200}, Color::black(), 16);
+				{
+					std::stringstream ss;
+					ss << "Used GPU memory: " << FormatBytes(m_RenderDevice->GetUsedGPUMemory());
+					m_VgRender->DrawText(ss.str(), {5, 25}, Color::black(), 16);
+				}
+
+				{
+
+
+					const FrameRenderStatistics& renderStatistics = m_RenderDevice->GetFrameRenderStatistics();
+
+					{
+						std::stringstream ss;
+						ss << "Draw calls: " << renderStatistics.DrawCalls;
+						m_VgRender->DrawText(ss.str(), {5, 75}, Color::black(), 12);
+					}
+
+					{
+						std::stringstream ss;
+						ss << "Vertex Count: " << renderStatistics.VertexCount;
+						m_VgRender->DrawText(ss.str(), {5, 85}, Color::black(), 12);
+					}
+
+					{
+						std::stringstream ss;
+						ss << "Buffer Writes: " << renderStatistics.BufferWrites;
+						m_VgRender->DrawText(ss.str(), {5, 95}, Color::black(), 12);
+					}
+
+					{
+						std::stringstream ss;
+						ss << "Buffer Maps: " << renderStatistics.BufferMaps;
+						m_VgRender->DrawText(ss.str(), {5, 105}, Color::black(), 12);
+					}
+
+					{
+						std::stringstream ss;
+						ss << "Memory usage: " << FormatBytes(renderStatistics.GPUMemoryUsage);
+						m_VgRender->DrawText(ss.str(), {5, 115}, Color::black(), 12);
+					}
 				}
 
 				m_VgRender->End();
@@ -274,7 +316,7 @@ namespace Aurora
 				GPU_DEBUG_SCOPE("ImGui render");
 				ImGui::Render();
 
-				static bool canRender = true;
+				static bool canRender = false;
 
 				if(canRender)
 					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -292,6 +334,7 @@ namespace Aurora
 
 			{
 				m_RenderManager->EndFrame();
+				m_RenderDevice->ResetFrameRenderStatistics();
 				CPU_DEBUG_SCOPE("Swap chain");
 				m_SwapChain->Present(0);
 			}

@@ -2,9 +2,13 @@
 
 #include "Aurora/Core/Time.hpp"
 #include "Aurora/Logger/Logger.hpp"
+#include "Aurora/Resource/ResourceManager.hpp"
 #include "Base/IRenderDevice.hpp"
 
 #include "InternalShaders/Blit.hpp"
+
+#include <stb_image.h>
+#include "Aurora/Resource/stb/stb_image_resize.h"
 
 namespace Aurora
 {
@@ -137,6 +141,162 @@ namespace Aurora
 		textureDesc.IsUAV = uav;
 
 		return m_RenderDevice->CreateTexture(textureDesc);
+	}
+
+	Texture_ptr RenderManager::CreateTextureArray(const std::vector<Path> &textures, bool srgba)
+	{
+		if(textures.empty()) {
+			AU_LOG_WARNING("Provided empty list of textures");
+			return nullptr;
+		}
+
+		auto resourceManager = GetEngine()->GetResourceManager();
+
+		Texture_ptr pTexArray = nullptr;
+
+		int targetWidth = 0;
+		int targetHeight = 0;
+		bool targetSizeInitialized = false;
+
+		for (int i = 0; i < textures.size(); ++i) {
+			const Path& path = textures[i];
+
+			auto fileData = resourceManager->LoadFile(path);
+
+			if(fileData.empty()) {
+				AU_LOG_FATAL("Could not load ", path);
+			}
+
+			int width,height,channels_in_file;
+			unsigned char *data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+			if(!data) {
+				AU_LOG_ERROR("Cannot load texture !", path.string());
+				return nullptr;
+			}
+
+			if(!targetSizeInitialized) {
+				targetSizeInitialized = true;
+				targetWidth = width;
+				targetHeight = height;
+
+				TextureDesc textureDesc;
+				textureDesc.Name = "TextureArray";
+				textureDesc.Width = targetWidth;
+				textureDesc.Height = targetHeight;
+				textureDesc.MipLevels = textureDesc.GetMipLevelCount();
+				textureDesc.DepthOrArraySize = textures.size();
+				textureDesc.ImageFormat = srgba ? GraphicsFormat::SRGBA8_UNORM : GraphicsFormat::RGBA8_UNORM;
+				textureDesc.DimensionType = EDimensionType::TYPE_2DArray;
+
+				pTexArray = m_RenderDevice->CreateTexture(textureDesc);
+			}
+
+			if(width != targetWidth || height != targetHeight) {
+				auto* resizedData = new uint8_t[targetWidth * targetHeight * STBI_rgb_alpha];
+				stbir_resize_uint8(data, width, height, 0, resizedData, targetWidth, targetHeight, 0, STBI_rgb_alpha);
+				stbi_image_free(data);
+				data = resizedData;
+				width = targetWidth;
+				height = targetHeight;
+			}
+
+			for (unsigned int mipLevel = 0; mipLevel < pTexArray->GetDesc().MipLevels; mipLevel++)
+			{
+				m_RenderDevice->WriteTexture(pTexArray, mipLevel, i, data);
+
+				if (mipLevel < pTexArray->GetDesc().MipLevels - 1u)
+				{
+					int newWidth = std::max<int>(1, width >> 1);
+					int newHeight = std::max<int>(1, height >> 1);
+
+					auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
+					stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);
+
+					stbi_image_free(data);
+					data = resizedData;
+					width = newWidth;
+					height = newHeight;
+				}
+			}
+
+			stbi_image_free(data);
+		}
+
+		return pTexArray;
+	}
+
+	Texture_ptr RenderManager::CreateCubeMap(const std::array<Path, 6>& textures, bool srgba)
+	{
+		Texture_ptr pTexArray = nullptr;
+
+		int targetWidth = 0;
+		int targetHeight = 0;
+		bool targetSizeInitialized = false;
+
+		for (int i = 0; i < textures.size(); ++i) {
+			const Path& path = textures[i];
+
+			auto fileData = GetEngine()->GetResourceManager()->LoadFile(path);
+
+			if(fileData.empty()) {
+				AU_LOG_FATAL("Could not load ", path);
+			}
+
+			int width,height,channels_in_file;
+			unsigned char *data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
+			if(!data) {
+				AU_LOG_ERROR("Cannot load texture !", path.string());
+				return nullptr;
+			}
+
+			if(!targetSizeInitialized) {
+				targetSizeInitialized = true;
+				targetWidth = width;
+				targetHeight = height;
+
+				TextureDesc textureDesc;
+				textureDesc.Name = "CubeMap";
+				textureDesc.Width = targetWidth;
+				textureDesc.Height = targetHeight;
+				textureDesc.MipLevels = textureDesc.GetMipLevelCount();
+				textureDesc.DepthOrArraySize = textures.size();
+				textureDesc.ImageFormat = srgba ? GraphicsFormat::SRGBA8_UNORM : GraphicsFormat::RGBA8_UNORM;
+				textureDesc.DimensionType = EDimensionType::TYPE_CubeMap;
+
+				pTexArray = m_RenderDevice->CreateTexture(textureDesc);
+			}
+
+			if(width != targetWidth || height != targetHeight) {
+				auto* resizedData = new uint8_t[targetWidth * targetHeight * STBI_rgb_alpha];
+				stbir_resize_uint8(data, width, height, 0, resizedData, targetWidth, targetHeight, 0, STBI_rgb_alpha);
+				stbi_image_free(data);
+				data = resizedData;
+				width = targetWidth;
+				height = targetHeight;
+			}
+
+			for (unsigned int mipLevel = 0; mipLevel < pTexArray->GetDesc().MipLevels; mipLevel++)
+			{
+				m_RenderDevice->WriteTexture(pTexArray, mipLevel, i, data);
+
+				if (mipLevel < pTexArray->GetDesc().MipLevels - 1u)
+				{
+					int newWidth = std::max<int>(1, width >> 1);
+					int newHeight = std::max<int>(1, height >> 1);
+
+					auto* resizedData = new uint8_t[newWidth * newHeight * STBI_rgb_alpha];
+					stbir_resize_uint8(data, width, height, 0, resizedData, newWidth, newHeight, 0, STBI_rgb_alpha);
+
+					stbi_image_free(data);
+					data = resizedData;
+					width = newWidth;
+					height = newHeight;
+				}
+			}
+
+			stbi_image_free(data);
+		}
+		return pTexArray;
 	}
 
 	void RenderManager::Blit(const Texture_ptr &src, const Texture_ptr &dest)

@@ -157,6 +157,9 @@ namespace Aurora
 			return std::move(CreateRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav));
 		}
 
+		Texture_ptr CreateTextureArray(const std::vector<Path>& textures, bool srgba);
+		Texture_ptr CreateCubeMap(const std::array<Path, 6>& textures, bool srgba);
+
 		void Blit(const Texture_ptr &src, const Texture_ptr &dest);
 
 		void Blit(const Texture_ptr &src)

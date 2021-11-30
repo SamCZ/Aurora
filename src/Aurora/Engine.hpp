@@ -19,14 +19,14 @@ namespace Aurora
 	{
 		friend class AuroraEngine;
 	private:
-		ResourceManager* m_ResourceManager;
-		RenderManager* m_RenderManager;
-		IRenderDevice* m_RenderDevice;
-		IWindow* m_Window;
-		Input::IManager* m_InputManager;
-		RmlUI* m_RmlUI;
-		VgRender* m_VgRender;
-		PhysicsWorld* m_PhysicsWorld;
+		ResourceManager* m_ResourceManager = nullptr;
+		RenderManager* m_RenderManager = nullptr;
+		IRenderDevice* m_RenderDevice = nullptr;
+		IWindow* m_Window = nullptr;
+		Input::IManager* m_InputManager = nullptr;
+		RmlUI* m_RmlUI = nullptr;
+		VgRender* m_VgRender = nullptr;
+		PhysicsWorld* m_PhysicsWorld = nullptr;
 	public:
 		[[nodiscard]] inline ResourceManager* GetResourceManager() const { return m_ResourceManager; }
 		[[nodiscard]] inline RenderManager* GetRenderManager() const { return m_RenderManager; }
