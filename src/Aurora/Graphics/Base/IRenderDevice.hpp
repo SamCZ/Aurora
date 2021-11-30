@@ -258,8 +258,26 @@ namespace Aurora
 				, StartInstanceLocation(0) {}
 	};
 
+	enum class EGpuVendor : uint8_t
+	{
+		Unknown = 0,
+		Nvidia,
+		AMD
+	};
+
+	struct FrameRenderStatistics
+	{
+		uint32_t VertexCount;
+		uint32_t DrawCalls;
+		uint32_t BufferWrites;
+		uint32_t BufferMaps;
+		uint32_t GPUMemoryUsage;
+	};
+
 	class IRenderDevice
 	{
+	protected:
+		FrameRenderStatistics m_FrameRenderStatistics = {};
 	public:
 		IRenderDevice() = default;
 		IRenderDevice(const IRenderDevice& other) = delete;
@@ -287,7 +305,8 @@ namespace Aurora
 		virtual void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) = 0;
 		virtual void* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) = 0;
 
-		template<typename T> T* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
+		template<typename T>
+		inline T* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
 		{
 			return reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
 		}
@@ -328,5 +347,10 @@ namespace Aurora
 		virtual void SetRasterState(const FRasterState& rasterState) = 0;
 		virtual void ClearRenderTargets(const DrawCallState &state) = 0;
 		virtual void SetDepthStencilState(FDepthStencilState state) = 0;
+
+		virtual size_t GetUsedGPUMemory() = 0;
+
+		[[nodiscard]] inline const FrameRenderStatistics& GetFrameRenderStatistics() const { return m_FrameRenderStatistics; }
+		inline void ResetFrameRenderStatistics() { memset(&m_FrameRenderStatistics, 0, sizeof(FrameRenderStatistics)); }
 	};
 }

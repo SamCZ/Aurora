@@ -8,13 +8,14 @@ layout(binding = 0) uniform sampler2D AlbedoAndFlagsRT;
 layout(binding = 1) uniform sampler2D NormalsRT;
 layout(binding = 2) uniform sampler2D RoughnessMetallicAORT;
 layout(binding = 3) uniform sampler2D SkyRT;
+layout(binding = 4) uniform sampler2D SSAORT;
 
-layout(binding = 4) uniform sampler2D DepthMap;
+layout(binding = 5) uniform sampler2D DepthMap;
 
-layout(binding = 5) uniform samplerCube PreFilteredMap;
-layout(binding = 6) uniform samplerCube IrradianceConvolutionMap;
-layout(binding = 7) uniform sampler2D BrdfLutMap;
-layout(binding = 8) uniform sampler2D DirLightDepthMap;
+layout(binding = 6) uniform samplerCube PreFilteredMap;
+layout(binding = 7) uniform samplerCube IrradianceConvolutionMap;
+layout(binding = 8) uniform sampler2D BrdfLutMap;
+layout(binding = 9) uniform sampler2D DirCascadeMaps[4];
 
 out vec4 FragColor;
 
@@ -40,29 +41,54 @@ float SampleShadowMap(sampler2D shadowMap, ivec2 coords, float compare)
 	return step(compare, texelFetch(shadowMap, coords, 0).r);
 }
 
-float DoShadowMappingLinear(vec3 worldPos, ivec2 offset, vec3 projCoords)
+/*float DoShadowMappingLinear(vec3 worldPos, ivec2 offset, vec3 projCoords, float bias)
 {
 	float currentDepth = projCoords.z;
 	vec2 fracPart = fract(projCoords.xy);
 
 	ivec2 shadowCoord = ivec2(projCoords.xy * textureSize(DirLightDepthMap, 0)) + offset;
 
-	const float g_bias = 0.001f;
-
-	float blTexel = SampleShadowMap(DirLightDepthMap, shadowCoord, currentDepth - g_bias);
-	float brTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(-1, 0), currentDepth - g_bias);
-	float tlTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(0, 1), currentDepth - g_bias);
-	float trTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(1, 1), currentDepth - g_bias);
+	float blTexel = SampleShadowMap(DirLightDepthMap, shadowCoord, currentDepth - bias);
+	float brTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(-1, 0), currentDepth - bias);
+	float tlTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(0, 1), currentDepth - bias);
+	float trTexel = SampleShadowMap(DirLightDepthMap, shadowCoord + ivec2(1, 1), currentDepth - bias);
 
 	float mixA = mix(blTexel, tlTexel, fracPart.y);
 	float mixB = mix(brTexel, trTexel, fracPart.y);
 
 	return 1.0 - mix(mixA, mixB, fracPart.x);
-}
+}*/
+
+const int cascadeCount = 4;
 
 float DoShadowMapping(vec3 worldPos, vec3 normal)
 {
-	vec4 fragPosLightSpace = u_DirLightProjectionViewMatrix * vec4(worldPos, 1.0);
+	vec4 fragPosViewSpace = u_ViewMatrix * vec4(worldPos, 1.0);
+	float depthValue = abs(fragPosViewSpace.z);
+
+	int layer = -1;
+	for (int i = 0; i < cascadeCount; ++i)
+	{
+		if (depthValue <= u_CascadeDistances[i].x)
+		{
+			layer = i;
+			break;
+		}
+	}
+	if (layer == -1)
+	{
+		layer = cascadeCount;
+	}
+
+	layer = 0;
+
+	//layer = cascadeCount - layer;
+
+	//layer = 1;
+
+	//return float(layer) / float(cascadeCount);
+
+	vec4 fragPosLightSpace = u_CascadeMatrices[layer] * vec4(worldPos, 1.0);
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 	projCoords.xy = projCoords.xy * 0.5 + 0.5;
 
@@ -74,18 +100,28 @@ float DoShadowMapping(vec3 worldPos, vec3 normal)
 
 	float currentDepth = projCoords.z;
 
-	float bias = 0.001f;
+	float bias = 0.005f;
+	//bias = max(0.05 * (1.0 - dot(normal, g_DirLight.Direction)), 0.005);
+
+	if (layer == cascadeCount)
+	{
+		bias *= 1 / (far_plane * 0.5f);
+	}
+	else
+	{
+		bias *= 1 / (u_CascadeDistances[layer].x * 0.5f);
+	}
 
 	float shadow = 0.0;
 
-	vec2 texelSize = 1.0 / textureSize(DirLightDepthMap, 0);
+	vec2 texelSize = 1.0f / vec2(u_CascadeDistances[layer].y);
 	for(int x = -1; x <= 1; ++x)
 	{
 		for(int y = -1; y <= 1; ++y)
 		{
-			//float pcfDepth = texelFetch(DirLightDepthMap, ivec2((projCoords.xy + vec2(x, y) * texelSize) * textureSize(DirLightDepthMap, 0)), 0).r;
-			//shadow += currentDepth - bias > pcfDepth ? currentDepth : 0.0;
-			shadow += DoShadowMappingLinear(worldPos, ivec2(x, y), projCoords);
+			float pcfDepth = texture(DirCascadeMaps[layer], projCoords.xy + vec2(x, y) * texelSize, 0).r;
+			shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;
+			//shadow += DoShadowMappingLinear(worldPos, ivec2(x, y), projCoords, bias);
 		}
 	}
 	shadow /= 9.0;
@@ -97,7 +133,7 @@ void main()
 {
 	vec4 albedoFlags = texelFetch(AlbedoAndFlagsRT, ivec2(gl_FragCoord.xy), 0);
 	vec4 normals = texelFetch(NormalsRT, ivec2(gl_FragCoord.xy), 0);
-	vec4 RMA = texelFetch(RoughnessMetallicAORT, ivec2(gl_FragCoord.xy), 0);
+	vec4 RougnessMetallicOcclusion = texelFetch(RoughnessMetallicAORT, ivec2(gl_FragCoord.xy), 0);
 
 	if(albedoFlags.a == 0)
 	{
@@ -112,14 +148,14 @@ void main()
 
 	float roughness = TestOptions.x;
 	float metallic = TestOptions.y;
-	float ao = TestOptions.z;
+	float ao = RougnessMetallicOcclusion.z;
 
 	vec3 N = normalize(normals.xyz * 2.0f - 1.0f);
 	vec3 V = normalize(CameraPos.xyz - WorldPos);
 	vec3 R = reflect(-V, N);
 
-	vec3 F0 = vec3(0.04);
-	F0 = mix(F0, clamp(albedo, 0, 1), metallic);
+	vec3 F0 = vec3(0.04f);
+	//F0 = mix(F0, clamp(albedo, 0.0001f, 1), metallic);
 
 	vec3 Lo = vec3(0.0);
 	//Dir light
@@ -132,10 +168,10 @@ void main()
 		// Cook-Torrance BRDF
 		float NDF = DistributionGGX(N, H, roughness);
 		float G   = GeometrySmith(N, V, L, roughness);
-		vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
+		vec3 F    = fresnelSchlick(max(dot(H, V), 0) - 0.00001f, F0);
 
 		vec3 nominator    = NDF * G * F;
-		float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // 0.001 to prevent divide by zero.
+		float denominator = (4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f)) + 0.001f; // 0.001 to prevent divide by zero.
 		vec3 specular = nominator / denominator;
 
 		// kS is equal to Fresnel
@@ -157,6 +193,7 @@ void main()
 		Lo += (albedo + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 	}
 
+	Lo = mix(Lo, Lo * (1.0f - (g_DirLight.ShadowIntensity.x)), DoShadowMapping(WorldPos, N));
 
 	// ambient lighting (we now use IBL as the ambient term)
 	vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
@@ -180,7 +217,8 @@ void main()
 	vec3 color = ambient + Lo;
 
 	//color = vec3(DoShadowMappingLinear(WorldPos, ivec2(0, 0)));
-	color = mix(color, color * 0.5, DoShadowMapping(WorldPos, N));
+	//color = mix(color, color * (1.0f - (g_DirLight.ShadowIntensity.x)), DoShadowMapping(WorldPos, N));
+	//color = vec3(DoShadowMapping(WorldPos, N));
 
 	FragColor.rgb = color;
 	FragColor.a = 1;

@@ -48,6 +48,12 @@ namespace Aurora
 			float Intensity = 1.0f;
 			float DirtIntensity = 1.0f;
 		};
+
+		struct DirLightShadowSettings
+		{
+			uint8_t NumOfCascades;
+			std::vector<uint16_t> CascadeResolutions;
+		};
 	private:
 		Scene* m_Scene;
 		RenderManager* m_RenderManager;
@@ -60,6 +66,14 @@ namespace Aurora
 		std::array<std::vector<entt::entity>, SortTypeCount> m_FinalSortedEntities;
 
 		Buffer_ptr m_InstancingBuffer;
+
+		DirLightShadowSettings m_DirCascadeSettings;
+		std::vector<Texture_ptr> m_DirCascadeTextures;
+		std::vector<Matrix4> m_DirCascadesMatrices;
+		std::vector<float> m_DirCascadesDistances;
+		Buffer_ptr m_DirCascadeUniformBuffer;
+
+		Texture_ptr m_SkyTextureCubeMap;
 
 		Shader_ptr m_PBRCompositeShader;
 		Shader_ptr m_SkyShader;
@@ -107,5 +121,8 @@ namespace Aurora
 		void RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext>& modelContexts, EPassType passType);
 
 		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
+
+	private:
+		std::vector<std::pair<glm::mat4, glm::mat4>> GetLightSpaceMatrices(std::vector<float> rations, const CameraComponent* mainCamera, const Matrix4& cameraViewMatrix, const Vector3& lightDir);
 	};
 }

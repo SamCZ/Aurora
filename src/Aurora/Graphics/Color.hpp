@@ -2,8 +2,7 @@
 
 #include <cstdint>
 #include <sstream>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
+#include <glm/glm.hpp>
 
 namespace Aurora
 {
@@ -28,6 +27,9 @@ namespace Aurora
 
 		constexpr Color(uint32_t rgba)
 				: rgba(rgba) {}
+
+		Color(const glm::vec3& rgb) : r(glm::round(rgb.x * 255.0f)), g(glm::round(rgb.y * 255.0f)), b(glm::round(rgb.z * 255.0f)), a(1.0f) { }
+		Color(const glm::vec4& rgb) : r(glm::round(rgb.x * 255.0f)), g(glm::round(rgb.y * 255.0f)), b(glm::round(rgb.z * 255.0f)), a(glm::round(rgb.w * 255.0f)) { }
 
 		static constexpr Color red() { return {255, 0, 0}; }
 		static constexpr Color green() { return {0, 255, 0}; }

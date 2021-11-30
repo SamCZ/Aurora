@@ -179,7 +179,7 @@ namespace Aurora
 	m_LastRasterState(),
 	m_LastDepthState(),
 	m_LastViewPort(0, 0),
-	  m_LastInputLayout(nullptr)
+	m_LastInputLayout(nullptr)
 	{
 
 	}
@@ -214,6 +214,20 @@ namespace Aurora
 
         AU_LOG_INFO("GPU Vendor: ", vendor);
         AU_LOG_INFO("GPU Renderer: ", renderer);
+
+		std::stringstream ssVendor;
+		ssVendor << vendor;
+		std::string vendorName = ssVendor.str();
+
+		// TODO: Finish other GPU vendor types
+		if(vendorName.find("NVIDIA") != std::string::npos)
+		{
+			m_GpuVendor = EGpuVendor::Nvidia;
+		}
+		else
+		{
+			m_GpuVendor = EGpuVendor::AMD;
+		}
 
 		{
 			GLint size;
@@ -981,6 +995,8 @@ namespace Aurora
 		CHECK_GL_ERROR();
 
 		glBindBuffer(glBuffer->BindTarget(), GL_NONE);
+
+		m_FrameRenderStatistics.BufferWrites++;
 	}
 
 	void GLRenderDevice::ClearBufferUInt(const Buffer_ptr &buffer, uint32_t clearValue)
@@ -1024,6 +1040,8 @@ namespace Aurora
 		if(buffer == nullptr) {
 			return nullptr;
 		}
+		m_FrameRenderStatistics.BufferMaps++;
+
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
 		return glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
@@ -1096,7 +1114,10 @@ namespace Aurora
 		for(const auto& drawArg : args) {
 			glDrawArraysInstanced(primitiveType, GLint(drawArg.StartVertexLocation), GLint(drawArg.VertexCount), GLint(drawArg.InstanceCount));
 			CHECK_GL_ERROR();
+			m_FrameRenderStatistics.VertexCount += drawArg.VertexCount * drawArg.InstanceCount;
 		}
+
+		m_FrameRenderStatistics.DrawCalls++;
 	}
 
 	#define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -1118,18 +1139,37 @@ namespace Aurora
 		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
 		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
 
+		GLsizei* count = nullptr;
+		uintptr_t* indices = nullptr;
+		uint16_t multiDrawCount = 0;
+
 		for(const auto& drawArg : args) {
 			if(drawArg.InstanceCount > 1) {
 				//glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
 				glDrawElementsInstanced(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount));
 			} else {
 				//glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLint(drawArg.StartVertexLocation));
-				glDrawElements(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation));
+				//glDrawElements(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation));
+
+				if(!count)
+					count = (GLsizei*)alloca( sizeof(GLsizei) * args.size());
+				if(!indices)
+					indices = (uintptr_t*)alloca( sizeof(uintptr_t) * args.size());
+
+				count[multiDrawCount] = GLsizei(drawArg.VertexCount);
+				indices[multiDrawCount] = drawArg.StartIndexLocation;
+				multiDrawCount++;
 			}
+			m_FrameRenderStatistics.VertexCount += drawArg.VertexCount * 3 * drawArg.InstanceCount;
 		}
+
+		if(multiDrawCount > 0)
+			glMultiDrawElements(primitiveType, count, ibFormat, (const void* const*)indices, multiDrawCount);
 
 		/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_NONE);
 		glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);*/
+
+		m_FrameRenderStatistics.DrawCalls++;
 	}
 
 	void GLRenderDevice::DrawIndirect(const DrawCallState &state, const Buffer_ptr &indirectParams, uint32_t offsetBytes)
@@ -1219,6 +1259,8 @@ namespace Aurora
 						GLsizei(layoutAttribute.Stride),
 						(const void*)size_t(layoutAttribute.Offset));
 			}
+
+			m_FrameRenderStatistics.GPUMemoryUsage += glBuffer->GetDesc().ByteSize - layoutAttribute.Offset;
 
 			//glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
 		}
@@ -1872,5 +1914,20 @@ namespace Aurora
 	const FViewPort &GLRenderDevice::GetCurrentViewPort() const
 	{
 		return m_LastViewPort;
+	}
+
+	size_t GLRenderDevice::GetUsedGPUMemory()
+	{
+		if(m_GpuVendor == EGpuVendor::Nvidia)
+		{
+			GLint totalAvailableMemory;
+			glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX, &totalAvailableMemory);
+
+			GLint currentAvailableMemory;
+			glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, &currentAvailableMemory);
+			return totalAvailableMemory - currentAvailableMemory;
+		}
+
+		return 0;
 	}
 }

@@ -11,8 +11,12 @@
 #endif
 
 #include "Input/GLFW/Manager.hpp"
-
 #include "Aurora/Graphics/OpenGL/GL.hpp"
+
+
+#include <Aurora/Engine.hpp>
+#include <Aurora/RmlUI/RmlUI.hpp>
+#define RML_UI_ENABLED 1
 
 namespace Aurora
 {
@@ -494,8 +498,8 @@ namespace Aurora
 			if(listener) listener(width, height);
 		}
 #ifdef RML_UI_ENABLED
-		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
-		GameUI->GetRmlContext()->SetDimensions({width, height});
+		if(GetEngine()->GetRmlUI() == nullptr || GetEngine()->GetRmlUI()->GetRmlContext() == nullptr) return;
+		GetEngine()->GetRmlUI()->GetRmlContext()->SetDimensions({width, height});
 #endif
 	}
 
@@ -543,7 +547,7 @@ namespace Aurora
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnKeyChange(key, scancode, pressed);
 #ifdef RML_UI_ENABLED
 		// Rml
-		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
+		if(GetEngine()->GetRmlUI() == nullptr || GetEngine()->GetRmlUI()->GetRmlContext() == nullptr) return;
 
 		currentMods = mods;
 
@@ -554,12 +558,12 @@ namespace Aurora
 		if(pressed)
 		{
 			auto rmlKeyId = (Rml::Input::KeyIdentifier)rmlkey->second;
-			GameUI->GetRmlContext()->ProcessKeyDown(rmlKeyId, ModifiersGLFWToRml(mods));
+			GetEngine()->GetRmlUI()->GetRmlContext()->ProcessKeyDown(rmlKeyId, ModifiersGLFWToRml(mods));
 
 			if (rmlKeyId == Rml::Input::KI_RETURN || rmlKeyId == Rml::Input::KI_NUMPADENTER)
-				GameUI->GetRmlContext()->ProcessTextInput('\n');
+				GetEngine()->GetRmlUI()->GetRmlContext()->ProcessTextInput('\n');
 		} else {
-			GameUI->GetRmlContext()->ProcessKeyUp((Rml::Input::KeyIdentifier)rmlkey->second, ModifiersGLFWToRml(mods));
+			GetEngine()->GetRmlUI()->GetRmlContext()->ProcessKeyUp((Rml::Input::KeyIdentifier)rmlkey->second, ModifiersGLFWToRml(mods));
 		}
 #endif
 	}
@@ -572,8 +576,8 @@ namespace Aurora
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseMove(newPosition);
 #ifdef RML_UI_ENABLED
 		// Rml
-		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
-		GameUI->GetRmlContext()->ProcessMouseMove(xpos, ypos, ModifiersGLFWToRml(currentMods));
+		if(GetEngine()->GetRmlUI() == nullptr || GetEngine()->GetRmlUI()->GetRmlContext() == nullptr) return;
+		GetEngine()->GetRmlUI()->GetRmlContext()->ProcessMouseMove(xpos, ypos, ModifiersGLFWToRml(currentMods));
 #endif
 	}
 
@@ -583,8 +587,8 @@ namespace Aurora
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseWheel({xoffset, yoffset});
 #ifdef RML_UI_ENABLED
 		// Rml
-		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
-		GameUI->GetRmlContext()->ProcessMouseWheel(-yoffset, ModifiersGLFWToRml(currentMods));
+		if(GetEngine()->GetRmlUI() == nullptr || GetEngine()->GetRmlUI()->GetRmlContext() == nullptr) return;
+		GetEngine()->GetRmlUI()->GetRmlContext()->ProcessMouseWheel(-yoffset, ModifiersGLFWToRml(currentMods));
 #endif
 	}
 
@@ -624,12 +628,12 @@ namespace Aurora
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseButton(button, pressed);
 #ifdef RML_UI_ENABLED
 		// Rml
-		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
+		if(GetEngine()->GetRmlUI() == nullptr || GetEngine()->GetRmlUI()->GetRmlContext() == nullptr) return;
 		if(pressed)
 		{
-			GameUI->GetRmlContext()->ProcessMouseButtonDown(MouseButtonGLFWToRml(button), ModifiersGLFWToRml(currentMods));
+			GetEngine()->GetRmlUI()->GetRmlContext()->ProcessMouseButtonDown(MouseButtonGLFWToRml(button), ModifiersGLFWToRml(currentMods));
 		} else {
-			GameUI->GetRmlContext()->ProcessMouseButtonUp(MouseButtonGLFWToRml(button), ModifiersGLFWToRml(currentMods));
+			GetEngine()->GetRmlUI()->GetRmlContext()->ProcessMouseButtonUp(MouseButtonGLFWToRml(button), ModifiersGLFWToRml(currentMods));
 		}
 #endif
 	}
@@ -641,11 +645,11 @@ namespace Aurora
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnTextInput(c);
 #ifdef RML_UI_ENABLED
 		// Rml
-		if(GameUI == nullptr || GameUI->GetRmlContext() == nullptr) return;
+		if(GetEngine()->GetRmlUI() == nullptr || GetEngine()->GetRmlUI()->GetRmlContext() == nullptr) return;
 
 		std::string str;
 		for (const auto &item : c) str += (char)item;
-		GameUI->GetRmlContext()->ProcessTextInput(str);
+		GetEngine()->GetRmlUI()->GetRmlContext()->ProcessTextInput(str);
 #endif
 	}
 }

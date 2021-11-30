@@ -5,9 +5,15 @@
 uniformbuffer PBRDesc
 {
 	mat4 u_InvProjectionView;
-	mat4 u_DirLightProjectionViewMatrix;
+	mat4 u_ViewMatrix;
 	vec4 CameraPos;
 	vec4 TestOptions;
+};
+
+uniformbuffer CascadeDesc
+{
+	mat4 u_CascadeMatrices[5];
+	vec2 u_CascadeDistances[4];
 };
 
 uniformbuffer DirectionalLight
@@ -18,4 +24,5 @@ uniformbuffer DirectionalLight
 #endif
 	vec3 Radiance;
 	float Multiplier;
+	vec2 ShadowIntensity;
 } g_DirLight;
