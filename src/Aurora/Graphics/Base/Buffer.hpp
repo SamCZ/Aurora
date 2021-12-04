@@ -23,6 +23,7 @@ namespace Aurora
 		UniformBuffer,
 		ShaderStorageBuffer,
 		TextureBuffer,
+		IndirectBuffer,
 		Unknown
 	};
 
@@ -74,20 +75,21 @@ namespace Aurora
 		EBufferType Type;
 		EBufferUsage Usage;
 		uint8_t Flags; // TODO: Fix flags, buffer is write only now !
+		bool IsDMA : 1;
 
 		BufferDesc()
 				: ByteSize(0),
 				  Name("Undefined"),
 				  Type(EBufferType::Unknown),
 				  Usage(EBufferUsage::Unknown),
-				  Flags(BF_MAP_WRITE) {}
+				  Flags(BF_MAP_WRITE), IsDMA(false) {}
 
-		BufferDesc(std::string name, uint32_t size, EBufferType type, EBufferUsage usage = EBufferUsage::DynamicDraw)
+		BufferDesc(std::string name, uint32_t size, EBufferType type, EBufferUsage usage = EBufferUsage::DynamicDraw, bool dma = false)
 				: ByteSize(size),
 				  Name(std::move(name)),
 				  Type(type),
 				  Flags(0),
-				  Usage(usage) {}
+				  Usage(usage), IsDMA(dma) {}
 	};
 
 	class IBuffer : public TypeBase<IBuffer>

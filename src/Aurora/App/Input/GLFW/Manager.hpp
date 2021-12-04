@@ -9,7 +9,7 @@
 
 #ifdef AU_DEBUG_INPUT
 #   ifndef AU_DEBUG_COUT_INPUT
-#       define AU_DEBUG_COUT_INPUT(input, value) AU_DEBUG_COUT(input << ": " << value)
+#       define AU_DEBUG_COUT_INPUT(input, value) std::cout << input << ": " << value << std::endl;
 #   endif
 #else
 #   define AU_DEBUG_COUT_INPUT(input, value)

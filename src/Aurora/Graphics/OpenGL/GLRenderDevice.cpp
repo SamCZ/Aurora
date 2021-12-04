@@ -940,7 +940,7 @@ namespace Aurora
 		GLuint handle = 0;
 		GLenum bindTarget = ConvertBufferType(desc.Type);
 		GLenum usage = ConvertUsage(desc.Usage);
-		void* mappedData = nullptr;
+		uint8_t* mappedData = nullptr;
 
 		if(desc.Type != EBufferType::TextureBuffer) {
 			glGenBuffers(1, &handle);
@@ -948,10 +948,16 @@ namespace Aurora
 
 			glObjectLabel(GL_BUFFER, handle, static_cast<GLsizei>(desc.Name.size()), desc.Name.c_str());
 
-			//glBufferStorage(bindTarget, desc.ByteSize, data, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
-			//mappedData = glMapBufferRange(bindTarget, 0, desc.ByteSize, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
-
-			glBufferData(bindTarget, desc.ByteSize, data, usage);
+			if(desc.IsDMA)
+			{
+				glBufferStorage(bindTarget, desc.ByteSize, data, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+				mappedData = (uint8_t*)glMapBufferRange(bindTarget, 0, desc.ByteSize, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+				if(data) memcpy(mappedData, data, desc.ByteSize);
+			}
+			else
+			{
+				glBufferData(bindTarget, desc.ByteSize, data, usage);
+			}
 			CHECK_GL_ERROR();
 
 			glBindBuffer(bindTarget, GL_NONE);
@@ -981,9 +987,16 @@ namespace Aurora
 
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
-		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
+		au_assert(glBuffer->GetDesc().ByteSize >= offset + dataSize);
 
-		au_assert(glBuffer->GetDesc().ByteSize >= dataSize);
+		if(glBuffer->GetDesc().IsDMA)
+		{
+			memcpy(glBuffer->m_MappedData + offset, data, dataSize);
+			m_FrameRenderStatistics.BufferWrites++;
+			return;
+		}
+
+		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
 
 		if (dataSize > glBuffer->GetDesc().ByteSize)
 			dataSize = glBuffer->GetDesc().ByteSize;
@@ -1043,6 +1056,12 @@ namespace Aurora
 		m_FrameRenderStatistics.BufferMaps++;
 
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+
+		if(buffer->GetDesc().IsDMA)
+		{
+			return glBuffer->m_MappedData;
+		}
+
 		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
 		return glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
 		//GLvoid* pMappedData = glMapBufferRange(glBuffer->BindTarget(), 0, glBuffer->GetDesc().ByteSize, GL_MAP_WRITE_BIT);//GL_MAP_UNSYNCHRONIZED_BIT
@@ -1122,6 +1141,8 @@ namespace Aurora
 
 	#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+	GLuint lastUsedElementBuffer = 0;
+
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args, bool bindState)
 	{
 		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
@@ -1134,7 +1155,14 @@ namespace Aurora
 
 		CHECK_GL_ERROR();
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GetBuffer(state.IndexBuffer.Buffer)->Handle());
+		GLBuffer* ib = GetBuffer(state.IndexBuffer.Buffer);
+
+		if(lastUsedElementBuffer != ib->Handle())
+		{
+			lastUsedElementBuffer = ib->Handle();
+
+		}
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib->Handle());
 
 		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
 		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);

@@ -13,7 +13,7 @@ namespace Aurora
 		GLenum m_BindTarget;
 		GLenum m_Usage;
 	public:
-		void* m_MappedData = nullptr;
+		uint8_t* m_MappedData = nullptr;
 
 		GLBuffer(BufferDesc desc, GLuint handle, GLenum bindTarget, GLenum usage);
 		~GLBuffer() override;

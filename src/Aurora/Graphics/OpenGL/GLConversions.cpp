@@ -165,6 +165,7 @@ namespace Aurora
 			case EBufferType::UniformBuffer: return GL_UNIFORM_BUFFER;
 			case EBufferType::ShaderStorageBuffer: return GL_SHADER_STORAGE_BUFFER;
 			case EBufferType::TextureBuffer: return GL_TEXTURE_BUFFER;
+			case EBufferType::IndirectBuffer: return GL_DRAW_INDIRECT_BUFFER;
 			default:
 			case EBufferType::Unknown: {
 				AU_LOG_WARNING("Unknown buffer type !");
