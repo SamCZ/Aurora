@@ -1117,6 +1117,7 @@ namespace Aurora
 
 	void GLRenderDevice::Draw(const DrawCallState &state, const std::vector<DrawArguments>& args)
 	{
+		CPU_DEBUG_SCOPE("Draw");
 		if(state.Shader == nullptr) {
 			AU_LOG_ERROR("Cannot draw without shader !");
 			throw;
@@ -1145,6 +1146,7 @@ namespace Aurora
 
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args, bool bindState)
 	{
+		CPU_DEBUG_SCOPE("DrawIndexed");
 		if(state.IndexBuffer.Buffer == nullptr || state.Shader == nullptr) {
 			AU_LOG_ERROR("Cannot draw with these arguments !");
 			throw;
@@ -1202,6 +1204,7 @@ namespace Aurora
 
 	void GLRenderDevice::DrawIndirect(const DrawCallState &state, const Buffer_ptr &indirectParams, uint32_t offsetBytes)
 	{
+		CPU_DEBUG_SCOPE("DrawIndirect");
 		// TODO: Indirect render
 	}
 
@@ -1325,6 +1328,7 @@ namespace Aurora
 
 	void GLRenderDevice::Dispatch(const DispatchState &state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ)
 	{
+		CPU_DEBUG_SCOPE("Dispatch");
 		ApplyDispatchState(state);
 
 		glDispatchCompute(GLuint(groupsX), GLuint(groupsY), GLuint(groupsZ));
