@@ -257,13 +257,13 @@ namespace Aurora
 				{
 					std::stringstream ss;
 					ss << "FPS: " << FPS;
-					m_VgRender->DrawText(ss.str(), {5, 55}, Color::black(), 12);
+					m_VgRender->DrawString(ss.str(), {5, 55}, Color::black(), 12);
 				}
 
 				{
 					std::stringstream ss;
 					ss << "Used GPU memory: " << FormatBytes(m_RenderDevice->GetUsedGPUMemory());
-					m_VgRender->DrawText(ss.str(), {5, 25}, Color::black(), 16);
+					m_VgRender->DrawString(ss.str(), {5, 25}, Color::black(), 16);
 				}
 
 				{
@@ -274,31 +274,31 @@ namespace Aurora
 					{
 						std::stringstream ss;
 						ss << "Draw calls: " << renderStatistics.DrawCalls;
-						m_VgRender->DrawText(ss.str(), {5, 75}, Color::black(), 12);
+						m_VgRender->DrawString(ss.str(), {5, 75}, Color::black(), 12);
 					}
 
 					{
 						std::stringstream ss;
 						ss << "Vertex Count: " << renderStatistics.VertexCount;
-						m_VgRender->DrawText(ss.str(), {5, 85}, Color::black(), 12);
+						m_VgRender->DrawString(ss.str(), {5, 85}, Color::black(), 12);
 					}
 
 					{
 						std::stringstream ss;
 						ss << "Buffer Writes: " << renderStatistics.BufferWrites;
-						m_VgRender->DrawText(ss.str(), {5, 95}, Color::black(), 12);
+						m_VgRender->DrawString(ss.str(), {5, 95}, Color::black(), 12);
 					}
 
 					{
 						std::stringstream ss;
 						ss << "Buffer Maps: " << renderStatistics.BufferMaps;
-						m_VgRender->DrawText(ss.str(), {5, 105}, Color::black(), 12);
+						m_VgRender->DrawString(ss.str(), {5, 105}, Color::black(), 12);
 					}
 
 					{
 						std::stringstream ss;
 						ss << "Memory usage: " << FormatBytes(renderStatistics.GPUMemoryUsage);
-						m_VgRender->DrawText(ss.str(), {5, 115}, Color::black(), 12);
+						m_VgRender->DrawString(ss.str(), {5, 115}, Color::black(), 12);
 					}
 				}
 
