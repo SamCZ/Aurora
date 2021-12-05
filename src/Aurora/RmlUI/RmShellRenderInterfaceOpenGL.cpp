@@ -48,6 +48,12 @@ namespace Aurora
 	{
 		auto screenSize = GetEngine()->GetWindow()->GetSize();
 
+		if(m_LastScreenSize != screenSize)
+		{
+			m_LastScreenSize = screenSize;
+			m_CurrentProjection = glm::ortho(0.0f, (float)screenSize.x, (float)screenSize.y, 0.0f, 0.0f, 1.0f);
+		}
+
 		au_assert((sizeof(Rml::Vertex) * num_vertices) <= sizeof(Rml::Vertex) * 3000);
 		au_assert((sizeof(uint32_t) * num_indices) <= sizeof(uint32_t) * 3000);
 
@@ -75,7 +81,7 @@ namespace Aurora
 		drawCallState.RasterState.CullMode = ECullMode::None;
 
 		BEGIN_UBW(VertexUniform, desc);
-			desc->Projection = glm::ortho(0.0f, (float)screenSize.x, (float)screenSize.y, 0.0f, 0.0f, 1.0f);
+			desc->Projection = m_CurrentProjection;
 
 			if(m_TransformEnabled)
 			{

@@ -44,6 +44,9 @@ namespace Aurora
 		Buffer_ptr m_IndexBuffer;
 		Buffer_ptr m_VertexUniformBuffer;
 		Buffer_ptr m_ScissorBuffer;
+
+		Matrix4 m_CurrentProjection;
+		Vector2i m_LastScreenSize;
 	public:
 		RmShellRenderInterfaceOpenGL();
 		~RmShellRenderInterfaceOpenGL() override;
