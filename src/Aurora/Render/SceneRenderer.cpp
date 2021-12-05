@@ -593,7 +593,7 @@ namespace Aurora
 
 					m_RenderDevice->BindRenderTargets(drawState);
 					m_RenderDevice->ClearRenderTargets(drawState);
-					RenderPass(drawState, globalRenderSet, EPassType::Depth);
+					RenderPass(drawState, globalRenderSet, EPassType::Depth, dirLightFrustum, dirView);
 					m_RenderManager->GetUniformBufferCache().Reset();
 				}
 
@@ -616,6 +616,7 @@ namespace Aurora
 		auto depthRT = m_RenderManager->CreateTemporalRenderTarget("Depth", camera.Size, GraphicsFormat::D32);
 
 		{
+			CPU_DEBUG_SCOPE("MainRenderBegin");
 			DrawCallState drawState;
 			//drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
 			drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
@@ -644,7 +645,7 @@ namespace Aurora
 
 			m_RenderDevice->BindRenderTargets(drawState);
 			m_RenderDevice->ClearRenderTargets(drawState);
-			RenderPass(drawState, globalRenderSet, EPassType::Ambient);
+			RenderPass(drawState, globalRenderSet, EPassType::Ambient, frustum, viewMatrix);
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
 
@@ -673,6 +674,7 @@ namespace Aurora
 		if(true)
 		{ // Sky render
 			GPU_DEBUG_SCOPE("Sky render");
+			CPU_DEBUG_SCOPE("SkyRender");
 
 			DrawCallState drawState;
 			drawState.Shader = m_SkyShader;
@@ -717,6 +719,7 @@ namespace Aurora
 		if(NormalBevelEnabled)
 		{ // NormalBevel
 			GPU_DEBUG_SCOPE("NormalBevel");
+			CPU_DEBUG_SCOPE("NormalBevel");
 
 			DrawCallState drawState = PostProcessEffect::PrepareState(m_NormalBevelShader);
 			drawState.BindTarget(0, smoothNormalsRT);
@@ -743,6 +746,7 @@ namespace Aurora
 
 		{ // Composite Deferred renderer and HRD
 			GPU_DEBUG_SCOPE("PBR Composite");
+			CPU_DEBUG_SCOPE("PBR Composite");
 
 			DrawCallState drawState;
 			drawState.Shader = m_PBRCompositeShader;
@@ -822,6 +826,7 @@ namespace Aurora
 		//dirLightShadowColorMask.Free();
 
 		{ // Debug shapes
+			CPU_DEBUG_SCOPE("DebugShapes");
 			GPU_DEBUG_SCOPE("Debug Shapes");
 			DrawCallState drawState;
 
@@ -855,6 +860,7 @@ namespace Aurora
 		TemporalRenderTarget bloomRTs[3];
 		if(m_BloomSettings.Enabled)
 		{ // Bloom
+			CPU_DEBUG_SCOPE("Bloom");
 			GPU_DEBUG_SCOPE("Bloom");
 
 			Vector2ui bloomTexSize = camera.Size / 2u;
@@ -973,6 +979,7 @@ namespace Aurora
 
 		auto finalSceneRT = m_RenderManager->CreateTemporalRenderTarget("FinalSceneRT", camera.Size, GraphicsFormat::RGBA8_UNORM);
 		{ // HDR and GammaCorrection
+			CPU_DEBUG_SCOPE("HDR");
 			GPU_DEBUG_SCOPE("HDR");
 			DrawCallState drawState = PostProcessEffect::PrepareState(m_HDRShader);
 			drawState.ViewPort = camera.Size;
@@ -996,6 +1003,7 @@ namespace Aurora
 			{
 				if(!ppe->CanRender()) continue;
 				GPU_DEBUG_SCOPE("PostProcess [" + String(ppe->GetTypeName()) + "]");
+				CPU_DEBUG_SCOPE("PostProcess");
 				ppe->Render(currentInput, currentOutput);
 				m_RenderManager->Blit(currentOutput, currentInput);
 			}
@@ -1016,9 +1024,10 @@ namespace Aurora
 		//ssaoRT.Free();
 	}
 
-	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType)
+	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType, Frustum& frustum, glm::mat4 viewMatrix)
 	{
 		//CPU_DEBUG_SCOPE(String("RenderPass [") + PassTypesToString[(int)passType] + "]")
+		CPU_DEBUG_SCOPE("RenderPass");
 		GPU_DEBUG_SCOPE(String("RenderPass [") + PassTypesToString[(int)passType] + "]");
 
 		std::vector<DrawArguments> drawArgs;
@@ -1128,6 +1137,16 @@ namespace Aurora
 		if(lastMaterial)
 		{
 			lastMaterial->EndPass(drawCallState, passType);
+		}
+
+		// Call injected render functions to current pass
+		auto injectedIt = m_InjectedPasses.find(passType);
+		if(injectedIt != m_InjectedPasses.end())
+		{
+			for(PassRenderFn& fn : injectedIt->second)
+			{
+				fn(passType, drawCallState, frustum, viewMatrix);
+			}
 		}
 	}
 }

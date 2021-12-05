@@ -2,6 +2,8 @@
 
 #include <map>
 #include <array>
+#include <functional>
+#include <vector>
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
@@ -34,6 +36,8 @@ namespace Aurora
 		std::vector<Matrix4> Instances;
 	};
 
+	typedef std::function<void(EPassType, DrawCallState&, Frustum&, glm::mat4)> PassRenderFn;
+
 	using RenderSet = std::vector<ModelContext>;
 
 	class SceneRenderer
@@ -64,6 +68,8 @@ namespace Aurora
 		entt::registry m_VisibleEntitiesRegistry;
 
 		std::array<std::vector<entt::entity>, SortTypeCount> m_FinalSortedEntities;
+
+		std::map<EPassType, std::vector<PassRenderFn>> m_InjectedPasses;
 
 		Buffer_ptr m_InstancingBuffer;
 
@@ -118,9 +124,14 @@ namespace Aurora
 		RenderSet BuildRenderSet();
 
 		void Render(entt::entity cameraEntityID);
-		void RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext>& modelContexts, EPassType passType);
+		void RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext>& modelContexts, EPassType passType, Frustum& frustum, glm::mat4 viewMatrix);
 
 		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
+
+		inline void InjectRenderToPass(EPassType passType, const PassRenderFn& passRenderFn)
+		{
+			m_InjectedPasses[passType].push_back(passRenderFn);
+		}
 
 	private:
 		std::vector<std::pair<glm::mat4, glm::mat4>> GetLightSpaceMatrices(std::vector<float> rations, const CameraComponent* mainCamera, const Matrix4& cameraViewMatrix, const Vector3& lightDir);
