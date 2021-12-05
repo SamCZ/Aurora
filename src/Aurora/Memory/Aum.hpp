@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include "Aurora/Tools/robin_hood.h"
 
 namespace Aurora
 {
@@ -29,6 +30,7 @@ namespace Aurora
 	private:
 		MemSize m_BlockSize;
 		std::vector<MemoryBlock> m_Memory;
+		robin_hood::unordered_map<uintptr_t, MemSize> m_MemorySizes;
 	public:
 		explicit Aum(MemSize blockSize = 8388608); // 8MB Default block
 		Aum(MemSize objectSize, MemSize objectCount); // 8MB Default block

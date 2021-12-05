@@ -12,7 +12,7 @@ namespace Aurora
 		AllocateMemoryBlock();
 	}
 
-	Aum::Aum(MemSize objectSize, MemSize objectCount) : m_BlockSize((objectSize + MemSizeOf) * objectCount)
+	Aum::Aum(MemSize objectSize, MemSize objectCount) : m_BlockSize(objectSize * objectCount)
 	{
 		AllocateMemoryBlock();
 	}
@@ -51,28 +51,24 @@ namespace Aurora
 		MemoryFragment& fragment = *fragmentIt;
 
 		MemPtr begin = fragment.Begin;
-
-		// Store size of memory at the end of size uint32_t
-		MemSize* newBlockSizePtr = reinterpret_cast<MemSize*>(begin);
-		*newBlockSizePtr = size;
-
 		// Get new memory start
-		MemPtr newMemoryStart = begin + MemSizeOf;
+		MemPtr newMemoryStart = begin;
 
 		// Decrement block free size
-		memoryBlock.FreeMemory -= size + MemSizeOf;
+		memoryBlock.FreeMemory -= size;
 
 		// Change fragment size and if remaining is 0 then delete fragment
 		fragment.Begin = newMemoryStart + size;
-		fragment.Size -= size + MemSizeOf;
+		fragment.Size -= size;
 		au_assert(fragment.Size >= 0);
 		if(fragment.Size == 0)
 		{
 			memoryBlock.Fragments.erase(fragmentIt);
 		}
 
+		m_MemorySizes[(uintptr_t)newMemoryStart] = size;
+
 		// FIXME: when new block is allocated the memory is somehow invalid
-		// TODO: Move the sizes to another struct to get rid of paddings
 
 		// Return new memory
 		return newMemoryStart;
@@ -81,14 +77,7 @@ namespace Aurora
 	void* Aum::Alloc(MemSize size)
 	{
 		au_assert(size);
-		// Add sizeof uint32 for additional info
-		size += MemSizeOf;
 		au_assert(size <= m_BlockSize);
-
-		if(!size)
-		{
-			return nullptr;
-		}
 
 		for (MemoryBlock& memoryBlock : m_Memory)
 		{
@@ -102,21 +91,28 @@ namespace Aurora
 			{
 				if(fragmentIt->Size >= size)
 				{
-					return AllocFromFragment(memoryBlock, fragmentIt, size - MemSizeOf);
+					return AllocFromFragment(memoryBlock, fragmentIt, size);
 				}
 			}
 		}
 
 		MemoryBlock& newBlock = AllocateMemoryBlock();
-		return AllocFromFragment(newBlock, newBlock.Fragments.begin(), size - MemSizeOf);
+		return AllocFromFragment(newBlock, newBlock.Fragments.begin(), size);
 	}
 
 	void Aum::DeAlloc(void* mem)
 	{
 		if(!mem) return;
 
-		MemPtr memPtrBegin = reinterpret_cast<MemPtr>(mem) - MemSizeOf;
-		MemSize size = *reinterpret_cast<MemSize*>(memPtrBegin);
+		MemPtr memPtrBegin = reinterpret_cast<MemPtr>(mem);
+		auto it = m_MemorySizes.find((uintptr_t)memPtrBegin);
+
+		if(it == m_MemorySizes.end())
+		{
+			AU_LOG_FATAL("Cound not find size for pointer ", PointerToString(mem), " !");
+		}
+
+		MemSize size = it->second;
 		MemPtr memPtrEnd = memPtrBegin + size;
 
 		for (MemoryBlock& memoryBlock : m_Memory)
