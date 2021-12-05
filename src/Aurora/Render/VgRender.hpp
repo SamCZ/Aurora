@@ -36,7 +36,7 @@ namespace Aurora
 
 		bool LoadFont(const String& name, const Path& path);
 
-		void DrawText(const String& text, const Vector2& pos, Color color, float fontSize, VgAlign xAlign = VgAlign::Left, VgAlign yAlign = VgAlign::Top);
+		void DrawString(const String& text, const Vector2& pos, Color color, float fontSize, VgAlign xAlign = VgAlign::Left, VgAlign yAlign = VgAlign::Top);
 		float GetTextSize(const String& text, float fontSize, const String& fontName, float* textHeight);
 
 		NVGcontext* GetVgContext() { return m_VgContext; }

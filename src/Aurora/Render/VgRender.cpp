@@ -63,7 +63,7 @@ namespace Aurora
 		return false;
 	}
 
-	void VgRender::DrawText(const String &text, const Vector2 &pos, Color color, float fontSize, VgAlign xAlign, VgAlign yAlign)
+	void VgRender::DrawString(const String &text, const Vector2 &pos, Color color, float fontSize, VgAlign xAlign, VgAlign yAlign)
 	{
 		nvgFontSize(m_VgContext, static_cast<float>(fontSize));
 		nvgFontFace(m_VgContext, "default");
@@ -303,7 +303,7 @@ namespace Aurora
 
 		RB_RenderGradientLR(x, y, width, 25, Color(20, 100, 200), Color(4, 40, 80), 2.0f);
 
-		DrawText(title, {x + width / 2.0f, y + 2}, Color(181, 188, 188), 20, VgAlign::Center); //Title
+		DrawString(title, {x + width / 2.0f, y + 2}, Color(181, 188, 188), 20, VgAlign::Center); //Title
 
 		if (isSelected)
 		{
