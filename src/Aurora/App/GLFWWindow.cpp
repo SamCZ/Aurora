@@ -327,9 +327,9 @@ namespace Aurora
 			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
 		}
 
-		if(!GLAD_GL_NV_gpu_shader5) {
+		/*if(!GLAD_GL_NV_gpu_shader5) {
 			AU_LOG_ERROR("GLAD_GL_NV_gpu_shader5 not found !");
-		}
+		}*/
 
 		// Handling
 
