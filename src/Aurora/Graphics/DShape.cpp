@@ -26,7 +26,7 @@ namespace Aurora
 		uint32_t lineVertexBufferSize = (sizeof(Vector3) * 2) * maxLines;
 		AU_LOG_INFO("Allocated ", FormatBytes(lineVertexBufferSize), " for debug line render.");
 
-		g_LineBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("DebugLinesVBuffer", lineVertexBufferSize, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw));
+		g_LineBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("DebugLinesVBuffer", lineVertexBufferSize, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw, true));
 		g_LineInputLayout = GetEngine()->GetRenderDevice()->CreateInputLayout({
 			{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(BaseShapeVertex, Position), 0, sizeof(BaseShapeVertex), false, true },
 			{"COLOR", GraphicsFormat::R32_UINT, 0, offsetof(BaseShapeVertex, Color), 1, sizeof(BaseShapeVertex), false, true }

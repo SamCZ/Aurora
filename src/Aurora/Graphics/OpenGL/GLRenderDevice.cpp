@@ -1070,7 +1070,7 @@ namespace Aurora
 
 	void GLRenderDevice::UnmapBuffer(const Buffer_ptr& buffer)
 	{
-		if(buffer == nullptr) {
+		if(buffer == nullptr || buffer->GetDesc().IsDMA) {
 			return;
 		}
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)

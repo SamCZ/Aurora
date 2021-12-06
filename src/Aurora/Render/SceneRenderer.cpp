@@ -536,6 +536,7 @@ namespace Aurora
 		const DirectionalLightComponent* mainDirLight = nullptr;
 		const TransformComponent* mainDirLightTransform = nullptr;
 		{ // Prepare lights
+			CPU_DEBUG_SCOPE("Lights");
 			auto view = m_Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
 
 			std::vector<float> rations = CalcRations(camera, 0.95f, m_DirCascadeSettings.NumOfCascades);
@@ -992,7 +993,7 @@ namespace Aurora
 			PostProcessEffect::RenderState(drawState);
 		}
 
-		if(m_BloomSettings.Enabled) for (int i = 0; i < 3; ++i) bloomRTs[i].Free();
+		if(m_BloomSettings.Enabled) for (auto & bloomRT : bloomRTs) bloomRT.Free();
 
 		auto ppRT = m_RenderManager->CreateTemporalRenderTarget("PP Intermediate", camera.Size, finalSceneRT->GetDesc().ImageFormat);
 		{ // PP's
