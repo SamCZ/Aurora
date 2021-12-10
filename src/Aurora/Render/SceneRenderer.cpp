@@ -231,7 +231,7 @@ namespace Aurora
 		}
 	}
 
-	void SceneRenderer::PrepareRender(Frustum* frustum)
+	void SceneRenderer::PrepareRender(FFrustum* frustum)
 	{
 		CPU_DEBUG_SCOPE("SceneRenderer::PrepareRender");
 		m_VisibleEntities.clear();
@@ -528,7 +528,7 @@ namespace Aurora
 		Matrix4 viewMatrix = glm::inverse(cameraTransform.GetTransform());
 		Matrix4 projectionViewMatrix = projectionMatrix * viewMatrix;
 
-		Frustum frustum(projectionViewMatrix);
+		FFrustum frustum(projectionViewMatrix);
 		AABB frustumBounds = frustum.GetBounds();
 
 		//auto dirLightShadowColorMask = m_RenderManager->CreateTemporalRenderTarget("DirLightMask", {dirLightShadowMapResolution, dirLightShadowMapResolution}, GraphicsFormat::RGBA8_UNORM);
@@ -568,7 +568,7 @@ namespace Aurora
 
 					m_DirCascadesMatrices[i] = dirProj * dirView;
 
-					Frustum dirLightFrustum(dirProj * dirView);
+					FFrustum dirLightFrustum(dirProj * dirView);
 					PrepareRender(&dirLightFrustum);
 					SortVisibleEntities();
 
@@ -1025,7 +1025,7 @@ namespace Aurora
 		//ssaoRT.Free();
 	}
 
-	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType, Frustum& frustum, glm::mat4 viewMatrix)
+	void SceneRenderer::RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext> &modelContexts, EPassType passType, FFrustum& frustum, glm::mat4 viewMatrix)
 	{
 		//CPU_DEBUG_SCOPE(String("RenderPass [") + PassTypesToString[(int)passType] + "]")
 		CPU_DEBUG_SCOPE("RenderPass");

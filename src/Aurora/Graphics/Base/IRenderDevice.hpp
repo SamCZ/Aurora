@@ -357,7 +357,7 @@ namespace Aurora
 		virtual void BindShaderResources(const BaseState& state) = 0;
 		virtual void ApplyDispatchState(const DispatchState& state) = 0;
 		virtual void ApplyDrawCallState(const DrawCallState& state) = 0;
-		virtual void BindShaderInputs(const DrawCallState &state) = 0;
+		virtual void BindShaderInputs(const DrawCallState &state, bool force = false) = 0;
 		virtual void BindRenderTargets(const DrawCallState &state) = 0;
 		virtual void SetBlendState(const DrawCallState &state) = 0;
 		virtual void SetRasterState(const FRasterState& rasterState) = 0;

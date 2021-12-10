@@ -108,7 +108,7 @@ namespace Aurora
 		void BindShaderResources(const BaseState& state) override;
 		void ApplyDispatchState(const DispatchState& state) override;
 		void ApplyDrawCallState(const DrawCallState& state) override;
-		void BindShaderInputs(const DrawCallState &state) override;
+		void BindShaderInputs(const DrawCallState &state, bool force) override;
 		void BindRenderTargets(const DrawCallState &state) override;
 		void SetBlendState(const DrawCallState &state) override;
 		void SetRasterState(const FRasterState& rasterState) override;

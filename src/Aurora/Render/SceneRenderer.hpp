@@ -18,7 +18,7 @@ namespace Aurora
 	class Scene;
 	class Material;
 	class XMesh;
-	class Frustum;
+	class FFrustum;
 
 	struct VisibleEntity
 	{
@@ -36,7 +36,7 @@ namespace Aurora
 		std::vector<Matrix4> Instances;
 	};
 
-	typedef std::function<void(EPassType, DrawCallState&, Frustum&, glm::mat4)> PassRenderFn;
+	typedef std::function<void(EPassType, DrawCallState&, FFrustum&, glm::mat4)> PassRenderFn;
 
 	using RenderSet = std::vector<ModelContext>;
 
@@ -118,13 +118,13 @@ namespace Aurora
 
 		void AddVisibleEntity(Material* material, XMesh* mesh, uint meshSection, const Matrix4& transform);
 
-		void PrepareRender(Frustum* frustum);
+		void PrepareRender(FFrustum* frustum);
 		void SortVisibleEntities();
 
 		RenderSet BuildRenderSet();
 
 		void Render(entt::entity cameraEntityID);
-		void RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext>& modelContexts, EPassType passType, Frustum& frustum, glm::mat4 viewMatrix);
+		void RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext>& modelContexts, EPassType passType, FFrustum& frustum, glm::mat4 viewMatrix);
 
 		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
 

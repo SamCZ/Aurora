@@ -1212,7 +1212,7 @@ namespace Aurora
 	{
 		SetShader(state.Shader);
 
-		BindShaderInputs(state);
+		BindShaderInputs(state, false);
 		BindShaderResources(state);
 
 		BindRenderTargets(state);
@@ -1225,7 +1225,7 @@ namespace Aurora
 		ClearRenderTargets(state);
 	}
 
-	void GLRenderDevice::BindShaderInputs(const DrawCallState &state)
+	void GLRenderDevice::BindShaderInputs(const DrawCallState &state, bool force)
 	{
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
@@ -1243,7 +1243,7 @@ namespace Aurora
 			glBindVertexArray(m_nVAO);
 		}
 
-		if(state.InputLayoutHandle == m_LastInputLayout) return;
+		if(state.InputLayoutHandle == m_LastInputLayout && !force) return;
 		m_LastInputLayout = state.InputLayoutHandle;
 
 		for(const auto& var : inputVars) {

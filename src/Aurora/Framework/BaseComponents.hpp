@@ -6,6 +6,7 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/UUID.hpp"
 #include "Aurora/Graphics/Mesh.hpp"
+#include "Aurora/Physics/Frustum.hpp"
 
 // Some components were acquired from Hazel(Cherno game engine)
 
@@ -88,6 +89,7 @@ namespace Aurora
 		float Fov = 85.0f;
 		Matrix4 Projection = glm::identity<Matrix4>();
 		std::vector<PostProcessEffect_ptr> PostProcessEffects;
+		Aurora::FFrustum Frustum;
 
 		CameraComponent() = default;
 		CameraComponent(const CameraComponent& other) = default;
@@ -100,6 +102,11 @@ namespace Aurora
 		void SetupOrthographicProjection(float left, float right, float bottom, float top, float near, float far)
 		{
 			//Projection = glm::ortho(left, right, bottom, top, near, far);
+		}
+
+		void UpdateFrustum(const Matrix4& viewMatrix)
+		{
+			Frustum = FFrustum(Projection * viewMatrix);
 		}
 
 		[[nodiscard]] Matrix4 GetProjectionViewMatrix(const TransformComponent& transformComponent) const

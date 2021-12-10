@@ -5,13 +5,13 @@
 namespace Aurora
 {
 	// Source: https://gist.github.com/podgorskiy/e698d18879588ada9014768e3e82a644
-	class Frustum
+	class FFrustum
 	{
 	public:
-		Frustum() = default;
+		FFrustum() = default;
 
 		// m = ProjectionMatrix * ViewMatrix
-		explicit Frustum(glm::mat4 m);
+		explicit FFrustum(glm::mat4 m);
 
 		[[nodiscard]] AABB GetBounds() const;
 
@@ -47,7 +47,7 @@ namespace Aurora
 		glm::vec3   m_points[8]{};
 	};
 
-	inline Frustum::Frustum(glm::mat4 m)
+	inline FFrustum::FFrustum(glm::mat4 m)
 	{
 		m = glm::transpose(m);
 		m_planes[Left]   = m[3] + m[0];
@@ -60,7 +60,7 @@ namespace Aurora
 		Init();
 	}
 
-	inline void Frustum::Init()
+	inline void FFrustum::Init()
 	{
 		glm::vec3 crosses[Combinations] = {
 			glm::cross(glm::vec3(m_planes[Left]),   glm::vec3(m_planes[Right])),
@@ -90,7 +90,7 @@ namespace Aurora
 		m_points[7] = intersection<Right, Top,    Far>(crosses);
 	}
 
-	inline AABB Frustum::GetBounds() const
+	inline AABB FFrustum::GetBounds() const
 	{
 		AABB aabb = AABB(Vector3(std::numeric_limits<float>::max()), Vector3(std::numeric_limits<float>::min()));
 
@@ -103,7 +103,7 @@ namespace Aurora
 	}
 
 // http://iquilezles.org/www/articles/frustumcorrect/frustumcorrect.htm
-	inline bool Frustum::IsBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const
+	inline bool FFrustum::IsBoxVisible(const glm::vec3& minp, const glm::vec3& maxp) const
 	{
 		// check box outside/inside of frustum
 		for (int i = 0; i < Count; i++)
@@ -133,13 +133,13 @@ namespace Aurora
 		return true;
 	}
 
-	inline bool Frustum::IsBoxVisible(const AABB& boundingBox) const
+	inline bool FFrustum::IsBoxVisible(const AABB& boundingBox) const
 	{
 		return IsBoxVisible(boundingBox.GetMin(), boundingBox.GetMax());
 	}
 
-	template<Frustum::Planes a, Frustum::Planes b, Frustum::Planes c>
-	inline glm::vec3 Frustum::intersection(const glm::vec3* crosses) const
+	template<FFrustum::Planes a, FFrustum::Planes b, FFrustum::Planes c>
+	inline glm::vec3 FFrustum::intersection(const glm::vec3* crosses) const
 	{
 		float D = glm::dot(glm::vec3(m_planes[a]), crosses[ij2k<b, c>::k]);
 		glm::vec3 res = glm::mat3(crosses[ij2k<b, c>::k], -crosses[ij2k<a, c>::k], crosses[ij2k<a, b>::k]) *
