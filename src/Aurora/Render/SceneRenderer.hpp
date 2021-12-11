@@ -40,6 +40,12 @@ namespace Aurora
 
 	using RenderSet = std::vector<ModelContext>;
 
+	struct LightSettings
+	{
+		bool ForceUpdate = true;
+		Texture_ptr CustomSkyCubeMap = nullptr;
+	};
+
 	class SceneRenderer
 	{
 	public:
@@ -79,6 +85,7 @@ namespace Aurora
 		std::vector<float> m_DirCascadesDistances;
 		Buffer_ptr m_DirCascadeUniformBuffer;
 
+		LightSettings m_LightSettings;
 		Texture_ptr m_SkyTextureCubeMap;
 
 		Shader_ptr m_PBRCompositeShader;
@@ -127,6 +134,7 @@ namespace Aurora
 		void RenderPass(DrawCallState& drawCallState, const std::vector<ModelContext>& modelContexts, EPassType passType, FFrustum& frustum, glm::mat4 viewMatrix);
 
 		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
+		LightSettings& GetLightSettings() { return m_LightSettings; }
 
 		inline void InjectRenderToPass(EPassType passType, const PassRenderFn& passRenderFn)
 		{

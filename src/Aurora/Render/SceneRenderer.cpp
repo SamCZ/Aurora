@@ -130,6 +130,18 @@ namespace Aurora
 
 	Texture_ptr SceneRenderer::RenderPreethamSky(const Vector2ui& resolution, float turbidity, float azimuth, float inclination)
 	{
+		if(m_LightSettings.CustomSkyCubeMap != nullptr)
+		{
+			m_SkyCubeMap = m_LightSettings.CustomSkyCubeMap;
+			if(m_LightSettings.ForceUpdate)
+			{
+				RenderPrefilterEnvMap(m_SkyCubeMap);
+				RenderIRRConvMap(m_SkyCubeMap);
+				m_LightSettings.ForceUpdate = false;
+			}
+			return m_SkyCubeMap;
+		}
+
 		if(m_SkyCubeMap == nullptr)
 		{
 			m_SkyCubeMap = m_RenderManager->CreateRenderTarget("PreethamSky", resolution, GraphicsFormat::RGBA16_FLOAT, EDimensionType::TYPE_CubeMap, 5, 6, TextureDesc::EUsage::Default, true);
