@@ -148,7 +148,8 @@ void main()
 
 	float roughness = TestOptions.x;
 	float metallic = TestOptions.y;
-	float ao = RougnessMetallicOcclusion.z;
+	float ao = RougnessMetallicOcclusion.z + 0.5;
+	ao = min(ao, 1.0);
 
 	vec3 N = normalize(normals.xyz * 2.0f - 1.0f);
 	vec3 V = normalize(CameraPos.xyz - WorldPos);
