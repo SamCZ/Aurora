@@ -135,7 +135,7 @@ namespace Aurora
 			m_SkyCubeMap = m_RenderManager->CreateRenderTarget("PreethamSky", resolution, GraphicsFormat::RGBA16_FLOAT, EDimensionType::TYPE_CubeMap, 5, 6, TextureDesc::EUsage::Default, true);
 		}
 
-		static Vector4 lastData = Vector4(-1, -1, -1, -1);
+		static Vector4 lastData = Vector4(-1, -1, -1, 1);
 		Vector4 data = Vector4(turbidity, azimuth, inclination, 1.0f);
 
 		if(lastData == data) return m_SkyCubeMap;
@@ -615,7 +615,6 @@ namespace Aurora
 		//auto worldPosRT = m_RenderManager->CreateTemporalRenderTarget("WorldPosition", camera.Size, GraphicsFormat::RGBA32_FLOAT);
 
 		auto depthRT = m_RenderManager->CreateTemporalRenderTarget("Depth", camera.Size, GraphicsFormat::D32);
-
 		{
 			CPU_DEBUG_SCOPE("MainRenderBegin");
 			DrawCallState drawState;
@@ -646,6 +645,7 @@ namespace Aurora
 
 			m_RenderDevice->BindRenderTargets(drawState);
 			m_RenderDevice->ClearRenderTargets(drawState);
+
 			RenderPass(drawState, globalRenderSet, EPassType::Ambient, frustum, viewMatrix);
 			m_RenderManager->GetUniformBufferCache().Reset();
 		}
