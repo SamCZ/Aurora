@@ -100,17 +100,17 @@ float DoShadowMapping(vec3 worldPos, vec3 normal)
 
 	float currentDepth = projCoords.z;
 
-	float bias = 0.005f;
+	float bias = g_DirLight.ShadowIntensity.y;
 	//bias = max(0.05 * (1.0 - dot(normal, g_DirLight.Direction)), 0.005);
 
-	if (layer == cascadeCount)
+	/*if (layer == cascadeCount)
 	{
 		bias *= 1 / (far_plane * 0.5f);
 	}
 	else
 	{
 		bias *= 1 / (u_CascadeDistances[layer].x * 0.5f);
-	}
+	}*/
 
 	float shadow = 0.0;
 

@@ -8,7 +8,7 @@ in vec4 WorldPos;
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 o_Normals;
 layout(location = 2) out vec4 o_RoughnessMetallicAO;
-layout(location = 3) out vec4 o_WorldPos;
+//layout(location = 3) out vec4 o_WorldPos;
 
 uniform sampler2D BaseColorMap;
 uniform sampler2D NormalMap;
@@ -23,13 +23,13 @@ void main()
 	vec3 N = normalize(Normal);
 
 	FragColor = texture(BaseColorMap, TexCoord);
-	FragColor.rgb += pbrConstants.BaseColor.rgb;
-	FragColor.rgb += texture(EmissionMap, TexCoord).rgb * 10.0f;
+	//FragColor.rgb += pbrConstants.BaseColor.rgb;
+	//FragColor.rgb += texture(EmissionMap, TexCoord).rgb * 10.0f;
 	FragColor.a = 1;
 
 	vec4 metallicRougnessVal = texture(MetallicRoughnessMap, TexCoord);
 
 	o_Normals = vec4(N * 0.5f + 0.5f, 1.0f);
 	o_RoughnessMetallicAO = vec4(metallicRougnessVal.y + pbrConstants.Roughness, metallicRougnessVal.x + pbrConstants.Metallic, pbrConstants.AmbientOcclusion, 1);
-	o_WorldPos = WorldPos;
+	//o_WorldPos = WorldPos;
 }

@@ -226,6 +226,7 @@ namespace Aurora
 		float ShadowIntensity = 0.5f;
 		float Near = 1.0f;
 		float Far  = 500.0f;
+		float ShadowBias = 0.0015f;
 	};
 
 	struct DirectionalLightComponent : LightComponent

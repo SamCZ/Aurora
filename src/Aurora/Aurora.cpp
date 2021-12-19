@@ -30,6 +30,16 @@
 
 #undef DrawText
 
+#ifdef _WIN32
+extern "C"
+{
+/* http://developer.amd.com/community/blog/2015/10/02/amd-enduro-system-for-developers/ */
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+/* http://developer.download.nvidia.com/devzone/devcenter/gamegraphics/files/OptimusRenderingPolicies.pdf */
+__declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+}
+#endif
+
 namespace Aurora
 {
 	static AuroraContext* g_Context = nullptr;

@@ -66,6 +66,7 @@ namespace Aurora
 	void Scene::Tick(double delta)
 	{
 		AU_CPU_DEBUG_SCOPE("Scene::Tick");
+		CPU_DEBUG_SCOPE("Scene::Tick");
 		for(uint i = m_Actors.size(); i --> 0;)
 		{
 			Actor* actor = m_Actors[i];
@@ -79,7 +80,12 @@ namespace Aurora
 				TransformComponent& transformComponent = view.get<TransformComponent>(entity);
 				Entity e = Entity(entity, this);
 				glm::mat4 transform = GetTransformRelativeToParent(e);
-				glm::vec3 translation;
+
+				transformComponent.Up = glm::normalize(transform[1]);
+				transformComponent.Right = glm::normalize(transform[0]);
+				transformComponent.Forward = glm::normalize(transform[2]);
+
+				/*glm::vec3 translation;
 				glm::vec3 rotation;
 				glm::vec3 scale;
 				DecomposeTransform(transform, translation, rotation, scale);
@@ -87,7 +93,7 @@ namespace Aurora
 				auto rotationQuat = Quaternion(rotation);
 				transformComponent.Up = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 1.0f, 0.0f)));
 				transformComponent.Right = glm::normalize(glm::rotate(rotationQuat, glm::vec3(1.0f, 0.0f, 0.0f)));
-				transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));
+				transformComponent.Forward = glm::normalize(glm::rotate(rotationQuat, glm::vec3(0.0f, 0.0f, -1.0f)));*/
 			}
 		}
 	}

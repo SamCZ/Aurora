@@ -88,7 +88,7 @@ namespace Aurora
 		// Init cascades
 		m_DirCascadeSettings.NumOfCascades = 1;
 		m_DirCascadeSettings.CascadeResolutions = {
-			2048, 1024, 512, 256, 256
+			4096, 2048, 1024, 512, 256, 256
 		};
 
 		m_DirCascadeTextures.reserve(m_DirCascadeSettings.NumOfCascades + 1);
@@ -373,7 +373,12 @@ namespace Aurora
 					continue;
 				}
 
-				if(lastMesh == visibleEntity.Mesh && lastMaterial == visibleEntity.Material && lastCanBeInstanced == canBeInstanced && lastSection == visibleEntity.MeshSection)
+				if(
+					lastMesh == visibleEntity.Mesh &&
+					lastMaterial == visibleEntity.Material &&
+					lastCanBeInstanced == canBeInstanced &&
+					lastSection == visibleEntity.MeshSection &&
+					currentModelContext.Instances.size() < MAX_INSTANCES)
 				{
 					currentModelContext.Instances.push_back(visibleEntity.Transform);
 				}
@@ -817,7 +822,7 @@ namespace Aurora
 					desc->Radiance = mainDirLight->LightColor;
 					desc->Multiplier = mainDirLight->Intensity;
 					desc->Multiplier = mainDirLight->Intensity;
-					desc->ShadowIntensity =  {mainDirLight->ShadowIntensity, 0};
+					desc->ShadowIntensity =  {mainDirLight->ShadowIntensity, mainDirLight->ShadowBias};
 				END_UB(DirectionalLight)
 			}
 
