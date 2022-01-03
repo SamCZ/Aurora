@@ -513,6 +513,11 @@ namespace Aurora
 					break;
 			}
 
+			for(const auto& macrosIt : shaderDesc.Macros)
+			{
+				ss << "#define " << macrosIt.first << " " << macrosIt.second << "\n";
+			}
+
 			ss << shaderDesc.Source;
 
 			std::string glslSourcePreprocessed;
