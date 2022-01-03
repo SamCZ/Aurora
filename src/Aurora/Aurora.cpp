@@ -271,12 +271,6 @@ namespace Aurora
 				}
 
 				{
-					std::stringstream ss;
-					ss << "Used GPU memory: " << FormatBytes(m_RenderDevice->GetUsedGPUMemory());
-					m_VgRender->DrawString(ss.str(), {5, 25}, Color::black(), 16);
-				}
-
-				{
 
 
 					const FrameRenderStatistics& renderStatistics = m_RenderDevice->GetFrameRenderStatistics();
