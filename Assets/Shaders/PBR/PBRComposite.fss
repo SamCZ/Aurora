@@ -36,6 +36,8 @@ vec3 GetSceneWorldPos()
 	return homogenousLocation.xyz / homogenousLocation.w;
 }
 
+#ifdef DIR_LIGHT_SHADOWS
+
 float SampleShadowMap(sampler2D shadowMap, ivec2 coords, float compare)
 {
 	return step(compare, texelFetch(shadowMap, coords, 0).r);
@@ -129,6 +131,8 @@ float DoShadowMapping(vec3 worldPos, vec3 normal)
 	return shadow;
 }
 
+#endif
+
 void main()
 {
 	vec4 albedoFlags = texelFetch(AlbedoAndFlagsRT, ivec2(gl_FragCoord.xy), 0);
@@ -193,9 +197,9 @@ void main()
 		//Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 		Lo += (albedo + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 	}
-
+#ifdef DIR_LIGHT_SHADOWS
 	Lo = mix(Lo, Lo * (1.0f - (g_DirLight.ShadowIntensity.x)), DoShadowMapping(WorldPos, N));
-
+#endif
 	// ambient lighting (we now use IBL as the ambient term)
 	vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
 

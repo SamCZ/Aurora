@@ -10,7 +10,25 @@ namespace Aurora
 
 	void SSAOEffect::Init()
 	{
+		/*m_SSAOShader = GetEngine()->GetResourceManager()->LoadShader("SSAO", {
+			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/ssao.fss"},
+		});
 
+		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+		std::default_random_engine generator;
+		std::vector<glm::vec3> ssaoNoise;
+		for (unsigned int i = 0; i < 16; i++)
+		{
+			ssaoNoise.push_back({randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f}); // rotate around z-axis (in tangent space)
+		}
+
+		TextureDesc desc;
+		desc.Width = 4;
+		desc.Height = 4;
+		desc.ImageFormat = GraphicsFormat::RGB32_FLOAT;
+		ssaoNoiseTex = m_RenderDevice->CreateTexture(desc);
+		m_RenderDevice->WriteTexture(ssaoNoiseTex, 0, 0, ssaoNoise.data());*/
 	}
 
 	void SSAOEffect::Render(const Texture_ptr &input, const Texture_ptr &output)

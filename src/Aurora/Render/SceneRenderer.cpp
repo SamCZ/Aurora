@@ -27,8 +27,6 @@
 
 namespace Aurora
 {
-	Texture_ptr ssaoNoiseTex = nullptr;
-
 	const int PBRMipLevelCount = 5;
 
 	SceneRenderer::SceneRenderer(Scene *scene, RenderManager* renderManager, IRenderDevice* renderDevice)
@@ -39,11 +37,8 @@ namespace Aurora
 		m_PBRCompositeShader = GetEngine()->GetResourceManager()->LoadShader("PBR Composite", {
 				{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 				{EShaderType::Pixel, "Assets/Shaders/PBR/PBRComposite.fss"},
-		});
-
-		m_SSAOShader = GetEngine()->GetResourceManager()->LoadShader("SSAO", {
-			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
-			{EShaderType::Pixel, "Assets/Shaders/PostProcess/ssao.fss"},
+		}, {
+			{"DIR_LIGHT_SHADOWS", "1"}
 		});
 
 		m_SkyShader = GetEngine()->GetResourceManager()->LoadShader("Sky", {
@@ -52,21 +47,6 @@ namespace Aurora
 		});
 
 		m_RenderSkyCubeShader = GetEngine()->GetResourceManager()->LoadComputeShader("Assets/Shaders/Sky/PreethamSky.glsl");
-
-		std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-		std::default_random_engine generator;
-		std::vector<glm::vec3> ssaoNoise;
-		for (unsigned int i = 0; i < 16; i++)
-		{
-			ssaoNoise.push_back({randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f}); // rotate around z-axis (in tangent space)
-		}
-
-		TextureDesc desc;
-		desc.Width = 4;
-		desc.Height = 4;
-		desc.ImageFormat = GraphicsFormat::RGB32_FLOAT;
-		ssaoNoiseTex = m_RenderDevice->CreateTexture(desc);
-		m_RenderDevice->WriteTexture(ssaoNoiseTex, 0, 0, ssaoNoise.data());
 
 		m_NormalBevelShader = GetEngine()->GetResourceManager()->LoadShader("Sky", {
 			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
@@ -105,15 +85,8 @@ namespace Aurora
 
 	SceneRenderer::~SceneRenderer()
 	{
-		ssaoNoiseTex.reset();
 		DShapes::Destroy();
 	}
-
-	class Test
-	{
-		String Name;
-		int Cislo;
-	};
 
 	void SceneRenderer::CreateBrdfMap()
 	{
@@ -575,47 +548,50 @@ namespace Aurora
 				mainDirLight = &directionalLightComponent;
 				mainDirLightTransform = &transformComponent;
 
-				glEnable(GL_DEPTH_CLAMP);
+				if(true)
+				{
+					glEnable(GL_DEPTH_CLAMP);
 
-				for (int i = 0; i < m_DirCascadeSettings.NumOfCascades; ++i)
-				{ // Render from dir light perspective
-					m_CurrentCameraEntity = Entity(entity, m_Scene);
+					for (int i = 0; i < m_DirCascadeSettings.NumOfCascades; ++i)
+					{ // Render from dir light perspective
+						m_CurrentCameraEntity = Entity(entity, m_Scene);
 
-					auto[dirProj, dirView] = splitData[i];
+						auto[dirProj, dirView] = splitData[i];
 
-					m_DirCascadesMatrices[i] = dirProj * dirView;
+						m_DirCascadesMatrices[i] = dirProj * dirView;
 
-					FFrustum dirLightFrustum(dirProj * dirView);
-					PrepareRender(&dirLightFrustum);
-					SortVisibleEntities();
+						FFrustum dirLightFrustum(dirProj * dirView);
+						PrepareRender(&dirLightFrustum);
+						SortVisibleEntities();
 
-					DrawCallState drawState;
-					drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
+						DrawCallState drawState;
+						drawState.BindUniformBuffer("Instances", m_InstancingBuffer);
 
-					BEGIN_UB(BaseVSData, baseVsData)
-						baseVsData->ProjectionMatrix = dirProj;
-						baseVsData->ViewMatrix = dirView;
-						baseVsData->ProjectionViewMatrix = m_DirCascadesMatrices[i];
-					END_UB(BaseVSData)
+						BEGIN_UB(BaseVSData, baseVsData)
+							baseVsData->ProjectionMatrix = dirProj;
+							baseVsData->ViewMatrix = dirView;
+							baseVsData->ProjectionViewMatrix = m_DirCascadesMatrices[i];
+						END_UB(BaseVSData)
 
-					drawState.ClearDepthTarget = true;
-					drawState.ClearColorTarget = false;
-					drawState.DepthStencilState.DepthEnable = true;
-					drawState.RasterState.CullMode = ECullMode::Back;
-					drawState.ClearColor = Color(255, 255, 255, 0);
+						drawState.ClearDepthTarget = true;
+						drawState.ClearColorTarget = false;
+						drawState.DepthStencilState.DepthEnable = true;
+						drawState.RasterState.CullMode = ECullMode::Back;
+						drawState.ClearColor = Color(255, 255, 255, 0);
 
-					drawState.ViewPort = FViewPort(m_DirCascadeSettings.CascadeResolutions[i], m_DirCascadeSettings.CascadeResolutions[i]);
+						drawState.ViewPort = FViewPort(m_DirCascadeSettings.CascadeResolutions[i], m_DirCascadeSettings.CascadeResolutions[i]);
 
-					RenderSet globalRenderSet = BuildRenderSet();
-					drawState.BindDepthTarget(m_DirCascadeTextures[i], 0, 0);
+						RenderSet globalRenderSet = BuildRenderSet();
+						drawState.BindDepthTarget(m_DirCascadeTextures[i], 0, 0);
 
-					m_RenderDevice->BindRenderTargets(drawState);
-					m_RenderDevice->ClearRenderTargets(drawState);
-					RenderPass(drawState, globalRenderSet, EPassType::Depth, dirLightFrustum, dirView);
-					m_RenderManager->GetUniformBufferCache().Reset();
+						m_RenderDevice->BindRenderTargets(drawState);
+						m_RenderDevice->ClearRenderTargets(drawState);
+						RenderPass(drawState, globalRenderSet, EPassType::Depth, dirLightFrustum, dirView);
+						m_RenderManager->GetUniformBufferCache().Reset();
+					}
+
+					glDisable(GL_DEPTH_CLAMP);
 				}
-
-				glDisable(GL_DEPTH_CLAMP);
 
 				break;
 			}
