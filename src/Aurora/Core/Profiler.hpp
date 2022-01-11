@@ -101,9 +101,30 @@ namespace Aurora
 
 		static const LocalTiming& GetLastFrameTimings() { return m_LastFrameTiming; }
 	};
+
+	class DebugScopeTime
+	{
+	private:
+		std::string m_Name;
+		std::chrono::high_resolution_clock::time_point m_StartTime;
+	public:
+		explicit DebugScopeTime(std::string name) : m_Name(std::move(name))
+		{
+			m_StartTime = std::chrono::high_resolution_clock::now();
+		}
+		~DebugScopeTime()
+		{
+			auto endTime = std::chrono::high_resolution_clock::now();
+			auto nanoTime = (endTime - m_StartTime).count();
+			auto microTime = nanoTime / 1000;
+			auto miliTime = microTime / 1000;
+			AU_LOG_INFO("Scope ", m_Name, " took ", miliTime, "ms ", microTime, "mc");
+		}
+	};
 }
 
 #define AU_CPU_DEBUG_SCOPE(name) ::Aurora::LocalProfileScope CAT(AU_GPU_Debug_Scope_, __LINE__)(name)
+#define AU_SCOPE_TIME(name) ::Aurora::DebugScopeTime CAT(AU_GPU_Debug_Scope_, __LINE__)(name)
 
 #if AU_TRACY_ENABLED
 #define CPU_DEBUG_SCOPE(name) ZoneNamedN(CAT(_GPU_Debug_Scope_, __LINE__), name, true)
