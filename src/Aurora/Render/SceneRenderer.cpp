@@ -1137,10 +1137,7 @@ namespace Aurora
 		auto injectedIt = m_InjectedPasses.find(passType);
 		if(injectedIt != m_InjectedPasses.end())
 		{
-			for(PassRenderFn& fn : injectedIt->second)
-			{
-				fn(passType, drawCallState, frustum, viewMatrix);
-			}
+			injectedIt->second.Invoke(std::forward<EPassType>(passType), drawCallState, frustum, std::forward<Matrix4>(viewMatrix));
 		}
 	}
 }

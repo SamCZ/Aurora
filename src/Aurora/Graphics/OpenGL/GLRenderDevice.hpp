@@ -89,7 +89,7 @@ namespace Aurora
 		// InputLayout
 		InputLayout_ptr CreateInputLayout(const std::vector<VertexAttributeDesc>& desc) override;
 		// Drawing
-		void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args) override;
+		void Draw(const DrawCallState& state, const std::vector<DrawArguments>& args, bool bindState) override;
 		void DrawIndexed(const DrawCallState& state, const std::vector<DrawArguments>& args, bool bindState) override;
 		void DrawIndirect(const DrawCallState& state, const Buffer_ptr& indirectParams, uint32_t offsetBytes) override;
 

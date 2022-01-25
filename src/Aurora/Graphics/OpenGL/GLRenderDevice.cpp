@@ -1120,7 +1120,7 @@ namespace Aurora
 		return std::make_shared<BasicInputLayout>(desc);
 	}
 
-	void GLRenderDevice::Draw(const DrawCallState &state, const std::vector<DrawArguments>& args)
+	void GLRenderDevice::Draw(const DrawCallState &state, const std::vector<DrawArguments>& args, bool bindState)
 	{
 		CPU_DEBUG_SCOPE("Draw");
 		if(state.Shader == nullptr) {
@@ -1129,10 +1129,13 @@ namespace Aurora
 			return;
 		}
 
-		glBindVertexArray(m_nVAOEmpty); // FIXME: idk why, but when frustum clips all geometry and nothing renders,then this call happens, it will throw error in non bound Array (maybe it does NanoVG?)
-		m_LastVao = m_nVAOEmpty;
+		if(bindState)
+		{
+			glBindVertexArray(m_nVAOEmpty); // FIXME: idk why, but when frustum clips all geometry and nothing renders,then this call happens, it will throw error in non bound Array (maybe it does NanoVG?)
+			m_LastVao = m_nVAOEmpty;
+		}
 
-		ApplyDrawCallState(state);
+		if(bindState) ApplyDrawCallState(state);
 
 		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
 

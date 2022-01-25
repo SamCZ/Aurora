@@ -5,6 +5,7 @@
 #include <functional>
 #include <vector>
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Delegate.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/Mesh.hpp"
@@ -36,8 +37,6 @@ namespace Aurora
 		std::vector<Matrix4> Instances;
 	};
 
-	typedef std::function<void(EPassType, DrawCallState&, FFrustum&, glm::mat4)> PassRenderFn;
-
 	using RenderSet = std::vector<ModelContext>;
 
 	struct LightSettings
@@ -64,6 +63,7 @@ namespace Aurora
 			uint8_t NumOfCascades;
 			std::vector<uint16_t> CascadeResolutions;
 		};
+		typedef EventEmitter<EPassType, DrawCallState&, FFrustum&, glm::mat4> PassRenderEventEmitter;
 	private:
 		Scene* m_Scene;
 		RenderManager* m_RenderManager;
@@ -75,7 +75,7 @@ namespace Aurora
 
 		std::array<std::vector<entt::entity>, SortTypeCount> m_FinalSortedEntities;
 
-		std::map<EPassType, std::vector<PassRenderFn>> m_InjectedPasses;
+		std::map<EPassType, PassRenderEventEmitter> m_InjectedPasses;
 
 		Buffer_ptr m_InstancingBuffer;
 
@@ -135,9 +135,9 @@ namespace Aurora
 		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
 		LightSettings& GetLightSettings() { return m_LightSettings; }
 
-		inline void InjectRenderToPass(EPassType passType, const PassRenderFn& passRenderFn)
+		inline void InjectRenderToPass(EPassType passType, PassRenderEventEmitter::Delegate delegate)
 		{
-			m_InjectedPasses[passType].push_back(passRenderFn);
+			m_InjectedPasses[passType].Bind(delegate);
 		}
 
 	private:

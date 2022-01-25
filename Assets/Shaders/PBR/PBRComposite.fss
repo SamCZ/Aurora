@@ -177,6 +177,12 @@ void main()
 		return;
 	}
 
+	/*if(true)
+	{
+		FragColor = vec4(albedoFlags.rgb, 1.0f);
+		return;
+	}*/
+
 	vec3 WorldPos = GetSceneWorldPos();
 
 	vec3 albedo = albedoFlags.rgb;
@@ -256,6 +262,11 @@ void main()
 	//color = vec3(DoShadowMappingLinear(WorldPos, ivec2(0, 0)));
 	//color = mix(color, color * (1.0f - (g_DirLight.ShadowIntensity.x)), DoShadowMapping(WorldPos, N));
 	//color = vec3(DoShadowMapping(WorldPos, N));
+
+	if(any(isnan(color)))
+	{
+		color = albedo;
+	}
 
 	FragColor.rgb = color;
 	FragColor.a = 1;

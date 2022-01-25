@@ -182,7 +182,7 @@ namespace Aurora
 
 	Shader_ptr ResourceManager::LoadShader(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros &macros)
 	{
-		std::stringstream ss;
+		/*std::stringstream ss;
 
 		for (const auto &item : shaderTypesPaths)
 		{
@@ -195,7 +195,7 @@ namespace Aurora
 
 		if(it != m_ShaderPrograms.end()) {
 			return m_ShaderPrograms[multipath];
-		}
+		}*/
 
 		ShaderProgramDesc shaderProgramDesc(name);
 
@@ -223,7 +223,7 @@ namespace Aurora
 			return nullptr;
 		}
 
-		m_ShaderPrograms[multipath] = shaderProgram;
+		//m_ShaderPrograms[multipath] = shaderProgram;
 
 		AU_LOG_INFO("Loaded shader: ", name);
 
