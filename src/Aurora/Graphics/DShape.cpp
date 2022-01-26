@@ -3,12 +3,16 @@
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
+#include "Aurora/Framework/BaseComponents.hpp"
+#include "Aurora/Render/VgRender.hpp"
+
 namespace Aurora
 {
 	std::vector<ShapeStructs::LineShape> DShapes::m_LineShapes;
 	std::vector<ShapeStructs::BoxShape> DShapes::m_BoxShapes;
 	std::vector<ShapeStructs::SphereShape> DShapes::m_SphereShapes;
 	std::vector<ShapeStructs::ArrowShape> DShapes::m_ArrowShapes;
+	std::vector<ShapeStructs::TextShape> DShapes::m_TextShapes;
 
 	struct BaseShapeVertex
 	{
@@ -42,7 +46,11 @@ namespace Aurora
 	{
 		std::sort(m_LineShapes.begin(), m_LineShapes.end(), [](const ShapeStructs::LineShape& left, const ShapeStructs::LineShape& right) -> bool
 		{
-			return left.Thickness < right.Thickness;
+
+			if(left.UseDepthBuffer < right.UseDepthBuffer) return true;
+			if(left.Thickness < right.Thickness) return true;
+
+			return false;
 		});
 
 		drawState.SetVertexBuffer(0, g_LineBuffer);
@@ -103,15 +111,29 @@ namespace Aurora
 
 		// TODO: Implement box, sphere and arrow shape render
 
-		Reset();
-	}
-
-	void DShapes::Reset()
-	{
 		m_LineShapes.clear();
 		m_BoxShapes.clear();
 		m_SphereShapes.clear();
 		m_ArrowShapes.clear();
+	}
+
+	void DShapes::RenderText(TransformComponent* cameraTransform, CameraComponent* cameraComponent)
+	{
+		for(const ShapeStructs::TextShape& shape : m_TextShapes)
+		{
+			Vector2 coords;
+			if(cameraComponent->GetScreenCoordinates(*cameraTransform, shape.Position, coords))
+			{
+				GetEngine()->GetVgRender()->DrawString(shape.Text, coords, shape.Color, 12.0f, VgAlign::Center, VgAlign::Center);
+			}
+		}
+
+		m_TextShapes.clear();
+	}
+
+	void DShapes::Reset()
+	{
+		m_TextShapes.clear();
 
 		// Todo implement timeout
 	}

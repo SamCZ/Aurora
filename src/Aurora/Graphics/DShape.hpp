@@ -4,10 +4,13 @@
 #include "Color.hpp"
 #include "Base/IRenderDevice.hpp"
 #include "Aurora/Physics/AABB.hpp"
+#include "Aurora/Core/String.hpp"
 
 namespace Aurora
 {
 	class Scene;
+	struct CameraComponent;
+	struct TransformComponent;
 
 	namespace ShapeStructs
 	{
@@ -42,6 +45,13 @@ namespace Aurora
 			Vector3 Position;
 			Vector3 Direction;
 		};
+
+		struct TextShape
+		{
+			Vector3 Position;
+			::Aurora::Color Color;
+			String Text;
+		};
 	}
 
 	class DShapes
@@ -51,9 +61,11 @@ namespace Aurora
 		static std::vector<ShapeStructs::BoxShape> m_BoxShapes;
 		static std::vector<ShapeStructs::SphereShape> m_SphereShapes;
 		static std::vector<ShapeStructs::ArrowShape> m_ArrowShapes;
+		static std::vector<ShapeStructs::TextShape> m_TextShapes;
 	public:
 		static void Init();
 		static void Render(DrawCallState& drawState);
+		static void RenderText(TransformComponent* cameraTransform, CameraComponent* cameraComponent);
 		static void Destroy();
 		static void Reset();
 
@@ -152,6 +164,15 @@ namespace Aurora
 			shape.Wireframe = wireframe;
 			shape.UseDepthBuffer = useDepthBuffer;
 			m_ArrowShapes.emplace_back(shape);
+		}
+
+		inline static void Text(const Vector3& pos, const String& text, Color color = Color::green())
+		{
+			ShapeStructs::TextShape shape;
+			shape.Position = pos;
+			shape.Color = color;
+			shape.Text = text;
+			m_TextShapes.emplace_back(shape);
 		}
 	};
 }
