@@ -98,6 +98,7 @@ namespace Aurora
 			if(it == m_Delegates.end())
 				return false;
 
+			delete *it;
 			m_Delegates.erase(it);
 
 			return true;
