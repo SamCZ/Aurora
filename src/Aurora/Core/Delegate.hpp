@@ -73,12 +73,19 @@ namespace Aurora
 	private:
 		std::vector<Delegate> m_Delegates;
 	public:
+		~EventEmitter()
+		{
+			for(Delegate delegate : m_Delegates)
+			{
+				delete delegate;
+			}
+		}
+
 		EventID Bind(Delegate delegate)
 		{
 			m_Delegates.push_back(delegate);
 			return reinterpret_cast<EventID>(delegate);
 		}
-
 
 		EventID Bind(typename FunctionAction<void, ArgsTypes...>::Type function)
 		{
