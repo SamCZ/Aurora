@@ -9,6 +9,7 @@ namespace Aurora
 
 	ToneMappingMaterial::ToneMappingMaterial()
 	{
+		// TODO: Turn off mipmaps, will crash on linux
 		MP_LOOKUP = CreateTextureParam("Lookup texture", GetEngine()->GetResourceManager()->LoadLutTexture("Assets/Textures/default_lut.png"));
 	}
 

@@ -40,7 +40,7 @@ vec3 GetSceneWorldPos()
 
 float SampleShadowMap(sampler2D shadowMap, vec2 coords, float compare)
 {
-	return step(compare, texture2D(shadowMap, coords, 0).r);
+	return step(compare, texture(shadowMap, coords, 0).r);
 }
 
 float DoShadowMappingLinear(sampler2D shadowMap, vec2 coords, float compare, vec2 texelSize)
