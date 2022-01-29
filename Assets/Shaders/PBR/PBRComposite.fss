@@ -49,30 +49,22 @@ float DoShadowMappingLinear(sampler2D shadowMap, vec2 coords, float compare, vec
 	vec2 fracPart = fract(pixelPos);
 	vec2 startTexel = (pixelPos - fracPart) * texelSize;
 
-	float blTexel = SampleShadowMap(shadowMap, startTexel, compare);
+	vec4 gatheredTexels = textureGather(shadowMap, startTexel, 0);
+
+	float blTexel = step(compare, gatheredTexels.w);
+	float brTexel = step(compare, gatheredTexels.z);
+	float tlTexel = step(compare, gatheredTexels.x);
+	float trTexel = step(compare, gatheredTexels.y);
+
+	/*float blTexel = SampleShadowMap(shadowMap, startTexel, compare);
 	float brTexel = SampleShadowMap(shadowMap, startTexel + vec2(texelSize.x, 0.0), compare);
 	float tlTexel = SampleShadowMap(shadowMap, startTexel + vec2(0.0, texelSize.y), compare);
-	float trTexel = SampleShadowMap(shadowMap, startTexel + texelSize, compare);
+	float trTexel = SampleShadowMap(shadowMap, startTexel + texelSize, compare);*/
 
 	float mixA = mix(blTexel, tlTexel, fracPart.y);
 	float mixB = mix(brTexel, trTexel, fracPart.y);
 
 	return 1.0 - mix(mixA, mixB, fracPart.x);
-
-	/*float currentDepth = projCoords.z;
-	vec2 fracPart = fract(projCoords.xy);
-
-	ivec2 shadowCoord = ivec2(projCoords.xy * textureSize(DirCascadeMaps[layer], 0)) + offset;
-
-	float blTexel = SampleShadowMap(DirCascadeMaps[layer], shadowCoord, currentDepth - bias);
-	float brTexel = SampleShadowMap(DirCascadeMaps[layer], shadowCoord + ivec2(-1, 0), currentDepth - bias);
-	float tlTexel = SampleShadowMap(DirCascadeMaps[layer], shadowCoord + ivec2(0, 1), currentDepth - bias);
-	float trTexel = SampleShadowMap(DirCascadeMaps[layer], shadowCoord + ivec2(1, 1), currentDepth - bias);
-
-	float mixA = mix(blTexel, tlTexel, fracPart.y);
-	float mixB = mix(brTexel, trTexel, fracPart.y);
-
-	return 1.0 - mix(mixA, mixB, fracPart.x);*/
 }
 
 const int cascadeCount = 4;
