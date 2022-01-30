@@ -31,6 +31,7 @@
 #undef DrawText
 
 #ifdef _WIN32
+#include <Windows.h>
 extern "C"
 {
 /* http://developer.amd.com/community/blog/2015/10/02/amd-enduro-system-for-developers/ */
