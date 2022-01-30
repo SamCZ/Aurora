@@ -1,15 +1,15 @@
 #include "ndContactCallback.hpp"
-
+#ifdef NEWTON
 #include <ndContact.h>
 #include <ndShapeInstance.h>
 #include "CollisionMatrix.hpp"
 
 namespace Aurora
 {
-	ndMaterial &ndContactCallback::RegisterMaterial(dUnsigned32 id0, dUnsigned32 id1)
+	ndMaterial &ndContactCallback::RegisterMaterial(ndUnsigned64 id0, ndUnsigned64 id1)
 	{
 		ndMaterialKey key(id0, id1);
-		dTree<ndMaterial, ndMaterialKey>::dNode* node = m_MaterialMap.Find(key);
+		ndTree<ndMaterial, ndMaterialKey>::ndNode* node = m_MaterialMap.Find(key);
 		if (!node)
 		{
 			node = m_MaterialMap.Insert(ndMaterial(), key);
@@ -20,11 +20,11 @@ namespace Aurora
 	ndMaterial ndContactCallback::GetMaterial(const ndContact *const contactJoint, const ndShapeInstance &instance0, const ndShapeInstance &instance1) const
 	{
 		ndMaterialKey key(instance0.GetMaterial().m_userId, instance1.GetMaterial().m_userId);
-		dTree<ndMaterial, ndMaterialKey>::dNode* const node = m_MaterialMap.Find(key);
+		ndTree<ndMaterial, ndMaterialKey>::ndNode* const node = m_MaterialMap.Find(key);
 		return node ? node->GetInfo() : ndMaterial();
 	}
 
-	bool ndContactCallback::OnAabbOverlap(const ndContact *const contactJoint, dFloat32 timestep)
+	bool ndContactCallback::OnAabbOverlap(const ndContact *const contactJoint, ndFloat32 timestep)
 	{
 		const ndBodyKinematic* const body0 = contactJoint->GetBody0();
 		const ndBodyKinematic* const body1 = contactJoint->GetBody1();
@@ -43,10 +43,11 @@ namespace Aurora
 		return CollisionMatrix::CanCollide(l0, l1);
 	}
 
-	void ndContactCallback::OnContactCallback(dInt32 threadIndex, const ndContact *const contactJoint, dFloat32 timestep)
+	void ndContactCallback::OnContactCallback(ndInt32 threadIndex, const ndContact *const contactJoint, ndFloat32 timestep)
 	{
 		const ndMaterial& material = contactJoint->GetMaterial();
 
 
 	}
 }
+#endif

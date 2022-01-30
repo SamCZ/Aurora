@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef NEWTON
 #include <ndBodyKinematic.h>
 #include <ndContactNotify.h>
 
@@ -14,7 +14,7 @@ namespace Aurora
 			ndMaterialKey()
 				:m_key(0) { }
 
-			ndMaterialKey(dUnsigned64 low, dUnsigned64 high) : m_lowKey(dUnsigned32(dMin(low, high))) ,m_highKey(dUnsigned32(dMax(low, high))) { }
+			ndMaterialKey(ndUnsigned64 low, ndUnsigned64 high) : m_lowKey(ndUnsigned64(dMin(low, high))) ,m_highKey(ndUnsigned64(dMax(low, high))) { }
 
 			bool operator<(const ndMaterialKey& other) const
 			{
@@ -30,19 +30,20 @@ namespace Aurora
 			{
 				struct
 				{
-					dUnsigned32 m_lowKey;
-					dUnsigned32 m_highKey;
+                    ndUnsigned64 m_lowKey;
+                    ndUnsigned64 m_highKey;
 				};
-				dUnsigned64 m_key;
+                ndUnsigned64 m_key;
 			};
 		};
 	private:
-		dTree<ndMaterial, ndMaterialKey> m_MaterialMap;
+		ndTree<ndMaterial, ndMaterialKey> m_MaterialMap;
 	public:
-		ndMaterial& RegisterMaterial(dUnsigned32 id0, dUnsigned32 id1);
+		ndMaterial& RegisterMaterial(ndUnsigned64 id0, ndUnsigned64 id1);
 
 		ndMaterial GetMaterial(const ndContact* contactJoint, const ndShapeInstance& instance0, const ndShapeInstance& instance1) const override;
-		bool OnAabbOverlap(const ndContact* contactJoint, dFloat32 timestep) override;
-		void OnContactCallback(dInt32 threadIndex, const ndContact* contactJoint, dFloat32 timestep) override;
+		bool OnAabbOverlap(const ndContact* contactJoint, ndFloat32 timestep) override;
+		void OnContactCallback(ndInt32 threadIndex, const ndContact* contactJoint, ndFloat32 timestep) override;
 	};
 }
+#endif

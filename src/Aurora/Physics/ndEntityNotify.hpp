@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef NEWTON
+
 #include <ndBodyDynamic.h>
 #include "../Framework/BaseComponents.hpp"
 
@@ -12,7 +14,8 @@ namespace Aurora
 	public:
 		ndEntityNotify(TransformComponent* transformComponent);
 
-		void OnApplyExternalForce(dInt32 threadIndex, dFloat32 timestep) override;
-		void OnTransform(dInt32 threadIndex, const dMatrix& matrix) override;
+		void OnApplyExternalForce(ndInt32 threadIndex, ndFloat32 timestep) override;
+		void OnTransform(ndInt32 threadIndex, const ndMatrix& matrix) override;
 	};
 }
+#endif

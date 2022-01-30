@@ -1,6 +1,6 @@
 #pragma once
-
-#include <ndWorld.h>
+#ifdef NEWTON
+#include <dNewton/ndWorld.h>
 
 namespace Aurora
 {
@@ -11,3 +11,4 @@ namespace Aurora
 		~PhysicsWorld() override;
 	};
 }
+#endif

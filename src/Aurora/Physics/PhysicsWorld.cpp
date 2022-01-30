@@ -1,6 +1,6 @@
 #include "PhysicsWorld.hpp"
 #include "ndContactCallback.hpp"
-
+#ifdef NEWTON
 namespace Aurora
 {
 	PhysicsWorld::PhysicsWorld() : ndWorld()
@@ -11,3 +11,4 @@ namespace Aurora
 
 	PhysicsWorld::~PhysicsWorld() = default;
 }
+#endif

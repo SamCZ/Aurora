@@ -1,30 +1,30 @@
 #include "ndEntityNotify.hpp"
-
+#ifdef NEWTON
 namespace Aurora
 {
 
-	ndEntityNotify::ndEntityNotify(TransformComponent* transformComponent) : ndBodyNotify(dVector(0.0f, -10.0f, 0.0f, 0.0f)), m_Transform(transformComponent)
+	ndEntityNotify::ndEntityNotify(TransformComponent* transformComponent) : ndBodyNotify(ndVector(0.0f, -10.0f, 0.0f, 0.0f)), m_Transform(transformComponent)
 	{
 
 	}
 
-	void ndEntityNotify::OnApplyExternalForce(dInt32 threadIndex, dFloat32 timestep)
+	void ndEntityNotify::OnApplyExternalForce(ndInt32 threadIndex, ndFloat32 timestep)
 	{
 		ndBodyKinematic* const body = GetBody()->GetAsBodyKinematic();
 		dAssert(body);
 		if (body->GetInvMass() > 0.0f)
 		{
-			dVector massMatrix(body->GetMassMatrix());
-			dVector force(GetGravity().Scale(massMatrix.m_w));
+			ndVector massMatrix(body->GetMassMatrix());
+			ndVector force(GetGravity().Scale(massMatrix.m_w));
 			body->SetForce(force);
-			body->SetTorque(dVector::m_zero);
+			body->SetTorque(ndVector::m_zero);
 
 			//dVector L(body->CalculateAngularMomentum());
 			//dTrace(("%f %f %f\n", L.m_x, L.m_y, L.m_z));
 		}
 	}
 
-	void ndEntityNotify::OnTransform(dInt32 threadIndex, const dMatrix &matrix)
+	void ndEntityNotify::OnTransform(ndInt32 threadIndex, const ndMatrix &matrix)
 	{
 		/*m_Transform->Translation = Vector3(matrix.m_posit.m_x, matrix.m_posit.m_y, matrix.m_posit.m_z);
 
@@ -39,3 +39,4 @@ namespace Aurora
 		m_Transform->SetFromMatrix(glm::make_mat4(&matrix.m_front.m_x));
 	}
 }
+#endif

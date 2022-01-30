@@ -99,7 +99,7 @@ endif()
 # Physics library
 #------------------------------
 if(NOT TARGET newton-dynamics)
-    set(NEWTON_BUILD_SANDBOX_DEMOS ON)
+    set(NEWTON_BUILD_SANDBOX_DEMOS OFF)
     set(NEWTON_BUILD_SHARED_LIBS OFF)
     set(NEWTON_BUILD_SINGLE_THREADED OFF)
     set(NEWTON_DOUBLE_PRECISION OFF)

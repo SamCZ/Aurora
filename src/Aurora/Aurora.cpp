@@ -58,8 +58,10 @@ namespace Aurora
 		m_InputManager(nullptr),
 		m_AppContext(nullptr),
 		m_RmlUI(nullptr),
-		m_VgRender(nullptr),
-		m_PhysicsWorld(nullptr)
+		m_VgRender(nullptr)
+#ifdef NEWTON
+        ,m_PhysicsWorld(nullptr)
+#endif
 	{
 
 	}
@@ -67,7 +69,9 @@ namespace Aurora
 	AuroraEngine::~AuroraEngine()
 	{
 		delete m_AppContext;
+#ifdef NEWTON
 		delete m_PhysicsWorld;
+#endif
 		delete g_Context;
 		delete m_VgRender;
 		delete m_RmlUI;
@@ -156,9 +160,11 @@ namespace Aurora
 		g_Context->m_VgRender = m_VgRender;
 		m_VgRender->LoadFont("default", "Assets/Fonts/LatoLatin-Bold.ttf");
 
+#ifdef NEWTON
 		// Init Physics world
 		m_PhysicsWorld = new PhysicsWorld();
 		g_Context->m_PhysicsWorld = m_PhysicsWorld;
+#endif
 
 		// Init App context
 		m_AppContext = appContext;
@@ -217,10 +223,12 @@ namespace Aurora
 				ImGui::NewFrame();
 			}
 
+#ifdef NEWTON
 			{
 				CPU_DEBUG_SCOPE("Physics update");
 				m_PhysicsWorld->Update(delta);
 			}
+#endif
 
 			{
 				CPU_DEBUG_SCOPE("Game update");
