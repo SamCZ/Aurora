@@ -2,10 +2,9 @@
 
 #ifdef _WIN32
 #include <Windows.h>
-#include <wrl.h>
 #endif
 
-#if PLATFORM_ANDROID
+#if PLATFORM_ANDROIDS
 #include <EGL/egl.h>
 #include <GLES/gl.h>
 #include <GLES3/gl3.h>
