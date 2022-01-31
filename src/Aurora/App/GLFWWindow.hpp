@@ -1,8 +1,12 @@
 #pragma once
 
 #if GLFW_ENABLED
-#include "IWindow.hpp"
 
+#if _WIN32
+#include <Windows.h>
+#endif
+
+#include "IWindow.hpp"
 #include <GLFW/glfw3.h>
 
 namespace Aurora
