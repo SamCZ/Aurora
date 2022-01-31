@@ -3,10 +3,6 @@
 #include "GLConversions.hpp"
 
 #include <algorithm>
-#ifdef _WIN32
-#include <Windows.h>
-#include <wrl.h>
-#endif
 
 #include <cstdint>
 #include <Aurora/Core/assert.hpp>
