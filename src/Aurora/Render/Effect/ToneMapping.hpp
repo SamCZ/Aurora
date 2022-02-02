@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class ToneMappingMaterial : public Material
+	class AU_API ToneMappingMaterial : public Material
 	{
 	private:
 		Shader_ptr m_Shader;
@@ -20,7 +20,7 @@ namespace Aurora
 		void OnShaderReload(ResourceManager* rsm) override;
 	};
 
-	class ToneMappingEffect : public PostProcessEffect
+	class AU_API ToneMappingEffect : public PostProcessEffect
 	{
 	public:
 		CLASS_OBJ(ToneMappingEffect, PostProcessEffect);

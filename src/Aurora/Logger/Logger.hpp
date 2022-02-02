@@ -1,14 +1,16 @@
 #pragma once
+
 #include <cstdint>
 #include <stdio.h>
 #include <functional>
 #include <memory>
 #include <vector>
+#include <Aurora/Core/Library.hpp>
 #include <Aurora/Core/FormatString.hpp>
 
 namespace Aurora
 {
-	class Logger
+	class AU_API Logger
 	{
 	public:
 		enum class Severity : uint8_t

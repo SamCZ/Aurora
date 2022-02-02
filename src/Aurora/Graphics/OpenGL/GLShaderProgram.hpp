@@ -6,7 +6,7 @@
 
 namespace Aurora
 {
-	class GLShaderProgram : public IShaderProgram
+	class AU_API GLShaderProgram : public IShaderProgram
 	{
 	private:
 		const ShaderProgramDesc m_Desc;

@@ -18,7 +18,7 @@ namespace Aurora
 		{}
 	};
 
-	class BufferCache
+	class AU_API BufferCache
 	{
 	private:
 		IRenderDevice* m_RenderDevice;

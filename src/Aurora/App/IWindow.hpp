@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 
+#include "Aurora/Core/Library.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Graphics/Base/SwapChain.hpp"
@@ -24,12 +25,12 @@ namespace Aurora
 		String Title;
 	};
 
-	AU_CLASS(IWindow)
+	class AU_API IWindow
 	{
 	public:
 		virtual ~IWindow() = default;
 	public:
-		virtual void Initialize(const WindowDefinition& windowDefinition, const IWindow_ptr& parentWindow) = 0;
+		virtual void Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<IWindow>& parentWindow) = 0;
 
 		virtual void SetSize(int width, int height) = 0;
 		virtual void SetSize(const Vector2i& size) = 0;

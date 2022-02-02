@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <memory>
 #include "assert.hpp"
+#include "Library.hpp"
 
 typedef uint32_t uint;
 typedef uint8_t uint8;
@@ -17,7 +18,7 @@ using DataBlob = std::vector<uint8_t>;
 #define BITF(bit) 1 << bit
 
 #define AU_CLASS(A) \
-class A;\
+class AU_API A;\
 \
 typedef std::shared_ptr<A> A ## _ptr;\
 typedef std::weak_ptr<A> A ## _wptr;\

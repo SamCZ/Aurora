@@ -43,7 +43,7 @@ namespace Aurora
 		virtual bool GetDescriptorBySemanticID(uint32_t semantic, VertexAttributeDesc& out_desc) const noexcept = 0;
 	};
 
-	class BasicInputLayout : public IInputLayout
+	class AU_API BasicInputLayout : public IInputLayout
 	{
 	private:
 		std::vector<VertexAttributeDesc> m_Descriptors;

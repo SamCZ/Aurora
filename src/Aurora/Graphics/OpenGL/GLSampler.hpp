@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class GLSampler : public ISampler
+	class AU_API GLSampler : public ISampler
 	{
 	private:
 		SamplerDesc m_Desc;

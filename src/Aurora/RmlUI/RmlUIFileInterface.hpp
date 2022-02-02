@@ -1,10 +1,11 @@
 #pragma once
 
 #include <RmlUi/Core/FileInterface.h>
+#include "Aurora/Core/Library.hpp"
 
 namespace Aurora
 {
-	class RmlUIFileInterface : public Rml::FileInterface
+	class AU_API RmlUIFileInterface : public Rml::FileInterface
 	{
 	public:
 		Rml::FileHandle Open(const Rml::String& path) override;

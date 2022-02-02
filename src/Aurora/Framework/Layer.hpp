@@ -21,7 +21,7 @@ namespace Aurora
 		NumLayers
 	};
 
-	class Layer
+	class AU_API Layer
 	{
 	public:
 		typedef uint16_t Hash_t;

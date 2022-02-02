@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Library.hpp"
+
 namespace Aurora
 {
 	class ResourceManager;
@@ -38,5 +40,5 @@ namespace Aurora
 		[[nodiscard]] inline PhysicsWorld* GetPhysicsWorld() const { return m_PhysicsWorld; }
 	};
 
-	extern AuroraContext* GetEngine();
+	AU_API extern AuroraContext* GetEngine();
 }

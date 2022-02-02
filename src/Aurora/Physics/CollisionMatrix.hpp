@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class CollisionMatrix
+	class AU_API CollisionMatrix
 	{
 	private:
 		static std::vector<Layer::Hash_t> m_CollisionMatrix;

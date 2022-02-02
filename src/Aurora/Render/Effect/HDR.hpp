@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class HDREffect : public PostProcessEffect
+	class AU_API HDREffect : public PostProcessEffect
 	{
 	public:
 		CLASS_OBJ(HDREffect, PostProcessEffect);

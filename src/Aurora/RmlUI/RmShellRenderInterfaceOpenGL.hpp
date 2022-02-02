@@ -2,6 +2,7 @@
 
 #include <map>
 #include <RmlUi/Core/RenderInterface.h>
+#include "Aurora/Core/Library.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
 #include "Aurora/Graphics/Base/ShaderBase.hpp"
 #include "Aurora/Graphics/Base/Buffer.hpp"
@@ -9,7 +10,7 @@
 
 namespace Aurora
 {
-	class RmShellRenderInterfaceOpenGL : public Rml::RenderInterface
+	class AU_API RmShellRenderInterfaceOpenGL : public Rml::RenderInterface
 	{
 	protected:
 		struct TexHandle

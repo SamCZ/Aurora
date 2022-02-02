@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class GLBuffer : public IBuffer
+	class AU_API GLBuffer : public IBuffer
 	{
 	private:
 		BufferDesc m_Desc;

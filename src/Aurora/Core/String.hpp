@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <iomanip>
+#include "Library.hpp"
 
 using String = std::basic_string<char>;
 
@@ -16,5 +17,5 @@ inline String PointerToString(T* pointer)
 	return ss.str();
 }
 
-std::vector<std::string> SplitString(const std::string& str, char delimiter);
-std::string FormatBytes(uint64_t bytes);
+AU_API std::vector<std::string> SplitString(const std::string& str, char delimiter);
+AU_API std::string FormatBytes(uint64_t bytes);

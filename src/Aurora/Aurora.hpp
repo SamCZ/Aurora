@@ -25,7 +25,7 @@ namespace Aurora
 		virtual void RenderVg() {}
 	};
 
-	class AuroraEngine
+	class AU_API AuroraEngine
 	{
 	private:
 		IWindow* m_Window;

@@ -1,10 +1,11 @@
 #pragma once
 
 #include <string>
+#include "Aurora/Core/Library.hpp"
 
 namespace Aurora
 {
-	class GLRenderGroupScope
+	class AU_API GLRenderGroupScope
 	{
 	public:
 		explicit GLRenderGroupScope(const char* name);

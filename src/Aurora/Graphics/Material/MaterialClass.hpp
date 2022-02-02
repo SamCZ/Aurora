@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Aurora/Core/Object.hpp"
+#include "Aurora/Core/Library.hpp"
 
 namespace Aurora
 {
-	class MaterialClass : public ObjectBase
+	class AU_API MaterialClass : public ObjectBase
 	{
 	public:
 		CLASS_OBJ(MaterialClass, ObjectBase);

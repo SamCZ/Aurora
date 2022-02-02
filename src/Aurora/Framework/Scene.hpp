@@ -11,7 +11,7 @@ namespace Aurora
 {
 	class Entity;
 
-	class Scene
+	class AU_API Scene
 	{
 	private:
 		friend class Entity;

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include "Aurora/Core/Library.hpp"
 #include "Aurora/Graphics/OpenGL/GL.hpp"
 #include "../Logger/Logger.hpp"
 
@@ -23,7 +24,7 @@
 
 namespace Aurora
 {
-	class LocalProfileScope
+	class AU_API LocalProfileScope
 	{
 	public:
 		struct LocalTiming

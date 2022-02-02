@@ -10,7 +10,7 @@ namespace Aurora
 		double AxesDistances[3]{};
 	};
 
-	class AABB
+	class AU_API AABB
 	{
 	private:
 		Vector3 m_Min;

@@ -11,14 +11,14 @@
 
 namespace Aurora
 {
-	GLenum ConvertStencilOp(EStencilOp value);
-	GLenum ConvertComparisonFunc(EComparisonFunc value);
-	GLenum ConvertPrimType(EPrimitiveType primType);
-	GLint ConvertWrapMode(EWrapMode wrapMode);
-	GLenum ConvertBlendValue(EBlendValue value);
-	GLenum ConvertBlendOp(EBlendOp value);
-	GLenum ConvertBufferType(EBufferType bufferType);
-	GLenum ConvertUsage(EBufferUsage usage);
-	GLenum ConvertIndexBufferFormat(EIndexBufferFormat format);
-	GLenum ConvertBufferAccess(EBufferAccess bufferAccess);
+	AU_API GLenum ConvertStencilOp(EStencilOp value);
+	AU_API GLenum ConvertComparisonFunc(EComparisonFunc value);
+	AU_API GLenum ConvertPrimType(EPrimitiveType primType);
+	AU_API GLint ConvertWrapMode(EWrapMode wrapMode);
+	AU_API GLenum ConvertBlendValue(EBlendValue value);
+	AU_API GLenum ConvertBlendOp(EBlendOp value);
+	AU_API GLenum ConvertBufferType(EBufferType bufferType);
+	AU_API GLenum ConvertUsage(EBufferUsage usage);
+	AU_API GLenum ConvertIndexBufferFormat(EIndexBufferFormat format);
+	AU_API GLenum ConvertBufferAccess(EBufferAccess bufferAccess);
 }

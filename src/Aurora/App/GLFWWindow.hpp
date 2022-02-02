@@ -11,7 +11,7 @@
 
 namespace Aurora
 {
-	AU_CLASS(GLFWWindow) : public IWindow
+	class AU_API GLFWWindow : public IWindow
 	{
 		friend class Input::IManager;
 	private:
@@ -31,7 +31,7 @@ namespace Aurora
 		GLFWWindow();
 		~GLFWWindow() override;
 
-		void Initialize(const WindowDefinition& windowDefinition, const IWindow_ptr& parentWindow) override;
+		void Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<IWindow>& parentWindow) override;
 
 		inline GLFWwindow* GetHandle()
 		{

@@ -13,7 +13,7 @@ namespace Aurora
 		uint32_t CompressedSize;
 	};
 
-	class AssetBank
+	class AU_API AssetBank
 	{
 	private:
 

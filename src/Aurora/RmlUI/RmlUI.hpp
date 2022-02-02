@@ -8,11 +8,13 @@
 #include <RmlUi/Core/Context.h>
 #include <RmlUi/Core/Core.h>
 
+#include "Aurora/Core/Library.hpp"
+
 namespace Aurora
 {
 	class RmlContext;
 
-	class RmlUI
+	class AU_API RmlUI
 	{
 		friend class RmlContext;
 		friend class RmlPlugin;

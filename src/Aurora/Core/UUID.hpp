@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <atomic>
 #include <functional>
+#include "Library.hpp"
 
 namespace Aurora
 {
@@ -42,7 +43,7 @@ namespace Aurora
 		}
 	};
 
-	class UUID64
+	class AU_API UUID64
 	{
 	private:
 		uint64_t m_UUID;
@@ -57,7 +58,7 @@ namespace Aurora
 		operator const uint64_t () const { return m_UUID; }
 	};
 
-	class UUID32
+	class AU_API UUID32
 	{
 	private:
 		uint32_t m_UUID;

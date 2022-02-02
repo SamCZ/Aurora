@@ -7,7 +7,7 @@
 
 namespace Aurora
 {
-	class GLTexture : public ITexture
+	class AU_API GLTexture : public ITexture
 	{
 	public:
 		friend class GLRenderDevice;

@@ -54,7 +54,7 @@ namespace Aurora
 		};
 	}
 
-	class DShapes
+	class AU_API DShapes
 	{
 	private:
 		static std::vector<ShapeStructs::LineShape> m_LineShapes;

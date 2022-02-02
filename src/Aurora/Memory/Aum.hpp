@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include "Aurora/Core/Library.hpp"
 #include "Aurora/Tools/robin_hood.h"
 
 namespace Aurora
@@ -11,7 +12,7 @@ namespace Aurora
 	typedef uint32_t MemSize;
 	static constexpr MemSize MemSizeOf = sizeof(MemSize);
 
-	class Aum
+	class AU_API Aum
 	{
 		struct MemoryFragment
 		{

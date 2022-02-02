@@ -1,12 +1,13 @@
 #pragma once
 
 #include <entt/entt.hpp>
+#include <Aurora/Core/Library.hpp>
 
 namespace Aurora
 {
 	class Scene;
 
-	class Actor
+	class AU_API Actor
 	{
 		friend class Scene;
 	protected:

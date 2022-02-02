@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class FXAAMaterial : public Material
+	class AU_API FXAAMaterial : public Material
 	{
 	private:
 		Shader_ptr m_Shader;
@@ -19,7 +19,7 @@ namespace Aurora
 		void BeginPass(DrawCallState& drawState, EPassType passType) const override;
 	};
 
-	class FXAAEffect : public PostProcessEffect
+	class AU_API FXAAEffect : public PostProcessEffect
 	{
 	public:
 		CLASS_OBJ(FXAAEffect, PostProcessEffect);

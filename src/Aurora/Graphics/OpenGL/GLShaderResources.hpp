@@ -45,7 +45,7 @@ namespace Aurora
 		const GLuint SBIndex = 0;
 	};
 
-	class GLShaderResources
+	class AU_API GLShaderResources
 	{
 	private:
 		uint32_t m_UniformBufferBinding;

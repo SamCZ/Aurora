@@ -14,7 +14,7 @@
 
 namespace Aurora
 {
-	class MaterialBase : public ObjectBase
+	class AU_API MaterialBase : public ObjectBase
 	{
 	public:
 		CLASS_OBJ(MaterialBase, ObjectBase)

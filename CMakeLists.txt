@@ -4,10 +4,24 @@ set(CMAKE_CXX_STANDARD 20)
 option(AU_GPU_PROFILE "GPU profiling" ON)
 option(AU_CPU_PROFILE "CPU profiling" ON)
 
+if(WIN32)
+    option(AU_SHARED_LIBRARY "Compile as shared library" OFF)
+ else()
+    set(AU_SHARED_LIBRARY OFF)
+endif()
+
 add_subdirectory(lib)
 
 file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
-add_library(Aurora STATIC ${PROJECT_SOURCE})
+
+if(NOT AU_SHARED_LIBRARY)
+    add_library(Aurora STATIC ${PROJECT_SOURCE})
+    target_compile_definitions(Aurora PUBLIC AU_SHARED=0)
+else()
+    add_library(Aurora SHARED ${PROJECT_SOURCE})
+    target_compile_definitions(Aurora PUBLIC AU_SHARED=1)
+    target_compile_definitions(Aurora PRIVATE AU_EXPORT=1)
+endif()
 
 target_include_directories(Aurora PUBLIC src)
 target_include_directories(Aurora PUBLIC Assets)

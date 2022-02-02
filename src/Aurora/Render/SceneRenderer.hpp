@@ -45,7 +45,7 @@ namespace Aurora
 		Texture_ptr CustomSkyCubeMap = nullptr;
 	};
 
-	class SceneRenderer
+	class AU_API SceneRenderer
 	{
 	public:
 		struct BloomSettings

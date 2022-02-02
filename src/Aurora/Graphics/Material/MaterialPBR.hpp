@@ -4,7 +4,7 @@
 
 namespace Aurora
 {
-	class MaterialPBR : public Material
+	class AU_API MaterialPBR : public Material
 	{
 	public:
 		CLASS_OBJ(MaterialPBR, Material)

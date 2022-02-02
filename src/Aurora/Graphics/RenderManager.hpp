@@ -21,14 +21,14 @@ namespace Aurora
 
 	namespace Samplers
 	{
-		extern Sampler_ptr ClampClampLinearLinear;
-		extern Sampler_ptr WrapWrapLinearLinear;
-		extern Sampler_ptr WrapWrapNearNearestFarLinear;
+		AU_API extern Sampler_ptr ClampClampLinearLinear;
+		AU_API extern Sampler_ptr WrapWrapLinearLinear;
+		AU_API extern Sampler_ptr WrapWrapNearNearestFarLinear;
 
-		extern Sampler_ptr ClampClampNearestNearest;
-		extern Sampler_ptr ClampClampClampLinearLinearLinear;
-		extern Sampler_ptr WrapWrapNearestNearest;
-		extern Sampler_ptr ClampClampNearNearestFarLinear;
+		AU_API extern Sampler_ptr ClampClampNearestNearest;
+		AU_API extern Sampler_ptr ClampClampClampLinearLinearLinear;
+		AU_API extern Sampler_ptr WrapWrapNearestNearest;
+		AU_API extern Sampler_ptr ClampClampNearNearestFarLinear;
 	}
 
 	struct RTCacheSort
@@ -91,7 +91,7 @@ namespace Aurora
 		{ return compare(other) == 0; }
 	};
 
-	class TemporalRenderTarget
+	class AU_API TemporalRenderTarget
 	{
 		friend class RenderManager;
 
@@ -121,7 +121,7 @@ namespace Aurora
 		double LastUseTime;
 	};
 
-	class RenderManager
+	class AU_API RenderManager
 	{
 		friend class TemporalRenderTarget;
 

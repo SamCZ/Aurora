@@ -4,13 +4,13 @@
 
 namespace Aurora::FS
 {
-	std::vector<std::string> ReadLines(const Path &path);
-	DataBlob LoadFile(const Path& path);
-	bool IsDirectory(const Path &path);
-	std::vector<Path> ListFiles(const Path &path, bool recursive);
-	bool CreateDirectories(const Path &path);
-	Path GetCurrentDir();
-	bool FileExists(const Path &path);
+	AU_API std::vector<std::string> ReadLines(const Path &path);
+	AU_API DataBlob LoadFile(const Path& path);
+	AU_API bool IsDirectory(const Path &path);
+	AU_API std::vector<Path> ListFiles(const Path &path, bool recursive);
+	AU_API bool CreateDirectories(const Path &path);
+	AU_API Path GetCurrentDir();
+	AU_API bool FileExists(const Path &path);
 
 	/*static inline nlohmann::json LoadJson(const Path& file) {
 		std::ifstream i(file);

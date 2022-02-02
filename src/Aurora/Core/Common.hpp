@@ -10,6 +10,7 @@
 #include <iostream>
 #include "../Logger/Logger.hpp"
 #include "Types.hpp"
+#include "Library.hpp"
 
 template<typename T>
 class SharedFromThis : public std::enable_shared_from_this<T>

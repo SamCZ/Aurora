@@ -7,10 +7,10 @@
 
 namespace Aurora
 {
-	GLBuffer* GetBuffer(const Buffer_ptr& buffer);
-	GLTexture* GetTexture(const Texture_ptr& texture);
-	GLSampler* GetSampler(const Sampler_ptr& sampler);
-	GLShaderProgram* GetShader(const Shader_ptr& shader);
+	AU_API GLBuffer* GetBuffer(const Buffer_ptr& buffer);
+	AU_API GLTexture* GetTexture(const Texture_ptr& texture);
+	AU_API GLSampler* GetSampler(const Sampler_ptr& sampler);
+	AU_API GLShaderProgram* GetShader(const Shader_ptr& shader);
 
 	class FrameBuffer
 	{
@@ -35,7 +35,7 @@ namespace Aurora
 
 	typedef std::shared_ptr<FrameBuffer> FrameBuffer_ptr;
 
-	class GLRenderDevice : public IRenderDevice
+	class AU_API GLRenderDevice : public IRenderDevice
 	{
 	public:
 		friend class GLTexture;

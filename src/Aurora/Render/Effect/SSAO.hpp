@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class SSAOEffect : public PostProcessEffect
+	class AU_API SSAOEffect : public PostProcessEffect
 	{
 	public:
 		CLASS_OBJ(SSAOEffect, PostProcessEffect);

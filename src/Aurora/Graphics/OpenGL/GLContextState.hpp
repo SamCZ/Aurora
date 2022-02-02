@@ -10,7 +10,7 @@
 
 namespace Aurora
 {
-	class GLContextState
+	class AU_API GLContextState
 	{
 	public:
 		typedef uint32_t BindIndex;

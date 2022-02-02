@@ -1,4 +1,5 @@
 #pragma once
+
 #include "MaterialBase.hpp"
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/PassType.hpp"
@@ -31,7 +32,7 @@ namespace Aurora
 
 	static constexpr uint8_t SortTypeCount = (uint8) RenderSortType::Count;
 
-	class Material : public MaterialBase
+	class AU_API Material : public MaterialBase
 	{
 	public:
 		CLASS_OBJ(Material, MaterialBase)

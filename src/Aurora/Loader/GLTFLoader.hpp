@@ -7,7 +7,7 @@ namespace Aurora
 	class XMesh;
 	class IRenderDevice;
 
-	class GLTFLoader
+	class AU_API GLTFLoader
 	{
 	public:
 		static std::vector<std::shared_ptr<XMesh>> LoadMeshFile(const Path& path, IRenderDevice* renderDevice);

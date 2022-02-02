@@ -2,5 +2,5 @@
 
 namespace Aurora
 {
-	extern double GetTimeInSeconds();
+	AU_API extern double GetTimeInSeconds();
 }

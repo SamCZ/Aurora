@@ -21,7 +21,7 @@ namespace Aurora
 		Top
 	};
 
-	class VgRender
+	class AU_API VgRender
 	{
 	private:
 		NVGcontext* m_VgContext;

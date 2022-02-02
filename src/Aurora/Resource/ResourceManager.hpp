@@ -10,13 +10,13 @@
 
 namespace Aurora
 {
-		struct TextureLoadInfo
-		{
-				bool SRGB = true;
-				bool Bindless = false;
-		};
+	struct TextureLoadInfo
+	{
+		bool SRGB = true;
+		bool Bindless = false;
+	};
 
-	class ResourceManager
+	class AU_API ResourceManager
 	{
 	private:
 		IRenderDevice* m_RenderDevice;

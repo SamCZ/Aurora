@@ -8,7 +8,7 @@ namespace Aurora
 {
 	class Material;
 
-	class PostProcessEffect : public ObjectBase
+	class AU_API PostProcessEffect : public ObjectBase
 	{
 	private:
 		std::shared_ptr<Material> m_Material;

@@ -1,10 +1,11 @@
 #pragma once
 
 #include <RmlUi/Core/SystemInterface.h>
+#include "Aurora/Core/Library.hpp"
 
 namespace Aurora
 {
-	class RmShellSystemInterface : public Rml::SystemInterface
+	class AU_API RmShellSystemInterface : public Rml::SystemInterface
 	{
 	public:
 		RmShellSystemInterface();
