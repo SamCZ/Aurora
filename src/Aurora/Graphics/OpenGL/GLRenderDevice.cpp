@@ -52,17 +52,6 @@ void main()
 
 namespace Aurora
 {
-#ifdef _WIN32
-	inline bool GetSSE42Support()
-	{
-		int cpui[4];
-		__cpuidex(cpui, 1, 0);
-		return !!(cpui[2] & 0x100000);
-	}
-
-	static const bool CpuSupportsSSE42 = GetSSE42Support();
-#endif
-
 	static uint64_t CrcTable[256];
 
 	class CrcHash

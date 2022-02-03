@@ -130,7 +130,9 @@ namespace Aurora
 
 		// Init resource manager (for loading assets)
 		m_ResourceManager = new ResourceManager(m_RenderDevice);
+#if AU_IN_PROJECT_ASSETS
 		m_ResourceManager->AddFileSearchPath(AURORA_PROJECT_DIR);
+#endif
 
 		{ // Init imgui, TODO: add define for it
 			IMGUI_CHECKVERSION();

@@ -2,19 +2,14 @@ project(Aurora C CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 option(AU_GPU_PROFILE "GPU profiling" ON)
-option(AU_CPU_PROFILE "CPU profiling" ON)
-
-if(WIN32)
-    option(AU_SHARED_LIBRARY "Compile as shared library" OFF)
- else()
-    set(AU_SHARED_LIBRARY OFF)
-endif()
+option(AU_CPU_PROFILE "CPU profiling" OFF)
+option(AU_IN_PROJECT_ASSETS "Adds Aurora search paths from source code" ON)
 
 add_subdirectory(lib)
 
 file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
 
-if(NOT AU_SHARED_LIBRARY)
+if(NOT BUILD_SHARED_LIBS)
     add_library(Aurora STATIC ${PROJECT_SOURCE})
     target_compile_definitions(Aurora PUBLIC AU_SHARED=0)
 else()
@@ -23,12 +18,18 @@ else()
     target_compile_definitions(Aurora PRIVATE AU_EXPORT=1)
 endif()
 
+if(AU_IN_PROJECT_ASSETS)
+    target_compile_definitions(Aurora PUBLIC AU_IN_PROJECT_ASSETS=1)
+else()
+    target_compile_definitions(Aurora PUBLIC AU_IN_PROJECT_ASSETS=0)
+endif()
+
 target_include_directories(Aurora PUBLIC src)
 target_include_directories(Aurora PUBLIC Assets)
 
 target_compile_definitions(Aurora PUBLIC GLFW_INCLUDE_NONE=1)
 target_compile_definitions(Aurora PUBLIC GLFW_ENABLED=1)
-target_compile_definitions(Aurora PUBLIC RMLUI_STATIC_LIB=1)
+#target_compile_definitions(Aurora PUBLIC RMLUI_STATIC_LIB=1)
 target_compile_definitions(Aurora PUBLIC AURORA_OPENGL=1)
 target_compile_definitions(Aurora PUBLIC SHADER_ENGINE_SIDE=1)
 target_compile_definitions(Aurora PUBLIC AURORA_PROJECT_DIR="${PROJECT_SOURCE_DIR}")
