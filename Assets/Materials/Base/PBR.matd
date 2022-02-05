@@ -1,0 +1,34 @@
+{
+	"name": "PBR",
+	"passes": [
+		{
+			"name": "Depth",
+			"shaders": [
+				{ "type": "vertex", "path": "Assets/Shaders/World/PBRBasic/depth.vss" },
+				{ "type": "pixel", "path": "Assets/Shaders/World/PBRBasic/depth.fss" }
+			]
+		},
+		{
+			"name": "Ambient",
+			"shaders": [
+				{ "type": "vertex", "path": "Assets/Shaders/World/PBRBasic/ambient.vss" },
+				{ "type": "pixel", "path": "Assets/Shaders/World/PBRBasic/ambient.fss" }
+			]
+		}
+	],
+	"variables": [
+		{ "name": "Albedo", "type": "Texture2D", "shader_name": "BaseColorMap", "value": "", "toggle_macros": ["ALBEDO_TEX", "!ALPHA_TEST"] },
+		{ "name": "NormalMap", "type": "Texture2D", "shader_name": "NormalMap", "value": "", "toggle_macros": "NORMAL_MAP_TEX" },
+		{ "name": "MetallicRoughnessMap", "type": "Texture2D", "shader_name": "MetallicRoughnessMap","value": "" },
+		{ "name": "Emission", "type": "Texture2D", "shader_name": "EmissionMap", "value": "" },
+		{
+			"name": "AlbedoColor",
+			"type": "Color",
+			"shader_name": "albedoColor",
+			"value": [20, 20, 20, 20]
+		}
+	],
+	"macros": {
+		"TEST": "1"
+	}
+}

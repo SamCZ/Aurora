@@ -148,6 +148,7 @@ namespace Aurora
 		std::map<EShaderType, ShaderDesc> ShaderDescriptions;
 		ErrorFnc ErrorOutput;
 	public:
+		ShaderProgramDesc() = default;
 		explicit ShaderProgramDesc(std::string name) : Name(std::move(name)), ShaderDescriptions(), ErrorOutput(nullptr) {}
 	public:
 		/**
@@ -177,6 +178,35 @@ namespace Aurora
 		inline void AddShader(const EShaderType& shaderType, const std::string& source, const ShaderMacros& macros = {}, bool enableBindless = false)
 		{
 			AddShader(ShaderDesc(shaderType, source, macros, enableBindless));
+		}
+
+		inline bool SetShaderMacros(const EShaderType& shaderType, const ShaderMacros& shaderMacros)
+		{
+			const auto& it = ShaderDescriptions.find(shaderType);
+
+			if(it == ShaderDescriptions.end())
+				return false;
+
+			ShaderDesc& shaderDesc = it->second;
+			shaderDesc.Macros = shaderMacros;
+
+			return true;
+		}
+
+		inline void SetShaderMacros(const ShaderMacros& shaderMacros)
+		{
+			for(auto& it : ShaderDescriptions)
+			{
+				it.second.Macros = shaderMacros;
+			}
+		}
+
+		inline void AddShaderMacros(const ShaderMacros& shaderMacros)
+		{
+			for(auto& it : ShaderDescriptions)
+			{
+				it.second.Macros.insert(shaderMacros.begin(), shaderMacros.end());
+			}
 		}
 
 		[[nodiscard]] inline bool HasShader(const EShaderType& shaderType) const noexcept { return ShaderDescriptions.contains(shaderType); }

@@ -1,107 +1,67 @@
-#include <Aurora/AuroraEngine.hpp>
+#include <Aurora/Aurora.hpp>
+#include <Aurora/Resource/ResourceManager.hpp>
 
-#include <Aurora/Framework/Scene.hpp>
-#include <Aurora/Assets/ModelImporter.hpp>
-#include <Aurora/Assets/MaterialLoader.hpp>
-#include <Aurora/Logger/std_sink.hpp>
-
-#include <Aurora/Graphics/OpenGL/GLRenderDevice.hpp>
-#include <Aurora/Graphics/Pipeline/DeferredRenderPipeline.hpp>
+#include <Aurora/Graphics/Material/MaterialDefinition.hpp>
 
 using namespace Aurora;
 
-class BaseCameraActor : public Actor
+class BaseAppContext : public AppContext
 {
-private:
-	CameraComponent* m_CameraComponent;
-
-public:
-	BaseCameraActor() : Actor(), m_CameraComponent(nullptr) {}
-
-	void InitializeComponents() override
-	{
-		m_CameraComponent = AddComponent<CameraComponent>("Camera", 0, 0, 0);
-		SetRootComponent(m_CameraComponent);
-	}
-
-	CameraComponent* GetCamera() { return m_CameraComponent; }
-};
-
-struct alignas(16) CameraConstants
-{
-	Matrix4 ProjectionViewMatrix;
-	Matrix4 ModelMatrix;
-};
-
-class BaseAppContext : public WindowGameContext
-{
-private:
-	Scene_ptr m_MainScene;
-public:
-	explicit BaseAppContext(const IWindow_ptr &window) : WindowGameContext(window)
-	{
-		m_MainScene = Scene::New();
-	}
-
-	~BaseAppContext() override
-	{
-
-	}
-
 	void Init() override
 	{
-		{ // Create skybox
-			auto cubeModel = ModelImporter::LoadMesh(AuroraEngine::AssetManager->LoadFile("Assets/Cube.FBX"));
-			cubeModel->UpdateBuffers();
+		/*MaterialDefinition* matdef = GetEngine()->GetResourceManager()->LoadMaterialDef("Assets/Materials/Base/PBR.matd");
 
+		Material* matInst = matdef->CreateInstance();
 
-			auto cubemapMat = MaterialLoader::Load("Assets/Materials/skybox.json").Finish();
+		matInst->SetTexture("Albedo", "Assets/Textures/stone.png");
 
-			cubemapMat->SetCullMode(ECullMode::None);
-			cubemapMat->SetDepthEnable(false);
+		Material* matInst2 = matInst->Clone();
 
-			cubeModel->MaterialSlots[0].Material = cubemapMat;
+		Material* matInstDirect = GetEngine()->GetResourceManager()->LoadMaterial("Assets/Materials/BlueprintPBR.mat");
 
-			for (int j = 0; j < 1000; ++j)
-			{
-				auto m_SkyBox = m_MainScene->SpawnActor<Actor, MeshComponent>("SkyBox", Vector3D(0.0), Vector3D(0.0), Vector3D(10.0));
-				m_SkyBox->GetRootComponent()->SetCanReceiveCollisions(false);
-				m_SkyBox->GetRootComponent()->SetSimulatePhysics(false);
-				auto *meshComponent = m_SkyBox->GetRootComponent()->SafeCast<MeshComponent>();
-				meshComponent->SetMesh(cubeModel);
-				m_SkyBox->GetRootComponent()->GetBody().SetCollider(nullptr);
-			}
-		}
+		matInstDirect->SetMacroSetState("Test", true);
+		matInstDirect->SetRawMacro("yes", 1);*/
 
-		auto* cameraActor = m_MainScene->SpawnActor<BaseCameraActor>("Camera", Vector3D(0.0));
-		cameraActor->GetCamera()->Resize(GetWindow()->GetSize());
+		MaterialDefinitionDesc materialDefinitionDesc;
+		materialDefinitionDesc.Name = "TestDesc";
+		materialDefinitionDesc.Filepath = "[[RUNTIME/desc]]";
+		materialDefinitionDesc.ShaderPasses[(PassType_t)EPassType::Ambient] = GetEngine()->GetResourceManager()->CreateShaderProgramDesc("PBR", {
+			{EShaderType::Vertex, "Assets/Shaders/World/PBRBasic/ambient.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/World/PBRBasic/ambient.fss"}
+		});
 
-		ASM->LoadGLTF("Assets/box.gltf");
+		MaterialDefinition matDef(materialDefinitionDesc);
+
+		std::shared_ptr<SMaterial> mat = matDef.CreateInstance();
 	}
 
-	void Update(double delta, double currentTime) override
+	void Update(double delta) override
 	{
-		ZoneScopedN("Update");
 
-		m_MainScene->Update(delta);
 	}
 
 	void Render() override
 	{
-		ZoneScopedN("Render");
+
+	}
+
+	void RenderVg() override
+	{
 
 	}
 };
 
 int main()
 {
-	std::filesystem::current_path(R"(C:\Sam\Projects\EmberSky)");
+	WindowDefinition windowDefinition = {};
+	windowDefinition.Width = 1270;
+	windowDefinition.Height = 720;
+	windowDefinition.HasOSWindowBorder = true;
+	windowDefinition.Maximized = false;
+	windowDefinition.Title = "BaseApp";
 
-	Logger::AddSink<std_sink>();
-
-	AuroraEngine::Init();
-
-	AuroraEngine::AddWindow<BaseAppContext>(1280, 720, "Aurora - Base App", true);
-
-	return AuroraEngine::Run();
+	Aurora::AuroraEngine engine;
+	engine.Init(new BaseAppContext(), windowDefinition);
+	engine.Run();
+	return 0;
 }

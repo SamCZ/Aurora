@@ -1,0 +1,7 @@
+{
+	"name": "Blueprint",
+	"base": "Assets/Materials/Base/PBR.matd",
+	"variables": [
+		{"Albedo": "Assets/Textures/blueprint.png"}
+	]
+}

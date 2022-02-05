@@ -4,7 +4,9 @@
 
 namespace Aurora
 {
-	enum class EPassType : uint8_t
+	typedef uint8 PassType_t;
+
+	enum class EPassType : PassType_t
 	{
 		Depth = 0,
 		Ambient

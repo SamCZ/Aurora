@@ -180,8 +180,41 @@ namespace Aurora
 		return shaderProgram;
 	}
 
+	ShaderProgramDesc ResourceManager::CreateShaderProgramDesc(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros &macros)
+	{
+		ShaderProgramDesc shaderProgramDesc(name);
+
+		if(shaderTypesPaths.size() == 1 && shaderTypesPaths.begin()->first == EShaderType::Compute)
+		{
+			shaderProgramDesc.AddShader(EShaderType::Compute, ReadShaderSource(shaderTypesPaths.begin()->second), macros);
+			return shaderProgramDesc;
+		}
+
+		for (const auto &item : shaderTypesPaths)
+		{
+			if(item.first == EShaderType::Compute && shaderTypesPaths.size() > 1)
+			{
+				AU_LOG_FATAL("You cannot mix compute shader with others !");
+			}
+
+			Path filePath = item.second;
+
+			if(!FileExists(filePath))
+			{
+				AU_LOG_FATAL("File " , filePath.string(), " not found !");
+			}
+
+			String shaderSource = ReadShaderSource(filePath);
+			shaderProgramDesc.AddShader(item.first, shaderSource, macros);
+		}
+
+		return shaderProgramDesc;
+	}
+
 	Shader_ptr ResourceManager::LoadShader(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros &macros)
 	{
+		// TODO: Simplify this with CreateShaderProgramDesc method
+
 		/*std::stringstream ss;
 
 		for (const auto &item : shaderTypesPaths)

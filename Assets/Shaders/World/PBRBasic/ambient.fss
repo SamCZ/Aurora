@@ -22,10 +22,11 @@ void main()
 
 	vec3 N = normalize(Normal);
 
-	FragColor = texture(BaseColorMap, TexCoord);
-	//FragColor.rgb += pbrConstants.BaseColor.rgb;
-	//FragColor.rgb += texture(EmissionMap, TexCoord).rgb * 10.0f;
-	FragColor.a = 1;
+	vec4 color = pbrConstants.BaseColor;
+
+#ifdef ALBEDO_MAP
+	color *= texture(BaseColorMap, TexCoord);
+#else
 
 	vec4 metallicRougnessVal = texture(MetallicRoughnessMap, TexCoord);
 
