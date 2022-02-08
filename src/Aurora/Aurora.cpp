@@ -205,7 +205,6 @@ namespace Aurora
 
 					ss << m_Window->GetOriginalTitle();
 					ss << " - " << frameRate << " fps, " << avgFrameTimeMs << "ms";
-					ss << " (LF: " << LocalProfileScope::GetLastFrameTimings().GetElapsedTimeInMilliseconds() << "ms)";
 
 					m_Window->SetTitle(ss.str());
 

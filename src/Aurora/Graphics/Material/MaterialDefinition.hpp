@@ -5,7 +5,9 @@
 
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/String.hpp"
+#include "Aurora/Core/Hash.hpp"
 #include "Aurora/Graphics/Base/ShaderBase.hpp"
+#include "Aurora/Tools/robin_hood.h"
 
 #include "../PassType.hpp"
 
@@ -13,80 +15,48 @@ namespace Aurora
 {
 	class SMaterial;
 
-	class MacroSet
+	class MMacro
 	{
 	private:
-		String m_Name = "Unknown";
-		ShaderMacros m_Macros;
-	public:
-		MacroSet() = default;
-		explicit MacroSet(String name) : m_Name(std::move(name)), m_Macros() {}
-		MacroSet(const MacroSet& other) = default;
-		explicit MacroSet(ShaderMacros macros) : m_Macros(std::move(macros)) {}
-		MacroSet(String name, ShaderMacros macros) : m_Name(std::move(name)), m_Macros(std::move(macros)) {}
-
-		inline void Set(const String& key, const String& value)
-		{
-			m_Macros[key] = value;
-		}
-
-		inline void Remove(const String& key)
-		{
-			m_Macros.erase(key);
-		}
-
-		inline void Clear()
-		{
-			m_Macros.clear();
-		}
-
-		void Merge(const MacroSet& other)
-		{
-			for(const auto& it : other.m_Macros)
-			{
-				if(!m_Macros.contains(it.first))
-				{
-					m_Macros[it.first] = it.second;
-				}
-				else
-				{
-					AU_LOG_WARNING("Mergin macro sets resolved in collision of macro: ", it.first);
-				}
-			}
-		}
-
-		[[nodiscard]] uint64_t Hash() const
-		{
-			std::stringstream ss;
-
-			for(const auto& it : m_Macros)
-			{
-				ss << it.first;
-				ss << it.second;
-			}
-
-			return std::hash<String>()(ss.str());
-		}
-
-		[[nodiscard]] const ShaderMacros& Get() const
-		{
-			return m_Macros;
-		}
-
-		 [[nodiscard]] const String& GetName() const { return m_Name; }
+		String Name;
 	};
 
-	std::ostream& operator<< (std::ostream &out, MacroSet const &t)
+	class MMSwitchMacro
 	{
-		for(const auto& it : t.Get())
+
+	};
+
+	struct MUniformVar
+	{
+		String Name;
+		size_t Size;
+		size_t Offset;
+	};
+
+	struct MUniformBlock
+	{
+		String Name;
+		TTypeID NameID;
+		size_t Size;
+		size_t Offset;
+
+		robin_hood::unordered_map<TTypeID, MUniformVar> Vars;
+
+		MUniformVar* FindVar(TTypeID id)
 		{
-			out << "#define " << it.first << " " << it.second << std::endl;
+			const auto& it = Vars.find(id);
+
+			if(it == Vars.end())
+				return nullptr;
+
+			return &it->second;
 		}
+	};
 
-		return out;
-	}
+	[[nodiscard]] AU_API uint64_t HashShaderMacros(const ShaderMacros& macros);
+	AU_API std::ostream& operator<<(std::ostream &out, ShaderMacros const& macros);
 
-	class PassShaderDef
+	class AU_API PassShaderDef
 	{
 	private:
 		ShaderProgramDesc m_ShaderBaseDescription;
@@ -94,7 +64,7 @@ namespace Aurora
 	public:
 		PassShaderDef() = default;
 		explicit PassShaderDef(ShaderProgramDesc shaderProgramDesc);
-		Shader_ptr GetShader(const MacroSet& macroSet);
+		Shader_ptr GetShader(const ShaderMacros& macroSet);
 	};
 
 	struct MaterialDefinitionDesc
@@ -102,22 +72,36 @@ namespace Aurora
 		String Name;
 		Path Filepath;
 		std::map<PassType_t, ShaderProgramDesc> ShaderPasses;
-		std::vector<MacroSet> MacroSets;
+		std::vector<ShaderMacros> MacroSets;
 		//TODO: variables
+	};
+
+	struct MaterialOverrides
+	{
+
 	};
 
 	/*
 	 * Holds variable patterns, macro sets, shader permutations
 	 */
-	class MaterialDefinition
+	class AU_API MaterialDefinition
 	{
+		friend class SMaterial;
 	private:
 		String m_Name;
 		Path m_Path;
 		std::map<uint8, PassShaderDef> m_PassShaders;
+
+		std::vector<MUniformBlock> m_UniformBlocksDef;
+		robin_hood::unordered_map<uint8, std::vector<uint8>> m_PassUniformBlockMapping;
+
+		std::vector<uint8> m_BaseUniformData;
 	public:
 		explicit MaterialDefinition(const MaterialDefinitionDesc& desc);
 
-		std::shared_ptr<SMaterial> CreateInstance();
+		std::shared_ptr<SMaterial> CreateInstance(const MaterialOverrides& overrides = {});
+	private:
+		MUniformBlock* FindUniformBlock(TTypeID id);
+		MUniformVar* FindUniformVar(TTypeID id, MUniformBlock** blockOut = nullptr);
 	};
 }

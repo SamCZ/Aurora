@@ -22,15 +22,15 @@ void main()
 
 	vec3 N = normalize(Normal);
 
-	vec4 color = pbrConstants.BaseColor;
+	vec4 color = BaseColor;
 
 #ifdef ALBEDO_MAP
 	color *= texture(BaseColorMap, TexCoord);
-#else
+#endif
 
 	vec4 metallicRougnessVal = texture(MetallicRoughnessMap, TexCoord);
 
 	o_Normals = vec4(N * 0.5f + 0.5f, 1.0f);
-	o_RoughnessMetallicAO = vec4(metallicRougnessVal.y + pbrConstants.Roughness, metallicRougnessVal.x + pbrConstants.Metallic, pbrConstants.AmbientOcclusion, 1);
+	o_RoughnessMetallicAO = vec4(metallicRougnessVal.y + Roughness, metallicRougnessVal.x + Metallic, AmbientOcclusion, 1);
 	//o_WorldPos = WorldPos;
 }

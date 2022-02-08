@@ -2,26 +2,11 @@
 
 #include <type_traits>
 #include <memory>
-#include <cstdint>
+
+#include "Hash.hpp"
 
 namespace Aurora
 {
-	typedef uint64_t TTypeID;
-
-	constexpr TTypeID Hash_djb2(const char* str)
-	{
-		unsigned long int hash = 5381;
-
-		char c = *str;
-		while(c != 0)
-		{
-			hash = ((hash << 5) + hash) + c;
-			c = *(++str);
-		}
-
-		return hash;
-	}
-
 	class ObjectBase;
 
 	template <typename Type>

@@ -2,6 +2,9 @@
 #include <Aurora/Resource/ResourceManager.hpp>
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
+#include <Aurora/Graphics/Material/SMaterial.hpp>
+
+#include <Shaders/World/PBRBasic/cb_pbr.h>
 
 using namespace Aurora;
 
@@ -33,6 +36,20 @@ class BaseAppContext : public AppContext
 		MaterialDefinition matDef(materialDefinitionDesc);
 
 		std::shared_ptr<SMaterial> mat = matDef.CreateInstance();
+
+		if(PBRConstants* matConstants = mat->GetVarBlock<PBRConstants>("PBRConstants"_HASH))
+		{
+			matConstants->AmbientOcclusion = 0.5f;
+			matConstants->Metallic = 1.0f;
+		}
+
+		mat->SetVariable("AmbientOcclusion"_HASH, 0.6f);
+
+		float metallic;
+		if(mat->GetVariable<float>("Metallic"_HASH, metallic))
+		{
+			std::cout << "metallic: " << metallic << std::endl;
+		}
 	}
 
 	void Update(double delta) override

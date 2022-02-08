@@ -4,36 +4,69 @@
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/PassType.hpp"
 
+#include "MaterialDefinition.hpp"
+
 namespace Aurora
 {
-	class MaterialShaderPass
-	{
-	private:
-		Shader_ptr m_Shader;
-	public:
-		template<typename T>
-		void SetVariable()
-		{
-
-		}
-	};
-
 	class SMaterial
 	{
 	private:
-
+		MaterialDefinition* m_MatDef;
+		// All of the uniíforms blocks from passes packed in here
+		std::vector<uint8> m_UniformData;
 	public:
-		SMaterial();
+		explicit SMaterial(MaterialDefinition* matDef);
 		~SMaterial();
 
-		bool AddPass(uint8_t passType, const Path& shaderPath);
-		bool RemovePass(uint8_t passType);
+		//////// Blocks ////////
+	private:
+		uint8* GetBlockMemory(TTypeID id, size_t size);
+	public:
+		template<typename VarBlock>
+		bool SetVarBlock(TTypeID id, VarBlock& block)
+		{
+			if(auto* blockPtr = reinterpret_cast<VarBlock*>(GetBlockMemory(id, sizeof(VarBlock))))
+			{
+				block = *blockPtr;
+				return true;
+			}
 
-		void Init();
-		void ReloadShaders();
+			return false;
+		}
 
+		template<typename VarBlock>
+		VarBlock* GetVarBlock(TTypeID id)
+		{
+			return reinterpret_cast<VarBlock*>(GetBlockMemory(id, sizeof(VarBlock)));
+		}
 
+		//////// Variables ////////
 
-		void BindResources(BaseState state, uint8_t passType);
+		uint8* GetVariableMemory(TTypeID varId, size_t size);
+		bool SetVariable(TTypeID varId, uint8* data, size_t size);
+
+		template<typename VarType>
+		bool SetVariable(TTypeID varId, VarType var)
+		{
+			auto* rawData = (uint8*)(&var);
+			size_t size = sizeof(VarType);
+
+			return SetVariable(varId, rawData, size);
+		}
+
+		template<typename VarType>
+		bool GetVariable(TTypeID varId, VarType& outVar)
+		{
+			size_t size = sizeof(VarType);
+			uint8* memory = GetVariableMemory(varId, size);
+
+			if(!memory)
+			{
+				return false;
+			}
+
+			outVar = *reinterpret_cast<VarType*>(memory);
+			return true;
+		}
 	};
 }

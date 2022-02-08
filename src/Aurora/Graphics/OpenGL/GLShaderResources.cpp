@@ -413,6 +413,11 @@ namespace Aurora
 						variable.Name = variable.Name.substr(0, arrCharPos);
 					}
 
+					auto dotCharPos = variable.Name.find('.');
+					if(dotCharPos != std::string::npos) {
+						variable.Name = variable.Name.substr(dotCharPos + 1);
+					}
+
 					bool foundDuplicate = false;
 					for (auto& storedVar : shaderVariables)
 					{
