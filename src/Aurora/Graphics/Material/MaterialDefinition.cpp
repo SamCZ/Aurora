@@ -63,6 +63,9 @@ namespace Aurora
 		: m_Name(desc.Name), m_Path(desc.Filepath)
 	{
 		size_t memorySize = 0;
+
+		// TODO: merge same blocks together from different passes
+
 		for(const auto& passIt : desc.ShaderPasses)
 		{
 			m_PassShaders[passIt.first] = PassShaderDef(passIt.second);
@@ -72,6 +75,29 @@ namespace Aurora
 
 			for(const ShaderResourceDesc& block : shader->GetResources(ShaderResourceType::ConstantBuffer))
 			{
+				bool skip = false;
+
+				// Check if same block already exists
+				for(const auto& mappingIt : m_PassUniformBlockMapping)
+				{
+					if(skip) break;
+
+					for(uint8 mappedBlockIndex : mappingIt.second)
+					{
+						MUniformBlock& mappedBlock = m_UniformBlocksDef[mappedBlockIndex];
+
+						if(mappedBlock.Name == block.Name && mappedBlock.Size == block.Size && mappedBlock.Vars.size() == block.Variables.size())
+						{
+							m_PassUniformBlockMapping[passIt.first].emplace_back(mappedBlockIndex);
+							skip = true;
+							AU_LOG_INFO("Found already cached block in material!");
+							break;
+						}
+					}
+				}
+
+				if(skip) continue;
+
 				MUniformBlock uniformBlock;
 				uniformBlock.Name = block.Name;
 				uniformBlock.NameID = Hash_djb2(block.Name.c_str());
