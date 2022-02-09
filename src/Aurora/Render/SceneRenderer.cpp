@@ -860,11 +860,7 @@ namespace Aurora
 			Vector2ui bloomTexSize = camera.Size / 2u;
 			bloomTexSize += Vector2ui(m_BloomComputeWorkgroupSize - (bloomTexSize.x % m_BloomComputeWorkgroupSize), m_BloomComputeWorkgroupSize - (bloomTexSize.y % m_BloomComputeWorkgroupSize));
 
-			TextureDesc mipDesc;
-			mipDesc.Width = bloomTexSize.x;
-			mipDesc.Height = bloomTexSize.y;
-
-			uint32_t mips = mipDesc.GetMipLevelCount() - 2 - 2;
+			uint32_t mips = TextureDesc::GetMipLevelCount(bloomTexSize.x, bloomTexSize.y) - 2 - 2;
 			//mips -= mips / 3;
 
 			for (int i = 0; i < 3; ++i)

@@ -319,12 +319,12 @@ namespace Aurora
 		virtual void WriteBuffer(const Buffer_ptr& buffer, const void* data, size_t dataSize, size_t offset) = 0;
 		virtual void ClearBufferUInt(const Buffer_ptr& buffer, uint32_t clearValue) = 0;
 		virtual void CopyToBuffer(const Buffer_ptr& dest, uint32_t destOffsetBytes, const Buffer_ptr& src, uint32_t srcOffsetBytes, size_t dataSizeBytes) = 0;
-		virtual void* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) = 0;
+		virtual uint8_t* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess) = 0;
 
 		template<typename T>
 		inline T* MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
 		{
-			return reinterpret_cast<T*>((void*)MapBuffer(buffer, bufferAccess));
+			return reinterpret_cast<T*>((uint8_t*)MapBuffer(buffer, bufferAccess));
 		}
 
 		inline void WriteBuffer(const Buffer_ptr& buffer, const void* data)

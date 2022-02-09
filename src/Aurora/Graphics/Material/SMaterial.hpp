@@ -14,9 +14,16 @@ namespace Aurora
 		MaterialDefinition* m_MatDef;
 		// All of the uniíforms blocks from passes packed in here
 		std::vector<uint8> m_UniformData;
+		ShaderMacros m_Macros;
+
+		FRasterState m_RasterState;
+		FDepthStencilState m_DepthStencilState;
 	public:
 		explicit SMaterial(MaterialDefinition* matDef);
 		~SMaterial();
+
+		void BeginPass(uint8 pass, DrawCallState& state);
+		void EndPass(uint8 pass, DrawCallState& state);
 
 		//////// Blocks ////////
 	private:

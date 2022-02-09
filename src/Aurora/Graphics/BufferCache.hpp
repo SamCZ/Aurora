@@ -34,7 +34,7 @@ namespace Aurora
 		BufferCache(IRenderDevice* renderDevice, EBufferType bufferType, uint numberOfBuffers, uint singleBufferSize, bool useGpuMapping);
 		~BufferCache();
 
-		void* GetOrMap(uint size, VBufferCacheIndex& bufferCacheIndex);
+		uint8* GetOrMap(uint size, VBufferCacheIndex& bufferCacheIndex);
 
 		template<typename T>
 		T* GetOrMap(uint size, VBufferCacheIndex& bufferCacheIndex)

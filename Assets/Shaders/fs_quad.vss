@@ -1,9 +1,9 @@
 out vec2 TexCoord;
 
 out gl_PerVertex
-		{
-				vec4 gl_Position;
-		};
+{
+	vec4 gl_Position;
+};
 
 void main() {
 	uint u = ~gl_VertexID & 1;

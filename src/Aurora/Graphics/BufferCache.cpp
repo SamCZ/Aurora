@@ -31,7 +31,7 @@ namespace Aurora
 		delete[] m_LocalMappedMemory;
 	}
 
-	void *BufferCache::GetOrMap(uint size, VBufferCacheIndex &bufferCacheIndex)
+	uint8* BufferCache::GetOrMap(uint size, VBufferCacheIndex &bufferCacheIndex)
 	{
 		if(size > m_SingleBufferSize)
 		{

@@ -1,4 +1,6 @@
 #include "SMaterial.hpp"
+#include "Aurora/Engine.hpp"
+#include "Aurora/Graphics/RenderManager.hpp"
 
 namespace Aurora
 {
@@ -9,6 +11,51 @@ namespace Aurora
 	}
 
 	SMaterial::~SMaterial() = default;
+
+	///////////////////////////////////// RENDER PASS /////////////////////////////////////
+#pragma region RenderPass
+
+	void SMaterial::BeginPass(uint8 pass, DrawCallState& drawState)
+	{
+		IRenderDevice* renderDevice = GetEngine()->GetRenderDevice();
+
+		Shader_ptr shader = m_MatDef->GetShader(pass, m_Macros);
+
+		if(shader == nullptr)
+		{
+			//TODO: Do something
+			AU_LOG_WARNING("Shader for pass", pass, " is null !");
+		}
+
+		drawState.Shader = shader;
+		renderDevice->SetShader(shader);
+
+		// Set buffers
+
+		for(uint8 uniformBlockIndex : m_MatDef->m_PassUniformBlockMapping[pass])
+		{
+			const MUniformBlock& block = m_MatDef->m_UniformBlocksDef[uniformBlockIndex];
+
+			VBufferCacheIndex cacheIndex;
+			uint8* data = GetEngine()->GetRenderManager()->GetUniformBufferCache().GetOrMap(block.Size, cacheIndex);
+			std::memcpy(data, m_UniformData.data() + block.Offset, block.Size);
+			GetEngine()->GetRenderManager()->GetUniformBufferCache().Unmap(cacheIndex);
+			drawState.BindUniformBuffer(block.Name, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);
+		}
+
+		renderDevice->BindShaderResources(drawState);
+
+		//TODO: Set render states
+	}
+
+	void SMaterial::EndPass(uint8 pass, DrawCallState& state)
+	{
+		GetEngine()->GetRenderManager()->GetUniformBufferCache().Reset();
+	}
+
+#pragma endregion RenderPass
+
+	///////////////////////////////////// BLOCKS /////////////////////////////////////
 
 	uint8* SMaterial::GetBlockMemory(TTypeID id, size_t size)
 	{

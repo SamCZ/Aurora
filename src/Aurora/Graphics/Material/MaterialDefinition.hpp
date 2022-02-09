@@ -99,6 +99,8 @@ namespace Aurora
 	public:
 		explicit MaterialDefinition(const MaterialDefinitionDesc& desc);
 
+		Shader_ptr GetShader(uint8 pass, const ShaderMacros& macroSet);
+
 		std::shared_ptr<SMaterial> CreateInstance(const MaterialOverrides& overrides = {});
 	private:
 		MUniformBlock* FindUniformBlock(TTypeID id);

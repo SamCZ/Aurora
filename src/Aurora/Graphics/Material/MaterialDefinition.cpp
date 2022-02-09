@@ -169,4 +169,16 @@ namespace Aurora
 	{
 		return std::make_shared<SMaterial>(this);
 	}
+
+	Shader_ptr MaterialDefinition::GetShader(uint8 pass, const ShaderMacros &macroSet)
+	{
+		const auto& it = m_PassShaders.find(pass);
+
+		if(it == m_PassShaders.end())
+		{
+			return nullptr;
+		}
+
+		return it->second.GetShader(macroSet);
+	}
 }

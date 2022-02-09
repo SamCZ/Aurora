@@ -73,7 +73,12 @@ namespace Aurora
 
 		[[nodiscard]] inline uint32_t GetMipLevelCount() const
 		{
-			return (uint32_t)std::floor(std::log2(glm::min(Width, Height))) + 1;
+			return GetMipLevelCount(Width, Height);
+		}
+
+		static inline uint32_t GetMipLevelCount(int w, int h)
+		{
+			return (uint32_t)std::floor(std::log2(glm::min(w, h))) + 1;
 		}
 
 		[[nodiscard]] std::pair<uint32_t, uint32_t> GetMipSize(uint32_t mip) const

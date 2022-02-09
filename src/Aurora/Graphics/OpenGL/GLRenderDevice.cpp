@@ -1038,7 +1038,7 @@ namespace Aurora
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
-	void* GLRenderDevice::MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
+	uint8_t* GLRenderDevice::MapBuffer(const Buffer_ptr& buffer, EBufferAccess bufferAccess)
 	{
 		if(buffer == nullptr) {
 			return nullptr;
@@ -1053,7 +1053,7 @@ namespace Aurora
 		}
 
 		glBindBuffer(glBuffer->BindTarget(), glBuffer->Handle());
-		return glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess));
+		return reinterpret_cast<uint8_t*>(glMapBuffer(glBuffer->BindTarget(), ConvertBufferAccess(bufferAccess)));
 		//GLvoid* pMappedData = glMapBufferRange(glBuffer->BindTarget(), 0, glBuffer->GetDesc().ByteSize, GL_MAP_WRITE_BIT);//GL_MAP_UNSYNCHRONIZED_BIT
 		//return glBuffer->m_MappedData;
 	}
@@ -1108,14 +1108,14 @@ namespace Aurora
 	void GLRenderDevice::Draw(const DrawCallState &state, const std::vector<DrawArguments>& args, bool bindState)
 	{
 		CPU_DEBUG_SCOPE("Draw");
-		if(state.Shader == nullptr) {
-			AU_LOG_ERROR("Cannot draw without shader !");
-			throw;
-			return;
-		}
-
 		if(bindState)
 		{
+			if(state.Shader == nullptr) {
+				AU_LOG_ERROR("Cannot draw without shader !");
+				throw;
+				return;
+			}
+
 			glBindVertexArray(m_nVAOEmpty); // FIXME: idk why, but when frustum clips all geometry and nothing renders,then this call happens, it will throw error in non bound Array (maybe it does NanoVG?)
 			m_LastVao = m_nVAOEmpty;
 		}
