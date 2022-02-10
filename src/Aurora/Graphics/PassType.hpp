@@ -8,8 +8,8 @@ namespace Aurora
 
 	enum class EPassType : PassType_t
 	{
-		Depth = 0,
-		Ambient
+		Ambient = 0,
+		Depth = 1
 	};
 
 	constexpr char const* PassTypesToString[2] = {

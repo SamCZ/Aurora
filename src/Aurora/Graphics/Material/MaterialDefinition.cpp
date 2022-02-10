@@ -30,9 +30,10 @@ namespace Aurora
 
 	///////////////////////////////////// PassShaderDef /////////////////////////////////////
 
-	PassShaderDef::PassShaderDef(ShaderProgramDesc shaderProgramDesc) : m_ShaderBaseDescription(std::move(shaderProgramDesc)) {}
+	MaterialPassDef::MaterialPassDef(ShaderProgramDesc shaderProgramDesc, MaterialPassState passState)
+		: m_ShaderBaseDescription(std::move(shaderProgramDesc)), m_PassStates(std::move(passState)) {}
 
-	Shader_ptr PassShaderDef::GetShader(const ShaderMacros& macros)
+	Shader_ptr MaterialPassDef::GetShader(const ShaderMacros& macros)
 	{
 		uint64_t hash = HashShaderMacros(macros);
 
@@ -60,7 +61,7 @@ namespace Aurora
 	///////////////////////////////////// MaterialDefinition /////////////////////////////////////
 
 	MaterialDefinition::MaterialDefinition(const MaterialDefinitionDesc& desc)
-		: m_Name(desc.Name), m_Path(desc.Filepath)
+		: m_Name(desc.Name), m_Path(desc.Filepath), m_PassDefs(desc.ShaderPasses.size())
 	{
 		size_t memorySize = 0;
 
@@ -68,10 +69,12 @@ namespace Aurora
 
 		for(const auto& passIt : desc.ShaderPasses)
 		{
-			m_PassShaders[passIt.first] = PassShaderDef(passIt.second);
+			MaterialPassState passState;
+			//TODO: read pass state from desc
+			m_PassDefs[passIt.first] = MaterialPassDef(passIt.second, passState);
 
 			ShaderMacros macros;
-			Shader_ptr shader = m_PassShaders[passIt.first].GetShader(macros);
+			Shader_ptr shader = m_PassDefs[passIt.first].GetShader(macros);
 
 			for(const ShaderResourceDesc& block : shader->GetResources(ShaderResourceType::ConstantBuffer))
 			{
@@ -167,14 +170,28 @@ namespace Aurora
 
 	std::shared_ptr<SMaterial> MaterialDefinition::CreateInstance(const MaterialOverrides &overrides)
 	{
-		return std::make_shared<SMaterial>(this);
+		auto mat = std::make_shared<SMaterial>(this);
+		AddRef(mat);
+		return mat;
+	}
+
+	MaterialPassDef* MaterialDefinition::GetPassDefinition(uint8 pass)
+	{
+		const auto& it = m_PassDefs.find(pass);
+
+		if(it == m_PassDefs.end())
+		{
+			return nullptr;
+		}
+
+		return &it->second;
 	}
 
 	Shader_ptr MaterialDefinition::GetShader(uint8 pass, const ShaderMacros &macroSet)
 	{
-		const auto& it = m_PassShaders.find(pass);
+		const auto& it = m_PassDefs.find(pass);
 
-		if(it == m_PassShaders.end())
+		if(it == m_PassDefs.end())
 		{
 			return nullptr;
 		}

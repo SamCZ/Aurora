@@ -54,6 +54,7 @@ class BaseAppContext : public AppContext
 {
 	MaterialDefinition* matDef;
 	std::shared_ptr<SMaterial> mat;
+	std::shared_ptr<SMaterial> mat2;
 
 	~BaseAppContext()
 	{
@@ -100,6 +101,9 @@ class BaseAppContext : public AppContext
 		}
 
 		mat->SetVariable("Color"_HASH, Vector4(0, 1, 0, 1));
+
+		mat2 = mat->Clone();
+		mat2->SetVariable("Color"_HASH, Vector4(0, 0, 1, 1));
 	}
 
 	float a = 0;
@@ -124,17 +128,28 @@ class BaseAppContext : public AppContext
 	{
 		DrawCallState drawCallState;
 		drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
-		drawCallState.ViewPort = GetEngine()->GetWindow()->GetSize();
-		mat->BeginPass((uint8)EPassType::Ambient ,drawCallState);
+		drawCallState.ViewPort = FViewPort(GetEngine()->GetWindow()->GetSize());
 
 		GetEngine()->GetRenderDevice()->BindRenderTargets(drawCallState);
-		GetEngine()->GetRenderDevice()->SetRasterState(drawCallState.RasterState);
-		GetEngine()->GetRenderDevice()->SetDepthStencilState(drawCallState.DepthStencilState);
 		GetEngine()->GetRenderDevice()->ClearRenderTargets(drawCallState);
 
-		GetEngine()->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
+		{
+			drawCallState.ViewPort = FViewPort(0, 0, 256, 256);
+			GetEngine()->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
 
-		mat->EndPass((uint8)EPassType::Ambient, drawCallState);
+			mat->BeginPass((uint8)EPassType::Ambient ,drawCallState);
+			GetEngine()->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
+			mat->EndPass((uint8)EPassType::Ambient, drawCallState);
+		}
+
+		{
+			drawCallState.ViewPort = FViewPort(0, 256 + 16, 256, 256);
+			GetEngine()->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
+
+			mat2->BeginPass((uint8)EPassType::Ambient ,drawCallState);
+			GetEngine()->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
+			mat2->EndPass((uint8)EPassType::Ambient, drawCallState);
+		}
 	}
 
 	void RenderVg() override

@@ -251,6 +251,8 @@ namespace Aurora
 				m_AppContext->Render();
 			}
 
+			m_RenderDevice->SetViewPort(FViewPort(m_Window->GetSize()));
+
 			{
 				CPU_DEBUG_SCOPE("NanoVG");
 				GPU_DEBUG_SCOPE("NanoVG");

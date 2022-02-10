@@ -12,19 +12,22 @@ namespace Aurora
 	{
 	private:
 		MaterialDefinition* m_MatDef;
-		// All of the uniíforms blocks from passes packed in here
-		std::vector<uint8> m_UniformData;
+		std::vector<uint8> m_UniformData;	// All of the uniíforms blocks from passes packed in here
 		ShaderMacros m_Macros;
 
-		FRasterState m_RasterState;
-		FDepthStencilState m_DepthStencilState;
+		robin_hood::unordered_map<PassType_t, MaterialPassState> m_PassStates;
 	public:
 		explicit SMaterial(MaterialDefinition* matDef);
 		~SMaterial();
 
-		void BeginPass(uint8 pass, DrawCallState& state);
-		void EndPass(uint8 pass, DrawCallState& state);
+		void BeginPass(PassType_t pass, DrawCallState& state);
+		void EndPass(PassType_t pass, DrawCallState& state);
 
+		FRasterState& RasterState(PassType_t pass = 0);
+		FDepthStencilState& DepthStencilState(PassType_t pass = 0);
+		FBlendState& BlendState(PassType_t pass = 0);
+
+		std::shared_ptr<SMaterial> Clone();
 		//////// Blocks ////////
 	private:
 		uint8* GetBlockMemory(TTypeID id, size_t size);

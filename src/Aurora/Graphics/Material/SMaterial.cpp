@@ -7,7 +7,10 @@ namespace Aurora
 	SMaterial::SMaterial(MaterialDefinition* matDef)
 		: m_MatDef(matDef), m_UniformData(matDef->m_BaseUniformData)
 	{
-
+		for(const auto& it : m_MatDef->m_PassDefs)
+		{
+			m_PassStates[it.first] = it.second.GetMaterialPassState();
+		}
 	}
 
 	SMaterial::~SMaterial() = default;
@@ -15,11 +18,19 @@ namespace Aurora
 	///////////////////////////////////// RENDER PASS /////////////////////////////////////
 #pragma region RenderPass
 
-	void SMaterial::BeginPass(uint8 pass, DrawCallState& drawState)
+	void SMaterial::BeginPass(PassType_t pass, DrawCallState& drawState)
 	{
 		IRenderDevice* renderDevice = GetEngine()->GetRenderDevice();
 
-		Shader_ptr shader = m_MatDef->GetShader(pass, m_Macros);
+		MaterialPassDef* passDef = m_MatDef->GetPassDefinition(pass);
+
+		if(passDef == nullptr)
+		{
+			//TODO: Do something
+			AU_LOG_WARNING("Pass ", pass, " not found for for ", m_MatDef->m_Name);
+		}
+
+		Shader_ptr shader = passDef->GetShader(m_Macros);
 
 		if(shader == nullptr)
 		{
@@ -45,12 +56,44 @@ namespace Aurora
 
 		renderDevice->BindShaderResources(drawState);
 
-		//TODO: Set render states
+		MaterialPassState& passState = m_PassStates[pass];
+		renderDevice->SetRasterState(passState.RasterState);
+		renderDevice->SetDepthStencilState(passState.DepthStencilState);
+		// TODO: Set blend state
 	}
 
-	void SMaterial::EndPass(uint8 pass, DrawCallState& state)
+	void SMaterial::EndPass(PassType_t pass, DrawCallState& state)
 	{
+		(void)pass;
+		(void)state;
+
 		GetEngine()->GetRenderManager()->GetUniformBufferCache().Reset();
+	}
+
+	FRasterState& SMaterial::RasterState(PassType_t pass)
+	{
+		return m_PassStates[pass].RasterState;
+	}
+
+	FDepthStencilState& SMaterial::DepthStencilState(PassType_t pass)
+	{
+		return m_PassStates[pass].DepthStencilState;
+	}
+
+	FBlendState& SMaterial::BlendState(PassType_t pass)
+	{
+		return m_PassStates[pass].BlendState;
+	}
+
+	std::shared_ptr<SMaterial> SMaterial::Clone()
+	{
+		auto cloned = std::make_shared<SMaterial>(m_MatDef);
+		cloned->m_UniformData = m_UniformData;
+		cloned->m_PassStates = m_PassStates;
+
+		m_MatDef->AddRef(cloned);
+
+		return cloned;
 	}
 
 #pragma endregion RenderPass
