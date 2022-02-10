@@ -42,7 +42,7 @@ jobs:
         run: cmake --build . --config Release --target BaseApp
 
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     steps:
       - uses: actions/checkout@v2
