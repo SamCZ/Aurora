@@ -29,7 +29,6 @@ jobs:
         run: |
           cmake "$GITHUB_WORKSPACE" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_TESTING=ON \
             -DCMAKE_C_COMPILER=gcc-10 \
             -DCMAKE_CXX_COMPILER=g++-10
 
@@ -38,7 +37,7 @@ jobs:
         shell: bash
         # Execute the build.
         # You can specify a specific target with "--target <NAME>".
-        run: cmake --build . --config Release --target Aurora
+        run: cmake --build . --config Release --target BaseApp
 
   windows:
     runs-on: windows-latest
@@ -72,4 +71,4 @@ jobs:
         shell: pwsh
         # Execute the build.
         # You can specify a specific target with "--target <NAME>".
-        run: cmake --build . --config Release --target Aurora
+        run: cmake --build . --config Release --target BaseApp
