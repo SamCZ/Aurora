@@ -1,6 +1,8 @@
 #include "MaterialDefinition.hpp"
 #include "Aurora/Engine.hpp"
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
+#include "Aurora/Graphics/RenderManager.hpp"
+#include "Aurora/Resource/ResourceManager.hpp"
 #include "SMaterial.hpp"
 
 namespace Aurora
@@ -60,12 +62,24 @@ namespace Aurora
 
 	///////////////////////////////////// MaterialDefinition /////////////////////////////////////
 
+	bool CanLoadBlock(const ShaderResourceDesc& block)
+	{
+		if(block.Name == "Instances")
+		{
+			return false;
+		}
+
+		// TODO: Find a better way to exclude global blocks
+
+		return true;
+	}
+
 	MaterialDefinition::MaterialDefinition(const MaterialDefinitionDesc& desc)
 		: m_Name(desc.Name), m_Path(desc.Filepath), m_PassDefs(desc.ShaderPasses.size())
 	{
 		size_t memorySize = 0;
 
-		// TODO: merge same blocks together from different passes
+		m_TextureVars = desc.Textures;
 
 		for(const auto& passIt : desc.ShaderPasses)
 		{
@@ -73,11 +87,38 @@ namespace Aurora
 			//TODO: read pass state from desc
 			m_PassDefs[passIt.first] = MaterialPassDef(passIt.second, passState);
 
-			ShaderMacros macros;
+			m_PassUniformBlockMapping[passIt.first] = {};
+			m_PassTextureMapping[passIt.first] = {};
+
+			ShaderMacros macros; // TODO: Finish macros
 			Shader_ptr shader = m_PassDefs[passIt.first].GetShader(macros);
+
+			for(const ShaderResourceDesc& sampler : shader->GetResources(ShaderResourceType::Sampler))
+			{
+				String samplerName = sampler.Name;
+				TTypeID samplerId = Hash_djb2(samplerName.c_str());
+
+				const auto& it = m_TextureVars.find(samplerId);
+				if(it == m_TextureVars.end())
+				{
+					MTextureVar textureVar;
+					textureVar.Name = samplerName;
+					textureVar.InShaderName = samplerName;
+					textureVar.Texture = GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png", GraphicsFormat::SRGBA8_UNORM, {});
+					textureVar.Sampler = Samplers::WrapWrapLinearLinear;
+					m_TextureVars[samplerId] = textureVar;
+				}
+
+				m_PassTextureMapping[passIt.first].push_back(samplerId);
+			}
 
 			for(const ShaderResourceDesc& block : shader->GetResources(ShaderResourceType::ConstantBuffer))
 			{
+				if(!CanLoadBlock(block))
+				{
+					continue;
+				}
+
 				bool skip = false;
 
 				// Check if same block already exists

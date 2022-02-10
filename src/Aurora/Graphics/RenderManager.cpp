@@ -26,7 +26,7 @@ namespace Aurora
 
 	RenderManager::RenderManager(IRenderDevice *renderDevice)
 	: m_RenderDevice(renderDevice),
-	m_UniformBufferCache(m_RenderDevice, EBufferType::UniformBuffer, 3, 65536, false) // We don't use GPU mapped memory because on OpenGL is too slow...
+	m_UniformBufferCache(m_RenderDevice, EBufferType::UniformBuffer, 3, 65536 * 3, false) // We don't use GPU mapped memory because on OpenGL is too slow...
 	{
 		{
 			ShaderProgramDesc desc("Blit");

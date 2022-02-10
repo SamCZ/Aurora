@@ -12,10 +12,11 @@ namespace Aurora
 	{
 	private:
 		MaterialDefinition* m_MatDef;
-		std::vector<uint8> m_UniformData;	// All of the uniíforms blocks from passes packed in here
-		ShaderMacros m_Macros;
+		std::vector<uint8> m_UniformData;	// All of the uniforms blocks from passes packed in here
+		ShaderMacros m_Macros; // TODO: Finish macros
 
 		robin_hood::unordered_map<PassType_t, MaterialPassState> m_PassStates;
+		robin_hood::unordered_map<TTypeID, MTextureVar> m_TextureVars;
 	public:
 		explicit SMaterial(MaterialDefinition* matDef);
 		~SMaterial();
@@ -78,5 +79,18 @@ namespace Aurora
 			outVar = *reinterpret_cast<VarType*>(memory);
 			return true;
 		}
+
+		//////// Textures ////////
+	private:
+		MTextureVar* GetTextureVar(TTypeID varId);
+	public:
+		bool SetTexture(TTypeID varId, const Texture_ptr& texture);
+		bool SetSampler(TTypeID varId, const Sampler_ptr& texture);
+
+		Texture_ptr GetTexture(TTypeID varId);
+		Sampler_ptr GetSampler(TTypeID varId);
+
+		//////// Buffers ////////
+		bool SetBuffer(TTypeID bufferId, const Buffer_ptr& buffer) { return false; } // TODO: Complete buffers
 	};
 }

@@ -78,6 +78,20 @@ namespace Aurora
 		}
 	}
 
+	static EShaderType ShaderType_FromString(const std::string& name)
+	{
+		if(name == "vertex")
+			return EShaderType::Vertex;
+		else if(name == "fragment" || name == "pixel")
+			return EShaderType::Pixel;
+		else if(name == "geometry")
+			return EShaderType::Geometry;
+		else if(name == "compute")
+			return EShaderType::Compute;
+		else
+			return EShaderType::Unknown;
+	}
+
 	struct ShaderVariable
 	{
 		std::string Name;

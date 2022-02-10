@@ -54,12 +54,26 @@ namespace Aurora
 			drawState.BindUniformBuffer(block.Name, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);
 		}
 
+		// Set textures
+		for(TTypeID texId : m_MatDef->m_PassTextureMapping[pass])
+		{
+			MTextureVar* textureVar = GetTextureVar(texId);
+
+			if(textureVar->Texture == nullptr)
+				continue;
+
+			drawState.BindTexture(textureVar->InShaderName, textureVar->Texture);
+			drawState.BindSampler(textureVar->InShaderName, textureVar->Sampler);
+		}
+
 		renderDevice->BindShaderResources(drawState);
 
 		MaterialPassState& passState = m_PassStates[pass];
 		renderDevice->SetRasterState(passState.RasterState);
 		renderDevice->SetDepthStencilState(passState.DepthStencilState);
 		// TODO: Set blend state
+
+
 	}
 
 	void SMaterial::EndPass(PassType_t pass, DrawCallState& state)
@@ -90,6 +104,7 @@ namespace Aurora
 		auto cloned = std::make_shared<SMaterial>(m_MatDef);
 		cloned->m_UniformData = m_UniformData;
 		cloned->m_PassStates = m_PassStates;
+		cloned->m_TextureVars = m_TextureVars;
 
 		m_MatDef->AddRef(cloned);
 
@@ -180,5 +195,69 @@ namespace Aurora
 
 		std::memcpy(varMemoryStart, data, size);
 		return true;
+	}
+
+	///////////////////////////////////// TEXTURES /////////////////////////////////////
+
+	MTextureVar *SMaterial::GetTextureVar(TTypeID varId)
+	{
+		const auto& it = m_TextureVars.find(varId);
+
+		if(it == m_TextureVars.end())
+		{
+			const auto& it2 = m_MatDef->m_TextureVars.find(varId);
+
+			if(it2 == m_MatDef->m_TextureVars.end())
+			{
+				AU_LOG_WARNING("Texture property ", varId, " not found !");
+				return nullptr;
+			}
+
+			return &(m_TextureVars[varId] = it2->second);
+		}
+
+		return &it->second;
+	}
+
+	bool SMaterial::SetTexture(TTypeID varId, const Texture_ptr& texture)
+	{
+		MTextureVar* var = GetTextureVar(varId);
+
+		if(var == nullptr)
+			return false;
+
+		var->Texture = texture;
+		return true;
+	}
+
+	bool SMaterial::SetSampler(TTypeID varId, const Sampler_ptr& sampler)
+	{
+		MTextureVar* var = GetTextureVar(varId);
+
+		if(var == nullptr)
+			return false;
+
+		var->Sampler = sampler;
+		return true;
+	}
+
+	Texture_ptr SMaterial::GetTexture(TTypeID varId)
+	{
+		MTextureVar* var = GetTextureVar(varId);
+
+		if(var == nullptr)
+			return nullptr;
+
+		return var->Texture;
+	}
+
+	Sampler_ptr SMaterial::GetSampler(TTypeID varId)
+	{
+		MTextureVar* var = GetTextureVar(varId);
+
+		if(var == nullptr)
+			return nullptr;
+
+		return var->Sampler;
 	}
 }

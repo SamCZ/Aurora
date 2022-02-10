@@ -1,0 +1,30 @@
+{
+	"name": "Test2D",
+	"passes": [
+		{
+			"name": "Ambient",
+			"shaders": {
+				"vertex": "Assets/Shaders/fs_quad.vss",
+				"pixel": "Assets/Shaders/color.fss"
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "Color",
+			"type": "Vector",
+			"widget": "Color",
+			"in_shader_name": "Color",
+			"value": [0, 1, 2, 4]
+		},
+		{
+			"name": "Texture",
+			"type": "Texture2D",
+			"in_shader_name": "Texture",
+			"value": "Assets/Textures/soft-noise-256.jpg"
+		}
+	],
+	"macros": {
+		"TEST": "1"
+	}
+}

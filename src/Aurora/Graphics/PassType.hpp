@@ -13,7 +13,7 @@ namespace Aurora
 	};
 
 	constexpr char const* PassTypesToString[2] = {
-			"Depth",
-			"Ambient"
+			"Ambient",
+			"Depth"
 	};
 }

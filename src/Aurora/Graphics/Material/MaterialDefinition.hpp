@@ -9,6 +9,8 @@
 #include "Aurora/Tools/robin_hood.h"
 
 #include "Aurora/Graphics/Base/ShaderBase.hpp"
+#include "Aurora/Graphics/Base/Texture.hpp"
+#include "Aurora/Graphics/Base/Sampler.hpp"
 #include "Aurora/Graphics/Base/RasterState.hpp"
 #include "Aurora/Graphics/Base/BlendState.hpp"
 #include "Aurora/Graphics/Base/FDepthStencilState.hpp"
@@ -28,6 +30,34 @@ namespace Aurora
 	class MMSwitchMacro
 	{
 
+	};
+
+	struct MNumericValDesc
+	{
+		String Name;
+		String InShaderName;
+		TTypeID InShaderNameID;
+		String Widget; // TODO: Change to enum
+		std::vector<float> Numbers;
+
+		[[nodiscard]] inline size_t MemorySize() const
+		{
+			return Numbers.size() * sizeof(float);
+		}
+	};
+
+	struct MTextureVar
+	{
+		String Name;
+		String InShaderName;
+		Texture_ptr Texture;
+		Sampler_ptr Sampler;
+	};
+
+	struct MNumericVal
+	{
+		String Name;
+		TTypeID NameID;
 	};
 
 	struct MUniformVar
@@ -92,6 +122,8 @@ namespace Aurora
 		robin_hood::unordered_map<PassType_t, ShaderProgramDesc> ShaderPasses;
 		std::vector<ShaderMacros> MacroSets;
 		//TODO: variables
+		robin_hood::unordered_map<TTypeID, MTextureVar> Textures;
+		robin_hood::unordered_map<TTypeID, MNumericValDesc> Variables;
 	};
 
 	struct MaterialOverrides
@@ -115,8 +147,10 @@ namespace Aurora
 
 		std::vector<MUniformBlock> m_UniformBlocksDef;
 		robin_hood::unordered_map<PassType_t, std::vector<uint8>> m_PassUniformBlockMapping;
+		robin_hood::unordered_map<PassType_t, std::vector<TTypeID>> m_PassTextureMapping;
 
 		std::vector<uint8> m_BaseUniformData;
+		robin_hood::unordered_map<TTypeID, MTextureVar> m_TextureVars;
 	public:
 		explicit MaterialDefinition(const MaterialDefinitionDesc& desc);
 

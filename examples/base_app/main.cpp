@@ -3,6 +3,7 @@
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
 #include <Aurora/Graphics/Material/SMaterial.hpp>
+#include <Aurora/Resource/MaterialLoader.hpp>
 
 #include <Shaders/World/PBRBasic/cb_pbr.h>
 
@@ -56,54 +57,38 @@ class BaseAppContext : public AppContext
 	std::shared_ptr<SMaterial> mat;
 	std::shared_ptr<SMaterial> mat2;
 
-	~BaseAppContext()
+	~BaseAppContext() override
 	{
 		delete matDef;
 	}
 
 	void Init() override
 	{
+		Path path = "Assets/Materials/Base/Test2D.matd";
+		nlohmann::json json;
+		if(!GetEngine()->GetResourceManager()->LoadJson(path, json))
+		{
+			AU_LOG_FATAL("Cannot load engine without test material !");
+		}
+
 		MaterialDefinitionDesc materialDefinitionDesc;
-		materialDefinitionDesc.Name = "TestDesc";
-		materialDefinitionDesc.Filepath = "[[RUNTIME/desc]]";
-		materialDefinitionDesc.ShaderPasses[(PassType_t)EPassType::Ambient] = GetEngine()->GetResourceManager()->CreateShaderProgramDesc("Color", {
-			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
-			{EShaderType::Pixel, "Assets/Shaders/color.fss"}
-		});
-		/*materialDefinitionDesc.ShaderPasses[(PassType_t)EPassType::Depth] = GetEngine()->GetResourceManager()->CreateShaderProgramDesc("PBRDepth", {
-			{EShaderType::Vertex, "Assets/Shaders/World/PBRBasic/depth.vss"},
-			{EShaderType::Pixel, "Assets/Shaders/World/PBRBasic/depth.fss"}
-		});*/
+		if(!MaterialLoader::ParseMaterialDefinitionJson(json, path, materialDefinitionDesc))
+		{
+			AU_LOG_FATAL("Cannot parse material json");
+		}
 
 		matDef = new MaterialDefinition(materialDefinitionDesc);
 
 		mat = matDef->CreateInstance();
 
-		if(PBRConstants* matConstants = mat->GetVarBlock<PBRConstants>("PBRConstants"_HASH))
-		{
-			matConstants->AmbientOcclusion = 0.5f;
-			matConstants->Metallic = 1.0f;
-			matConstants->EmissionFactor = Vector4(1, 2, 3, 4);
-		}
-
-		mat->SetVariable("AmbientOcclusion"_HASH, 0.6f);
-
-		float metallic;
-		if(mat->GetVariable<float>("Metallic"_HASH, metallic))
-		{
-			std::cout << "metallic: " << metallic << std::endl;
-		}
-
-		Vector4 emf;
-		if(mat->GetVariable<Vector4>("EmissionFactor"_HASH, emf))
-		{
-			std::cout << glm::to_string(emf) << std::endl;
-		}
-
 		mat->SetVariable("Color"_HASH, Vector4(0, 1, 0, 1));
 
 		mat2 = mat->Clone();
-		mat2->SetVariable("Color"_HASH, Vector4(0, 0, 1, 1));
+		mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
+
+		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
+
+		///
 	}
 
 	float a = 0;
