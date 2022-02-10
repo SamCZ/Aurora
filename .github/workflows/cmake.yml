@@ -30,6 +30,8 @@ jobs:
           cmake "$GITHUB_WORKSPACE" \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc-10 \
+            -DBUILD_TESTING=OFF \
+            -DNEWTON_BUILD_SANDBOX_DEMOS=OFF \
             -DCMAKE_CXX_COMPILER=g++-10
 
       - name: Build Engine
@@ -61,7 +63,8 @@ jobs:
         run: |
           cmake "${env:GITHUB_WORKSPACE}" `
             -DCMAKE_BUILD_TYPE=Release `
-            -DBUILD_TESTING=ON `
+            -DBUILD_TESTING=OFF `
+            -DNEWTON_BUILD_SANDBOX_DEMOS=OFF `
             -DCMAKE_C_COMPILER=gcc-10 `
             -DCMAKE_CXX_COMPILER=g++-10 `
             -G "Visual Studio 16 2019" -A x64
