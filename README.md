@@ -6,12 +6,12 @@
 
 | Name | Compiler | 32-bit | 64-bit | Render Context |
 |------|:--------:|:------:|:------:|:--------------:|
-| [Windows 10](https://en.wikipedia.org/wiki/Windows_10) | [MSVC](https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B) |  - | YES | OpenGL |
-| [Windows 10](https://en.wikipedia.org/wiki/Windows_10) | [MinGW-w64](http://mingw-w64.org/) |  - | YES | OpenGL |
-| [Windows 10](https://en.wikipedia.org/wiki/Windows_10) | [Cygwin](https://www.cygwin.com/) |  - | - | - |
-| [Debian](https://www.debian.org/) / [Ubuntu](https://ubuntu.com/) | [GCC](https://gcc.gnu.org/) | - | In Development | OpenGL |
-| [Debian](https://www.debian.org/) / [Ubuntu](https://ubuntu.com/) | [Clang](https://clang.llvm.org/) | - | - | - |
-| [macOS](https://en.wikipedia.org/wiki/MacOS) | - | - | - | ~~Metal~~ |
+| [Windows 10](https://en.wikipedia.org/wiki/Windows_10) | [MSVC](https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B) |  - |  YES   | OpenGL |
+| [Windows 10](https://en.wikipedia.org/wiki/Windows_10) | [MinGW-w64](http://mingw-w64.org/) |  - |  YES   | OpenGL |
+| [Windows 10](https://en.wikipedia.org/wiki/Windows_10) | [Cygwin](https://www.cygwin.com/) |  - |   -    | - |
+| [Debian](https://www.debian.org/) / [Ubuntu](https://ubuntu.com/) | [GCC](https://gcc.gnu.org/) | - |  YES   | OpenGL |
+| [Debian](https://www.debian.org/) / [Ubuntu](https://ubuntu.com/) | [Clang](https://clang.llvm.org/) | - |   -    | - |
+| [macOS](https://en.wikipedia.org/wiki/MacOS) | - | - |   -    | ~~Metal~~ |
 
 ## Used libraries
 | Name | License | Version |

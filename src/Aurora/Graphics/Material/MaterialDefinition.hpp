@@ -65,6 +65,10 @@ namespace Aurora
 		String Name;
 		size_t Size;
 		size_t Offset;
+
+		String ConnectedName;
+		String Widget;
+		bool Connected;
 	};
 
 	struct MUniformBlock

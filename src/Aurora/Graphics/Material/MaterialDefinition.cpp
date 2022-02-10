@@ -81,6 +81,8 @@ namespace Aurora
 
 		m_TextureVars = desc.Textures;
 
+		std::vector<std::tuple<size_t, size_t, std::vector<float>>> defaultsToWrite;
+
 		for(const auto& passIt : desc.ShaderPasses)
 		{
 			MaterialPassState passState;
@@ -154,12 +156,33 @@ namespace Aurora
 
 				for(const auto& var : block.Variables)
 				{
+					TTypeID varId = Hash_djb2(var.Name.data());
+
 					MUniformVar uniformVar;
 					uniformVar.Name = var.Name;
 					uniformVar.Size = var.Size;
 					uniformVar.Offset = var.Offset;
+					uniformVar.Connected = false;
 
-					uniformBlock.Vars[Hash_djb2(var.Name.data())] = uniformVar;
+					const auto& descVarIt = desc.Variables.find(varId);
+					if(descVarIt != desc.Variables.end())
+					{
+						const MNumericValDesc& valDesc = descVarIt->second;
+
+						if(valDesc.MemorySize() == var.Size)
+						{
+							uniformVar.Connected = true;
+							uniformVar.ConnectedName = valDesc.Name;
+							uniformVar.Widget = valDesc.Widget;
+							defaultsToWrite.emplace_back(uniformBlock.Offset + var.Offset, var.Size, valDesc.Numbers);
+						}
+						else
+						{
+							AU_LOG_WARNING("Connected variable ", valDesc.Name, " has wrong size ! You've set ", valDesc.MemorySize(), " but it needs ", var.Size, " !");
+						}
+					}
+
+					uniformBlock.Vars[varId] = uniformVar;
 
 					std::cout << " - " << var.Name << " " << var.Size << std::endl;
 				}
@@ -173,7 +196,15 @@ namespace Aurora
 
 		m_BaseUniformData.resize(memorySize);
 
-		// TODO: Init default vars from desc
+		// Write defaults
+		for(auto& pair : defaultsToWrite)
+		{
+			size_t offset = std::get<0>(pair);
+			size_t size = std::get<1>(pair);
+			const std::vector<float>& vals = std::get<2>(pair);
+
+			std::memcpy(m_BaseUniformData.data() + offset, vals.data(), size);
+		}
 	}
 
 	MUniformBlock* MaterialDefinition::FindUniformBlock(TTypeID id)

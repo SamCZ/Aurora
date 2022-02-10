@@ -81,10 +81,10 @@ class BaseAppContext : public AppContext
 
 		mat = matDef->CreateInstance();
 
-		mat->SetVariable("Color"_HASH, Vector4(0, 1, 0, 1));
+		//mat->SetVariable("Color"_HASH, Vector4(0, 1, 0, 1));
 
 		mat2 = mat->Clone();
-		mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
+		//mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
 
 		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
 

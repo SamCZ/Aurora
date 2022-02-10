@@ -15,7 +15,7 @@
 			"type": "Vector",
 			"widget": "Color",
 			"in_shader_name": "Color",
-			"value": [0, 1, 2, 4]
+			"value": [1, 1, 1, 1]
 		},
 		{
 			"name": "Texture",
