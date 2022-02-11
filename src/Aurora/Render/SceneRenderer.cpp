@@ -904,7 +904,7 @@ namespace Aurora
 				workGroupsY = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
 
 				{ // Ping
-					//Output
+					// Output
 					dispatchState.BindTexture("o_Image", bloomRTs[1], true, Aurora::TextureBinding::EAccess::Write, i);
 					// Input
 					bloomDesc.LodAndMode.x = (float)i - 1.0f;
@@ -934,7 +934,7 @@ namespace Aurora
 				dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mips - 1);
 
 				// Input
-				bloomDesc.LodAndMode.x--;
+				bloomDesc.LodAndMode.x = mips - 2;
 				GetEngine()->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
 				dispatchState.BindTexture("u_Texture", bloomRTs[0]);
 
