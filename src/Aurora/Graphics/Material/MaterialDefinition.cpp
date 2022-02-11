@@ -201,9 +201,9 @@ namespace Aurora
 		{
 			size_t offset = std::get<0>(pair);
 			size_t size = std::get<1>(pair);
-			const std::vector<float>& vals = std::get<2>(pair);
+			const std::vector<float>& values = std::get<2>(pair);
 
-			std::memcpy(m_BaseUniformData.data() + offset, vals.data(), size);
+			std::memcpy(m_BaseUniformData.data() + offset, values.data(), size);
 		}
 	}
 

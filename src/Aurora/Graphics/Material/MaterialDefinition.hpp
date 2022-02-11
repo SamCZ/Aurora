@@ -54,12 +54,6 @@ namespace Aurora
 		Sampler_ptr Sampler;
 	};
 
-	struct MNumericVal
-	{
-		String Name;
-		TTypeID NameID;
-	};
-
 	struct MUniformVar
 	{
 		String Name;
