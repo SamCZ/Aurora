@@ -53,31 +53,14 @@ void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) 
 
 class BaseAppContext : public AppContext
 {
-	MaterialDefinition* matDef;
+	MaterialDefinition_ptr matDef;
 	std::shared_ptr<SMaterial> mat;
 	std::shared_ptr<SMaterial> mat2;
-
-	~BaseAppContext() override
-	{
-		delete matDef;
-	}
+	std::shared_ptr<SMaterial> mat3;
 
 	void Init() override
 	{
-		Path path = "Assets/Materials/Base/Test2D.matd";
-		nlohmann::json json;
-		if(!GetEngine()->GetResourceManager()->LoadJson(path, json))
-		{
-			AU_LOG_FATAL("Cannot load engine without test material !");
-		}
-
-		MaterialDefinitionDesc materialDefinitionDesc;
-		if(!MaterialLoader::ParseMaterialDefinitionJson(json, path, materialDefinitionDesc))
-		{
-			AU_LOG_FATAL("Cannot parse material json");
-		}
-
-		matDef = new MaterialDefinition(materialDefinitionDesc);
+		matDef = GetEngine()->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Test2D.matd");
 
 		mat = matDef->CreateInstance();
 
@@ -87,8 +70,6 @@ class BaseAppContext : public AppContext
 		//mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
 
 		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
-
-		///
 	}
 
 	float a = 0;
