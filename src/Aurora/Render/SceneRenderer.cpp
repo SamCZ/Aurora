@@ -934,7 +934,7 @@ namespace Aurora
 				dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mips - 1);
 
 				// Input
-				bloomDesc.LodAndMode.x = mips - 2;
+				bloomDesc.LodAndMode.x = (float)mips - 2.0f;
 				GetEngine()->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
 				dispatchState.BindTexture("u_Texture", bloomRTs[0]);
 
