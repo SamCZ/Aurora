@@ -273,6 +273,10 @@ namespace Aurora
 					break;
 			}
 
+			if(primitive.material < 0)
+			{
+				AU_LOG_FATAL("Model does not have any material");
+			}
 
 			// Load material
 			const tinygltf::Material& material = model.materials[primitive.material];
