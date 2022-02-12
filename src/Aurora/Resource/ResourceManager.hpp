@@ -1,9 +1,11 @@
 #pragma once
 
+#include <unordered_map>
 #include "Aurora/Core/Common.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
+#include "Aurora/Graphics/Material/MaterialDefinition.hpp"
 #include "AssetBank.hpp"
 
 #include <nlohmann/json.hpp>
@@ -25,6 +27,7 @@ namespace Aurora
 		std::map<Path, std::vector<Path>> m_AssetPackageFolders;
 		std::map<String, Shader_ptr> m_ShaderPrograms;
 		std::map<Path, Texture_ptr> m_LoadedTextures;
+		std::map<Path, MaterialDefinition_ptr> m_MaterialDefinitions;
 	public:
 		explicit ResourceManager(IRenderDevice* renderDevice);
 
@@ -54,7 +57,9 @@ namespace Aurora
 		bool LoadJson(const Path &path, nlohmann::json &json);
 
 		Texture_ptr LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo);
-
 		Texture_ptr LoadLutTexture(const Path& path);
+
+		const MaterialDefinition_ptr& GetOrLoadMaterialDefinition(const Path& path);
+		std::shared_ptr<SMaterial> LoadMaterial(const Path& path);
 	};
 }

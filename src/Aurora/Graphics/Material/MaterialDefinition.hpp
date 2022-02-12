@@ -132,14 +132,14 @@ namespace Aurora
 	/*
 	 * Holds variable patterns, macro sets, shader permutations
 	 */
-	class AU_API MaterialDefinition
+	AU_CLASS(MaterialDefinition)
 	{
 		friend class SMaterial;
 	private:
 		String m_Name;
 		Path m_Path;
 
-		std::vector<std::shared_ptr<SMaterial>> m_MaterialRefs;
+		std::vector<std::weak_ptr<SMaterial>> m_MaterialRefs;
 
 		robin_hood::unordered_map<PassType_t, MaterialPassDef> m_PassDefs;
 

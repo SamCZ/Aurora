@@ -65,9 +65,10 @@ namespace Aurora
 	bool CanLoadBlock(const ShaderResourceDesc& block)
 	{
 		if(block.Name == "Instances")
-		{
 			return false;
-		}
+
+		if(block.Name == "BaseVSData")
+			return false;
 
 		// TODO: Find a better way to exclude global blocks
 

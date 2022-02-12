@@ -8,7 +8,7 @@
 
 namespace Aurora
 {
-	class SMaterial
+	AU_CLASS(SMaterial)
 	{
 	private:
 		MaterialDefinition* m_MatDef;

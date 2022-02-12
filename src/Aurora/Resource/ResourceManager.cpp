@@ -9,6 +9,8 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb/stb_image_resize.h"
 
+#include "MaterialLoader.hpp"
+
 namespace Aurora
 {
 
@@ -400,5 +402,41 @@ namespace Aurora
 
 		m_LoadedTextures[path] = texture;
 		return texture;
+	}
+
+	const MaterialDefinition_ptr& ResourceManager::GetOrLoadMaterialDefinition(const Path &path)
+	{
+		const auto& it = m_MaterialDefinitions.find(path);
+
+		if(it != m_MaterialDefinitions.end())
+		{
+			return it->second;
+		}
+
+		nlohmann::json json;
+		if(!LoadJson(path, json))
+		{
+			AU_LOG_FATAL("Cannot load engine without test material !");
+		}
+
+		MaterialDefinitionDesc materialDefinitionDesc;
+		if(!MaterialLoader::ParseMaterialDefinitionJson(json, path, materialDefinitionDesc))
+		{
+			AU_LOG_FATAL("Cannot parse material json");
+		}
+
+		return (m_MaterialDefinitions[path] = std::make_shared<MaterialDefinition>(materialDefinitionDesc));
+	}
+
+	std::shared_ptr<SMaterial> ResourceManager::LoadMaterial(const Path &path)
+	{
+		// TODO: Load overrides from file
+		/*const MaterialDefinition_ptr& materialDefinition = GetOrLoadMaterialDefinition(definitionPath);
+
+		MaterialOverrides overrides;
+		auto matInstance = materialDefinition->CreateInstance(overrides);
+
+		return matInstance;*/
+		return nullptr;
 	}
 }
