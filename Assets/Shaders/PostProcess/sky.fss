@@ -107,7 +107,7 @@ void main()
 
     //planetCenter = rayOrigin;
 
-    FragColor = texture(SkyCube, rayDir);
+    FragColor = textureLod(SkyCube, rayDir, 0);
     return;
     /*float depth = texelFetch(DepthTexture, ivec2(gl_FragCoord.xy), 0).r;
     float dstToSurface = linearize_depth(depth, 0.1f, 2000.0f);

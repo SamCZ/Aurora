@@ -527,6 +527,7 @@ namespace Aurora
 		const TransformComponent* mainDirLightTransform = nullptr;
 		{ // Prepare lights
 			CPU_DEBUG_SCOPE("Lights");
+			CPU_DEBUG_SCOPE("Lights");
 			auto view = m_Scene->GetRegistry().view<TransformComponent, DirectionalLightComponent>();
 
 			std::vector<float> rations = CalcRations(camera, 0.95f, m_DirCascadeSettings.NumOfCascades);
@@ -610,6 +611,7 @@ namespace Aurora
 		auto depthRT = m_RenderManager->CreateTemporalRenderTarget("Depth", camera.Size, GraphicsFormat::D32);
 		{
 			CPU_DEBUG_SCOPE("MainRenderBegin");
+			GPU_DEBUG_SCOPE("MainRenderPass");
 			DrawCallState drawState;
 			//drawCallState.BindUniformBuffer("BaseVSData", m_BaseVSDataBuffer);
 			drawState.BindUniformBuffer("Instances", m_InstancingBuffer);

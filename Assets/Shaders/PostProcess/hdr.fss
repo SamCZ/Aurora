@@ -9,7 +9,7 @@ uniform sampler2D BloomTexture;
 
 void main()
 {
-	vec4 sceneColor = texture(SceneHRDTexture, TexCoord);
+	vec4 sceneColor = texelFetch(SceneHRDTexture, ivec2(gl_FragCoord.xy), 0);
 	vec4 bloomColor = texture(BloomTexture, TexCoord);
 
 	const float gamma = 2.2;
