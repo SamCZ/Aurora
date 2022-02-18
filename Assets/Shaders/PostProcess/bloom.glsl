@@ -1,3 +1,5 @@
+// Bloom made by Cherno https://www.youtube.com/channel/UCQ-W1KE9EYfdxhL6S4twUNw
+
 layout(binding = 0, rgba16f) restrict writeonly uniform image2D o_Image;
 
 const float Epsilon = 1.0e-4;
