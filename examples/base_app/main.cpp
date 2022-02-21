@@ -121,6 +121,10 @@ class BaseAppContext : public AppContext
 		{
 			aa->Tick(0);
 
+			for(SceneComponent* component : *aa)
+			{
+				AU_LOG_INFO("Component ", component->GetTypeName(), " ", component->GetName());
+			}
 		}
 
 		scene.DestroyActor(actor);

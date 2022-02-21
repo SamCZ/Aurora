@@ -31,7 +31,6 @@ namespace Aurora
 			SceneComponent* component = GetComponentStorage().CreateComponent<T, Args...>(name, std::forward<Args>(args)...);
 
 			InitializeComponent(component);
-			m_Components.push_back(component);
 
 			if(m_RootComponent)
 			{
@@ -69,6 +68,12 @@ namespace Aurora
 
 			return components;
 		}
+
+		std::vector<SceneComponent*>::iterator begin() { return m_Components.begin(); }
+		std::vector<SceneComponent*>::iterator end() { return m_Components.end(); }
+
+		[[nodiscard]] std::vector<SceneComponent*>::const_iterator begin() const { return m_Components.begin(); }
+		[[nodiscard]] std::vector<SceneComponent*>::const_iterator end() const { return m_Components.end(); }
 
 		inline virtual void InitializeComponents() {}
 		inline virtual void BeginPlay() {}

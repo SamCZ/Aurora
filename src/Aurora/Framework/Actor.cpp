@@ -47,6 +47,8 @@ namespace Aurora
 		{
 			//m_Scene->RegisterComponent(component);
 		}
+
+		m_Components.push_back(component);
 	}
 
 	ComponentStorage& Actor::GetComponentStorage()

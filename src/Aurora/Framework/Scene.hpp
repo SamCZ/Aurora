@@ -54,6 +54,7 @@ namespace Aurora
 			actor->m_Name = name;
 
 			actor->m_RootComponent = m_ComponentStorage.CreateComponent<RootCmp>("RootComponent");
+			actor->InitializeComponent(actor->m_RootComponent);
 
 			actor->m_RootComponent->GetTransform().Translation = position;
 			actor->m_RootComponent->GetTransform().Rotation = rotation;

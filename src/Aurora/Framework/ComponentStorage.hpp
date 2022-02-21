@@ -40,7 +40,7 @@ namespace Aurora
 			{
 				allocator = new Aum();
 				m_ComponentMemory.emplace(componentID, allocator);
-				AU_LOG_INFO("New allocator for component ", T::TypeName(), " with size of ", FormatBytes(componentSize), " aligned ", componentSizeAligned);
+				AU_LOG_INFO("New allocator for component ", T::TypeName(), " with size of ", FormatBytes(componentSize), " aligned ", FormatBytes(componentSizeAligned));
 			}
 
 			MemPtr componentMemory = allocator->Alloc(componentSizeAligned);
