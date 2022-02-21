@@ -5,23 +5,23 @@
 #endif
 #include <GLFW/glfw3.h>
 
-#include "Aurora/Logger/file_sink.hpp"
-#include "Aurora/Logger/std_sink.hpp"
+#include "Logger/file_sink.hpp"
+#include "Logger/std_sink.hpp"
 
-#include "Aurora/Core/assert.hpp"
-#include "Aurora/Core/Profiler.hpp"
+#include "Core/assert.hpp"
+#include "Core/Profiler.hpp"
 
-#include "Aurora/App/GLFWWindow.hpp"
-#include "Aurora/App/Input/GLFW/Manager.hpp"
+#include "App/GLFWWindow.hpp"
+#include "App/Input/GLFW/Manager.hpp"
 
-#include "Aurora/Graphics/OpenGL/GLSwapChain.hpp"
-#include "Aurora/Graphics/OpenGL/GLRenderDevice.hpp"
-#include "Aurora/Graphics/RenderManager.hpp"
-#include "Aurora/Resource/ResourceManager.hpp"
+#include "Graphics/OpenGL/GLSwapChain.hpp"
+#include "Graphics/OpenGL/GLRenderDevice.hpp"
+#include "Graphics/RenderManager.hpp"
+#include "Resource/ResourceManager.hpp"
 
-#include "Aurora/RmlUI/RmlUI.hpp"
+#include "RmlUI/RmlUI.hpp"
 
-#include "Aurora/Render/VgRender.hpp"
+#include "Render/VgRender.hpp"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -29,7 +29,7 @@
 
 #include <TracyOpenGL.hpp>
 
-#include "Aurora/Physics/PhysicsWorld.hpp"
+#include "Physics/PhysicsWorld.hpp"
 
 #undef DrawText
 
@@ -47,6 +47,9 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 namespace Aurora
 {
 	static AuroraContext* g_Context = nullptr;
+
+	GameContext* AppContext::m_GameContext = nullptr;
+	GameModeBase* AppContext::m_GameMode = nullptr;
 
 	AuroraContext* GetEngine()
 	{
@@ -99,6 +102,7 @@ namespace Aurora
 		glfwInit();
 
 		g_Context = new AuroraContext();
+		g_Context->m_AppContext = appContext;
 
 		// Init and create window
 		m_Window = new GLFWWindow();
@@ -237,7 +241,7 @@ namespace Aurora
 
 			{
 				CPU_DEBUG_SCOPE("Game update");
-				m_AppContext->Update(delta);
+				m_AppContext->InternalUpdate(delta);
 			}
 
 			{

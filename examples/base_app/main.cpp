@@ -113,55 +113,6 @@ class BaseAppContext : public AppContext
 		//mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
 
 		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
-
-		for(int i = 0; i < 50; i++)
-		{
-			TestActor* actor = scene.SpawnActor<TestActor>("yo", {});
-			actor->Test();
-
-
-
-			//scene.DestroyActor(actor);
-		}
-
-		for(Actor* aa : scene)
-		{
-			aa->Tick(0);
-
-			for(SceneComponent* component : *aa)
-			{
-				AU_LOG_INFO("Component ", component->GetTypeName(), " ", component->GetName());
-			}
-		}
-
-		/*{
-			TestActor* actor = scene.SpawnActor<TestActor>("yo", {});
-			actor->Test();
-
-			for(Actor* aa : scene)
-			{
-				aa->Tick(0);
-
-				for(SceneComponent* component : *aa)
-				{
-					AU_LOG_INFO("Component ", component->GetTypeName(), " ", component->GetName());
-				}
-			}
-
-			scene.DestroyActor(actor);
-		}*/
-
-		/*for(Actor* actor : scene.GetActors())
-		{
-			ActorComponent* cmp1 = actor->GetComponent<ActorComponent>();
-		}*/
-
-		/*auto view = scene.GetComponents<ActorComponent, SceneComponent>();
-		for(auto entityID : view)
-		{
-			ActorComponent* cmp1 = view.Get<ActorComponent>(entityID);
-			SceneComponent* cmp2 = view.Get<SceneComponent>(entityID);
-		}*/
 	}
 
 	float a = 0;

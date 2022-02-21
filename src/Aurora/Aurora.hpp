@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Aurora/App/IWindow.hpp"
+#include "App/IWindow.hpp"
+#include "App/AppContext.hpp"
 #include "Engine.hpp"
 
 namespace Aurora
@@ -13,17 +14,6 @@ namespace Aurora
 	{
 		class IManager;
 	}
-
-	class AppContext
-	{
-	public:
-		virtual ~AppContext() = default;
-
-		virtual void Init() {}
-		virtual void Update(double delta) {}
-		virtual void Render() {}
-		virtual void RenderVg() {}
-	};
 
 	class AU_API AuroraEngine
 	{
