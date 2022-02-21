@@ -65,7 +65,7 @@ public:
 
 	TestActor() : number(10)
 	{
-		std::cout << "TestActor created" << std::endl;
+		std::cout << "TestActor created " << PointerToString(this) << std::endl;
 	}
 
 	void InitializeComponents() override
@@ -114,8 +114,15 @@ class BaseAppContext : public AppContext
 
 		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
 
-		TestActor* actor = scene.SpawnActor<TestActor>("yo", {});
-		actor->Test();
+		for(int i = 0; i < 50; i++)
+		{
+			TestActor* actor = scene.SpawnActor<TestActor>("yo", {});
+			actor->Test();
+
+
+
+			//scene.DestroyActor(actor);
+		}
 
 		for(Actor* aa : scene)
 		{
@@ -127,7 +134,22 @@ class BaseAppContext : public AppContext
 			}
 		}
 
-		scene.DestroyActor(actor);
+		/*{
+			TestActor* actor = scene.SpawnActor<TestActor>("yo", {});
+			actor->Test();
+
+			for(Actor* aa : scene)
+			{
+				aa->Tick(0);
+
+				for(SceneComponent* component : *aa)
+				{
+					AU_LOG_INFO("Component ", component->GetTypeName(), " ", component->GetName());
+				}
+			}
+
+			scene.DestroyActor(actor);
+		}*/
 
 		/*for(Actor* actor : scene.GetActors())
 		{

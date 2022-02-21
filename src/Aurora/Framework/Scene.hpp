@@ -10,16 +10,6 @@
 
 namespace Aurora
 {
-	struct ComponentView
-	{
-
-		template<typename T>
-		T* Get()
-		{
-
-		}
-
-	};
 
 	class Scene
 	{

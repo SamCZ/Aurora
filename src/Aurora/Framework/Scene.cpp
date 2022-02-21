@@ -9,7 +9,14 @@ namespace Aurora
 
 	}
 
-	Scene::~Scene() = default;
+	Scene::~Scene()
+	{
+		std::vector<Actor*> actors = m_Actors;
+		for(Actor* actor : actors)
+		{
+			DestroyActor(actor);
+		}
+	}
 
 	void Scene::FinishSpawningActor(Actor* actor)
 	{
