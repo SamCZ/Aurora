@@ -7,6 +7,11 @@
 
 #include <Shaders/World/PBRBasic/cb_pbr.h>
 
+#include <Aurora/Memory/Aum.hpp>
+#include <Aurora/Framework/Scene.hpp>
+#include <Aurora/Framework/Actor.hpp>
+#include <Aurora/Framework/SceneComponent.hpp>
+
 using namespace Aurora;
 
 void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) {
@@ -50,6 +55,42 @@ void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) 
 	fB += fM;
 }
 
+class TestActor : public Actor
+{
+private:
+	int number;
+	SceneComponent* m_Test;
+public:
+	CLASS_OBJ(TestActor, Actor);
+
+	TestActor() : number(10)
+	{
+		std::cout << "TestActor created" << std::endl;
+	}
+
+	void InitializeComponents() override
+	{
+		m_Test = AddComponent<SceneComponent>("Test");
+		m_Test->GetTransform().Translation.x = 15;
+
+		GetRootComponent()->GetTransform().Translation.x = 1000;
+	}
+
+	void Tick(double delta) override
+	{
+		std::cout << "tick" << std::endl;
+	}
+
+	void Test()
+	{
+		std::cout << "TestActor Test() " << number << " " << m_Test->GetTransform().Translation.x << " " << GetRootComponent()->GetTransform().Translation.x << std::endl;
+	}
+
+	~TestActor() override
+	{
+		std::cout << "TestActor deleted" << std::endl;
+	}
+};
 
 class BaseAppContext : public AppContext
 {
@@ -57,6 +98,8 @@ class BaseAppContext : public AppContext
 	std::shared_ptr<SMaterial> mat;
 	std::shared_ptr<SMaterial> mat2;
 	std::shared_ptr<SMaterial> mat3;
+
+	Scene scene;
 
 	void Init() override
 	{
@@ -70,6 +113,29 @@ class BaseAppContext : public AppContext
 		//mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
 
 		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
+
+		TestActor* actor = scene.SpawnActor<TestActor>("yo", {});
+		actor->Test();
+
+		for(Actor* aa : scene)
+		{
+			aa->Tick(0);
+
+		}
+
+		scene.DestroyActor(actor);
+
+		/*for(Actor* actor : scene.GetActors())
+		{
+			ActorComponent* cmp1 = actor->GetComponent<ActorComponent>();
+		}*/
+
+		/*auto view = scene.GetComponents<ActorComponent, SceneComponent>();
+		for(auto entityID : view)
+		{
+			ActorComponent* cmp1 = view.Get<ActorComponent>(entityID);
+			SceneComponent* cmp2 = view.Get<SceneComponent>(entityID);
+		}*/
 	}
 
 	float a = 0;

@@ -4,9 +4,6 @@
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/PassType.hpp"
 
-#include <entt/core/enum.hpp>
-#include <entt/core/type_traits.hpp>
-
 namespace Aurora
 {
 	class ResourceManager;

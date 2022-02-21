@@ -46,7 +46,7 @@ namespace Aurora
 		return m_Memory.emplace_back(memoryBlock);
 	}
 
-	void* Aum::AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator fragmentIt, MemSize size)
+	MemPtr Aum::AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator fragmentIt, MemSize size)
 	{
 		MemoryFragment& fragment = *fragmentIt;
 
@@ -74,7 +74,7 @@ namespace Aurora
 		return newMemoryStart;
 	}
 
-	void* Aum::Alloc(MemSize size)
+	MemPtr Aum::Alloc(MemSize size)
 	{
 		au_assert(size);
 		au_assert(size <= m_BlockSize);

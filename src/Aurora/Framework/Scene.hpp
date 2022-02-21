@@ -1,58 +1,88 @@
 #pragma once
 
-#include <entt/entt.hpp>
-
+#include "Aurora/Core/Vector.hpp"
 #include "Aurora/Core/String.hpp"
+#include "Aurora/Logger/Logger.hpp"
 #include "Aurora/Memory/Aum.hpp"
+#include "ComponentStorage.hpp"
 #include "Actor.hpp"
-#include "BaseComponents.hpp"
+#include "SceneComponent.hpp"
 
 namespace Aurora
 {
-	class Entity;
+	struct ComponentView
+	{
 
-	class AU_API Scene
+		template<typename T>
+		T* Get()
+		{
+
+		}
+
+	};
+
+	class Scene
 	{
 	private:
-		friend class Entity;
-	private:
-		entt::registry m_Registry;
 		Aum m_ActorMemory;
 		std::vector<Actor*> m_Actors;
+		ComponentStorage m_ComponentStorage;
 	public:
+		friend class Actor;
+
 		Scene();
 		~Scene();
 
-		void OnBodyComponentAdded(entt::registry& registry, entt::entity entity);
-		void OnBodyComponentDestroyed(entt::registry& registry, entt::entity entity);
-
-		Entity CreateEntity(const std::string& name);
-
-		void Tick(double delta);
-
-		Matrix4 GetTransformRelativeToParent(Entity entity);
-
-		inline entt::registry& GetRegistry() { return m_Registry; }
-
-		template<class Actor>
-		Actor* SpawnActor(const String& name, const Vector3& position)
+		template<class T, class RootCmp = SceneComponent, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
+		T* SpawnActor(const String& name, const Vector3& position, const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
 		{
-			Actor* actor = m_ActorMemory.AllocAndInit<Actor>();
-			actor->m_Scene = this;
-			actor->Init();
-
-			m_Actors.push_back(actor);
-
+			T* actor = BeginSpawnActor<T, RootCmp>(name, position, rotation, scale);
+			FinishSpawningActor(actor);
 			return actor;
 		}
 
-		void DestroyActor(Actor* actor);
-
-		inline Aum* GetActorMemory()
+		template<class T, class RootCmp = SceneComponent, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
+		T* BeginSpawnActor(const String& name, const Vector3& position, const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
 		{
-			return &m_ActorMemory;
+			size_t objSize = sizeof(T);
+			size_t objSizeAligned = Align(objSize, 16u);
+
+			MemPtr actorMemory = m_ActorMemory.Alloc(objSizeAligned);
+			Actor* actor = new(actorMemory) T();
+
+			actor->m_Scene = this;
+			actor->m_Name = name;
+
+			actor->m_RootComponent = m_ComponentStorage.CreateComponent<RootCmp>("RootComponent");
+
+			actor->m_RootComponent->GetTransform().Translation = position;
+			actor->m_RootComponent->GetTransform().Rotation = rotation;
+			actor->m_RootComponent->GetTransform().Scale = scale;
+
+			actor->InitializeComponents();
+
+			m_Actors.push_back(actor);
+
+			return (T*) actor;
 		}
 
-		void SetEntityCollider(Entity entity, const BaseColliderComponent& colliderComponent);
+		/*template<typename... T>
+		const ComponentView GetComponents()
+		{
+
+		}*/
+
+		std::vector<Actor*>::iterator begin() { return m_Actors.begin(); }
+		std::vector<Actor*>::iterator end() { return m_Actors.end(); }
+
+		[[nodiscard]] std::vector<Actor*>::const_iterator begin() const { return m_Actors.begin(); }
+		[[nodiscard]] std::vector<Actor*>::const_iterator end() const { return m_Actors.end(); }
+
+	protected:
+
+
+	public:
+		void FinishSpawningActor(Actor* actor);
+		void DestroyActor(Actor* actor);
 	};
 }

@@ -45,7 +45,7 @@ std::shared_ptr<B> SharedFromThis<T>::AsSharedSafe()
 }
 
 template<typename T>
-inline bool VectorRemove(std::vector<T>& vector, T& data)
+inline bool VectorRemove(std::vector<T>& vector, T data)
 {
 	auto iter = std::find(vector.begin(), vector.end(), data);
 	if(iter == vector.end()) {
@@ -57,7 +57,7 @@ inline bool VectorRemove(std::vector<T>& vector, T& data)
 }
 
 template<typename T>
-inline bool VectorContains(std::vector<T>& vector, T& data)
+inline bool VectorContains(std::vector<T>& vector, T&& data)
 {
 	return std::find(vector.begin(), vector.end(), data) != vector.end();
 }
