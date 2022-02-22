@@ -6,6 +6,10 @@ option(AU_GPU_PROFILE "GPU profiling" ON)
 option(AU_CPU_PROFILE "CPU profiling" OFF)
 option(AU_IN_PROJECT_ASSETS "Adds Aurora search paths from source code" ON)
 
+SET(RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls and binaries")
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for binaries")
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls")
+
 add_subdirectory(lib)
 
 file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
@@ -59,7 +63,7 @@ if(WIN32)
     target_link_libraries(Aurora PRIVATE opengl32 gdi32)
 endif()
 
-target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient tinygltf ImGui TracyClient glslang)
+target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui TracyClient glslang assimp stb_utils)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
 add_subdirectory(examples)

@@ -11,6 +11,7 @@
 #include <Aurora/Framework/Scene.hpp>
 #include <Aurora/Framework/Actor.hpp>
 #include <Aurora/Framework/SceneComponent.hpp>
+#include <Aurora/Resource/AssimpModelLoader.hpp>
 
 using namespace Aurora;
 
@@ -113,6 +114,10 @@ class BaseAppContext : public AppContext
 		//mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
 
 		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
+
+		AssimpModelLoader modelLoader;
+
+		modelLoader.ImportModel("Test", GetEngine()->GetResourceManager()->LoadFile("Assets/idle.fbx"));
 	}
 
 	float a = 0;

@@ -36,3 +36,9 @@
 [submodule "glslang"]
 	path = lib/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "assimp"]
+	path = lib/assimp
+	url = git@github.com:assimp/assimp.git
+[submodule "stb"]
+	path = lib/stb/stb
+	url = git@github.com:nothings/stb.git
