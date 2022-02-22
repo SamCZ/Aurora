@@ -35,7 +35,8 @@ jobs:
             -DCMAKE_CXX_COMPILER=g++-10 \
             -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=OFF \
             -DASSIMP_BUILD_FBX_IMPORTER=ON \
-            -DASSIMP_BUILD_DRACO=OFF
+            -DASSIMP_BUILD_DRACO=OFF \
+            -DASSIMP_NO_EXPORT=ON
 
       - name: Build Engine
         working-directory: ${{runner.workspace}}/build
@@ -73,6 +74,7 @@ jobs:
             -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=OFF `
             -DASSIMP_BUILD_FBX_IMPORTER=ON `
             -DASSIMP_BUILD_DRACO=OFF `
+            -DASSIMP_NO_EXPORT=ON `
             -G "Visual Studio 16 2019" -A x64
 
       - name: Build Engine
