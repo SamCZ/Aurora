@@ -140,8 +140,6 @@ if(NOT TARGET assimp)
 
     set(BUILD_SHARED_LIBS ON)
 
-    cmake_policy(SET CMP0077 NEW) # set() overrides option()
-
     set(ASM686 OFF)
     set(AMD64 ON)
     set(ASSIMP_BUILD_ZLIB ON)
