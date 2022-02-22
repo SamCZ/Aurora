@@ -128,20 +128,6 @@ if(NOT TARGET tracy)
 endif()
 
 #------------------------------
-# TinyGLTF
-# Model loading library
-#------------------------------
-if(NOT TARGET tinygltf)
-    set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF)
-    set(TINYGLTF_BUILD_GL_EXAMPLES OFF)
-    set(TINYGLTF_BUILD_VALIDATOR_EXAMPLE OFF)
-    set(TINYGLTF_BUILD_BUILDER_EXAMPLE OFF)
-    set(TINYGLTF_HEADER_ONLY OFF)
-    set(TINYGLTF_INSTALL OFF)
-    add_subdirectory(tinygltf)
-endif()
-
-#------------------------------
 # ASSIMP
 # Model loading library
 #------------------------------
