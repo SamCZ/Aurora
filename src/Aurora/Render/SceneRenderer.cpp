@@ -68,7 +68,7 @@ namespace Aurora
 		// Init cascades
 		m_DirCascadeSettings.NumOfCascades = 1;
 		m_DirCascadeSettings.CascadeResolutions = {
-			4096, 2048, 1024, 512, 256, 256
+			2048, 1024, 512, 256, 256
 		};
 
 		m_DirCascadeTextures.reserve(m_DirCascadeSettings.NumOfCascades + 1);
@@ -549,7 +549,7 @@ namespace Aurora
 				mainDirLight = &directionalLightComponent;
 				mainDirLightTransform = &transformComponent;
 
-				if(true)
+				if(directionalLightComponent.ShadowMode != EShadowMode::None)
 				{
 					glEnable(GL_DEPTH_CLAMP);
 
