@@ -1135,8 +1135,6 @@ namespace Aurora
 
 	#define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-	GLuint lastUsedElementBuffer = 0;
-
 	void GLRenderDevice::DrawIndexed(const DrawCallState &state, const std::vector<DrawArguments> &args, bool bindState)
 	{
 		CPU_DEBUG_SCOPE("DrawIndexed");
@@ -1152,42 +1150,52 @@ namespace Aurora
 
 		GLBuffer* ib = GetBuffer(state.IndexBuffer.Buffer);
 
-		if(lastUsedElementBuffer != ib->Handle())
-		{
-			lastUsedElementBuffer = ib->Handle();
-
-		}
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib->Handle());
+
 
 		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
 		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
 
-		GLsizei* count = nullptr;
-		uintptr_t* indices = nullptr;
-		uint16_t multiDrawCount = 0;
-
-		for(const auto& drawArg : args) {
-			if(drawArg.InstanceCount > 1) {
+		if(args.size() == 1)
+		{
+			if(args[0].InstanceCount > 1) {
 				//glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
-				glDrawElementsInstanced(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount));
-			} else {
+				glDrawElementsInstanced(primitiveType, GLsizei(args[0].VertexCount), ibFormat, BUFFER_OFFSET(args[0].StartIndexLocation), GLsizei(args[0].InstanceCount));
+			} else
+			{
 				//glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLint(drawArg.StartVertexLocation));
-				//glDrawElements(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation));
-
-				if(!count)
-					count = (GLsizei*)alloca( sizeof(GLsizei) * args.size());
-				if(!indices)
-					indices = (uintptr_t*)alloca( sizeof(uintptr_t) * args.size());
-
-				count[multiDrawCount] = GLsizei(drawArg.VertexCount);
-				indices[multiDrawCount] = drawArg.StartIndexLocation;
-				multiDrawCount++;
+				glDrawElements(primitiveType, GLsizei(args[0].VertexCount), ibFormat, BUFFER_OFFSET(args[0].StartIndexLocation));
 			}
-			m_FrameRenderStatistics.VertexCount += drawArg.VertexCount * 3 * drawArg.InstanceCount;
 		}
+		else
+		{
+			GLsizei* count = nullptr;
+			uintptr_t* indices = nullptr;
+			uint16_t multiDrawCount = 0;
 
-		if(multiDrawCount > 0)
-			glMultiDrawElements(primitiveType, count, ibFormat, (const void* const*)indices, multiDrawCount);
+			for(const auto& drawArg : args) {
+				if(drawArg.InstanceCount > 1) {
+					//glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
+					glDrawElementsInstanced(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount));
+				} else {
+					//glDrawElementsBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLint(drawArg.StartVertexLocation));
+					//glDrawElements(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, BUFFER_OFFSET(drawArg.StartIndexLocation));
+
+					if(!count)
+						count = (GLsizei*)alloca( sizeof(GLsizei) * args.size());
+					if(!indices)
+						indices = (uintptr_t*)alloca( sizeof(uintptr_t) * args.size());
+
+					count[multiDrawCount] = GLsizei(drawArg.VertexCount);
+					indices[multiDrawCount] = drawArg.StartIndexLocation;
+					multiDrawCount++;
+				}
+				m_FrameRenderStatistics.VertexCount += drawArg.VertexCount * 3 * drawArg.InstanceCount;
+			}
+
+			if(multiDrawCount > 0)
+				glMultiDrawElements(primitiveType, count, ibFormat, (const void* const*)indices, multiDrawCount);
+		}
 
 		/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_NONE);
 		glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);*/
