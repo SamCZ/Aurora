@@ -5,13 +5,34 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/String.hpp"
 
+#include "Aurora/Framework/Mesh/Mesh.hpp"
+
 namespace Aurora
 {
+	struct MeshImportOptions
+	{
+		bool SplitMeshes = false;
+		bool KeepCPUData = false;
+		bool UploadToGPU = true;
+	};
+
+	struct MeshImportedData
+	{
+		bool Imported = false;
+		Mesh_ptr Mesh = nullptr;
+		std::vector<Mesh_ptr> Meshes = {};
+
+		explicit operator bool() const
+		{
+			return Imported;
+		}
+	};
+
 	class AssimpModelLoader
 	{
 	private:
 		Assimp::Importer m_Importer;
 	public:
-		void ImportModel(const String& name, const DataBlob& data);
+		MeshImportedData ImportModel(const String& name, const DataBlob& data, const MeshImportOptions& importOptions = {});
 	};
 }

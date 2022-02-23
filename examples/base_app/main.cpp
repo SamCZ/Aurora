@@ -117,7 +117,12 @@ class BaseAppContext : public AppContext
 
 		AssimpModelLoader modelLoader;
 
-		modelLoader.ImportModel("Test", GetEngine()->GetResourceManager()->LoadFile("Assets/idle.fbx"));
+		MeshImportedData importedData = modelLoader.ImportModel("Test", GetEngine()->GetResourceManager()->LoadFile("Assets/transform_test.fbx"));
+
+		if(importedData)
+		{
+
+		}
 	}
 
 	float a = 0;

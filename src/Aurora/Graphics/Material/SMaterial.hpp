@@ -8,6 +8,27 @@
 
 namespace Aurora
 {
+	typedef uint64_t SortID;
+
+	enum class RenderSortType : uint8
+	{
+		Opaque = 0,
+		Translucent,
+		Transparent,
+		Sky,
+		Count
+	};
+
+	enum MaterialFlags : uint8_t
+	{
+		MF_NONE = 0,
+		MF_INSTANCED = 1 << 0,
+		MF_TRANSFORM = 1 << 1,
+
+	};
+
+	static constexpr uint8_t SortTypeCount = (uint8) RenderSortType::Count;
+
 	AU_CLASS(SMaterial)
 	{
 	private:
@@ -17,6 +38,9 @@ namespace Aurora
 
 		robin_hood::unordered_map<PassType_t, MaterialPassState> m_PassStates;
 		robin_hood::unordered_map<TTypeID, MTextureVar> m_TextureVars;
+
+		RenderSortType m_SortType = RenderSortType::Opaque;
+		uint8_t m_Flags = MF_INSTANCED | MF_TRANSFORM;
 	public:
 		explicit SMaterial(MaterialDefinition* matDef);
 		~SMaterial();
@@ -29,6 +53,12 @@ namespace Aurora
 		FBlendState& BlendState(PassType_t pass = 0);
 
 		std::shared_ptr<SMaterial> Clone();
+
+		void SetSortType(RenderSortType sortType) { m_SortType = sortType; }
+		[[nodiscard]] RenderSortType GetSortType() const { return m_SortType; }
+		[[nodiscard]] uint8_t GetFlags() const { return m_Flags; }
+		[[nodiscard]] bool HasFlag(uint8_t flag) const { return m_Flags & flag; }
+		void SetFlags(uint8_t flags) { m_Flags = flags; }
 		//////// Blocks ////////
 	private:
 		uint8* GetBlockMemory(TTypeID id, size_t size);
@@ -93,4 +123,6 @@ namespace Aurora
 		//////// Buffers ////////
 		bool SetBuffer(TTypeID bufferId, const Buffer_ptr& buffer) { return false; } // TODO: Complete buffers
 	};
+
+	using matref = std::shared_ptr<SMaterial>;
 }

@@ -30,7 +30,7 @@ namespace Aurora
 			return m_Materials[i];
 		}
 
-		std::map<uint, std::shared_ptr<Material>>::size_type GetCount() const
+		[[nodiscard]] std::map<uint, std::shared_ptr<Material>>::size_type GetCount() const
 		{
 			return m_Materials.size();
 		}
