@@ -29,7 +29,7 @@ namespace Aurora
 
 	static constexpr uint8_t SortTypeCount = (uint8) RenderSortType::Count;
 
-	AU_CLASS(SMaterial)
+	AU_CLASS(Material)
 	{
 	private:
 		MaterialDefinition* m_MatDef;
@@ -42,8 +42,8 @@ namespace Aurora
 		RenderSortType m_SortType = RenderSortType::Opaque;
 		uint8_t m_Flags = MF_INSTANCED | MF_TRANSFORM;
 	public:
-		explicit SMaterial(MaterialDefinition* matDef);
-		~SMaterial();
+		explicit Material(MaterialDefinition* matDef);
+		~Material();
 
 		void BeginPass(PassType_t pass, DrawCallState& state);
 		void EndPass(PassType_t pass, DrawCallState& state);
@@ -52,7 +52,7 @@ namespace Aurora
 		FDepthStencilState& DepthStencilState(PassType_t pass = 0);
 		FBlendState& BlendState(PassType_t pass = 0);
 
-		std::shared_ptr<SMaterial> Clone();
+		std::shared_ptr<Material> Clone();
 
 		void SetSortType(RenderSortType sortType) { m_SortType = sortType; }
 		[[nodiscard]] RenderSortType GetSortType() const { return m_SortType; }
@@ -124,5 +124,5 @@ namespace Aurora
 		bool SetBuffer(TTypeID bufferId, const Buffer_ptr& buffer) { return false; } // TODO: Complete buffers
 	};
 
-	using matref = std::shared_ptr<SMaterial>;
+	using matref = std::shared_ptr<Material>;
 }

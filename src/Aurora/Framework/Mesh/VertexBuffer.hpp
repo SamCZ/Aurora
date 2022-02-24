@@ -22,6 +22,7 @@ namespace Aurora
 	private:
 		std::vector<VertexBufferType> Buffer{};
 	public:
+		VertexBuffer() = default;
 		explicit VertexBuffer(uint count)
 		{
 			Buffer.reserve(count);
@@ -46,7 +47,7 @@ namespace Aurora
 
 		[[nodiscard]] inline const uint8* GetData() const override
 		{
-			return &Buffer[0]; // Gets pointer to first element
+			return reinterpret_cast<const uint8*>(Buffer.data()); // Gets pointer to first element
 		}
 
 		[[nodiscard]] inline uint32_t GetSize() const override

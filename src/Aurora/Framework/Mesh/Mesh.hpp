@@ -3,7 +3,7 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Graphics/Base/Buffer.hpp"
-#include "Aurora/Graphics/Material/SMaterial.hpp"
+#include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Tools/robin_hood.h"
 #include "VertexBuffer.hpp"
 
@@ -47,7 +47,7 @@ namespace Aurora
 
 	struct MeshLodResource
 	{
-		IVertexBuffer* Vertices;
+		std::shared_ptr<IVertexBuffer> Vertices;
 		std::vector<Index_t> Indices;
 		std::vector<MeshSection> Sections;
 
@@ -63,9 +63,82 @@ namespace Aurora
 	public:
 		robin_hood::unordered_map<uint8_t, MeshLodResource> LODResources;
 		std::vector<MaterialSlot> MaterialSlots;
+
+		void UploadToGPU(bool keepCPUData, bool dynamic = false);
 	};
 
-	AU_CLASS(StaticMesh) : public Mesh
+	template<typename Self>
+	class MeshBufferHelper
+	{
+	public:
+		bool HasVertexBuffer(int lod = 0)
+		{
+			if(!static_cast<Self*>(this)->LODResources.contains(lod)) {
+				return false;
+			}
+
+			MeshLodResource& lodResource = static_cast<Self*>(this)->LODResources[lod];
+
+			if(lodResource.Vertices == nullptr) {
+				return false;
+			}
+
+			return true;
+		}
+
+		template<typename BufferTypename>
+		VertexBuffer<BufferTypename>* GetVertexBuffer(int lod = 0)
+		{
+			if(!static_cast<Self*>(this)->LODResources.contains(lod)) {
+				return nullptr;
+			}
+
+			MeshLodResource& lodResource = static_cast<Self*>(this)->LODResources[lod];
+
+			if(lodResource.Vertices == nullptr) {
+				return nullptr;
+			}
+#ifdef DEBUG
+			return dynamic_cast<VertexBuffer<BufferTypename>*>(lodResource.Vertices);
+#else
+			return static_cast<VertexBuffer<BufferTypename>*>(lodResource.Vertices.get());
+#endif
+		}
+
+		std::vector<Index_t> GetIndexBuffer(int lod = 0)
+		{
+			if(!static_cast<Self*>(this)->LODResources.contains(lod)) {
+				return {};
+			}
+
+			return static_cast<Self*>(this)->LODResources[lod].Indices;
+		}
+
+		template<typename BufferTypename>
+		VertexBuffer<BufferTypename>* CreateVertexBuffer(int lod = 0, MeshLodResource** out_resource = nullptr)
+		{
+			MeshLodResource* lodResource;
+
+			if(static_cast<Self*>(this)->LODResources.contains(lod)) {
+				lodResource = &static_cast<Self*>(this)->LODResources[lod];
+			} else {
+				static_cast<Self*>(this)->LODResources[lod] = {};
+				lodResource = &static_cast<Self*>(this)->LODResources[lod];
+			}
+
+			if(lodResource->Vertices == nullptr) {
+				lodResource->Vertices = std::make_shared<VertexBuffer<BufferTypename>>();
+			}
+
+			if(out_resource != nullptr) {
+				*out_resource = lodResource;
+			}
+
+			return (VertexBuffer<BufferTypename>*)lodResource->Vertices.get();
+		}
+	};
+
+	AU_CLASS(StaticMesh) : public Mesh, public MeshBufferHelper<StaticMesh>
 	{
 	public:
 		struct Vertex
@@ -78,7 +151,7 @@ namespace Aurora
 		};
 	};
 
-	AU_CLASS(SkeletalMesh) : public Mesh
+	AU_CLASS(SkeletalMesh) : public Mesh, public MeshBufferHelper<SkeletalMesh>
 	{
 	public:
 		struct Vertex

@@ -2,7 +2,7 @@
 #include <Aurora/Resource/ResourceManager.hpp>
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
-#include <Aurora/Graphics/Material/SMaterial.hpp>
+#include <Aurora/Graphics/Material/Material.hpp>
 #include <Aurora/Resource/MaterialLoader.hpp>
 
 #include <Shaders/World/PBRBasic/cb_pbr.h>
@@ -96,11 +96,12 @@ public:
 class BaseAppContext : public AppContext
 {
 	MaterialDefinition_ptr matDef;
-	std::shared_ptr<SMaterial> mat;
-	std::shared_ptr<SMaterial> mat2;
-	std::shared_ptr<SMaterial> mat3;
+	std::shared_ptr<Material> mat;
+	std::shared_ptr<Material> mat2;
+	std::shared_ptr<Material> mat3;
 
 	Scene scene;
+	Mesh_ptr mesh = nullptr;
 
 	void Init() override
 	{
@@ -121,7 +122,7 @@ class BaseAppContext : public AppContext
 
 		if(importedData)
 		{
-
+			mesh = importedData.Mesh;
 		}
 	}
 

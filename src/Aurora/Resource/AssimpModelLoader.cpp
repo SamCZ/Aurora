@@ -16,9 +16,15 @@ namespace Aurora
 	inline Matrix4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
 	inline Matrix4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
 
-	StaticMesh_ptr ProcessStaticMesh(const aiMesh* sourceMesh, const aiMatrix4x4& transform, const MeshImportOptions& importOptions)
+	void ProcessStaticMesh(const StaticMesh_ptr& mesh, const aiMesh* sourceMesh, const Matrix4& transform, LOD lod, const MeshImportOptions& importOptions)
 	{
+		auto& indices = mesh->LODResources[lod].Indices;
+		auto* buffer = mesh->GetVertexBuffer<StaticMesh::Vertex>(lod);
 
+		MeshSection section;
+		section.MaterialIndex = 0;
+
+		size_t lastVertex = buffer->GetCount();
 
 		for (uint vertIdx = 0u; vertIdx < sourceMesh->mNumVertices; vertIdx++)
 		{
@@ -40,25 +46,44 @@ namespace Aurora
 			{
 				aiVector3D tan = sourceMesh->mTangents[vertIdx];
 				aiVector3D bit = sourceMesh->mBitangents[vertIdx];
+
 				vertex.Tangent = vec3_cast(tan);
 				vertex.BiTangent = vec3_cast(bit);
 			}
+
+			if(importOptions.PreTransform)
+			{
+				vertex.Position = transform * Vector4(vertex.Position, 1.0f);
+				vertex.Normal = transform * Vector4(vertex.Normal, 0.0f);
+
+				if(sourceMesh->HasTangentsAndBitangents())
+				{
+					vertex.Tangent = transform * Vector4(vertex.Tangent, 0.0f);
+					vertex.BiTangent = transform * Vector4(vertex.BiTangent, 0.0f);
+				}
+			}
+
+			buffer->Add(vertex);
 		}
+
+		section.FirstIndex = indices.size();
 
 		for (uint faceIdx = 0u; faceIdx < sourceMesh->mNumFaces; faceIdx++)
 		{
 			for (uint8_t id = 0; id < 3; id++)
 			{
 				uint index = sourceMesh->mFaces[faceIdx].mIndices[id];
+				uint32_t newIndex = lastVertex + index;
+				indices.push_back(newIndex);
 			}
 		}
 
-		uint indexCount = sourceMesh->mNumFaces * 3;
-
-		return nullptr;
+		section.NumTriangles = sourceMesh->mNumFaces * 3;
+		mesh->LODResources[lod].Sections.emplace_back(section);
 	}
 
-	void ProcessNode(const aiScene* scene, aiNode* node, const aiMatrix4x4& parentTransform, const MeshImportOptions& importOptions)
+	template<typename Mesh, typename MeshProcessor>
+	void ProcessNode(const Mesh& mesh, MeshProcessor& meshProcessor, const aiScene* scene, aiNode* node, const aiMatrix4x4& parentTransform, const MeshImportOptions& importOptions)
 	{
 		std::cout << node->mName.C_Str() << std::endl;
 
@@ -73,18 +98,24 @@ namespace Aurora
 		{
 			aiMesh* sourceMesh = scene->mMeshes[node->mMeshes[i]];
 
-			if (sourceMesh->mPrimitiveTypes != aiPrimitiveType_TRIANGLE)
+			/*AU_LOG_INFO("aiPrimitiveType_POINT = ", (sourceMesh->mPrimitiveTypes & aiPrimitiveType_POINT) ? "Y" : "N");
+			AU_LOG_INFO("aiPrimitiveType_LINE = ", (sourceMesh->mPrimitiveTypes & aiPrimitiveType_LINE) ? "Y" : "N");
+			AU_LOG_INFO("aiPrimitiveType_TRIANGLE = ", (sourceMesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE) ? "Y" : "N");
+			AU_LOG_INFO("aiPrimitiveType_POLYGON = ", (sourceMesh->mPrimitiveTypes & aiPrimitiveType_POLYGON) ? "Y" : "N");
+			AU_LOG_INFO("aiPrimitiveType_NGONEncodingFlag = ", (sourceMesh->mPrimitiveTypes & aiPrimitiveType_NGONEncodingFlag) ? "Y" : "N");*/
+
+			if ((sourceMesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE) == 0)
 				continue;
 
 			aiMaterial* sourceMaterial = scene->mMaterials[sourceMesh->mMaterialIndex];
 
-			Mesh_ptr mesh = ProcessMesh(sourceMesh, transform, importOptions);
+			meshProcessor(mesh, sourceMesh, mat4_cast(transform), (LOD)0, importOptions);
 		}
 
 		// Iterate over children
 		for (uint i = 0; i < node->mNumChildren; i++)
 		{
-			ProcessNode(scene, node->mChildren[i], node->mTransformation, importOptions);
+			ProcessNode(mesh, meshProcessor, scene, node->mChildren[i], node->mTransformation, importOptions);
 		}
 	}
 
@@ -103,9 +134,19 @@ namespace Aurora
 
 		AU_LOG_INFO("Has animations = ", scene->HasAnimations() ? "Yes" : "no");
 
-		ProcessNode(scene, scene->mRootNode, aiMatrix4x4(), importOptions);
+		StaticMesh_ptr mesh = std::make_shared<StaticMesh>();
+		mesh->CreateVertexBuffer<StaticMesh::Vertex>(0);
+
+		ProcessNode(mesh, ProcessStaticMesh, scene, scene->mRootNode, aiMatrix4x4(), importOptions);
+
+		AU_LOG_INFO("Mesh section count: ", mesh->LODResources[0].Sections.size());
 
 		m_Importer.FreeScene();
+
+		if(importOptions.UploadToGPU)
+			mesh->UploadToGPU(importOptions.KeepCPUData);
+
+		importedData.Mesh = mesh;
 
 		return importedData;
 	}

@@ -19,7 +19,7 @@
 
 namespace Aurora
 {
-	class SMaterial;
+	class Material;
 
 	class MMacro
 	{
@@ -134,12 +134,12 @@ namespace Aurora
 	 */
 	AU_CLASS(MaterialDefinition)
 	{
-		friend class SMaterial;
+		friend class Material;
 	private:
 		String m_Name;
 		Path m_Path;
 
-		std::vector<std::weak_ptr<SMaterial>> m_MaterialRefs;
+		std::vector<std::weak_ptr<Material>> m_MaterialRefs;
 
 		robin_hood::unordered_map<PassType_t, MaterialPassDef> m_PassDefs;
 
@@ -155,13 +155,13 @@ namespace Aurora
 		MaterialPassDef* GetPassDefinition(uint8 pass);
 		Shader_ptr GetShader(uint8 pass, const ShaderMacros& macroSet);
 
-		std::shared_ptr<SMaterial> CreateInstance(const MaterialOverrides& overrides = {});
+		std::shared_ptr<Material> CreateInstance(const MaterialOverrides& overrides = {});
 
 		[[nodiscard]] inline const String& GetName() const { return m_Name; }
 		[[nodiscard]] inline const Path& GetPath() const { return m_Path; }
 	private:
 		MUniformBlock* FindUniformBlock(TTypeID id);
 		MUniformVar* FindUniformVar(TTypeID id, MUniformBlock** blockOut = nullptr);
-		void AddRef(const std::shared_ptr<SMaterial>& mat) { m_MaterialRefs.emplace_back(mat); }
+		void AddRef(const std::shared_ptr<Material>& mat) { m_MaterialRefs.emplace_back(mat); }
 	};
 }

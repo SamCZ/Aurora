@@ -1,10 +1,10 @@
-#include "SMaterial.hpp"
+#include "Material.hpp"
 #include "Aurora/Engine.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
 
 namespace Aurora
 {
-	SMaterial::SMaterial(MaterialDefinition* matDef)
+	Material::Material(MaterialDefinition* matDef)
 		: m_MatDef(matDef), m_UniformData(matDef->m_BaseUniformData)
 	{
 		for(const auto& it : m_MatDef->m_PassDefs)
@@ -13,12 +13,12 @@ namespace Aurora
 		}
 	}
 
-	SMaterial::~SMaterial() = default;
+	Material::~Material() = default;
 
 	///////////////////////////////////// RENDER PASS /////////////////////////////////////
 #pragma region RenderPass
 
-	void SMaterial::BeginPass(PassType_t pass, DrawCallState& drawState)
+	void Material::BeginPass(PassType_t pass, DrawCallState& drawState)
 	{
 		IRenderDevice* renderDevice = GetEngine()->GetRenderDevice();
 
@@ -76,7 +76,7 @@ namespace Aurora
 
 	}
 
-	void SMaterial::EndPass(PassType_t pass, DrawCallState& state)
+	void Material::EndPass(PassType_t pass, DrawCallState& state)
 	{
 		(void)pass;
 		(void)state;
@@ -84,24 +84,24 @@ namespace Aurora
 		GetEngine()->GetRenderManager()->GetUniformBufferCache().Reset();
 	}
 
-	FRasterState& SMaterial::RasterState(PassType_t pass)
+	FRasterState& Material::RasterState(PassType_t pass)
 	{
 		return m_PassStates[pass].RasterState;
 	}
 
-	FDepthStencilState& SMaterial::DepthStencilState(PassType_t pass)
+	FDepthStencilState& Material::DepthStencilState(PassType_t pass)
 	{
 		return m_PassStates[pass].DepthStencilState;
 	}
 
-	FBlendState& SMaterial::BlendState(PassType_t pass)
+	FBlendState& Material::BlendState(PassType_t pass)
 	{
 		return m_PassStates[pass].BlendState;
 	}
 
-	std::shared_ptr<SMaterial> SMaterial::Clone()
+	std::shared_ptr<Material> Material::Clone()
 	{
-		auto cloned = std::make_shared<SMaterial>(m_MatDef);
+		auto cloned = std::make_shared<Material>(m_MatDef);
 		cloned->m_UniformData = m_UniformData;
 		cloned->m_PassStates = m_PassStates;
 		cloned->m_TextureVars = m_TextureVars;
@@ -115,7 +115,7 @@ namespace Aurora
 
 	///////////////////////////////////// BLOCKS /////////////////////////////////////
 
-	uint8* SMaterial::GetBlockMemory(TTypeID id, size_t size)
+	uint8* Material::GetBlockMemory(TTypeID id, size_t size)
 	{
 		MUniformBlock* block = m_MatDef->FindUniformBlock(id);
 
@@ -149,7 +149,7 @@ namespace Aurora
 		return memoryStart;
 	}
 
-	uint8 *SMaterial::GetVariableMemory(TTypeID varId, size_t size)
+	uint8 *Material::GetVariableMemory(TTypeID varId, size_t size)
 	{
 		MUniformBlock* block = nullptr;
 		MUniformVar* var = m_MatDef->FindUniformVar(varId, &block);
@@ -184,7 +184,7 @@ namespace Aurora
 		return varMemoryStart;
 	}
 
-	bool SMaterial::SetVariable(TTypeID varId, uint8 *data, size_t size)
+	bool Material::SetVariable(TTypeID varId, uint8 *data, size_t size)
 	{
 		uint8* varMemoryStart = GetVariableMemory(varId, size);
 
@@ -199,7 +199,7 @@ namespace Aurora
 
 	///////////////////////////////////// TEXTURES /////////////////////////////////////
 
-	MTextureVar *SMaterial::GetTextureVar(TTypeID varId)
+	MTextureVar *Material::GetTextureVar(TTypeID varId)
 	{
 		const auto& it = m_TextureVars.find(varId);
 
@@ -219,7 +219,7 @@ namespace Aurora
 		return &it->second;
 	}
 
-	bool SMaterial::SetTexture(TTypeID varId, const Texture_ptr& texture)
+	bool Material::SetTexture(TTypeID varId, const Texture_ptr& texture)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 
@@ -230,7 +230,7 @@ namespace Aurora
 		return true;
 	}
 
-	bool SMaterial::SetSampler(TTypeID varId, const Sampler_ptr& sampler)
+	bool Material::SetSampler(TTypeID varId, const Sampler_ptr& sampler)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 
@@ -241,7 +241,7 @@ namespace Aurora
 		return true;
 	}
 
-	Texture_ptr SMaterial::GetTexture(TTypeID varId)
+	Texture_ptr Material::GetTexture(TTypeID varId)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 
@@ -251,7 +251,7 @@ namespace Aurora
 		return var->Texture;
 	}
 
-	Sampler_ptr SMaterial::GetSampler(TTypeID varId)
+	Sampler_ptr Material::GetSampler(TTypeID varId)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 

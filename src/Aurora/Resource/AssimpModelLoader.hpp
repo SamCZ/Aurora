@@ -12,6 +12,8 @@ namespace Aurora
 	struct MeshImportOptions
 	{
 		bool SplitMeshes = false;
+		bool MergeSameMaterialMeshes = false;
+		bool PreTransform = true;
 		bool KeepCPUData = false;
 		bool UploadToGPU = true;
 	};

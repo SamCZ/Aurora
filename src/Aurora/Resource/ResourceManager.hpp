@@ -60,6 +60,6 @@ namespace Aurora
 		Texture_ptr LoadLutTexture(const Path& path);
 
 		const MaterialDefinition_ptr& GetOrLoadMaterialDefinition(const Path& path);
-		std::shared_ptr<SMaterial> LoadMaterial(const Path& path);
+		std::shared_ptr<Material> LoadMaterial(const Path& path);
 	};
 }
