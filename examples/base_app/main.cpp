@@ -124,6 +124,13 @@ class BaseAppContext : public AppContext
 		{
 			mesh = importedData.Mesh;
 		}
+
+		TestActor* actor = scene.SpawnActor<TestActor>("", {0, 0, 0});
+
+		for(SceneComponent* component : scene.GetComponents<SceneComponent>())
+		{
+			std::cout << "Component " << component->GetName() << std::endl;
+		}
 	}
 
 	float a = 0;

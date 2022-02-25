@@ -57,17 +57,17 @@ namespace Aurora
 			return (T*) actor;
 		}
 
-		/*template<typename... T>
-		const ComponentView GetComponents()
-		{
-
-		}*/
-
 		std::vector<Actor*>::iterator begin() { return m_Actors.begin(); }
 		std::vector<Actor*>::iterator end() { return m_Actors.end(); }
 
 		[[nodiscard]] std::vector<Actor*>::const_iterator begin() const { return m_Actors.begin(); }
 		[[nodiscard]] std::vector<Actor*>::const_iterator end() const { return m_Actors.end(); }
+
+		template<typename T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
+		ComponentView<T> GetComponents()
+		{
+			return m_ComponentStorage.template GetComponents<T>();
+		}
 
 	protected:
 
