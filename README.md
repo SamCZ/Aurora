@@ -14,21 +14,20 @@
 | [macOS](https://en.wikipedia.org/wiki/MacOS) | - | - |   -    | ~~Metal~~ |
 
 ## Used libraries
-| Name | License | Version |
-|------|---------|---------|
-| [GLFW](https://www.glfw.org/) | [zlib/libpng](https://www.glfw.org/license.html) | branch: [`master`](https://github.com/glfw/glfw/tree/master) | 
-| [GLM](https://glm.g-truc.net) | [MIT](https://glm.g-truc.net/copying.txt) | branch: [`master`](https://github.com/g-truc/glm/tree/master) |
-| [GLAD](https://github.com/Dav1dde/glad) ([web](https://glad.dav1d.de/)) | [MIT](https://github.com/Dav1dde/glad/blob/master/LICENSE) | `OpenGL 4.6` |
-| [ImGui](https://github.com/ocornut/imgui) | [MIT](https://github.com/ocornut/imgui/blob/docking/LICENSE.txt) | branch: [`master`]
-| [nlohmann JSON](https://nlohmann.github.io/json/) | [MIT](https://github.com/nlohmann/json/blob/master/LICENSE.MIT) | branch: [`master`](https://github.com/nlohmann/json/tree/master) |
-| [newton-dynamics](https://github.com/MADEAPPS/newton-dynamics) | [Newton zlib license](https://github.com/MADEAPPS/newton-dynamics/blob/master/LICENSE) | branch: [`master`](https://github.com/MADEAPPS/newton-dynamics/tree/master) |
-| [FMOD](https://fmod.com/) | [Proprietary](https://fmod.com/legal) | [2.01.09 (build 115889)](https://fmod.com/download) |
-| [entt](https://github.com/skypjack/entt) | [MIT License](https://github.com/skypjack/entt/blob/master/LICENSE) | branch: [`master`] |
-| [freetype](https://www.freetype.org/) | [BSD-style](https://www.freetype.org/license.html) | local |
-| [glslang](https://github.com/KhronosGroup/glslang) | [3-Clause BSD License](https://github.com/KhronosGroup/glslang/blob/master/LICENSE.txt) | branch: [`master`] |
-| [RmlUI](https://github.com/mikke89/RmlUi) | [MIT License](https://github.com/mikke89/RmlUi/blob/master/LICENSE.txt) | branch: [`master`] |
-| [tinygltf](https://github.com/syoyo/tinygltf) | [MIT License](https://github.com/syoyo/tinygltf/blob/master/LICENSE) | branch: [`master`] |
-| [tracy](https://github.com/wolfpld/tracy) | [3-clause BSD license](https://github.com/wolfpld/tracy/blob/master/LICENSE) | branch: [`master`] |
+| Name                                                                    | License                                                                                 | Version |
+|-------------------------------------------------------------------------|-----------------------------------------------------------------------------------------|---------|
+| [GLFW](https://www.glfw.org/)                                           | [zlib/libpng](https://www.glfw.org/license.html)                                        | branch: [`master`](https://github.com/glfw/glfw/tree/master) | 
+| [GLM](https://glm.g-truc.net)                                           | [MIT](https://glm.g-truc.net/copying.txt)                                               | branch: [`master`](https://github.com/g-truc/glm/tree/master) |
+| [GLAD](https://github.com/Dav1dde/glad) ([web](https://glad.dav1d.de/)) | [MIT](https://github.com/Dav1dde/glad/blob/master/LICENSE)                              | `OpenGL 4.6` |
+| [ImGui](https://github.com/ocornut/imgui)                               | [MIT](https://github.com/ocornut/imgui/blob/docking/LICENSE.txt)                        | branch: [`docking`]
+| [nlohmann JSON](https://nlohmann.github.io/json/)                       | [MIT](https://github.com/nlohmann/json/blob/master/LICENSE.MIT)                         | branch: [`master`](https://github.com/nlohmann/json/tree/master) |
+| [newton-dynamics](https://github.com/MADEAPPS/newton-dynamics)          | [Newton zlib license](https://github.com/MADEAPPS/newton-dynamics/blob/master/LICENSE)  | branch: [`master`](https://github.com/MADEAPPS/newton-dynamics/tree/master) |
+| [FMOD](https://fmod.com/)                                               | [Proprietary](https://fmod.com/legal)                                                   | [2.01.09 (build 115889)](https://fmod.com/download) |
+| [freetype](https://www.freetype.org/)                                   | [BSD-style](https://www.freetype.org/license.html)                                      | local |
+| [glslang](https://github.com/KhronosGroup/glslang)                      | [3-Clause BSD License](https://github.com/KhronosGroup/glslang/blob/master/LICENSE.txt) | branch: [`master`] |
+| [RmlUI](https://github.com/mikke89/RmlUi)                               | [MIT License](https://github.com/mikke89/RmlUi/blob/master/LICENSE.txt)                 | branch: [`master`] |
+| [Assimp](https://github.com/syoyo/tinygltf)                             | [Poly2Tri License](https://github.com/assimp/assimp/blob/master/LICENSE)               | branch: [`master`] |
+| [tracy](https://github.com/wolfpld/tracy)                               | [3-clause BSD license](https://github.com/wolfpld/tracy/blob/master/LICENSE)            | branch: [`master`] |
 
 ## Installation
 
