@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Logger/Logger.hpp"
 
