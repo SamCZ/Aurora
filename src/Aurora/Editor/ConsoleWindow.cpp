@@ -26,7 +26,7 @@ namespace Aurora
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
 
-		for (const Message& message : m_Messages)
+		for (const SMessage& message : m_Messages)
 		{
 			switch (message.Severity)
 			{

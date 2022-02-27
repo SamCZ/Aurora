@@ -9,7 +9,7 @@ namespace Aurora
 	class ConsoleWindow : public Logger::Sink
 	{
 	protected:
-		struct Message
+		struct SMessage
 		{
 			Logger::Severity Severity;
 			String SeverityStr;
@@ -21,9 +21,9 @@ namespace Aurora
 	private:
 		bool m_AutoScroll;
 		bool m_ScrollToBottom;
-		std::vector<Message> m_Messages;
+		std::vector<SMessage> m_Messages;
 	public:
-		ConsoleWindow() : m_AutoScroll(true), m_ScrollToBottom(false), m_Messages() {}
+		ConsoleWindow() : m_AutoScroll(true), m_ScrollToBottom(false) {}
 
 		void Draw();
 		void Log(const Logger::Severity& severity, const std::string& severityStr, const std::string& file, const std::string& function, int line, const std::string& message) override;
