@@ -24,7 +24,7 @@ namespace Aurora
 		class Sink
 		{
 		public:
-			virtual void Log(const std::string& severity, const std::string& file, const std::string& function, int line, const std::string& message) = 0;
+			virtual void Log(const Severity& severity, const std::string& severityStr, const std::string& file, const std::string& function, int line, const std::string& message) = 0;
 		};
 
 	private:
@@ -48,7 +48,7 @@ namespace Aurora
 			if(function) fncStr = function;
 
 			for(auto& sink : m_Sinks) {
-				sink->Log(messageSeverity, fileName, fncStr, line, message);
+				sink->Log(severity, messageSeverity, fileName, fncStr, line, message);
 			}
 		}
 

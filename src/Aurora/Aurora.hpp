@@ -35,7 +35,7 @@ namespace Aurora
 		AuroraEngine();
 		~AuroraEngine();
 
-		void Init(AppContext* appContext, WindowDefinition& windowDefinition);
+		void Init(AppContext* appContext, WindowDefinition& windowDefinition, bool editor);
 		void Run();
 	};
 }

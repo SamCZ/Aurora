@@ -90,7 +90,7 @@ namespace Aurora
 		glfwTerminate();
 	}
 
-	void AuroraEngine::Init(AppContext* appContext, WindowDefinition& windowDefinition)
+	void AuroraEngine::Init(AppContext* appContext, WindowDefinition& windowDefinition, bool editor)
 	{
 		au_assert(appContext != nullptr);
 
@@ -141,7 +141,8 @@ namespace Aurora
 		{ // Init imgui, TODO: add define for it
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
-			ImGuiIO& io = ImGui::GetIO(); (void)io;
+			ImGuiIO& io = ImGui::GetIO();
+			io.IniFilename = "../../imgui.ini";
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 			//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking

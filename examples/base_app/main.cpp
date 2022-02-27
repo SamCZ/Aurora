@@ -13,6 +13,9 @@
 #include <Aurora/Framework/SceneComponent.hpp>
 #include <Aurora/Resource/AssimpModelLoader.hpp>
 
+#include <imgui.h>
+#include "Aurora/Editor/MainEditorPanel.hpp"
+
 using namespace Aurora;
 
 void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) {
@@ -103,6 +106,8 @@ class BaseAppContext : public AppContext
 	Scene scene;
 	Mesh_ptr mesh = nullptr;
 
+	MainEditorPanel mainEditorPanel;
+
 	void Init() override
 	{
 		matDef = GetEngine()->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Test2D.matd");
@@ -137,6 +142,10 @@ class BaseAppContext : public AppContext
 
 	void Update(double delta) override
 	{
+		mainEditorPanel.Update();
+
+
+
 		float fR = 0, fG = 0, fB = 0, fH = 0, fS = 0, fV = 0;
 
 		fH = a * 255;
@@ -191,11 +200,11 @@ int main()
 	windowDefinition.Width = 1270;
 	windowDefinition.Height = 720;
 	windowDefinition.HasOSWindowBorder = true;
-	windowDefinition.Maximized = false;
+	windowDefinition.Maximized = true;
 	windowDefinition.Title = "BaseApp";
 
 	Aurora::AuroraEngine engine;
-	engine.Init(new BaseAppContext(), windowDefinition);
+	engine.Init(new BaseAppContext(), windowDefinition, true);
 	engine.Run();
 	return 0;
 }
