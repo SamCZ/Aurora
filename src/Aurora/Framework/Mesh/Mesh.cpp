@@ -22,10 +22,10 @@ namespace Aurora
 			}
 			else
 			{
-				lodResource.VertexBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("Mesh VB", lodResource.Vertices->GetSize(), EBufferType::VertexBuffer, dynamic ? EBufferUsage::DynamicDraw : EBufferUsage::StaticDraw));
+				lodResource.VertexBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Mesh VB", lodResource.Vertices->GetSize(), EBufferType::VertexBuffer, dynamic ? EBufferUsage::DynamicDraw : EBufferUsage::StaticDraw));
 			}
 
-			GetEngine()->GetRenderDevice()->WriteBuffer(lodResource.VertexBuffer, lodResource.Vertices->GetData());
+			GEngine->GetRenderDevice()->WriteBuffer(lodResource.VertexBuffer, lodResource.Vertices->GetData());
 
 			if(!keepCPUData)
 				lodResource.Vertices.reset();
@@ -41,10 +41,10 @@ namespace Aurora
 			}
 			else
 			{
-				lodResource.IndexBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("Mesh IB", lodResource.Indices.size() * sizeof(Index_t), EBufferType::IndexBuffer, dynamic ? EBufferUsage::DynamicDraw : EBufferUsage::StaticDraw));
+				lodResource.IndexBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Mesh IB", lodResource.Indices.size() * sizeof(Index_t), EBufferType::IndexBuffer, dynamic ? EBufferUsage::DynamicDraw : EBufferUsage::StaticDraw));
 			}
 
-			GetEngine()->GetRenderDevice()->WriteBuffer(lodResource.IndexBuffer, lodResource.Indices.data());
+			GEngine->GetRenderDevice()->WriteBuffer(lodResource.IndexBuffer, lodResource.Indices.data());
 
 			if(!keepCPUData)
 				lodResource.Indices.clear();

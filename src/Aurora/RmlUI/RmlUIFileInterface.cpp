@@ -14,7 +14,7 @@ namespace Aurora
 
 	Rml::FileHandle RmlUIFileInterface::Open(const Rml::String &path)
 	{
-		DataBlob data = GetEngine()->GetResourceManager()->LoadFile(path);
+		DataBlob data = GEngine->GetResourceManager()->LoadFile(path);
 
 		if(data.empty())
 			return (Rml::FileHandle)nullptr;
@@ -78,7 +78,7 @@ namespace Aurora
 
 	bool RmlUIFileInterface::LoadFile(const Rml::String &path, Rml::String &out_data)
 	{
-		out_data = GetEngine()->GetResourceManager()->LoadFileToString(path);
+		out_data = GEngine->GetResourceManager()->LoadFileToString(path);
 		return !out_data.empty();
 	}
 }

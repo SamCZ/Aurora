@@ -38,7 +38,7 @@ namespace Aurora
 
 	bool VgRender::LoadFont(const String &name, const Path &path)
 	{
-		auto fontData = GetEngine()->GetResourceManager()->LoadFile(path);
+		auto fontData = GEngine->GetResourceManager()->LoadFile(path);
 
 		if(fontData.empty())
 		{

@@ -30,13 +30,13 @@ namespace Aurora
 		uint32_t lineVertexBufferSize = (sizeof(Vector3) * 2) * maxLines;
 		AU_LOG_INFO("Allocated ", FormatBytes(lineVertexBufferSize), " for debug line render.");
 
-		g_LineBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("DebugLinesVBuffer", lineVertexBufferSize, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw, true));
-		g_LineInputLayout = GetEngine()->GetRenderDevice()->CreateInputLayout({
+		g_LineBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("DebugLinesVBuffer", lineVertexBufferSize, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw, true));
+		g_LineInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
 			{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(BaseShapeVertex, Position), 0, sizeof(BaseShapeVertex), false, true },
 			{"COLOR", GraphicsFormat::R32_UINT, 0, offsetof(BaseShapeVertex, Color), 1, sizeof(BaseShapeVertex), false, true }
 		});
 
-		g_LineShader = GetEngine()->GetResourceManager()->LoadShader("DebugShaderBase", {
+		g_LineShader = GEngine->GetResourceManager()->LoadShader("DebugShaderBase", {
 			{EShaderType::Vertex, "Assets/Shaders/World/Debug/base_shape.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/World/Debug/base_shape.fss"}
 		});
@@ -63,7 +63,7 @@ namespace Aurora
 		{
 			const ShapeStructs::LineShape& currentShape = m_LineShapes[i];
 
-			BaseShapeVertex* vertices = GetEngine()->GetRenderDevice()->MapBuffer<BaseShapeVertex>(g_LineBuffer, EBufferAccess::WriteOnly);
+			BaseShapeVertex* vertices = GEngine->GetRenderDevice()->MapBuffer<BaseShapeVertex>(g_LineBuffer, EBufferAccess::WriteOnly);
 
 			vertices->Position = currentShape.P0;
 			vertices->Color = currentShape.Color.rgba;
@@ -96,7 +96,7 @@ namespace Aurora
 				}
 			}
 
-			GetEngine()->GetRenderDevice()->UnmapBuffer(g_LineBuffer);
+			GEngine->GetRenderDevice()->UnmapBuffer(g_LineBuffer);
 
 			drawState.PrimitiveType = EPrimitiveType::LineList;
 			drawState.RasterState.LineWidth = currentShape.Thickness;
@@ -104,7 +104,7 @@ namespace Aurora
 
 			DrawArguments drawArguments;
 			drawArguments.VertexCount = renderLineCount * 2;
-			GetEngine()->GetRenderDevice()->Draw(drawState, {drawArguments});
+			GEngine->GetRenderDevice()->Draw(drawState, {drawArguments});
 
 			lineDrawCount++;
 		}
@@ -124,7 +124,7 @@ namespace Aurora
 			Vector2 coords;
 			if(cameraComponent->GetScreenCoordinates(*cameraTransform, shape.Position, coords))
 			{
-				GetEngine()->GetVgRender()->DrawString(shape.Text, coords, shape.Color, 12.0f, VgAlign::Center, VgAlign::Center);
+				GEngine->GetVgRender()->DrawString(shape.Text, coords, shape.Color, 12.0f, VgAlign::Center, VgAlign::Center);
 			}
 		}
 

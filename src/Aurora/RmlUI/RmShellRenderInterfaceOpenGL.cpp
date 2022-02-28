@@ -14,39 +14,39 @@ namespace Aurora
 	RmShellRenderInterfaceOpenGL::RmShellRenderInterfaceOpenGL()
 	: m_Width(0), m_Height(0), m_TransformEnabled(false), m_RegisteredCustomTextures(), m_Scissors(), m_Transform(glm::identity<Matrix4>())
 	{
-		m_ColorShader = GetEngine()->GetResourceManager()->LoadShader("RmlUIColored", {
+		m_ColorShader = GEngine->GetResourceManager()->LoadShader("RmlUIColored", {
 			{EShaderType::Vertex, "Assets/Shaders/RmlUI/vs_color.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/RmlUI/ps_color.fss"},
 		});
 
-		m_TexturedShader = GetEngine()->GetResourceManager()->LoadShader("RmlUITextured", {
+		m_TexturedShader = GEngine->GetResourceManager()->LoadShader("RmlUITextured", {
 			{EShaderType::Vertex, "Assets/Shaders/RmlUI/vs_textured.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/RmlUI/ps_textured.fss"},
 		});
 
-		m_ColorInputLayout = GetEngine()->GetRenderDevice()->CreateInputLayout({
+		m_ColorInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
 			VertexAttributeDesc{"in_Pos", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, position), 0, sizeof(Rml::Vertex), false, false},
 			VertexAttributeDesc{"in_Color", GraphicsFormat::R32_UINT, 0, offsetof(Rml::Vertex, colour), 1, sizeof(Rml::Vertex), false, false}
 		});
 
-		m_TexturedInputLayout = GetEngine()->GetRenderDevice()->CreateInputLayout({
+		m_TexturedInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
 			VertexAttributeDesc{"in_Pos", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, position), 0, sizeof(Rml::Vertex), false, false},
 			VertexAttributeDesc{"in_Color", GraphicsFormat::R32_UINT, 0, offsetof(Rml::Vertex, colour), 1, sizeof(Rml::Vertex), false, false},
 			VertexAttributeDesc{"in_TexCoord", GraphicsFormat::RG32_FLOAT, 0, offsetof(Rml::Vertex, tex_coord), 2, sizeof(Rml::Vertex), false, true}
 		});
 
-		m_VertexBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("RmlVertexBuffer", sizeof(Rml::Vertex) * 3000, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw));
-		m_IndexBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("RmlIndexBuffer", sizeof(uint32_t) * 3000, EBufferType::IndexBuffer, EBufferUsage::DynamicDraw));
+		m_VertexBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("RmlVertexBuffer", sizeof(Rml::Vertex) * 3000, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw));
+		m_IndexBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("RmlIndexBuffer", sizeof(uint32_t) * 3000, EBufferType::IndexBuffer, EBufferUsage::DynamicDraw));
 
-		m_VertexUniformBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("UB", sizeof(VertexUniform), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
-		m_ScissorBuffer = GetEngine()->GetRenderDevice()->CreateBuffer(BufferDesc("SB", sizeof(Scissors), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+		m_VertexUniformBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("UB", sizeof(VertexUniform), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+		m_ScissorBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("SB", sizeof(Scissors), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
 	}
 
 	RmShellRenderInterfaceOpenGL::~RmShellRenderInterfaceOpenGL() = default;
 
 	void RmShellRenderInterfaceOpenGL::RenderGeometry(Rml::Vertex* vertices, int num_vertices, int* indices, int num_indices, const Rml::TextureHandle texture, const Rml::Vector2f& translation)
 	{
-		auto screenSize = GetEngine()->GetWindow()->GetSize();
+		auto screenSize = GEngine->GetWindow()->GetSize();
 
 		if(m_LastScreenSize != screenSize)
 		{
@@ -57,8 +57,8 @@ namespace Aurora
 		au_assert((sizeof(Rml::Vertex) * num_vertices) <= sizeof(Rml::Vertex) * 3000);
 		au_assert((sizeof(uint32_t) * num_indices) <= sizeof(uint32_t) * 3000);
 
-		GetEngine()->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices, sizeof(Rml::Vertex) * num_vertices, 0);
-		GetEngine()->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices, sizeof(uint32_t) * num_indices, 0);
+		GEngine->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices, sizeof(Rml::Vertex) * num_vertices, 0);
+		GEngine->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices, sizeof(uint32_t) * num_indices, 0);
 
 		DrawCallState drawCallState;
 		drawCallState.ViewPort = screenSize;
@@ -97,7 +97,7 @@ namespace Aurora
 			*desc = m_Scissors;
 		END_UBW(drawCallState, m_ScissorBuffer, "Scissors");
 
-		GetEngine()->GetRenderDevice()->DrawIndexed(drawCallState, {DrawArguments(num_indices)});
+		GEngine->GetRenderDevice()->DrawIndexed(drawCallState, {DrawArguments(num_indices)});
 	}
 
 	Rml::CompiledGeometryHandle RmShellRenderInterfaceOpenGL::CompileGeometry(Rml::Vertex* RMLUI_UNUSED_PARAMETER(vertices), int RMLUI_UNUSED_PARAMETER(num_vertices), int* RMLUI_UNUSED_PARAMETER(indices), int RMLUI_UNUSED_PARAMETER(num_indices), const Rml::TextureHandle RMLUI_UNUSED_PARAMETER(texture))
@@ -124,7 +124,7 @@ namespace Aurora
 
 	void RmShellRenderInterfaceOpenGL::EnableScissorRegion(bool enable)
 	{
-		auto screenSize = GetEngine()->GetWindow()->GetSize();
+		auto screenSize = GEngine->GetWindow()->GetSize();
 
 		m_Scissors.sSettings.x = enable;
 		m_Scissors.sSettings.y = static_cast<float>(screenSize.y);
@@ -165,7 +165,7 @@ namespace Aurora
 			}
 		}
 
-		auto texturePtr = GetEngine()->GetResourceManager()->LoadTexture(path, GraphicsFormat::RGBA8_UNORM, {false});
+		auto texturePtr = GEngine->GetResourceManager()->LoadTexture(path, GraphicsFormat::RGBA8_UNORM, {false});
 
 		if(!texturePtr) {
 			return false;
@@ -190,8 +190,8 @@ namespace Aurora
 		textureDesc.MipLevels = 1;
 		textureDesc.Usage = TextureDesc::EUsage::Default;
 
-		Texture_ptr texturePtr = GetEngine()->GetRenderDevice()->CreateTexture(textureDesc);
-		GetEngine()->GetRenderDevice()->WriteTexture(texturePtr, 0, 0, source);
+		Texture_ptr texturePtr = GEngine->GetRenderDevice()->CreateTexture(textureDesc);
+		GEngine->GetRenderDevice()->WriteTexture(texturePtr, 0, 0, source);
 
 		auto* handle = new TexHandle();
 		handle->Texture = texturePtr;

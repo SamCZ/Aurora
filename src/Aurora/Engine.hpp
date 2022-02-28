@@ -43,5 +43,5 @@ namespace Aurora
 		[[nodiscard]] inline AppContext* GetAppContext() const { return m_AppContext; }
 	};
 
-	AU_API extern AuroraContext* GetEngine();
+	extern AU_API AuroraContext* GEngine;
 }

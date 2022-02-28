@@ -55,6 +55,9 @@ namespace Aurora
 					case GL_UNSIGNED_INT:
 						inputVariable.Format = GraphicsFormat::R32_UINT;
 						break;
+					case GL_FLOAT:
+						inputVariable.Format = GraphicsFormat::R32_FLOAT;
+						break;
 					case GL_FLOAT_MAT4:
 					{
 						auto vec4Size = GetOpenGLDataTypeSize(GL_FLOAT_VEC4);

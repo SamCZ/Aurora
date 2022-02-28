@@ -75,7 +75,7 @@ namespace Aurora
 		EBufferType Type;
 		EBufferUsage Usage;
 		uint8_t Flags; // TODO: Fix flags, buffer is write only now !
-		bool IsDMA : 1;
+		bool IsDMA : 1; // IMPORTANT! If you set this you need to make barrier after writing to the buffer !
 
 		BufferDesc()
 				: ByteSize(0),

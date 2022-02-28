@@ -45,7 +45,7 @@ namespace Aurora
 		{
 			ShaderProgramDesc programDesc = m_ShaderBaseDescription;
 			programDesc.AddShaderMacros(macros);
-			Shader_ptr newShader = GetEngine()->GetRenderDevice()->CreateShaderProgram(programDesc);
+			Shader_ptr newShader = GEngine->GetRenderDevice()->CreateShaderProgram(programDesc);
 
 			if(newShader == nullptr)
 			{
@@ -107,7 +107,7 @@ namespace Aurora
 					MTextureVar textureVar;
 					textureVar.Name = samplerName;
 					textureVar.InShaderName = samplerName;
-					textureVar.Texture = GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png", GraphicsFormat::SRGBA8_UNORM, {});
+					textureVar.Texture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png", GraphicsFormat::SRGBA8_UNORM, {});
 					textureVar.Sampler = Samplers::WrapWrapLinearLinear;
 					m_TextureVars[samplerId] = textureVar;
 				}

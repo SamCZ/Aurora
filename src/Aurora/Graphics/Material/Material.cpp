@@ -20,7 +20,7 @@ namespace Aurora
 
 	void Material::BeginPass(PassType_t pass, DrawCallState& drawState)
 	{
-		IRenderDevice* renderDevice = GetEngine()->GetRenderDevice();
+		IRenderDevice* renderDevice = GEngine->GetRenderDevice();
 
 		MaterialPassDef* passDef = m_MatDef->GetPassDefinition(pass);
 
@@ -48,9 +48,9 @@ namespace Aurora
 			const MUniformBlock& block = m_MatDef->m_UniformBlocksDef[uniformBlockIndex];
 
 			VBufferCacheIndex cacheIndex;
-			uint8* data = GetEngine()->GetRenderManager()->GetUniformBufferCache().GetOrMap(block.Size, cacheIndex);
+			uint8* data = GEngine->GetRenderManager()->GetUniformBufferCache().GetOrMap(block.Size, cacheIndex);
 			std::memcpy(data, m_UniformData.data() + block.Offset, block.Size);
-			GetEngine()->GetRenderManager()->GetUniformBufferCache().Unmap(cacheIndex);
+			GEngine->GetRenderManager()->GetUniformBufferCache().Unmap(cacheIndex);
 			drawState.BindUniformBuffer(block.Name, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);
 		}
 
@@ -81,7 +81,7 @@ namespace Aurora
 		(void)pass;
 		(void)state;
 
-		GetEngine()->GetRenderManager()->GetUniformBufferCache().Reset();
+		GEngine->GetRenderManager()->GetUniformBufferCache().Reset();
 	}
 
 	FRasterState& Material::RasterState(PassType_t pass)

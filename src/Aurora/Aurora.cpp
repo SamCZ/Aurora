@@ -46,15 +46,10 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 
 namespace Aurora
 {
-	static AuroraContext* g_Context = nullptr;
+	AuroraContext* GEngine = nullptr;
 
 	GameContext* AppContext::m_GameContext = nullptr;
 	GameModeBase* AppContext::m_GameMode = nullptr;
-
-	AuroraContext* GetEngine()
-	{
-		return g_Context;
-	}
 
 	AuroraEngine::AuroraEngine() :
 		m_Window(),
@@ -79,7 +74,7 @@ namespace Aurora
 #ifdef NEWTON
 		delete m_PhysicsWorld;
 #endif
-		delete g_Context;
+		delete GEngine;
 		delete m_VgRender;
 		delete m_RmlUI;
 		delete m_ResourceManager;
@@ -101,8 +96,8 @@ namespace Aurora
 
 		glfwInit();
 
-		g_Context = new AuroraContext();
-		g_Context->m_AppContext = appContext;
+		GEngine = new AuroraContext();
+		GEngine->m_AppContext = appContext;
 
 		// Init and create window
 		m_Window = new GLFWWindow();
@@ -160,19 +155,19 @@ namespace Aurora
 		}
 
 		// Init global context
-		g_Context->m_Window = m_Window;
-		g_Context->m_InputManager = m_Window->GetInputManager().get();
-		g_Context->m_RenderDevice = m_RenderDevice;
-		g_Context->m_RenderManager = m_RenderManager;
-		g_Context->m_ResourceManager = m_ResourceManager;
+		GEngine->m_Window = m_Window;
+		GEngine->m_InputManager = m_Window->GetInputManager().get();
+		GEngine->m_RenderDevice = m_RenderDevice;
+		GEngine->m_RenderManager = m_RenderManager;
+		GEngine->m_ResourceManager = m_ResourceManager;
 
 		// Init RmlUI
 		m_RmlUI = new RmlUI("RmlContext");
-		g_Context->m_RmlUI = m_RmlUI;
+		GEngine->m_RmlUI = m_RmlUI;
 
 		// Init NanoVG render
 		m_VgRender = new VgRender();
-		g_Context->m_VgRender = m_VgRender;
+		GEngine->m_VgRender = m_VgRender;
 		m_VgRender->LoadFont("default", "Assets/Fonts/LatoLatin-Bold.ttf");
 
 #ifdef NEWTON
@@ -357,7 +352,7 @@ namespace Aurora
 				}
 			}
 
-			g_Context->m_RenderDevice->InvalidateState();
+			GEngine->m_RenderDevice->InvalidateState();
 
 			{
 				m_RenderManager->EndFrame();

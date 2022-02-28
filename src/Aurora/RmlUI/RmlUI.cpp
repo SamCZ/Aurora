@@ -194,7 +194,7 @@ namespace Aurora
 
 	Rml::Vector2i RmlUI::GetDesiredCanvasSize() const
 	{
-		auto windowSize = GetEngine()->GetWindow()->GetSize();
+		auto windowSize = GEngine->GetWindow()->GetSize();
 
 		return {windowSize.x, windowSize.y};
 	}

@@ -56,17 +56,35 @@ namespace Aurora
 		{
 			std::vector<T*> components;
 
-			if(auto* c = dynamic_cast<T*>(m_RootComponent)) {
+			if(T::TypeID() == m_RootComponent->GetTypeID()) {
 				components.push_back(m_RootComponent);
 			}
 
+			// FIXME: This will only work in depth 1, sub components will not be found !
+
 			for(auto* component : m_RootComponent->m_Components) {
-				if(auto* c = dynamic_cast<T*>(component)) {
+				if(T::TypeID() == component->GetTypeID()) {
 					components.push_back(component);
 				}
 			}
 
 			return components;
+		}
+
+		template<class T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
+		inline T* FindComponentOfType()
+		{
+			// FIXME: This will only work in depth 1, sub components will not be found !
+
+			if(T::TypeID() == m_RootComponent->GetTypeID()) {
+				return (T*) m_RootComponent;
+			}
+
+			for(auto* component : m_RootComponent->m_Components) {
+				if(T::TypeID() == component->GetTypeID()) {
+					return (T*) component;
+				}
+			}
 		}
 
 		std::vector<SceneComponent*>::iterator begin() { return m_Components.begin(); }

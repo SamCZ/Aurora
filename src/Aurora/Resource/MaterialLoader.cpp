@@ -48,7 +48,7 @@ namespace Aurora
 				shaders[ShaderType_FromString(passShader.key())] = passShader.value().get<String>();
 			}
 
-			ShaderProgramDesc shaderProgramDesc = GetEngine()->GetResourceManager()->CreateShaderProgramDesc(descOut.Name + ":" + passName, shaders);
+			ShaderProgramDesc shaderProgramDesc = GEngine->GetResourceManager()->CreateShaderProgramDesc(descOut.Name + ":" + passName, shaders);
 
 			if(!passId)
 			{
@@ -78,7 +78,7 @@ namespace Aurora
 				MTextureVar textureVar;
 				textureVar.Name = name;
 				textureVar.InShaderName = in_shader_name;
-				textureVar.Texture = GetEngine()->GetResourceManager()->LoadTexture(value.get<String>(), GraphicsFormat::RGBA8_UNORM, {});
+				textureVar.Texture = GEngine->GetResourceManager()->LoadTexture(value.get<String>(), GraphicsFormat::RGBA8_UNORM, {});
 				textureVar.Sampler = sampler;
 
 				if(descOut.Textures.contains(nameId))

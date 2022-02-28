@@ -179,10 +179,10 @@ namespace Aurora
 #define BEGIN_UB(type, name) \
 { \
     VBufferCacheIndex cacheIndex; \
-    auto* name = GetEngine()->GetRenderManager()->GetUniformBufferCache().GetOrMap<type>(sizeof(type) * 1, cacheIndex);
+    auto* name = GEngine->GetRenderManager()->GetUniformBufferCache().GetOrMap<type>(sizeof(type) * 1, cacheIndex);
 
 #define END_UB(bufferName) \
-    GetEngine()->GetRenderManager()->GetUniformBufferCache().Unmap(cacheIndex); \
+    GEngine->GetRenderManager()->GetUniformBufferCache().Unmap(cacheIndex); \
     drawState.BindUniformBuffer(#bufferName, cacheIndex.Buffer, cacheIndex.Offset, cacheIndex.Size);}
 
 #define END_CUB(bufferName) \
@@ -193,5 +193,5 @@ namespace Aurora
     { type l_BufferData = {}; type* name = &l_BufferData; auto l_BufferDataSize = sizeof(type);
 
 #define END_UBW(state, buffer, uniformBufferName) \
-     GetEngine()->GetRenderDevice()->WriteBuffer(buffer, &l_BufferData, l_BufferDataSize, 0); state.BindUniformBuffer(uniformBufferName, buffer); }
+     GEngine->GetRenderDevice()->WriteBuffer(buffer, &l_BufferData, l_BufferDataSize, 0); state.BindUniformBuffer(uniformBufferName, buffer); }
 }

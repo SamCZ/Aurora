@@ -8,7 +8,7 @@
 #include "InternalShaders/Blit.hpp"
 
 #include <stb_image.h>
-#include "Aurora/Resource/stb/stb_image_resize.h"
+#include <stb_image_resize.h>
 
 namespace Aurora
 {
@@ -150,7 +150,7 @@ namespace Aurora
 			return nullptr;
 		}
 
-		auto resourceManager = GetEngine()->GetResourceManager();
+		auto resourceManager = GEngine->GetResourceManager();
 
 		Texture_ptr pTexArray = nullptr;
 
@@ -236,7 +236,7 @@ namespace Aurora
 		for (int i = 0; i < textures.size(); ++i) {
 			const Path& path = textures[i];
 
-			auto fileData = GetEngine()->GetResourceManager()->LoadFile(path);
+			auto fileData = GEngine->GetResourceManager()->LoadFile(path);
 
 			if(fileData.empty()) {
 				AU_LOG_FATAL("Could not load ", path);
