@@ -79,6 +79,7 @@ namespace Aurora
 	private:
 		robin_hood::unordered_map<TTypeID, Aum*> m_ComponentMemory;
 		robin_hood::unordered_map<TTypeID, std::vector<std::uintptr_t>> m_ComponentPointers;
+		std::vector<std::uintptr_t> m_FindComponentCache;
 	public:
 		~ComponentStorage()
 		{
@@ -133,17 +134,25 @@ namespace Aurora
 			m_ComponentMemory[componentID]->DeAllocAndUnload<T>(component);
 		}
 
+		// Not multi-thread friendly currently
 		template<typename T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
 		ComponentView<T> GetComponents()
 		{
-			TTypeID componentID = T::TypeID();
+			m_FindComponentCache.clear();
 
-			if(!m_ComponentPointers.contains(componentID))
+			for(auto& it : m_ComponentPointers)
 			{
-				return ComponentView<T>();
+				if(it.second.empty()) continue;
+
+				auto* typeBase = reinterpret_cast<ObjectBase*>(it.second[0]);
+
+				if(typeBase->HasType(it.first))
+				{
+					m_FindComponentCache.insert(m_FindComponentCache.end(), it.second.begin(), it.second.end());
+				}
 			}
 
-			return ComponentView<T>(&m_ComponentPointers[componentID]);
+			return ComponentView<T>(&m_FindComponentCache);
 		}
 	};
 }

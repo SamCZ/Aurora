@@ -69,9 +69,6 @@ namespace Aurora
 			return m_ComponentStorage.template GetComponents<T>();
 		}
 
-	protected:
-
-
 	public:
 		void FinishSpawningActor(Actor* actor);
 		void DestroyActor(Actor* actor);
