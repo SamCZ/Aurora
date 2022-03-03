@@ -17,6 +17,7 @@
 #include "Graphics/OpenGL/GLSwapChain.hpp"
 #include "Graphics/OpenGL/GLRenderDevice.hpp"
 #include "Graphics/RenderManager.hpp"
+#include "Graphics/ViewPortManager.hpp"
 #include "Resource/ResourceManager.hpp"
 
 #include "RmlUI/RmlUI.hpp"
@@ -60,6 +61,7 @@ namespace Aurora
 		m_InputManager(nullptr),
 		m_AppContext(nullptr),
 		m_RmlUI(nullptr),
+		m_ViewPortManager(nullptr),
 		m_VgRender(nullptr)
 #ifdef NEWTON
         ,m_PhysicsWorld(nullptr)
@@ -79,6 +81,7 @@ namespace Aurora
 		delete m_RmlUI;
 		delete m_ResourceManager;
 		delete m_RenderManager;
+		delete m_ViewPortManager;
 		delete m_RenderDevice;
 		delete m_SwapChain;
 		delete m_Window;
@@ -175,6 +178,9 @@ namespace Aurora
 		m_PhysicsWorld = new PhysicsWorld();
 		g_Context->m_PhysicsWorld = m_PhysicsWorld;
 #endif
+
+		m_ViewPortManager = new ViewPortManager();
+		GEngine->m_ViewPortManager = m_ViewPortManager;
 
 		// Init App context
 		m_AppContext = appContext;
@@ -337,6 +343,11 @@ namespace Aurora
 			{
 				CPU_DEBUG_SCOPE("ImGui render");
 				GPU_DEBUG_SCOPE("ImGui render");
+
+				DrawCallState drawCallState;
+				drawCallState.ViewPort = m_Window->GetSize();
+				m_RenderDevice->BindRenderTargets(drawCallState);
+
 				ImGui::Render();
 				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

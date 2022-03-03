@@ -9,6 +9,7 @@ namespace Aurora
 	class IRenderDevice;
 	class RenderManager;
 	class ResourceManager;
+	class ViewPortManager;
 
 	namespace Input
 	{
@@ -29,6 +30,7 @@ namespace Aurora
 #ifdef NEWTON
 		PhysicsWorld* m_PhysicsWorld;
 #endif
+		ViewPortManager* m_ViewPortManager;
 
 		AppContext* m_AppContext;
 	public:
