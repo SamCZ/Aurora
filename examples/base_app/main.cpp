@@ -3,6 +3,7 @@
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
 #include <Aurora/Graphics/Material/Material.hpp>
+#include <Aurora/Graphics/ViewPortManager.hpp>
 #include <Aurora/Resource/MaterialLoader.hpp>
 
 #include <Shaders/World/PBRBasic/cb_pbr.h>
@@ -19,6 +20,7 @@
 #include "Aurora/Editor/MainEditorPanel.hpp"
 
 #include <Aurora/Graphics/OpenGL/GLRenderDevice.hpp>
+#include <Aurora/Render/VgRender.hpp>
 
 #include <stb_image_write.h>
 
@@ -112,7 +114,12 @@ class BaseAppContext : public AppContext
 	Scene scene;
 	Mesh_ptr mesh = nullptr;
 
-	MainEditorPanel mainEditorPanel;
+	MainEditorPanel* mainEditorPanel;
+
+	~BaseAppContext()
+	{
+		delete mainEditorPanel;
+	}
 
 	void Init() override
 	{
@@ -143,13 +150,15 @@ class BaseAppContext : public AppContext
 		{
 			std::cout << "Component " << component->GetName() << std::endl;
 		}
+
+		mainEditorPanel = new MainEditorPanel();
 	}
 
 	float a = 0;
 
 	void Update(double delta) override
 	{
-		//mainEditorPanel.Update();
+		mainEditorPanel->Update();
 
 
 
@@ -169,9 +178,15 @@ class BaseAppContext : public AppContext
 
 	void Render() override
 	{
+		RenderViewPort* wp = GEngine->GetViewPortManager()->Get();
+
 		DrawCallState drawCallState;
 		drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
-		drawCallState.ViewPort = FViewPort(GEngine->GetWindow()->GetSize());
+		drawCallState.ViewPort = wp->ViewPort;
+		drawCallState.BindTarget(0, wp->Target);
+
+		drawCallState.ClearColor = Color::black();
+		drawCallState.ClearColorTarget = true;
 
 		GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 		GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);

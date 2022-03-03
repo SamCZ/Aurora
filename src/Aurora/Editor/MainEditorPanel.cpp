@@ -1,6 +1,8 @@
 #include "MainEditorPanel.hpp"
-
 #include <imgui.h>
+
+#include "Aurora/Engine.hpp"
+#include "Aurora/Graphics/ViewPortManager.hpp"
 
 namespace Aurora
 {
@@ -8,7 +10,30 @@ namespace Aurora
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		Logger::AddSinkPtr(m_ConsoleWindow);
+
+		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
 	}
+
+	MainEditorPanel::~MainEditorPanel() = default;
+
+	enum class PinType
+	{
+		Execute,
+		Boolean,
+		Int32,
+		Float,
+		String,
+		Vec2,
+		Vec3,
+		Vec4
+	};
+
+	struct Pin
+	{
+		uint32_t ID;
+		String Name;
+		PinType Type;
+	};
 
 	void MainEditorPanel::Update()
 	{
@@ -23,12 +48,24 @@ namespace Aurora
 
 		ImGui::End();
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");
 		{
 			ImVec2 avail_size = ImGui::GetContentRegionAvail();
+			ImVec2 dragDelta = ImGui::GetMouseDragDelta();
+			Vector2i viewPortSize = {avail_size.x, avail_size.y};
 
+			if((dragDelta.x == 0 && dragDelta.y == 0) || !m_RenderViewPort->Initialized())
+			{
+				m_RenderViewPort->Resize(viewPortSize);
+			}
+
+			ImGui::Image((ImTextureID)m_RenderViewPort->Target->GetRawHandle(), ImVec2(m_RenderViewPort->ViewPort.Width, m_RenderViewPort->ViewPort.Height));
 		}
 		ImGui::End();
+		ImGui::PopStyleVar();
+
+
 
 		ImGui::Begin("Resources");
 

@@ -1,10 +1,18 @@
 #pragma once
 
-//#include <ImGuiUtils.hpp>
+#include "Aurora/Core/Vector.hpp"
+
+#define IM_VEC2_CLASS_EXTRA \
+		ImVec2(const glm::vec2& f) { x = f.x; y = f.y; }\
+		operator glm::vec2() const { return glm::vec2(x,y); }
+
+#define IM_VEC4_CLASS_EXTRA \
+		ImVec4(const glm::vec4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }\
+		operator glm::vec4() const { return glm::vec4(x,y,z,w); }
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <string>
-#include "Aurora/Core/Vector.hpp"
 
 namespace ImGui
 {
@@ -39,39 +47,6 @@ namespace ImGui
 		colors[ImGuiCol_TitleBg] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 		colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
-	}
-
-	void DrawSplitter(int split_vertically, float thickness, float* size0, float* size1, float min_size0, float min_size1)
-	{
-		ImVec2 backup_pos = ImGui::GetCursorPos();
-		if (split_vertically)
-			ImGui::SetCursorPosY(backup_pos.y + *size0);
-		else
-			ImGui::SetCursorPosX(backup_pos.x + *size0);
-
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0,0,0,0));          // We don't draw while active/pressed because as we move the panes the splitter button will be 1 frame late
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f,0.6f,0.6f,0.10f));
-		ImGui::Button("##Splitter", ImVec2(!split_vertically ? thickness : -1.0f, split_vertically ? thickness : -1.0f));
-		ImGui::PopStyleColor(3);
-
-		ImGui::SetItemAllowOverlap(); // This is to allow having other buttons OVER our splitter.
-
-		if (ImGui::IsItemActive())
-		{
-			float mouse_delta = split_vertically ? ImGui::GetIO().MouseDelta.y : ImGui::GetIO().MouseDelta.x;
-
-			// Minimum pane size
-			if (mouse_delta < min_size0 - *size0)
-				mouse_delta = min_size0 - *size0;
-			if (mouse_delta > *size1 - min_size1)
-				mouse_delta = *size1 - min_size1;
-
-			// Apply resize
-			*size0 += mouse_delta;
-			*size1 -= mouse_delta;
-		}
-		ImGui::SetCursorPos(backup_pos);
 	}
 
 	inline void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f)
@@ -202,14 +177,6 @@ namespace ImGui
 		}
 	}
 
-	inline bool IsItemActivePreviousFrame()
-	{
-		ImGuiContext& g = *GImGui;
-		if (g.ActiveIdPreviousFrame)
-			return g.ActiveIdPreviousFrame== GImGui->CurrentWindow->DC.LastItemId;
-		return false;
-	}
-
 	inline void BeginWindow(const std::string& name, float x, float y, float width, float height, bool stay = false, int padding = -1, bool* p_open = nullptr) {
 		if (padding >= 0) {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { (float)padding, (float)padding });
@@ -225,4 +192,18 @@ namespace ImGui
 	inline void EndWindow() {
 		ImGui::End();
 	}
+}
+
+namespace ImGui
+{
+	void RenderHollowBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col, float thickness = 1.0f);
+
+	void Bullet(bool hollow);
+	void Bullet(bool hollow, glm::vec4 color);
+}
+
+namespace ImGui
+{
+	void NodePin(bool fill, glm::vec4 color);
+	void NodePin_Execute(bool fill, glm::vec4 color);
 }
