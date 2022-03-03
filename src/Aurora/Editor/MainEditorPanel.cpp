@@ -16,25 +16,6 @@ namespace Aurora
 
 	MainEditorPanel::~MainEditorPanel() = default;
 
-	enum class PinType
-	{
-		Execute,
-		Boolean,
-		Int32,
-		Float,
-		String,
-		Vec2,
-		Vec3,
-		Vec4
-	};
-
-	struct Pin
-	{
-		uint32_t ID;
-		String Name;
-		PinType Type;
-	};
-
 	void MainEditorPanel::Update()
 	{
 		DrawMainMenu();
