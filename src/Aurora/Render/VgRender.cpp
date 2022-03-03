@@ -211,7 +211,7 @@ namespace Aurora
 		{
 			nvgRoundedRectVarying(m_VgContext, x, y, w, h, topLeft, topRight, bottomRight, bottomLeft);
 		}
-		NVGcolor c = nvgRGBAf(color.r, color.g, color.b, color.a);
+		NVGcolor c = nvgRGBA(color.r, color.g, color.b, color.a);
 		if (isStroke)
 		{
 			nvgStrokeWidth(m_VgContext, strokeSize);
@@ -303,7 +303,7 @@ namespace Aurora
 
 		RB_RenderGradientLR(x, y, width, 25, Color(20, 100, 200), Color(4, 40, 80), 2.0f);
 
-		DrawString(title, {x + width / 2.0f, y + 2}, Color(181, 188, 188), 20, VgAlign::Center); //Title
+		DrawString(title, {x + 5, y + 6}, Color(181, 188, 188), 20, VgAlign::Left); //Title
 
 		if (isSelected)
 		{
