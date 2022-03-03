@@ -12,15 +12,11 @@ namespace Aurora
 			int diffX = (int)glm::abs((int)size.x - (int)ViewPort.Width);
 			int diffY = (int)glm::abs((int)size.y - (int)ViewPort.Height);
 
-			AU_LOG_INFO("diff " , diffX, " " , diffY);
-
 			// This prevents OpenGL from crashing when creating many textures in every tick
 			if(diffX < 10 && diffY < 10)
 			{
 				return;
 			}
-
-			AU_LOG_INFO("Viewport resized");
 
 			ViewPort.Width = size.x;
 			ViewPort.Height = size.y;

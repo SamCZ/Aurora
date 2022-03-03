@@ -643,7 +643,6 @@ namespace Aurora
 		else if (desc.SampleCount > 1 && !desc.UseAsBindless)
 		{
 			AU_LOG_FATAL("Multisample is not supported !");
-			AU_LOG_FATAL("Multisample is not supported !");
 			//bindTarget = GL_TEXTURE_2D_MULTISAMPLE;
 			glBindTexture(bindTarget, handle);
 
@@ -1589,7 +1588,6 @@ namespace Aurora
 					m_CurrentFrameBuffer = nullptr;
 				}
 
-				AU_LOG_INFO("FrameBuffer destroyed !");
 				m_CachedFrameBuffers.erase(std::find(m_CachedFrameBuffers.begin(), m_CachedFrameBuffers.end(), m_CachedFrameBuffers[i]));
 				break;
 			}
