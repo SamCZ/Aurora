@@ -32,5 +32,10 @@ namespace Aurora
 		[[nodiscard]] inline GLenum BindTarget() const noexcept { return m_BindTarget; }
 	public:
 		[[nodiscard]] inline const TextureDesc& GetDesc() const override { return m_Desc; }
+
+		void* GetRawHandle() override
+		{
+			return (void*)(uintptr_t)(m_Handle);
+		}
 	};
 }

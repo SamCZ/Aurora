@@ -44,14 +44,14 @@ namespace Aurora
 
 	struct TargetBinding
 	{
-		Texture_ptr Texture;
+		ITexture* Texture;
 		uint32_t Index; // This values is for texture arrays / cubemaps. TODO: Rename this var to something better.
 		uint32_t MipSlice;
 
 		TargetBinding() : Texture(nullptr), Index(0), MipSlice(0) {}
-		explicit TargetBinding(Texture_ptr texture) : Texture(std::move(texture)), Index(0), MipSlice(0) {}
-		TargetBinding(Texture_ptr texture, uint32_t index) : Texture(std::move(texture)), Index(index), MipSlice(0) {}
-		TargetBinding(Texture_ptr texture, uint32_t index, uint32_t mipSlice) : Texture(std::move(texture)), Index(index), MipSlice(mipSlice) {}
+		explicit TargetBinding(ITexture* texture) : Texture(texture), Index(0), MipSlice(0) {}
+		TargetBinding(ITexture* texture, uint32_t index) : Texture(texture), Index(index), MipSlice(0) {}
+		TargetBinding(ITexture* texture, uint32_t index, uint32_t mipSlice) : Texture(texture), Index(index), MipSlice(mipSlice) {}
 	};
 
 	struct IndexBufferBinding
@@ -204,7 +204,7 @@ namespace Aurora
 			VertexBuffers[slot] = std::move(buffer);
 		}
 
-		inline void BindTarget(uint16_t slot, Texture_ptr texture, uint32_t index = 0, uint32_t mipSlice = 0)
+		inline void BindTarget(uint16_t slot, const Texture_ptr& texture, uint32_t index = 0, uint32_t mipSlice = 0)
 		{
 			assert(slot < MaxRenderTargets);
 
@@ -212,7 +212,7 @@ namespace Aurora
 				HasAnyRenderTarget = true;
 			}
 
-			RenderTargets[slot] = TargetBinding(std::move(texture), index, mipSlice);
+			RenderTargets[slot] = TargetBinding(texture.get(), index, mipSlice);
 		}
 
 		void BindDepthTarget(const Texture_ptr& depthTarget, uint32_t depthIndex, uint32_t depthMipSlice)

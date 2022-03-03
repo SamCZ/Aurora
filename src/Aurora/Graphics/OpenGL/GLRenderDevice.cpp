@@ -52,89 +52,6 @@ void main()
 
 namespace Aurora
 {
-	static uint64_t CrcTable[256];
-
-	class CrcHash
-	{
-	private:
-		uint64_t m_crc;
-	public:
-		inline CrcHash() : m_crc(0)
-		{
-			uint64_t poly = 0xC96C5795D7870F42;
-
-			for (int i = 0; i < 256; ++i)
-			{
-				uint64_t crc = i;
-
-				for (uint32_t j = 0; j < 8; ++j)
-				{
-					// is current coefficient set?
-					if (crc & 1)
-					{
-						// yes, then assume it gets zero'd (by implied x^64 coefficient of dividend)
-						crc >>= 1;
-
-						// and add rest of the divisor
-						crc ^= poly;
-					}
-					else
-					{
-						// no? then move to next coefficient
-						crc >>= 1;
-					}
-				}
-
-				CrcTable[i] = crc;
-			}
-		}
-
-		inline uint64_t Get()
-		{
-			return m_crc;
-		}
-
-#ifdef _WIN32_DISABLED
-		template<size_t size> __forceinline void AddBytesSSE42(void* p)
-		{
-			static_assert(size % 4 == 0, "Size of hashable types must be multiple of 4");
-
-			auto* data = (uint32_t*)p;
-
-			const size_t numIterations = size / sizeof(uint32_t);
-			for (size_t i = 0; i < numIterations; i++)
-			{
-				crc = _mm_crc32_u32(crc, data[i]);
-			}
-		}
-#endif
-
-		inline void AddBytes(char *p, uint64_t size)
-		{
-			for (uint64_t idx = 0; idx < size; idx++)
-			{
-				uint8_t index = p[idx] ^ m_crc;
-				uint64_t lookup = CrcTable[index];
-
-				m_crc >>= 8;
-				m_crc ^= lookup;
-			}
-		}
-
-		template<typename T>
-		void Add(const T &value)
-		{
-#ifdef _WIN32_DISABLED
-			if (CpuSupportsSSE42)
-				AddBytesSSE42<sizeof(value)>((void*)&value);
-			else
-				AddBytes((char*)&value, sizeof(value));
-#else
-			AddBytes((char *) &value, sizeof(value));
-#endif
-		}
-	};
-
 	GLBuffer* GetBuffer(const Buffer_ptr& buffer)
 	{
 		return static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
@@ -143,6 +60,11 @@ namespace Aurora
 	GLTexture* GetTexture(const Texture_ptr& texture)
 	{
 		return static_cast<GLTexture*>(texture.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+	}
+
+	GLTexture* GetTexture(ITexture* texture)
+	{
+		return static_cast<GLTexture*>(texture); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 	}
 
 	GLSampler* GetSampler(const Sampler_ptr& sampler)
@@ -1549,7 +1471,11 @@ namespace Aurora
 			return nullptr;
 		}
 
-		CrcHash hasher;
+		FrameBufferKey key = {
+			state.RenderTargets, state.DepthTarget, state.DepthIndex, state.DepthMipSlice
+		};
+
+		/*CrcHash hasher;
 		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
 		{
 			if(state.RenderTargets[rt].Texture != nullptr) {
@@ -1563,14 +1489,22 @@ namespace Aurora
 
 		auto it = m_CachedFrameBuffers.find(hash);
 		if (it != m_CachedFrameBuffers.end())
-			return it->second;
+			return it->second;*/
+
+		for (auto& fbo : m_CachedFrameBuffers)
+		{
+			if(fbo.first.compare(key) == 0)
+			{
+				return fbo.second;
+			}
+		}
 
 		auto framebuffer = std::make_shared<FrameBuffer>();
 
 		glGenFramebuffers(1, &framebuffer->Handle);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->Handle);
 
-		std::string fbName = "Cached framebuffer " + std::to_string(hash);
+		std::string fbName = "Cached framebuffer";
 		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
 
 		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
@@ -1583,7 +1517,7 @@ namespace Aurora
 
 			auto glTex = GetTexture(state.RenderTargets[rt].Texture);
 
-			framebuffer->RenderTargets[rt] = state.RenderTargets[rt].Texture.get();
+			framebuffer->RenderTargets[rt] = state.RenderTargets[rt].Texture;
 			glTex->m_UsedInFrameBuffers = true;
 
 			if (targetBinding.Index == ~0u || glTex->GetDesc().DepthOrArraySize == 0) {
@@ -1634,32 +1568,31 @@ namespace Aurora
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		m_CachedFrameBuffers[hash] = framebuffer;
+		m_CachedFrameBuffers.push_back(std::make_pair(key, framebuffer));
 
 		return framebuffer;
 	}
 
 	void GLRenderDevice::NotifyTextureDestroy(GLTexture* texture)
 	{
-		std::vector<uint32_t> frameBuffersToRemove;
+		for (size_t i = m_CachedFrameBuffers.size(); i --> 0;)
+		{
+			const FrameBuffer_ptr& fb = m_CachedFrameBuffers[i].second;
 
-		for(const auto& it : m_CachedFrameBuffers) {
-			for(const auto& rt : it.second->RenderTargets) {
+			for(const auto& rt : fb->RenderTargets)
+			{
 				if(texture != rt) {
 					continue;
 				}
 
-				if(m_CurrentFrameBuffer == it.second) {
+				if(m_CurrentFrameBuffer == fb) {
 					m_CurrentFrameBuffer = nullptr;
 				}
 
-				frameBuffersToRemove.push_back(it.first);
+				AU_LOG_INFO("FrameBuffer destroyed !");
+				m_CachedFrameBuffers.erase(std::find(m_CachedFrameBuffers.begin(), m_CachedFrameBuffers.end(), m_CachedFrameBuffers[i]));
 				break;
 			}
-		}
-
-		for(auto rt_id : frameBuffersToRemove) {
-			m_CachedFrameBuffers.erase(rt_id);
 		}
 	}
 
