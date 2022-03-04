@@ -52,6 +52,8 @@ namespace Aurora
 	GameContext* AppContext::m_GameContext = nullptr;
 	GameModeBase* AppContext::m_GameMode = nullptr;
 
+	ImFont* m_ImGuiDefaultFont = nullptr;
+
 	AuroraEngine::AuroraEngine() :
 		m_Window(),
 		m_SwapChain(nullptr),
@@ -140,6 +142,10 @@ namespace Aurora
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
+			//io.Fonts->AddFontFromFileTTF("../../Assets/Fonts/LatoLatin-Bold.ttf", 16);
+			auto fontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf"));
+			io.Fonts->AddFontFromMemoryTTF(fontData->data(), fontData->size(), 15);
+
 			io.IniFilename = "../../imgui.ini";
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 			//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -155,6 +161,9 @@ namespace Aurora
 			// Setup Platform/Renderer backends
 			ImGui_ImplGlfw_InitForOpenGL(((GLFWWindow*)m_Window)->GetHandle(), true);
 			ImGui_ImplOpenGL3_Init("#version 330 core");
+
+			//auto fontData = m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf");
+			//m_ImGuiDefaultFont = io.Fonts->AddFontFromMemoryCompressedTTF(fontData.data(), fontData.size(), 12);
 		}
 
 		// Init global context
