@@ -24,6 +24,8 @@ namespace Aurora
 			return;
 		}
 
+		m_Actors.push_back(actor);
+
 		actor->SetActive(true);
 		actor->BeginPlay();
 	}
@@ -35,9 +37,9 @@ namespace Aurora
 			return;
 		}
 
-		for(SceneComponent* component : actor->m_Components)
+		for (size_t i = actor->m_Components.size(); i --> 0;)
 		{
-			actor->DestroyComponent(component);
+			actor->DestroyComponent(actor->m_Components[i]);
 		}
 
 		actor->BeginDestroy();

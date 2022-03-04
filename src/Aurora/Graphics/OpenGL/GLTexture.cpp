@@ -21,8 +21,6 @@ namespace Aurora
 
 	GLTexture::~GLTexture()
 	{
-		AU_LOG_INFO("Texture destroyed");
-
 		if(m_UsedInFrameBuffers && GEngine->GetRenderDevice()) {
 			static_cast<GLRenderDevice*>(GEngine->GetRenderDevice())->NotifyTextureDestroy(this); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 		}

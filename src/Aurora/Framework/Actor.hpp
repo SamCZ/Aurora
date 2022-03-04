@@ -30,12 +30,12 @@ namespace Aurora
 		{
 			SceneComponent* component = GetComponentStorage().CreateComponent<T, Args...>(name, std::forward<Args>(args)...);
 
-			InitializeComponent(component);
-
 			if(m_RootComponent)
 			{
 				component->AttachToComponent(m_RootComponent);
 			}
+
+			InitializeComponent(component);
 
 			return (T*) component;
 		}

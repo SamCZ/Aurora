@@ -112,6 +112,8 @@ namespace Aurora
 			AU_LOG_FATAL("Cound not find size for pointer ", PointerToString(mem), " !");
 		}
 
+		m_MemorySizes.erase(it);
+
 		MemSize size = it->second;
 		MemPtr memPtrEnd = memPtrBegin + size;
 

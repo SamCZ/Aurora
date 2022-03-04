@@ -48,10 +48,7 @@ namespace Aurora
 	public:
 		ComponentView() : m_DataVector(nullptr) {}
 
-		explicit ComponentView(std::vector<std::uintptr_t>* data) : m_DataVector(data)
-		{
-			std::cout << "components: " << m_DataVector->size() << std::endl;
-		}
+		explicit ComponentView(std::vector<std::uintptr_t>* data) : m_DataVector(data) { }
 
 		ComponentIterator<T> begin()
 		{
@@ -122,11 +119,11 @@ namespace Aurora
 		template<typename T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
 		void DestroyComponent(T* component)
 		{
-			TTypeID componentID = T::TypeID();
+			TTypeID componentID = component->GetTypeID();
 
 			if(!m_ComponentMemory.contains(componentID))
 			{
-				AU_LOG_WARNING("Component ", T::TypeName(), " does not exists in Scene !");
+				AU_LOG_WARNING("Component ", component->GetTypeName(), " does not exists in Scene !");
 				return;
 			}
 

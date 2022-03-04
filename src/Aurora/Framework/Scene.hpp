@@ -52,8 +52,6 @@ namespace Aurora
 
 			actor->InitializeComponents();
 
-			m_Actors.push_back(actor);
-
 			return (T*) actor;
 		}
 
