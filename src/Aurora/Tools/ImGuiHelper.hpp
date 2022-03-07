@@ -139,7 +139,7 @@ namespace ImGui
 		return state;
 	}
 
-	inline void InputText(const std::string& label, std::string& text, bool enableLabel = true)
+	inline bool InputText(const std::string& label, std::string& text, bool enableLabel = true)
 	{
 		if(enableLabel) {
 			ImGui::Text("%s", label.c_str());
@@ -151,7 +151,9 @@ namespace ImGui
 		text.copy(name, 64);
 		if (ImGui::InputText(("##" + label).c_str(), name, 64)) {
 			text = std::string(name);
+			return true;
 		}
+		return false;
 	}
 
 	inline void InputInt(const std::string& label, int& i)

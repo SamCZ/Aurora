@@ -3,12 +3,19 @@
 #include <utility>
 #include "Aurora/Logger/Logger.hpp"
 #include "Aurora/Framework/GameModeBase.hpp"
+#include "Aurora/Framework/Scene.hpp"
 
 namespace Aurora
 {
 	class GameContext
 	{
+	protected:
+		Scene m_Scene;
+	public:
+		virtual ~GameContext() = default;
 
+		Scene& GetScene() { return m_Scene; }
+		[[nodiscard]] const Scene& GetScene() const { return m_Scene; }
 	};
 
 	class AppContext
@@ -46,7 +53,7 @@ namespace Aurora
 				AU_LOG_FATAL("Cannot change already initialized game context !");
 			}
 
-			m_GameContext = new T(std::forward<Args>(args)...);
+			return (m_GameContext = new T(std::forward<Args>(args)...));
 		}
 
 		template<class T>
@@ -67,5 +74,7 @@ namespace Aurora
 			m_GameMode = new T(std::forward<Args>(args)...);
 			m_GameMode->BeginPlay();
 		}
+
+		static Scene& GetScene() { return m_GameContext->GetScene(); }
 	};
 }

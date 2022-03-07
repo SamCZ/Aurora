@@ -11,6 +11,8 @@ namespace Aurora
 	private:
 		std::shared_ptr<ConsoleWindow> m_ConsoleWindow;
 		RenderViewPort* m_RenderViewPort;
+
+		class Actor* m_SelectedActor;
 	public:
 		MainEditorPanel();
 		~MainEditorPanel();

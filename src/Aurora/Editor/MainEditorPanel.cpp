@@ -1,17 +1,22 @@
 #include "MainEditorPanel.hpp"
-#include <imgui.h>
+
+#include "Style.hpp"
 
 #include "Aurora/Engine.hpp"
+#include "Aurora/Aurora.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
+#include "Aurora/Framework/Actor.hpp"
 
 namespace Aurora
 {
-	MainEditorPanel::MainEditorPanel()
+	MainEditorPanel::MainEditorPanel() : m_SelectedActor(nullptr)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		Logger::AddSinkPtr(m_ConsoleWindow);
 
 		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
+
+		SetEditorStyle();
 	}
 
 	MainEditorPanel::~MainEditorPanel() = default;
@@ -22,16 +27,50 @@ namespace Aurora
 		BeginDockSpace();
 
 		ImGui::Begin("Scene");
+		{
+			int i = 0;
+			for (Actor* actor : AppContext::GetGameContext<GameContext>()->GetScene())
+			{
+				String name = String("[") + actor->GetTypeName() + "] " + actor->GetName();
+				//ImGui::Text("%s", actor->GetTypeName());
 
-		ImGui::End();
+				uint8 flags = actor == m_SelectedActor ? ImGuiTreeNodeFlags_Selected : 0;
+				if(ImGui::TreeNodeEx((name + "##Node" + std::to_string(i)).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags))
+				{
+					if (ImGui::IsItemActivated())
+					{
+						m_SelectedActor = actor;
+					}
 
-		ImGui::Begin("TargetOptions");
+					ImGui::Text("yo");
 
+					ImGui::TreePop();
+				}
+				i++;
+			}
+		}
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		ImGui::Begin("Viewport");
+		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_MenuBar);
 		{
+			if (ImGui::BeginMenuBar())
+			{
+				ImGui::Spacing();
+				static bool isPlaying = false;
+				if (ImGui::BeginMenu("Play", !isPlaying))
+				{
+					isPlaying = true;
+					ImGui::EndMenu();
+				}
+				if (ImGui::BeginMenu("Stop", isPlaying))
+				{
+					isPlaying = false;
+					ImGui::EndMenu();
+				}
+				ImGui::EndMenuBar();
+			}
+
 			ImVec2 avail_size = ImGui::GetContentRegionAvail();
 			ImVec2 dragDelta = ImGui::GetMouseDragDelta();
 			Vector2i viewPortSize = {avail_size.x, avail_size.y};
@@ -55,7 +94,14 @@ namespace Aurora
 		m_ConsoleWindow->Draw();
 
 		ImGui::Begin("Properties");
-
+		if(m_SelectedActor)
+		{
+			std::string name = m_SelectedActor->GetName();
+			if(ImGui::InputText("Name", name))
+			{
+				m_SelectedActor->SetName(name);
+			}
+		}
 		ImGui::End();
 	}
 
@@ -67,7 +113,7 @@ namespace Aurora
 
 		// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
 		// because it would be confusing to have two docking targets within each others.
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
 		if (opt_fullscreen)
 		{
 			const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -115,7 +161,7 @@ namespace Aurora
 
 		}
 
-		if (ImGui::BeginMenuBar())
+		/*if (ImGui::BeginMenuBar())
 		{
 			if (ImGui::BeginMenu("Options"))
 			{
@@ -135,7 +181,7 @@ namespace Aurora
 			}
 
 			ImGui::EndMenuBar();
-		}
+		}*/
 
 		ImGui::End();
 	}

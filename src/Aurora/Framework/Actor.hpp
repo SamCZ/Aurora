@@ -101,6 +101,9 @@ namespace Aurora
 		inline virtual void ToggleActive() { m_IsActive = !m_IsActive; }
 		virtual inline bool IsActive() { return m_IsActive; }
 
+		[[nodiscard]] inline const String& GetName() const { return m_Name; }
+		inline void SetName(const String& name) { m_Name = name; }
+
 		inline Scene* GetScene() { return m_Scene; }
 
 		void DestroyComponent(SceneComponent*& component);

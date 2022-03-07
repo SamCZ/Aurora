@@ -111,7 +111,6 @@ class BaseAppContext : public AppContext
 	std::shared_ptr<Material> mat2;
 	std::shared_ptr<Material> mat3;
 
-	Scene scene;
 	Mesh_ptr mesh = nullptr;
 
 	MainEditorPanel* mainEditorPanel;
@@ -123,6 +122,8 @@ class BaseAppContext : public AppContext
 
 	void Init() override
 	{
+		SetGameContext<GameContext>();
+
 		matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Test2D.matd");
 
 		mat = matDef->CreateInstance();
@@ -143,13 +144,15 @@ class BaseAppContext : public AppContext
 			mesh = importedData.Mesh;
 		}
 
-		TestActor* actor = scene.SpawnActor<TestActor>("", {0, 0, 0});
+		TestActor* actor = GetScene().SpawnActor<TestActor>("TestActor", Vector3(0, 0, 0));
 		CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
-		for(SceneComponent* component : scene.GetComponents<SceneComponent>())
+		for(SceneComponent* component : GetScene().GetComponents<SceneComponent>())
 		{
 			std::cout << "Component " << component->GetName() << std::endl;
 		}
+
+		GetScene().SpawnActor<TestActor>("TestActor2", Vector3(0, 0, 0));
 
 		mainEditorPanel = new MainEditorPanel();
 	}
