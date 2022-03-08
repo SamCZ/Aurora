@@ -143,7 +143,7 @@ namespace Aurora
 
 				auto* typeBase = reinterpret_cast<ObjectBase*>(it.second[0]);
 
-				if(typeBase->HasType(it.first))
+				if(typeBase->HasType(T::TypeID()))
 				{
 					m_FindComponentCache.insert(m_FindComponentCache.end(), it.second.begin(), it.second.end());
 				}
