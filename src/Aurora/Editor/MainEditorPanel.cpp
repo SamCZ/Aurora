@@ -27,6 +27,31 @@ namespace Aurora
 		DrawMainMenu();
 		BeginDockSpace();
 
+		std::function<void(SceneComponent* component, int& i)> drawComponent;
+		drawComponent = [&drawComponent](SceneComponent* component, int& i) -> void
+		{
+			String name = String("[") + component->GetTypeName() + "] " + component->GetName();
+
+			uint8 flags = 0;
+
+			if(ImGui::TreeNodeEx((name + "##Node" + std::to_string(i)).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags))
+			{
+				if (ImGui::IsItemActivated())
+				{
+
+				}
+
+				i++;
+
+				for(SceneComponent* child : component->GetComponents())
+				{
+					drawComponent(child, i);
+				}
+
+				ImGui::TreePop();
+			}
+		};
+
 		ImGui::Begin("Scene");
 		{
 			int i = 0;
@@ -43,7 +68,7 @@ namespace Aurora
 						m_SelectedActor = actor;
 					}
 
-					ImGui::Text("yo");
+					drawComponent(actor->GetRootComponent(), i);
 
 					ImGui::TreePop();
 				}

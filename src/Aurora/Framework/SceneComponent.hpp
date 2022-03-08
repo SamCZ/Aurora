@@ -26,5 +26,7 @@ namespace Aurora
 
 		bool AttachToComponent(SceneComponent* InParent);
 		void DetachFromComponent();
+
+		[[nodiscard]] const std::vector<SceneComponent*>& GetComponents() const { return m_Components; }
 	};
 }
