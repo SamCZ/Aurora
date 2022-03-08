@@ -3,6 +3,17 @@
 
 namespace Aurora
 {
+	Matrix4 SceneComponent::GetTransformationMatrix() const
+	{
+		// TODO: Cache matrix and update it only when transform changes!
+
+		if(m_Parent)
+		{
+			return m_Parent->GetTransformationMatrix() * m_Transform.GetTransform();
+		}
+
+		return m_Transform.GetTransform();
+	}
 
 	bool SceneComponent::AttachToComponent(SceneComponent *InParent)
 	{

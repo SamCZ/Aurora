@@ -6,7 +6,7 @@ namespace Aurora
 {
 	struct Transform
 	{
-		Vector3 Translation = { 0.0f, 0.0f, 0.0f };
+		Vector3 Location = { 0.0f, 0.0f, 0.0f };
 		Vector3 Rotation = { 0.0f, 0.0f, 0.0f };
 		Vector3 Scale = { 1.0f, 1.0f, 1.0f };
 
@@ -18,7 +18,7 @@ namespace Aurora
 
 		Transform() = default;
 		Transform(const Transform& other) = default;
-		explicit Transform(const glm::vec3& translation) : Translation(translation) {}
+		explicit Transform(const glm::vec3& location) : Location(location) {}
 
 		[[nodiscard]] Matrix4 GetTransform() const
 		{
@@ -35,12 +35,12 @@ namespace Aurora
 			// Y * X * Z
 			const glm::mat4 roationMatrix = transformY * transformX * transformZ;
 
-			return  glm::translate(glm::mat4(1.0f), Translation) * roationMatrix * glm::scale(glm::mat4(1.0f), Scale);
+			return  glm::translate(glm::mat4(1.0f), Location) * roationMatrix * glm::scale(glm::mat4(1.0f), Scale);
 		}
 
 		void SetFromMatrix(const Matrix4& mat)
 		{
-			glm::DecomposeTransform(mat, Translation, Rotation, Scale);
+			glm::DecomposeTransform(mat, Location, Rotation, Scale);
 			Rotation = glm::degrees(Rotation);
 		}
 	};

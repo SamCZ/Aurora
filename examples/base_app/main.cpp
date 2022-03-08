@@ -83,9 +83,9 @@ public:
 	void InitializeComponents() override
 	{
 		m_Test = AddComponent<SceneComponent>("Test");
-		m_Test->GetTransform().Translation.x = 15;
+		m_Test->GetTransform().Location.x = 15;
 
-		GetRootComponent()->GetTransform().Translation.x = 1000;
+		GetRootComponent()->GetTransform().Location.x = 1000;
 	}
 
 	void Tick(double delta) override
@@ -95,12 +95,33 @@ public:
 
 	void Test()
 	{
-		std::cout << "TestActor Test() " << number << " " << m_Test->GetTransform().Translation.x << " " << GetRootComponent()->GetTransform().Translation.x << std::endl;
+		std::cout << "TestActor Test() " << number << " " << m_Test->GetTransform().Location.x << " " << GetRootComponent()->GetTransform().Location.x << std::endl;
 	}
 
 	~TestActor() override
 	{
 		std::cout << "TestActor deleted" << std::endl;
+	}
+};
+
+class CameraActor : public Actor
+{
+private:
+	CameraComponent* m_Camera;
+public:
+	CLASS_OBJ(CameraActor, Actor);
+	DEFAULT_COMPONENT(CameraComponent);
+
+	void InitializeComponents() override
+	{
+		m_Camera = CameraComponent::Cast(GetRootComponent());
+		m_Camera->SetViewPort(GEngine->GetViewPortManager()->Get());
+		m_Camera->SetPerspective(75, 0.1f, 2000.0f);
+	}
+
+	CameraComponent* GetCamera()
+	{
+		return m_Camera;
 	}
 };
 
@@ -124,6 +145,8 @@ class BaseAppContext : public AppContext
 	{
 		SetGameContext<GameContext>();
 
+		mainEditorPanel = new MainEditorPanel();
+
 		matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Test2D.matd");
 
 		mat = matDef->CreateInstance();
@@ -145,7 +168,7 @@ class BaseAppContext : public AppContext
 		}
 
 		TestActor* actor = GetScene().SpawnActor<TestActor>("TestActor", Vector3(0, 0, 0));
-		CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
+		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
 		for(SceneComponent* component : GetScene().GetComponents<SceneComponent>())
 		{
@@ -154,7 +177,8 @@ class BaseAppContext : public AppContext
 
 		GetScene().SpawnActor<TestActor>("TestActor2", Vector3(0, 0, 0));
 
-		mainEditorPanel = new MainEditorPanel();
+
+		GetScene().SpawnActor<CameraActor>("Camera", {});
 	}
 
 	float a = 0;
@@ -181,35 +205,55 @@ class BaseAppContext : public AppContext
 
 	void Render() override
 	{
-		RenderViewPort* wp = GEngine->GetViewPortManager()->Get();
-
 		DrawCallState drawCallState;
-		drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
-		drawCallState.ViewPort = wp->ViewPort;
-		drawCallState.BindTarget(0, wp->Target);
 
-		drawCallState.ClearColor = Color::black();
-		drawCallState.ClearColorTarget = true;
-
-		GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
-		GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
-
+		for (CameraComponent* camera : GetScene().GetComponents<CameraComponent>())
 		{
-			drawCallState.ViewPort = FViewPort(0, 0, 256, 256);
-			GEngine->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
+			if(!camera->IsActive())
+				continue;
 
-			mat->BeginPass((uint8)EPassType::Ambient ,drawCallState);
-			GEngine->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
-			mat->EndPass((uint8)EPassType::Ambient, drawCallState);
-		}
+			RenderViewPort* viewPort = camera->GetViewPort();
 
-		{
-			drawCallState.ViewPort = FViewPort(0, 256 + 16, 256, 256);
-			GEngine->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
+			if(!viewPort)
+			{
+				AU_LOG_ERROR("Cannot render camera ", camera->GetName(), " because it has no viewport !");
+				continue;
+			}
 
-			mat2->BeginPass((uint8)EPassType::Ambient ,drawCallState);
-			GEngine->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
-			mat2->EndPass((uint8)EPassType::Ambient, drawCallState);
+			if(camera->GetProjectionType() == CameraComponent::ProjectionType::None)
+			{
+				AU_LOG_ERROR("Cannot render camera ", camera->GetName(), " because it has no projection !");
+				continue;
+			}
+
+			drawCallState.ViewPort = viewPort->ViewPort;
+			drawCallState.BindTarget(0, viewPort->Target);
+
+			drawCallState.ClearColor = camera->GetClearColor();
+			drawCallState.ClearColorTarget = true;
+
+			GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+			GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
+
+			drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
+			{
+				drawCallState.ViewPort = FViewPort(0, 0, 256, 256);
+				GEngine->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
+
+				mat->BeginPass(Pass::Ambient ,drawCallState);
+				GEngine->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
+				mat->EndPass(Pass::Ambient, drawCallState);
+			}
+
+			{
+				drawCallState.ViewPort = FViewPort(0, 256 + 16, 256, 256);
+				GEngine->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
+
+				mat2->BeginPass(Pass::Ambient ,drawCallState);
+				GEngine->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
+				mat2->EndPass(Pass::Ambient, drawCallState);
+			}
+			////
 		}
 	}
 

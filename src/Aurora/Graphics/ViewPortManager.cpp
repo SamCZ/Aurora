@@ -24,6 +24,8 @@ namespace Aurora
 			TargetDesc.Height = size.y;
 
 			Target = GEngine->GetRenderDevice()->CreateTexture(TargetDesc);
+
+			ResizeEmitter.Invoke(size);
 		}
 	}
 

@@ -49,6 +49,9 @@ namespace Aurora
 		}
 
 		m_Components.push_back(component);
+
+		component->SetActive(true);
+		component->BeginPlay();
 	}
 
 	ComponentStorage& Actor::GetComponentStorage()

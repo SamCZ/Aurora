@@ -23,7 +23,7 @@ namespace Aurora
 		Scene();
 		~Scene();
 
-		template<class T, class RootCmp = SceneComponent, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
+		template<class T, class RootCmp = typename T::DefaultComponent_t, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
 		T* SpawnActor(const String& name, const Vector3& position, const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
 		{
 			T* actor = BeginSpawnActor<T, RootCmp>(name, position, rotation, scale);
@@ -34,6 +34,8 @@ namespace Aurora
 		template<class T, class RootCmp = SceneComponent, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
 		T* BeginSpawnActor(const String& name, const Vector3& position, const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
 		{
+			au_assert(name.empty() == false);
+
 			size_t objSize = sizeof(T);
 			size_t objSizeAligned = Align(objSize, 16u);
 
@@ -46,7 +48,7 @@ namespace Aurora
 			actor->m_RootComponent = m_ComponentStorage.CreateComponent<RootCmp>("RootComponent");
 			actor->InitializeComponent(actor->m_RootComponent);
 
-			actor->m_RootComponent->GetTransform().Translation = position;
+			actor->m_RootComponent->GetTransform().Location = position;
 			actor->m_RootComponent->GetTransform().Rotation = rotation;
 			actor->m_RootComponent->GetTransform().Scale = scale;
 

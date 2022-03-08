@@ -18,6 +18,12 @@ namespace Aurora
 
 		Transform& GetTransform() { return m_Transform; }
 
+		[[nodiscard]] const Vector3& GetLocation() const { return m_Transform.Location; }
+		[[nodiscard]] const Vector3& GetRotation() const { return m_Transform.Rotation; }
+		[[nodiscard]] const Vector3& GetScale() const { return m_Transform.Scale; }
+
+		[[nodiscard]] Matrix4 GetTransformationMatrix() const;
+
 		bool AttachToComponent(SceneComponent* InParent);
 		void DetachFromComponent();
 	};

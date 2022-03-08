@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Aurora/Core/Types.hpp"
+#include "Aurora/Core/Delegate.hpp"
 #include "Aurora/Tools/robin_hood.h"
 #include "Base/Texture.hpp"
 #include "ViewPort.hpp"
@@ -14,6 +15,7 @@ namespace Aurora
 		FViewPort ViewPort;
 		TextureDesc TargetDesc;
 		Texture_ptr Target;
+		EventEmitter<const Vector2i&> ResizeEmitter;
 
 		void Resize(const Vector2i &size);
 
@@ -26,6 +28,9 @@ namespace Aurora
 		{
 			return ViewPort.Width > 0 && ViewPort.Height > 0;
 		}
+
+		[[nodiscard]] int GetWidth() const { return ViewPort.Width; }
+		[[nodiscard]] int GetHeight() const { return ViewPort.Height; }
 	};
 
 	class ViewPortManager

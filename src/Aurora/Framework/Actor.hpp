@@ -6,6 +6,8 @@
 #include "SceneComponent.hpp"
 #include "ComponentStorage.hpp"
 
+#define DEFAULT_COMPONENT(name) typedef name DefaultComponent_t
+
 namespace Aurora
 {
 	class Scene;
@@ -21,6 +23,7 @@ namespace Aurora
 		std::vector<SceneComponent*> m_Components;
 	public:
 		CLASS_OBJ(Actor, ObjectBase);
+		DEFAULT_COMPONENT(SceneComponent);
 	public:
 		Actor();
 		~Actor() override;

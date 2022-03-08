@@ -15,6 +15,7 @@ namespace Aurora
 		Logger::AddSinkPtr(m_ConsoleWindow);
 
 		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
+		m_RenderViewPort->Resize({1270, 720});
 
 		SetEditorStyle();
 	}
