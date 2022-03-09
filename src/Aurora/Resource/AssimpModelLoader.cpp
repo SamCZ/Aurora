@@ -21,7 +21,7 @@ namespace Aurora
 		auto& indices = mesh->LODResources[lod].Indices;
 		auto* buffer = mesh->GetVertexBuffer<StaticMesh::Vertex>(lod);
 
-		MeshSection section;
+		FMeshSection section;
 		section.MaterialIndex = 0;
 
 		size_t lastVertex = buffer->GetCount();

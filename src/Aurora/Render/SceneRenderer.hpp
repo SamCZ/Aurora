@@ -13,8 +13,8 @@ namespace Aurora
 
 	struct VisibleEntity
 	{
-		Material* Material;
-		Mesh* Mesh;
+		Aurora::Material* Material;
+		Aurora::Mesh* Mesh;
 		uint MeshSection;
 		LOD Lod;
 		Matrix4 Transform;
@@ -32,8 +32,8 @@ namespace Aurora
 
 	struct ModelContext
 	{
-		Material* Material;
-		Mesh* Mesh;
+		Aurora::Material* Material;
+		Aurora::Mesh* Mesh;
 		MeshLodResource* LodResource;
 		FMeshSection* MeshSection;
 		std::vector<Matrix4> Instances;
