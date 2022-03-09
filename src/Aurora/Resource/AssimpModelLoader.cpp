@@ -78,7 +78,7 @@ namespace Aurora
 			}
 		}
 
-		section.NumTriangles = sourceMesh->mNumFaces * 3;
+		section.NumTriangles = sourceMesh->mNumFaces * sizeof(Index_t);
 		mesh->LODResources[lod].Sections.emplace_back(section);
 	}
 
@@ -141,11 +141,16 @@ namespace Aurora
 
 		AU_LOG_INFO("Mesh section count: ", mesh->LODResources[0].Sections.size());
 
+		{ // TODO: just for testing purposes
+			mesh->MaterialSlots.emplace_back(nullptr, "Material");
+		}
+
 		m_Importer.FreeScene();
 
 		if(importOptions.UploadToGPU)
 			mesh->UploadToGPU(importOptions.KeepCPUData);
 
+		importedData.Imported = true;
 		importedData.Mesh = mesh;
 
 		return importedData;

@@ -1,6 +1,8 @@
 # Aurora
 ### Free open source C++ game engine
 
+**STILL WORK IN PROGRESS!**
+
 ## Supported Platforms
 **Desktop**
 

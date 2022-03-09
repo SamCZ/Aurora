@@ -75,6 +75,8 @@ namespace Aurora
 	public:
 		void UpdateFrustum();
 
+		void Tick(double delta) override;
+
 		[[nodiscard]] Vector3 GetWorldPositionFromScreen(float x, float y, float projectionZPos) const;
 		bool GetScreenCoordinatesFromWorld(const Vector3& position, Vector2& out_ScreenPos) const;
 

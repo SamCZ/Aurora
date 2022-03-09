@@ -34,16 +34,23 @@ namespace Aurora
 
 			uint8 flags = 0;
 
-			if(ImGui::TreeNodeEx((name + "##Node" + std::to_string(i)).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags))
+			const std::vector<SceneComponent*>& childComponents = component->GetComponents();
+
+			if(childComponents.empty())
+			{
+				ImGui::TreeNodeEx((name + "##ComponentNode" + std::to_string(++i)).c_str(), ImGuiTreeNodeFlags_Leaf);
+				ImGui::TreePop();
+				return;
+			}
+
+			if(ImGui::TreeNodeEx((name + "##ComponentNode" + std::to_string(++i)).c_str(), flags))
 			{
 				if (ImGui::IsItemActivated())
 				{
 
 				}
 
-				i++;
-
-				for(SceneComponent* child : component->GetComponents())
+				for(SceneComponent* child : childComponents)
 				{
 					drawComponent(child, i);
 				}
@@ -61,18 +68,18 @@ namespace Aurora
 				//ImGui::Text("%s", actor->GetTypeName());
 
 				uint8 flags = actor == m_SelectedActor ? ImGuiTreeNodeFlags_Selected : 0;
-				if(ImGui::TreeNodeEx((name + "##Node" + std::to_string(i)).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags))
+				if(ImGui::TreeNodeEx((name + "##Node" + std::to_string(++i)).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags))
 				{
 					if (ImGui::IsItemActivated())
 					{
 						m_SelectedActor = actor;
 					}
 
-					drawComponent(actor->GetRootComponent(), i);
+					drawComponent(actor->GetRootComponent(), ++i);
 
+					ImGui::Separator();
 					ImGui::TreePop();
 				}
-				i++;
 			}
 		}
 		ImGui::End();
@@ -106,7 +113,9 @@ namespace Aurora
 				m_RenderViewPort->Resize(viewPortSize);
 			}
 
-			ImGui::Image((ImTextureID)m_RenderViewPort->Target->GetRawHandle(), ImVec2(m_RenderViewPort->ViewPort.Width, m_RenderViewPort->ViewPort.Height));
+			ImVec2 uv0 = {0, 1};
+			ImVec2 uv1 = {1, 0};
+			ImGui::Image((ImTextureID)m_RenderViewPort->Target->GetRawHandle(), ImVec2(m_RenderViewPort->ViewPort.Width, m_RenderViewPort->ViewPort.Height), uv0, uv1);
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();
@@ -129,6 +138,8 @@ namespace Aurora
 			}
 		}
 		ImGui::End();
+
+		//ImGui::ShowDemoWindow();
 	}
 
 	void MainEditorPanel::BeginDockSpace()

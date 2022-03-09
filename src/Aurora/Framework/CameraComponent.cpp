@@ -143,4 +143,9 @@ namespace Aurora
 
 		return false;
 	}
+
+	void CameraComponent::Tick(double delta)
+	{
+		UpdateFrustum();
+	}
 }

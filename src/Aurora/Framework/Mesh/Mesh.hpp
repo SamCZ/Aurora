@@ -2,6 +2,7 @@
 
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Object.hpp"
 #include "Aurora/Graphics/Base/Buffer.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Tools/robin_hood.h"
@@ -35,12 +36,15 @@ namespace Aurora
 		bool EnableCollision;
 		bool CastShadow;
 
+		EPrimitiveType PrimitiveType;
+
 		MeshSection()
 			: MaterialIndex(0)
 			, FirstIndex(0)
 			, NumTriangles(0)
 			, EnableCollision(false)
 			, CastShadow(true)
+			, PrimitiveType(EPrimitiveType::TriangleList)
 		{
 		}
 	};
@@ -55,13 +59,16 @@ namespace Aurora
 		Buffer_ptr IndexBuffer;
 		bool NeedUpdateBuffers;
 
-		MeshLodResource() : Vertices(nullptr), Indices(), Sections(), VertexBuffer(nullptr), IndexBuffer(nullptr), NeedUpdateBuffers(false) { }
+		EIndexBufferFormat IndexFormat;
+
+		MeshLodResource() : Vertices(nullptr), Indices(), Sections(), VertexBuffer(nullptr), IndexBuffer(nullptr), NeedUpdateBuffers(false), IndexFormat(EIndexBufferFormat::Uint32) { }
 	};
 
-	AU_CLASS(Mesh)
+	AU_CLASS(Mesh) : public ObjectBase
 	{
 	public:
-		robin_hood::unordered_map<uint8_t, MeshLodResource> LODResources;
+		CLASS_OBJ(Mesh, ObjectBase);
+		robin_hood::unordered_map<LOD, MeshLodResource> LODResources;
 		std::vector<MaterialSlot> MaterialSlots;
 
 		void UploadToGPU(bool keepCPUData, bool dynamic = false);
@@ -87,7 +94,7 @@ namespace Aurora
 		}
 
 		template<typename BufferTypename>
-		VertexBuffer<BufferTypename>* GetVertexBuffer(int lod = 0)
+		VertexBuffer<BufferTypename>* GetVertexBuffer(LOD lod = 0)
 		{
 			if(!static_cast<Self*>(this)->LODResources.contains(lod)) {
 				return nullptr;
@@ -141,6 +148,8 @@ namespace Aurora
 	AU_CLASS(StaticMesh) : public Mesh, public MeshBufferHelper<StaticMesh>
 	{
 	public:
+		CLASS_OBJ(StaticMesh, Mesh);
+
 		struct Vertex
 		{
 			Vector3 Position;
@@ -154,6 +163,8 @@ namespace Aurora
 	AU_CLASS(SkeletalMesh) : public Mesh, public MeshBufferHelper<SkeletalMesh>
 	{
 	public:
+		CLASS_OBJ(SkeletalMesh, Mesh);
+
 		struct Vertex
 		{
 			Vector3 Position;

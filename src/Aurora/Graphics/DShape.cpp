@@ -2,8 +2,8 @@
 #include "Aurora/Engine.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
+#include "Aurora/Framework/CameraComponent.hpp"
 
-#include "Aurora/Framework/BaseComponents.hpp"
 #include "Aurora/Render/VgRender.hpp"
 
 namespace Aurora
@@ -117,12 +117,12 @@ namespace Aurora
 		m_ArrowShapes.clear();
 	}
 
-	void DShapes::RenderText(TransformComponent* cameraTransform, CameraComponent* cameraComponent)
+	void DShapes::RenderText(CameraComponent* camera)
 	{
 		for(const ShapeStructs::TextShape& shape : m_TextShapes)
 		{
 			Vector2 coords;
-			if(cameraComponent->GetScreenCoordinates(*cameraTransform, shape.Position, coords))
+			if(camera->GetScreenCoordinatesFromWorld(shape.Position, coords))
 			{
 				GEngine->GetVgRender()->DrawString(shape.Text, coords, shape.Color, 12.0f, VgAlign::Center, VgAlign::Center);
 			}
