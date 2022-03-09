@@ -88,7 +88,7 @@ namespace Aurora
 
 				for (int sectionID = 0; sectionID < lodResource.Sections.size(); ++sectionID)
 				{
-					const MeshSection& meshSection = lodResource.Sections[sectionID];
+					const FMeshSection& meshSection = lodResource.Sections[sectionID];
 					int32_t materialIndex = meshSection.MaterialIndex;
 
 					Material_ptr material = meshComponent->GetMaterialSlot(materialIndex).Material;
@@ -197,7 +197,7 @@ namespace Aurora
 				Material* currentMaterial = nullptr;
 				Mesh* currentMesh = nullptr;
 				MeshLodResource* currentLodResource = nullptr;
-				MeshSection* currentSection = nullptr;
+				FMeshSection* currentSection = nullptr;
 
 				for (const ModelContext& modelContext : modelContexts)
 				{

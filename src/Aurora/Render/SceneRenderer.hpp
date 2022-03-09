@@ -35,7 +35,7 @@ namespace Aurora
 		Material* Material;
 		Mesh* Mesh;
 		MeshLodResource* LodResource;
-		MeshSection* MeshSection;
+		FMeshSection* MeshSection;
 		std::vector<Matrix4> Instances;
 	};
 

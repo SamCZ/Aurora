@@ -26,7 +26,7 @@ namespace Aurora
 		bool operator==(const MaterialSlot& left) const { return Material == left.Material && MaterialSlotName == left.MaterialSlotName; }
 	};
 
-	struct MeshSection
+	struct FMeshSection
 	{
 		int32_t MaterialIndex;
 
@@ -38,7 +38,7 @@ namespace Aurora
 
 		EPrimitiveType PrimitiveType;
 
-		MeshSection()
+		FMeshSection()
 			: MaterialIndex(0)
 			, FirstIndex(0)
 			, NumTriangles(0)
@@ -53,7 +53,7 @@ namespace Aurora
 	{
 		std::shared_ptr<IVertexBuffer> Vertices;
 		std::vector<Index_t> Indices;
-		std::vector<MeshSection> Sections;
+		std::vector<FMeshSection> Sections;
 
 		Buffer_ptr VertexBuffer;
 		Buffer_ptr IndexBuffer;
