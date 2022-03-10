@@ -8,7 +8,7 @@ namespace Aurora
 	class AU_API MeshComponent : public SceneComponent
 	{
 	protected:
-		std::vector<MaterialSlot> m_MaterialSlots;
+		MaterialSet m_MaterialSlots;
 	public:
 		CLASS_OBJ(MeshComponent, SceneComponent);
 
@@ -21,7 +21,7 @@ namespace Aurora
 
 		[[nodiscard]] virtual TTypeID GetSupportedMeshType() const = 0;
 
-		void SetMaterial(uint slot, const matref& material)
+		void SetMaterial(int slot, const matref& material)
 		{
 			au_assert(slot < m_MaterialSlots.size());
 
@@ -29,16 +29,18 @@ namespace Aurora
 		}
 
 		[[nodiscard]] size_t GetNumMaterialSlots() const { return m_MaterialSlots.size(); }
-		MaterialSlot& GetMaterialSlot(uint slot)
+		MaterialSlot& GetMaterialSlot(int slot)
 		{
 			au_assert(slot < m_MaterialSlots.size());
 			return m_MaterialSlots[slot];
 		}
 
-		[[nodiscard]] const MaterialSlot& GetMaterialSlot(uint slot) const
+		[[nodiscard]] const MaterialSlot& GetMaterialSlot(int slot) const
 		{
 			au_assert(slot < m_MaterialSlots.size());
-			return m_MaterialSlots[slot];
+			return m_MaterialSlots.find(slot)->second;
 		}
+
+		MaterialSet& GetMaterialSet() { return m_MaterialSlots; }
 	};
 }

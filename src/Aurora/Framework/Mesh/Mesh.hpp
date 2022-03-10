@@ -64,12 +64,14 @@ namespace Aurora
 		MeshLodResource() : Vertices(nullptr), Indices(), Sections(), VertexBuffer(nullptr), IndexBuffer(nullptr), NeedUpdateBuffers(false), IndexFormat(EIndexBufferFormat::Uint32) { }
 	};
 
+	typedef std::unordered_map<int32_t, MaterialSlot> MaterialSet;
+
 	AU_CLASS(Mesh) : public ObjectBase
 	{
 	public:
 		CLASS_OBJ(Mesh, ObjectBase);
 		robin_hood::unordered_map<LOD, MeshLodResource> LODResources;
-		std::vector<MaterialSlot> MaterialSlots;
+		MaterialSet MaterialSlots;
 
 		void UploadToGPU(bool keepCPUData, bool dynamic = false);
 	};
