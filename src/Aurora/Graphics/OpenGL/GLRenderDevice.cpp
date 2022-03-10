@@ -1115,6 +1115,22 @@ namespace Aurora
 		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
 		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
 
+		if(args.size() == 1)
+		{
+			if (args[0].InstanceCount > 1)
+			{
+				//glDrawElementsInstancedBaseVertex(primitiveType, GLsizei(drawArg.VertexCount), ibFormat, (const void*)size_t(drawArg.StartIndexLocation), GLsizei(drawArg.InstanceCount), GLint(drawArg.StartVertexLocation));
+				glDrawElementsInstanced(primitiveType, GLsizei(args[0].VertexCount), ibFormat, BUFFER_OFFSET(args[0].StartIndexLocation), GLsizei(args[0].InstanceCount));
+			}
+			else
+			{
+				glDrawElementsBaseVertex(primitiveType, GLsizei(args[0].VertexCount), ibFormat, (const void*)size_t(args[0].StartIndexLocation), GLint(args[0].StartVertexLocation));
+			}
+
+			m_FrameRenderStatistics.DrawCalls++;
+			return;
+		}
+
 		GLsizei* count = nullptr;
 		uintptr_t* indices = nullptr;
 		uint16_t multiDrawCount = 0;
