@@ -20,7 +20,8 @@ namespace Aurora
 	{
 		testInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
 			{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Position), 0, sizeof(StaticMesh::Vertex), false, false},
-			{"NORMAL", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Normal), 1, sizeof(StaticMesh::Vertex), false, false}
+			{"TEXCOORD", GraphicsFormat::RG32_FLOAT, 0, offsetof(StaticMesh::Vertex, TexCoord), 1, sizeof(StaticMesh::Vertex), false, false},
+			{"NORMAL", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Normal), 2, sizeof(StaticMesh::Vertex), false, false}
 		});
 
 		m_BaseVsDataBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
@@ -172,7 +173,7 @@ namespace Aurora
 						if(!currentModelContext.Instances.empty())
 						{
 							modelContexts.emplace_back(currentModelContext);
-							currentModelContext = {nullptr, nullptr, nullptr, {}};
+							currentModelContext = {nullptr, nullptr, nullptr, nullptr, {}};
 						}
 
 						currentModelContext.Material = visibleEntity.Material;

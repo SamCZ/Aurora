@@ -104,16 +104,24 @@ class BaseAppContext : public AppContext
 		sceneRenderer = new SceneRenderer();
 
 		AssimpModelLoader modelLoader;
-		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"));
+		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/sponza.fbx"));
 
-		testActor = GetScene().SpawnActor<TestActor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.01f));
+		testActor = GetScene().SpawnActor<TestActor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.0001f));
 		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
 		if (importedData)
 		{
+			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+
 			auto* meshComponent = testActor->AddComponent<StaticMeshComponent>("Mesh");
 			meshComponent->SetMesh(importedData.Mesh);
-			meshComponent->SetMaterial(0, GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd")->CreateInstance());
+
+			for (auto &item : meshComponent->GetMaterialSet())
+			{
+				auto matInstance = matDef->CreateInstance();
+				matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
+				item.second.Material = matInstance;
+			}
 		}
 
 		GetScene().SpawnActor<CameraActor>("Camera", {0, 0, 5});
@@ -121,10 +129,10 @@ class BaseAppContext : public AppContext
 
 	void Update(double delta) override
 	{
-		mainEditorPanel->Update();
+		mainEditorPanel->Update(delta);
 
-		testActor->GetRootComponent()->GetTransform().Rotation.x += delta * 50.0f;
-		testActor->GetRootComponent()->GetTransform().Rotation.y += delta * 50.0f;
+		//testActor->GetRootComponent()->GetTransform().Rotation.x += delta * 50.0f;
+		//testActor->GetRootComponent()->GetTransform().Rotation.y += delta * 50.0f;
 	}
 
 	void Render() override

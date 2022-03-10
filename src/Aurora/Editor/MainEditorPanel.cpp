@@ -1,15 +1,18 @@
 #include "MainEditorPanel.hpp"
 
 #include "Style.hpp"
+#include "Utils.hpp"
 
 #include "Aurora/Engine.hpp"
 #include "Aurora/Aurora.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
 #include "Aurora/Framework/Actor.hpp"
+#include "Aurora/Framework/CameraComponent.hpp"
+#include "Aurora/Resource/ResourceManager.hpp"
 
 namespace Aurora
 {
-	MainEditorPanel::MainEditorPanel() : m_SelectedActor(nullptr)
+	MainEditorPanel::MainEditorPanel() : m_SelectedActor(nullptr), m_MouseViewportGrabbed(false)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		Logger::AddSinkPtr(m_ConsoleWindow);
@@ -17,18 +20,24 @@ namespace Aurora
 		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
 		m_RenderViewPort->Resize({1270, 720});
 
+		m_FolderTexture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/Editor/folder.png", GraphicsFormat::RGBA8_UNORM, {});
+		m_FileTexture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/Editor/file.png", GraphicsFormat::RGBA8_UNORM, {});
+
 		SetEditorStyle();
 	}
 
 	MainEditorPanel::~MainEditorPanel() = default;
 
-	void MainEditorPanel::Update()
+	void MainEditorPanel::Update(double delta)
 	{
 		DrawMainMenu();
 		BeginDockSpace();
 
+		static int ID = 0;
+		ID = 0;
+
 		std::function<void(SceneComponent* component, int& i)> drawComponent;
-		drawComponent = [&drawComponent](SceneComponent* component, int& i) -> void
+		drawComponent = [this, &drawComponent](SceneComponent* component, int& i) -> void
 		{
 			String name = String("[") + component->GetTypeName() + "] " + component->GetName();
 
@@ -36,27 +45,27 @@ namespace Aurora
 
 			const std::vector<SceneComponent*>& childComponents = component->GetComponents();
 
-			if(childComponents.empty())
+			ImGui::PushID(ID++);
+
+			bool opened = ImGui::TreeNodeEx(name.c_str(), childComponents.empty() ? (ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet) : ImGuiTreeNodeFlags_OpenOnArrow | flags);
+
+			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 			{
-				ImGui::TreeNodeEx((name + "##ComponentNode" + std::to_string(++i)).c_str(), ImGuiTreeNodeFlags_Leaf);
-				ImGui::TreePop();
-				return;
+				m_SelectedActor = nullptr;
 			}
 
-			if(ImGui::TreeNodeEx((name + "##ComponentNode" + std::to_string(++i)).c_str(), flags))
+			if(opened)
 			{
-				if (ImGui::IsItemActivated())
-				{
-
-				}
-
 				for(SceneComponent* child : childComponents)
 				{
 					drawComponent(child, i);
 				}
 
-				ImGui::TreePop();
+				if(!childComponents.empty())
+					ImGui::TreePop();
 			}
+
+			ImGui::PopID();
 		};
 
 		ImGui::Begin("Scene");
@@ -67,26 +76,44 @@ namespace Aurora
 				String name = String("[") + actor->GetTypeName() + "] " + actor->GetName();
 				//ImGui::Text("%s", actor->GetTypeName());
 
+				ImGui::PushID(ID++);
 				uint8 flags = actor == m_SelectedActor ? ImGuiTreeNodeFlags_Selected : 0;
-				if(ImGui::TreeNodeEx((name + "##Node" + std::to_string(++i)).c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags))
+
+
+				bool opened = ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags);
+
+				if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 				{
-					if (ImGui::IsItemActivated())
-					{
-						m_SelectedActor = actor;
-					}
+					m_SelectedActor = actor;
+				}
 
+				if(opened)
+				{
 					drawComponent(actor->GetRootComponent(), ++i);
-
 					ImGui::Separator();
 					ImGui::TreePop();
 				}
+
+				ImGui::PopID();
 			}
 		}
 		ImGui::End();
 
+		if(m_MouseViewportGrabbed && !ImGui::GetIO().MouseDown[1])
+		{
+			m_MouseViewportGrabbed = false;
+			GEngine->GetWindow()->SetCursorMode(ECursorMode::Normal);
+		}
+
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_MenuBar);
 		{
+			if(ImGui::IsWindowHovered() && ImGui::GetIO().MouseDown[1])
+			{
+				m_MouseViewportGrabbed = true;
+				GEngine->GetWindow()->SetCursorMode(ECursorMode::Disabled);
+			}
+
 			if (ImGui::BeginMenuBar())
 			{
 				ImGui::Spacing();
@@ -113,9 +140,7 @@ namespace Aurora
 				m_RenderViewPort->Resize(viewPortSize);
 			}
 
-			ImVec2 uv0 = {0, 1};
-			ImVec2 uv1 = {1, 0};
-			ImGui::Image((ImTextureID)m_RenderViewPort->Target->GetRawHandle(), ImVec2(m_RenderViewPort->ViewPort.Width, m_RenderViewPort->ViewPort.Height), uv0, uv1);
+			EUI::Image(m_RenderViewPort->Target, (Vector2)m_RenderViewPort->ViewPort);
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();
@@ -123,7 +148,32 @@ namespace Aurora
 
 
 		ImGui::Begin("Resources");
+		{
+			for (auto& directory : std::filesystem::directory_iterator("../"))
+			{
+				ImGui::BeginGroup();
+				{
+					if(directory.is_directory())
+					{
+						EUI::ImageButton(m_FolderTexture, 64);
+						ImGui::Text("%s", directory.path().filename().string().c_str());
+					}
+					else
+					{
+						EUI::ImageButton(m_FileTexture, 64);
+						ImGui::Text("%s", directory.path().filename().string().c_str());
+					}
+				}
+				ImGui::EndGroup();
 
+				const float width = ImGui::GetColumnWidth();
+
+				if(ImGui::GetCursorPosX() < 500)
+				{
+					ImGui::SameLine();
+				}
+			}
+		}
 		ImGui::End();
 
 		m_ConsoleWindow->Draw();
@@ -140,6 +190,40 @@ namespace Aurora
 		ImGui::End();
 
 		//ImGui::ShowDemoWindow();
+
+		// FIXME: This is just for debugging purposes
+		if(m_MouseViewportGrabbed)
+		{
+			if(CameraComponent* camera = *AppContext::GetScene().GetComponents<CameraComponent>().begin())
+			{
+				camera->GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
+				camera->GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
+
+				Matrix4 transform = camera->GetTransformationMatrix();
+
+				float speed = 5.0f;
+
+				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
+				{
+					camera->GetTransform().Location -= Vector3(transform[2]) * (float)delta * speed;
+				}
+
+				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
+				{
+					camera->GetTransform().Location += Vector3(transform[2]) * (float)delta * speed;
+				}
+
+				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
+				{
+					camera->GetTransform().Location -= Vector3(transform[0]) * (float)delta * speed;
+				}
+
+				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
+				{
+					camera->GetTransform().Location += Vector3(transform[0]) * (float)delta * speed;
+				}
+			}
+		}
 	}
 
 	void MainEditorPanel::BeginDockSpace()

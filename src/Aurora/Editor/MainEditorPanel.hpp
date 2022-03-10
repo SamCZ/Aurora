@@ -2,6 +2,8 @@
 
 #include "ConsoleWindow.hpp"
 
+#include "Aurora/Graphics/Base/Texture.hpp"
+
 namespace Aurora
 {
 	struct RenderViewPort;
@@ -12,12 +14,17 @@ namespace Aurora
 		std::shared_ptr<ConsoleWindow> m_ConsoleWindow;
 		RenderViewPort* m_RenderViewPort;
 
+		Texture_ptr m_FolderTexture;
+		Texture_ptr m_FileTexture;
+
 		class Actor* m_SelectedActor;
+
+		bool m_MouseViewportGrabbed;
 	public:
 		MainEditorPanel();
 		~MainEditorPanel();
 
-		void Update();
+		void Update(double delta);
 
 		void BeginDockSpace();
 		void DrawMainMenu();

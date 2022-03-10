@@ -36,5 +36,15 @@ namespace Aurora
 		{
 			return !(operator==(other));
 		}
+
+		explicit operator glm::vec2() const
+		{
+			return {Width, Height};
+		}
+
+		explicit operator glm::vec4() const
+		{
+			return {X, Y, Width, Height};
+		}
 	};
 }
