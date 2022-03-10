@@ -95,7 +95,7 @@ namespace Aurora
 		mesh->LODResources[lod].Sections.emplace_back(section);
 	}
 
-	void LoadMaterial(const aiScene* scene, const Mesh_ptr& mesh, uint32_t materialIndex, const aiMaterial* sourceMaterial)
+	void LoadMaterial(const aiScene* scene, const Mesh_ptr& mesh, int32_t materialIndex, const aiMaterial* sourceMaterial)
 	{
 		if(!mesh->MaterialSlots.contains(materialIndex))
 		{
@@ -110,11 +110,15 @@ namespace Aurora
 				if(!textureCount)
 					continue;
 
+				AU_LOG_INFO("Texture count: ", textureCount);
+
 				aiString texturePathAiStr;
 				if (sourceMaterial->GetTexture(textureType, 0, &texturePathAiStr) != aiReturn_SUCCESS)
 				{
 					continue;
 				}
+
+				AU_LOG_INFO("Texture path: ", texturePathAiStr.data);
 
 				if (const aiTexture* asTexture = scene->GetEmbeddedTexture(texturePathAiStr.C_Str()))
 				{
@@ -199,9 +203,9 @@ namespace Aurora
 						case aiTextureType_DIFFUSE:
 							slot.Textures["Diffuse"] = texture;
 							break;
-						/*case aiTextureType_BASE_COLOR:
-							slot.Textures["BaseColor"] = texture;
-							break;*/
+							/*case aiTextureType_BASE_COLOR:
+								slot.Textures["BaseColor"] = texture;
+								break;*/
 						default:
 							AU_LOG_WARNING("Unsupported texture type: ", TextureTypeEnumToString[texTypeID], " !");
 					}
@@ -258,7 +262,7 @@ namespace Aurora
 		MeshImportedData importedData;
 
 		uint8 additionalFlags = 0;
-		const aiScene* scene = m_Importer.ReadFileFromMemory(data.data(), data.size(), aiProcessPreset_TargetRealtime_Quality | aiProcess_FlipUVs | aiProcess_EmbedTextures | additionalFlags);
+		const aiScene* scene = m_Importer.ReadFileFromMemory(data.data(), data.size(), aiProcessPreset_TargetRealtime_Fast | aiProcess_FlipUVs | aiProcess_EmbedTextures | additionalFlags);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
