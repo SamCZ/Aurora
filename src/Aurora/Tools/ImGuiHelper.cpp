@@ -41,6 +41,34 @@ namespace ImGui
 		}
 		PopStyleColor();
 	}
+
+	bool IconCheckbox(const char* name, bool* v)
+	{
+		PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+		PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+		PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+
+		ImVec4 color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+		if(v && !*v)
+		{
+			color = ImVec4(0.5f, 0.5f, 0.5f, 0.5f);
+		}
+
+		PushStyleColor(ImGuiCol_Text, color);
+
+		bool clicked = Button(name);
+		PopStyleColor(4);
+		PopStyleVar();
+
+		if(clicked && v)
+		{
+			*v = !*v;
+		}
+
+		return clicked;
+	}
 }
 
 namespace ImGui

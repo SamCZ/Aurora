@@ -8,7 +8,9 @@
 #include "Aurora/Graphics/ViewPortManager.hpp"
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
+#include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
+#include "Aurora/Tools/IconsFontAwesome5.hpp"
 
 namespace Aurora
 {
@@ -28,6 +30,20 @@ namespace Aurora
 
 	MainEditorPanel::~MainEditorPanel() = default;
 
+	const char* GetIconForComponent(ActorComponent* component)
+	{
+		if(component->HasType(CameraComponent::TypeID()))
+			return ICON_FA_CAMERA;
+
+		if(component->HasType(MeshComponent::TypeID()))
+			return ICON_FA_CUBE;
+
+		if(component->HasType(SceneComponent::TypeID()))
+			return ICON_FA_LAYER_GROUP;
+
+		return ICON_FA_QUESTION;
+	}
+
 	void MainEditorPanel::Update(double delta)
 	{
 		DrawMainMenu();
@@ -36,68 +52,125 @@ namespace Aurora
 		static int ID = 0;
 		ID = 0;
 
-		std::function<void(SceneComponent* component, int& i)> drawComponent;
-		drawComponent = [this, &drawComponent](SceneComponent* component, int& i) -> void
+		std::function<void(SceneComponent* component, bool)> drawComponent;
+		drawComponent = [this, &drawComponent](SceneComponent* component, bool opened) -> void
 		{
-			String name = String("[") + component->GetTypeName() + "] " + component->GetName();
-
-			uint8 flags = 0;
+			ImGui::PushID(ID++);
 
 			const std::vector<SceneComponent*>& childComponents = component->GetComponents();
 
-			ImGui::PushID(ID++);
-
-			bool opened = ImGui::TreeNodeEx(name.c_str(), childComponents.empty() ? (ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet) : ImGuiTreeNodeFlags_OpenOnArrow | flags);
-
-			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-			{
-				m_SelectedActor = nullptr;
-			}
-
-			if(opened)
+			if(!opened)
 			{
 				for(SceneComponent* child : childComponents)
 				{
-					drawComponent(child, i);
+					drawComponent(child, false);
+				}
+				ImGui::PopID();
+				return;
+			}
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+
+			if(childComponents.empty())
+			{
+				ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+				/*ImGui::TableNextColumn();
+				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
+				ImGui::TableNextColumn();
+				ImGui::Text("%s %s", GetIconForComponent(component), component->GetTypeName());
+				ImGui::TableNextColumn();
+
+				bool active = component->IsActive() && component->IsParentActive();
+				if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
+				{
+					component->SetActive(active);
+				}
+			}
+			else
+			{
+				bool open = ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+				/*ImGui::TableNextColumn();
+				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
+				ImGui::TableNextColumn();
+				ImGui::Text("%s %s", GetIconForComponent(component), component->GetTypeName());
+				ImGui::TableNextColumn();
+				bool active = component->IsActive() && component->IsParentActive();
+				if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
+				{
+					component->SetActive(active);
 				}
 
-				if(!childComponents.empty())
+				for(SceneComponent* child : childComponents)
+				{
+					drawComponent(child, open && opened);
+				}
+
+				if (open)
+				{
 					ImGui::TreePop();
+				}
 			}
 
 			ImGui::PopID();
 		};
 
+		const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
+		const float ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_EYE).x;
+		const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Scene");
 		{
-			int i = 0;
-			for (Actor* actor : AppContext::GetGameContext<GameContext>()->GetScene())
+			static ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
+			if(ImGui::BeginTable("SceneView", 3, tableFlags))
 			{
-				String name = String("[") + actor->GetTypeName() + "] " + actor->GetName();
-				//ImGui::Text("%s", actor->GetTypeName());
-
 				ImGui::PushID(ID++);
-				uint8 flags = actor == m_SelectedActor ? ImGuiTreeNodeFlags_Selected : 0;
-
-
-				bool opened = ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | flags);
-
-				if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-				{
-					m_SelectedActor = actor;
-				}
-
-				if(opened)
-				{
-					drawComponent(actor->GetRootComponent(), ++i);
-					ImGui::Separator();
-					ImGui::TreePop();
-				}
-
+				ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
+				//ImGui::TableSetupColumn("---", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0f);
+				ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
+				ImGui::TableSetupColumn(ICON_FA_EYE, ImGuiTableColumnFlags_WidthFixed, ICON_BASE_WIDTH * 1.0f);
+				ImGui::TableHeadersRow();
 				ImGui::PopID();
+
+				for (Actor* actor : AppContext::GetGameContext<GameContext>()->GetScene())
+				{
+					//String name = String("[") + actor->GetTypeName() + "] " + actor->GetName();
+
+					ImGui::PushID(ID++);
+
+					ImGui::TableNextRow();
+					ImGui::TableNextColumn();
+
+					bool open = ImGui::TreeNodeEx(actor->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+					/*ImGui::TableNextColumn();
+					ImGui::TextDisabled(ICON_FA_USER);*/
+					ImGui::TableNextColumn();
+					ImGui::Text("%s %s", ICON_FA_USER, actor->GetTypeName());
+					ImGui::TableNextColumn();
+					//ImGui::TextUnformatted(ICON_FA_EYE);
+
+					bool active = actor->IsActive();
+					if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
+					{
+						actor->SetActive(active);
+					}
+
+					drawComponent(actor->GetRootComponent(), open);
+
+					if (open)
+					{
+						ImGui::TreePop();
+					}
+
+					ImGui::PopID();
+				}
+
+				ImGui::EndTable();
 			}
 		}
 		ImGui::End();
+		ImGui::PopStyleVar();
 
 		if(m_MouseViewportGrabbed && !ImGui::GetIO().MouseDown[1])
 		{
@@ -149,7 +222,7 @@ namespace Aurora
 
 		ImGui::Begin("Resources");
 		{
-			for (auto& directory : std::filesystem::directory_iterator("../"))
+			/*for (auto& directory : std::filesystem::directory_iterator("../"))
 			{
 				ImGui::BeginGroup();
 				{
@@ -166,13 +239,11 @@ namespace Aurora
 				}
 				ImGui::EndGroup();
 
-				const float width = ImGui::GetColumnWidth();
-
 				if(ImGui::GetCursorPosX() < 500)
 				{
 					ImGui::SameLine();
 				}
-			}
+			}*/
 		}
 		ImGui::End();
 

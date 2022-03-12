@@ -1648,7 +1648,7 @@ namespace Aurora
 
 	void GLRenderDevice::SetRasterState(const FRasterState& rasterState)
 	{
-		// TODO: Call gl commands only on change of values !
+		// FIXME: This do not works if some gl call from ImGui set some state, find a fix here!
 
 		if (m_LastRasterState.FillMode != rasterState.FillMode)
 		{

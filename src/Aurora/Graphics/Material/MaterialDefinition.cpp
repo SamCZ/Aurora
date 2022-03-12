@@ -33,7 +33,7 @@ namespace Aurora
 	///////////////////////////////////// PassShaderDef /////////////////////////////////////
 
 	MaterialPassDef::MaterialPassDef(ShaderProgramDesc shaderProgramDesc, MaterialPassState passState)
-		: m_ShaderBaseDescription(std::move(shaderProgramDesc)), m_PassStates(std::move(passState)) {}
+		: m_ShaderBaseDescription(std::move(shaderProgramDesc)), m_PassStates(passState) {}
 
 	Shader_ptr MaterialPassDef::GetShader(const ShaderMacros& macros)
 	{

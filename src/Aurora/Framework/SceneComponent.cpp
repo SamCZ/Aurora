@@ -1,8 +1,14 @@
 #include "SceneComponent.hpp"
 #include "Aurora/Core/Common.hpp"
+#include "Actor.hpp"
 
 namespace Aurora
 {
+	SceneComponent::SceneComponent() : m_Parent(nullptr)
+	{
+
+	}
+
 	Matrix4 SceneComponent::GetTransformationMatrix() const
 	{
 		// TODO: Cache matrix and update it only when transform changes!
@@ -37,5 +43,15 @@ namespace Aurora
 			VectorRemove<SceneComponent*>(m_Parent->m_Components, this);
 			m_Parent = nullptr;
 		}
+	}
+
+	bool SceneComponent::IsParentActive() const
+	{
+		if(!HasParent())
+		{
+			return m_Owner->IsActive();
+		}
+
+		return m_Owner->IsActive() && m_Parent->IsActive();
 	}
 }

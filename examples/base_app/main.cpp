@@ -89,6 +89,7 @@ class BaseAppContext : public AppContext
 	SceneRenderer* sceneRenderer;
 
 	Actor* testActor;
+	Actor* testActor2;
 
 	~BaseAppContext() override
 	{
@@ -111,7 +112,7 @@ class BaseAppContext : public AppContext
 
 		if (importedData)
 		{
-			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
 
 			auto* meshComponent = testActor->AddComponent<StaticMeshComponent>("Mesh");
 			meshComponent->SetMesh(importedData.Mesh);
@@ -120,6 +121,24 @@ class BaseAppContext : public AppContext
 			{
 				auto matInstance = matDef->CreateInstance();
 				matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
+				item.second.Material = matInstance;
+			}
+		}
+
+		testActor2 = GetScene().SpawnActor<Actor>("Box", Vector3(0, 0, 0), {}, Vector3(0.01f));
+		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"));
+		if(importedData2)
+		{
+			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+
+			auto* meshComponent = testActor2->AddComponent<StaticMeshComponent>("Mesh");
+			meshComponent->SetMesh(importedData2.Mesh);
+
+			auto matInstance = matDef->CreateInstance();
+
+			for (auto &item : meshComponent->GetMaterialSet())
+			{
+				//matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
 				item.second.Material = matInstance;
 			}
 		}
@@ -133,6 +152,9 @@ class BaseAppContext : public AppContext
 
 		//testActor->GetRootComponent()->GetTransform().Rotation.x += delta * 50.0f;
 		//testActor->GetRootComponent()->GetTransform().Rotation.y += delta * 50.0f;
+
+		testActor2->GetRootComponent()->GetTransform().Location.x = 10;
+		testActor2->GetRootComponent()->GetTransform().Rotation.y += delta * 20.0f;
 	}
 
 	void Render() override

@@ -27,6 +27,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include "Tools/IconsFontAwesome5.hpp"
 
 #include <TracyOpenGL.hpp>
 
@@ -143,8 +144,19 @@ namespace Aurora
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
 			//io.Fonts->AddFontFromFileTTF("../../Assets/Fonts/LatoLatin-Bold.ttf", 16);
+
+			//ImFont* font = io.Fonts->AddFontDefault();
+			static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
+
 			auto fontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf"));
 			io.Fonts->AddFontFromMemoryTTF(fontData->data(), fontData->size(), 15);
+
+			ImFontConfig config;
+			config.MergeMode = true;
+			//config.PixelSnapH = true;
+			auto iconFontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/fa-solid-900.ttf"));
+			io.Fonts->AddFontFromMemoryTTF(iconFontData->data(), iconFontData->size(), 15, &config, icons_ranges);
+			io.Fonts->Build();
 
 			io.IniFilename = "../../imgui.ini";
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls

@@ -16,6 +16,8 @@ namespace Aurora
 
 		CLASS_OBJ(SceneComponent, ActorComponent);
 
+		SceneComponent();
+
 		Transform& GetTransform() { return m_Transform; }
 
 		[[nodiscard]] const Vector3& GetLocation() const { return m_Transform.Location; }
@@ -28,5 +30,9 @@ namespace Aurora
 		void DetachFromComponent();
 
 		[[nodiscard]] const std::vector<SceneComponent*>& GetComponents() const { return m_Components; }
+
+		SceneComponent* GetParent() { return m_Parent; }
+		[[nodiscard]] bool HasParent() const { return m_Parent != nullptr;}
+		[[nodiscard]] bool IsParentActive() const;
 	};
 }

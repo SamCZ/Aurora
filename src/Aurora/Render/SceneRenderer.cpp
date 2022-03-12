@@ -75,7 +75,7 @@ namespace Aurora
 
 			for (MeshComponent* meshComponent : scene->GetComponents<MeshComponent>())
 			{
-				if(!meshComponent->HasMesh() || !meshComponent->IsActive())
+				if(!meshComponent->HasMesh() || !meshComponent->IsActive() || !meshComponent->IsParentActive())
 				{
 					continue;
 				}
@@ -126,6 +126,9 @@ namespace Aurora
 			for (int i = 0; i < SortTypeCount; ++i)
 			{
 				std::vector<VisibleEntity>& visibleEntities = m_VisibleEntities[i];
+
+				if(visibleEntities.empty())
+					continue;
 
 				std::sort(visibleEntities.begin(), visibleEntities.end(), [](const VisibleEntity& left, const VisibleEntity& right) -> bool
 				{
@@ -230,7 +233,7 @@ namespace Aurora
 						GEngine->GetRenderDevice()->BindShaderInputs(drawCallState, true);
 					}
 
-					//drawCallState.RasterState.CullMode = ECullMode::None;
+					drawCallState.RasterState.CullMode = ECullMode::Front;
 					GEngine->GetRenderDevice()->SetRasterState(drawCallState.RasterState);
 
 					// TODO: Change this to instance rendering, this is just for test

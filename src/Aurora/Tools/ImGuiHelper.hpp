@@ -209,3 +209,9 @@ namespace ImGui
 	void NodePin(bool fill, glm::vec4 color);
 	void NodePin_Execute(bool fill, glm::vec4 color);
 }
+
+namespace ImGui
+{
+	//bool IconButton(const char* name);
+	bool IconCheckbox(const char* name, bool* v);
+}

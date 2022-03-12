@@ -35,7 +35,7 @@ namespace Aurora
 			// Y * X * Z
 			const glm::mat4 roationMatrix = transformY * transformX * transformZ;
 
-			return  glm::translate(glm::mat4(1.0f), Location) * roationMatrix * glm::scale(glm::mat4(1.0f), Scale);
+			return glm::translate(glm::mat4(1.0f), Location) * roationMatrix * glm::scale(glm::mat4(1.0f), Scale);
 		}
 
 		void SetFromMatrix(const Matrix4& mat)

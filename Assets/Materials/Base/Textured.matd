@@ -4,8 +4,8 @@
 		{
 			"name": "Ambient",
 			"shaders": {
-				"vertex": "Assets/Shaders/Test/color.vert",
-				"pixel": "Assets/Shaders/Test/color.frag"
+				"vertex": "Assets/Shaders/Test/ambient.vert",
+				"pixel": "Assets/Shaders/Test/ambient.frag"
 			}
 		}
 	],
