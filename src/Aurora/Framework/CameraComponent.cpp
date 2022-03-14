@@ -11,20 +11,12 @@ namespace Aurora
 		m_ProjectionType(ProjectionType::None),
 		m_PerspectiveSettings(),
 		m_OrthogonalSettings(),
-		m_ClearColor(0, 0, 0, 255),
-		m_ViewPortEventID(0)
+		m_ClearColor(0, 0, 0, 255)
 	{
 
 	}
 
-	CameraComponent::~CameraComponent()
-	{
-		if(m_ViewPort)
-		{
-			m_ViewPort->ResizeEmitter.Unbind(m_ViewPortEventID);
-			m_ViewPortEventID = 0;
-		}
-	}
+	CameraComponent::~CameraComponent() = default;
 
 	void CameraComponent::SetPerspective(float fov, float near, float far)
 	{
@@ -61,16 +53,11 @@ namespace Aurora
 
 	void CameraComponent::SetViewPort(RenderViewPort* wp)
 	{
-		if(m_ViewPort)
-		{
-			m_ViewPort->ResizeEmitter.Unbind(m_ViewPortEventID);
-		}
-
 		if(!wp)
 			return;
 
 		m_ViewPort = wp;
-		m_ViewPortEventID = wp->ResizeEmitter.Bind(this, &CameraComponent::Resize);
+		m_ViewPortEvent = wp->ResizeEmitter.BindUnique(this, &CameraComponent::Resize);
 	}
 
 	void CameraComponent::Resize(const Vector2i&)

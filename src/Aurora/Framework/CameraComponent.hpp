@@ -40,7 +40,7 @@ namespace Aurora
 	private:
 		PassType_t m_SelectedPass;
 		RenderViewPort* m_ViewPort;
-		EventID m_ViewPortEventID;
+		UniqueEvent m_ViewPortEvent;
 
 		ProjectionType m_ProjectionType;
 		PerspectiveSettings m_PerspectiveSettings;
