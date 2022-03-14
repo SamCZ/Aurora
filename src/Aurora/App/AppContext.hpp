@@ -9,13 +9,17 @@ namespace Aurora
 {
 	class GameContext
 	{
+		friend class AppContext;
 	protected:
-		Scene m_Scene;
+		Scene* m_Scene = nullptr;
 	public:
-		virtual ~GameContext() = default;
+		virtual ~GameContext()
+		{
+			delete m_Scene;
+		}
 
-		Scene& GetScene() { return m_Scene; }
-		[[nodiscard]] const Scene& GetScene() const { return m_Scene; }
+		Scene& GetScene() { return *m_Scene; }
+		[[nodiscard]] const Scene& GetScene() const { return *m_Scene; }
 	};
 
 	class AppContext
@@ -45,7 +49,7 @@ namespace Aurora
 		virtual void Render() {}
 		virtual void RenderVg() {}
 
-		template<class T, typename... Args>
+		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameContext, T>::value>::type* = nullptr>
 		static T* SetGameContext(Args... args)
 		{
 			if(m_GameContext)
@@ -62,7 +66,7 @@ namespace Aurora
 			return static_cast<T*>(m_GameContext);
 		}
 
-		template<class T, typename... Args>
+		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameModeBase, T>::value>::type* = nullptr>
 		static T* SwitchGameMode(Args... args)
 		{
 			if(m_GameMode)
@@ -71,8 +75,13 @@ namespace Aurora
 				delete m_GameMode;
 			}
 
+			// TODO: Think if this should be the place that resets scene
+			m_GameContext->m_Scene = new Scene();
+
 			m_GameMode = new T(std::forward<Args>(args)...);
 			m_GameMode->BeginPlay();
+
+			return (T*)m_GameMode;
 		}
 
 		static Scene& GetScene() { return m_GameContext->GetScene(); }

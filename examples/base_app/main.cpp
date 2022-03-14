@@ -83,6 +83,52 @@ public:
 	}
 };
 
+enum UI_TYPES
+{
+	UI_MAINMENU = 0,
+	UI_SETTINGS = 1
+};
+
+class TestUI : public UserInterface
+{
+public:
+	explicit TestUI(UIID_t id) : UserInterface(id) {}
+
+	void BeginPlay() override
+	{
+
+	}
+
+	void BeginDestroy() override
+	{
+
+	}
+
+	void Tick(double delta) override
+	{
+
+	}
+};
+
+class TestGameMode : public GameModeBase
+{
+public:
+	void BeginPlay() override
+	{
+		AddUserInterface<TestUI>(UI_MAINMENU);
+	}
+
+	void BeginDestroy() override
+	{
+
+	}
+
+	void Tick(double delta) override
+	{
+
+	}
+};
+
 class BaseAppContext : public AppContext
 {
 	MainEditorPanel* mainEditorPanel;
@@ -100,6 +146,7 @@ class BaseAppContext : public AppContext
 	void Init() override
 	{
 		SetGameContext<GameContext>();
+		SwitchGameMode<TestGameMode>();
 
 		mainEditorPanel = new MainEditorPanel();
 		sceneRenderer = new SceneRenderer();
