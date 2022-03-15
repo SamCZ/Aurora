@@ -224,7 +224,7 @@ namespace IMGUIZMO_NAMESPACE
 		const vec_t& operator + () const { return (*this); }
 		float Length() const { return sqrtf(x * x + y * y + z * z); };
 		float LengthSq() const { return (x * x + y * y + z * z); };
-		vec_t Normalize() { (*this) *= (1.f / Length()); return (*this); }
+		vec_t Normalize() { (*this) *= (1.f / ( Length() > FLT_EPSILON ? Length() : FLT_EPSILON ) ); return (*this); }
 		vec_t Normalize(const vec_t& v) { this->Set(v.x, v.y, v.z, v.w); this->Normalize(); return (*this); }
 		vec_t Abs() const;
 
@@ -378,7 +378,7 @@ namespace IMGUIZMO_NAMESPACE
 		float GetDeterminant() const
 		{
 			return m[0][0] * m[1][1] * m[2][2] + m[0][1] * m[1][2] * m[2][0] + m[0][2] * m[1][0] * m[2][1] -
-			       m[0][2] * m[1][1] * m[2][0] - m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
+				m[0][2] * m[1][1] * m[2][0] - m[0][1] * m[1][0] * m[2][2] - m[0][0] * m[1][2] * m[2][1];
 		}
 
 		float Inverse(const matrix_t& srcMatrix, bool affine = false);
@@ -680,7 +680,7 @@ namespace IMGUIZMO_NAMESPACE
 
 		bool mbUsing;
 		bool mbEnable;
-
+		bool mbMouseOver;
 		bool mReversed; // reversed projection matrix
 
 		// translation
@@ -890,6 +890,19 @@ namespace IMGUIZMO_NAMESPACE
 		return IsWithin(p.x, gContext.mX, gContext.mXMax) && IsWithin(p.y, gContext.mY, gContext.mYMax);
 	}
 
+	static bool IsHoveringWindow()
+	{
+		ImGuiContext& g = *ImGui::GetCurrentContext();
+		ImGuiWindow* window = ImGui::FindWindowByName(gContext.mDrawList->_OwnerName);
+		if (g.HoveredWindow == window)   // Mouse hovering drawlist window
+			return true;
+		if (g.HoveredWindow != NULL)     // Any other window is hovered
+			return false;
+		if (ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max, false))   // Hovering drawlist window rect, while no other window is hovered (for _NoInputs windows)
+			return true;
+		return false;
+	}
+
 	void SetRect(float x, float y, float width, float height)
 	{
 		gContext.mX = x;
@@ -922,11 +935,11 @@ namespace IMGUIZMO_NAMESPACE
 
 #ifdef IMGUI_HAS_VIEWPORT
 		ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size);
-      ImGui::SetNextWindowPos(ImGui::GetMainViewport()->Pos);
+		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->Pos);
 #else
 		ImGuiIO& io = ImGui::GetIO();
-		ImGui::SetNextWindowSize(io.DisplaySize);
-		ImGui::SetNextWindowPos(ImVec2(0, 0));
+      ImGui::SetNextWindowSize(io.DisplaySize);
+      ImGui::SetNextWindowPos(ImVec2(0, 0));
 #endif
 
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, 0);
@@ -948,8 +961,8 @@ namespace IMGUIZMO_NAMESPACE
 	bool IsOver()
 	{
 		return (Intersects(gContext.mOperation, TRANSLATE) && GetMoveType(gContext.mOperation, NULL) != MT_NONE) ||
-		       (Intersects(gContext.mOperation, ROTATE) && GetRotateType(gContext.mOperation) != MT_NONE) ||
-		       (Intersects(gContext.mOperation, SCALE) && GetScaleType(gContext.mOperation) != MT_NONE) || IsUsing();
+			(Intersects(gContext.mOperation, ROTATE) && GetRotateType(gContext.mOperation) != MT_NONE) ||
+			(Intersects(gContext.mOperation, SCALE) && GetScaleType(gContext.mOperation) != MT_NONE) || IsUsing();
 	}
 
 	bool IsOver(OPERATION op)
@@ -988,6 +1001,7 @@ namespace IMGUIZMO_NAMESPACE
 		gContext.mMode = mode;
 		gContext.mViewMat = *(matrix_t*)view;
 		gContext.mProjectionMat = *(matrix_t*)projection;
+		gContext.mbMouseOver = IsHoveringWindow();
 
 		gContext.mModelLocal = *(matrix_t*)matrix;
 		gContext.mModelLocal.OrthoNormalize();
@@ -1791,9 +1805,9 @@ namespace IMGUIZMO_NAMESPACE
 				char tmps[512];
 				ImVec2 destinationPosOnScreen = worldToPos(gContext.mModel.v.position, gContext.mViewProjection);
 				ImFormatString(tmps, sizeof(tmps), "X: %.2f Y: %.2f Z:%.2f"
-						, (bounds[3] - bounds[0]) * gContext.mBoundsMatrix.component[0].Length() * scale.component[0].Length()
-						, (bounds[4] - bounds[1]) * gContext.mBoundsMatrix.component[1].Length() * scale.component[1].Length()
-						, (bounds[5] - bounds[2]) * gContext.mBoundsMatrix.component[2].Length() * scale.component[2].Length()
+					, (bounds[3] - bounds[0]) * gContext.mBoundsMatrix.component[0].Length() * scale.component[0].Length()
+					, (bounds[4] - bounds[1]) * gContext.mBoundsMatrix.component[1].Length() * scale.component[1].Length()
+					, (bounds[5] - bounds[2]) * gContext.mBoundsMatrix.component[2].Length() * scale.component[2].Length()
 				);
 				drawList->AddText(ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15), IM_COL32_BLACK, tmps);
 				drawList->AddText(ImVec2(destinationPosOnScreen.x + 14, destinationPosOnScreen.y + 14), IM_COL32_WHITE, tmps);
@@ -1824,8 +1838,8 @@ namespace IMGUIZMO_NAMESPACE
 
 		// screen
 		if (io.MousePos.x >= gContext.mScreenSquareMin.x && io.MousePos.x <= gContext.mScreenSquareMax.x &&
-		    io.MousePos.y >= gContext.mScreenSquareMin.y && io.MousePos.y <= gContext.mScreenSquareMax.y &&
-		    Contains(op, SCALE))
+			io.MousePos.y >= gContext.mScreenSquareMin.y && io.MousePos.y <= gContext.mScreenSquareMax.y &&
+			Contains(op, SCALE))
 		{
 			type = MT_SCALE_XYZ;
 		}
@@ -1960,7 +1974,7 @@ namespace IMGUIZMO_NAMESPACE
 
 	static int GetMoveType(OPERATION op, vec_t* gizmoHitProportion)
 	{
-		if(!Intersects(op, TRANSLATE) || gContext.mbUsing)
+		if(!Intersects(op, TRANSLATE) || gContext.mbUsing || !gContext.mbMouseOver)
 		{
 			return MT_NONE;
 		}
@@ -1969,8 +1983,8 @@ namespace IMGUIZMO_NAMESPACE
 
 		// screen
 		if (io.MousePos.x >= gContext.mScreenSquareMin.x && io.MousePos.x <= gContext.mScreenSquareMax.x &&
-		    io.MousePos.y >= gContext.mScreenSquareMin.y && io.MousePos.y <= gContext.mScreenSquareMax.y &&
-		    Contains(op, TRANSLATE))
+			io.MousePos.y >= gContext.mScreenSquareMin.y && io.MousePos.y <= gContext.mScreenSquareMax.y &&
+			Contains(op, TRANSLATE))
 		{
 			type = MT_MOVE_SCREEN;
 		}
@@ -2130,7 +2144,7 @@ namespace IMGUIZMO_NAMESPACE
 
 	static bool HandleScale(float* matrix, float* deltaMatrix, OPERATION op, int& type, const float* snap)
 	{
-		if((!Intersects(op, SCALE) && !Intersects(op, SCALEU)) || type != MT_NONE)
+		if((!Intersects(op, SCALE) && !Intersects(op, SCALEU)) || type != MT_NONE || !gContext.mbMouseOver)
 		{
 			return false;
 		}
@@ -2243,7 +2257,7 @@ namespace IMGUIZMO_NAMESPACE
 
 	static bool HandleRotation(float* matrix, float* deltaMatrix, OPERATION op, int& type, const float* snap)
 	{
-		if(!Intersects(op, ROTATE) || type != MT_NONE)
+		if(!Intersects(op, ROTATE) || type != MT_NONE || !gContext.mbMouseOver)
 		{
 			return false;
 		}
@@ -2403,7 +2417,8 @@ namespace IMGUIZMO_NAMESPACE
 
 	bool Manipulate(const float* view, const float* projection, OPERATION operation, MODE mode, float* matrix, float* deltaMatrix, const float* snap, const float* localBounds, const float* boundsSnap)
 	{
-		ComputeContext(view, projection, matrix, mode);
+		// Scale is always local or matrix will be skewed when applying world scale or oriented matrix
+		ComputeContext(view, projection, matrix, (operation & SCALE) ? LOCAL : mode);
 
 		// set delta to identity
 		if (deltaMatrix)
@@ -2427,8 +2442,8 @@ namespace IMGUIZMO_NAMESPACE
 			if (!gContext.mbUsingBounds)
 			{
 				manipulated = HandleTranslation(matrix, deltaMatrix, operation, type, snap) ||
-				              HandleScale(matrix, deltaMatrix, operation, type, snap) ||
-				              HandleRotation(matrix, deltaMatrix, operation, type, snap);
+					HandleScale(matrix, deltaMatrix, operation, type, snap) ||
+					HandleRotation(matrix, deltaMatrix, operation, type, snap);
 			}
 		}
 
@@ -2769,8 +2784,8 @@ namespace IMGUIZMO_NAMESPACE
 					const ImVec2 panelCorners[2] = { panelPosition[iPanel], panelPosition[iPanel] + panelSize[iPanel] };
 					bool insidePanel = localx > panelCorners[0].x && localx < panelCorners[1].x&& localy > panelCorners[0].y && localy < panelCorners[1].y;
 					int boxCoordInt = int(boxCoord.x * 9.f + boxCoord.y * 3.f + boxCoord.z);
-					assert(boxCoordInt < 27);
-					boxes[boxCoordInt] |= insidePanel && (!isDraging);
+					IM_ASSERT(boxCoordInt < 27);
+					boxes[boxCoordInt] |= insidePanel && (!isDraging) && gContext.mbMouseOver;
 
 					// draw face with lighter color
 					if (iPass)
@@ -2811,7 +2826,7 @@ namespace IMGUIZMO_NAMESPACE
 								interpolationFrames = 40;
 								isClicking = false;
 							}
-							if (io.MouseDown[0] && !isDraging)
+							if (io.MouseClicked[0] && !isDraging)
 							{
 								isClicking = true;
 							}
@@ -2834,10 +2849,10 @@ namespace IMGUIZMO_NAMESPACE
 			vec_t newEye = camTarget + newDir * length;
 			LookAt(&newEye.x, &camTarget.x, &newUp.x, view);
 		}
-		isInside = ImRect(position, position + size).Contains(io.MousePos);
+		isInside = gContext.mbMouseOver && ImRect(position, position + size).Contains(io.MousePos);
 
 		// drag view
-		if (!isDraging && io.MouseDown[0] && isInside && (fabsf(io.MouseDelta.x) > 0.f || fabsf(io.MouseDelta.y) > 0.f))
+		if (!isDraging && io.MouseClicked[0] && isInside)
 		{
 			isDraging = true;
 			isClicking = false;
