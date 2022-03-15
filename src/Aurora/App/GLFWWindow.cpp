@@ -359,6 +359,18 @@ namespace Aurora
 
 		glfwSwapBuffers(m_WindowHandle);
 		glfwWaitEvents();
+
+#if UNIX
+		// If on linux you startup window maximized, it will not call the callback and instead of set wrong size, this should fix that.
+		int width;
+		int height;
+		glfwGetWindowSize(m_WindowHandle, &width, &height);
+
+		if(m_Size.x != width || m_Size.y != height)
+		{
+			OnResizeCallback(m_WindowHandle, width, height);
+		}
+#endif
 	}
 
 	void GLFWWindow::Hide()
@@ -456,7 +468,7 @@ namespace Aurora
 		double x;
 		double y;
 		glfwGetCursorPos(m_WindowHandle, &x, &y);
-		return Vector2i(static_cast<int>(x), static_cast<int>(y));
+		return {static_cast<int>(x), static_cast<int>(y)};
 	}
 
 	::Aurora::Input::IManager_ptr& GLFWWindow::GetInputManager()
@@ -476,7 +488,7 @@ namespace Aurora
 			return clipboardString;
 		}
 
-		return String();
+		return {};
 	}
 
 	/**
