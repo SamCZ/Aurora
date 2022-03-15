@@ -41,15 +41,15 @@ std::string FormatBytes(uint64_t bytes)
 	} // return KB if less than a MB
 	else if(bytes < megaBytes)
 	{
-		ss << std::setprecision(decimal) << ((float)bytes / (float)kiloBytes) << " KB";
+		ss << std::setprecision(decimal) << ((float)bytes / (float)kiloBytes) << "KB";
 	}// return MB if less than a GB
 	else if(bytes < gigaBytes)
 	{
-		ss << std::setprecision(decimal) << ((float)bytes / (float)megaBytes) << " MB";
+		ss << std::setprecision(decimal) << ((float)bytes / (float)megaBytes) << "MB";
 	} // return GB if less than a TB
 	else
 	{
-		ss << std::setprecision(decimal) << ((float)bytes / (float)gigaBytes) << " GB";
+		ss << std::setprecision(decimal) << ((float)bytes / (float)gigaBytes) << "GB";
 	}
 
 	return ss.str();

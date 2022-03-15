@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Aurora/App/IWindow.hpp"
+#include "App/IWindow.hpp"
+#include "App/AppContext.hpp"
 #include "Engine.hpp"
 
 namespace Aurora
@@ -8,22 +9,14 @@ namespace Aurora
 	class IRenderDevice;
 	class RenderManager;
 	class ResourceManager;
+	class ViewPortManager;
+	struct RenderViewPort;
+	class MainEditorPanel;
 
 	namespace Input
 	{
 		class IManager;
 	}
-
-	class AppContext
-	{
-	public:
-		virtual ~AppContext() = default;
-
-		virtual void Init() {}
-		virtual void Update(double delta) {}
-		virtual void Render() {}
-		virtual void RenderVg() {}
-	};
 
 	class AU_API AuroraEngine
 	{
@@ -39,13 +32,17 @@ namespace Aurora
 #ifdef NEWTON
 		PhysicsWorld* m_PhysicsWorld;
 #endif
+		ViewPortManager* m_ViewPortManager;
 
 		AppContext* m_AppContext;
+
+		RenderViewPort* m_RenderViewPort;
+		MainEditorPanel* m_EditorPanel;
 	public:
 		AuroraEngine();
 		~AuroraEngine();
 
-		void Init(AppContext* appContext, WindowDefinition& windowDefinition);
+		void Init(AppContext* appContext, WindowDefinition& windowDefinition, bool editor);
 		void Run();
 	};
 }

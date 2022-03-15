@@ -103,6 +103,8 @@ namespace Aurora
 	public:
 		virtual ~ITexture() = default;
 		[[nodiscard]] virtual const TextureDesc& GetDesc() const = 0;
+
+		virtual void* GetRawHandle() = 0;
 	};
 
 	typedef std::shared_ptr<ITexture> Texture_ptr;

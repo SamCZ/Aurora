@@ -9,8 +9,7 @@
 namespace Aurora
 {
 	class Scene;
-	struct CameraComponent;
-	struct TransformComponent;
+	class CameraComponent;
 
 	namespace ShapeStructs
 	{
@@ -65,7 +64,7 @@ namespace Aurora
 	public:
 		static void Init();
 		static void Render(DrawCallState& drawState);
-		static void RenderText(TransformComponent* cameraTransform, CameraComponent* cameraComponent);
+		static void RenderText(CameraComponent* camera);
 		static void Destroy();
 		static void Reset();
 

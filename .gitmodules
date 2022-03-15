@@ -13,7 +13,7 @@
 [submodule "imgui"]
 	path = lib/imgui/imgui
 	url = git@github.com:ocornut/imgui.git
-	branch = master
+	branch = docking
 [submodule "RmlUI"]
 	path = lib/RmlUI
 	url = git@github.com:SamCZ/RmlUi.git
@@ -26,13 +26,15 @@
 	path = lib/tracy
 	url = git@github.com:wolfpld/tracy.git
 	branch = master
-[submodule "tinygltf"]
-	path = lib/tinygltf
-	url = git@github.com:syoyo/tinygltf.git
-	branch = master
 [submodule "entt"]
 	path = lib/entt
 	url = git@github.com:skypjack/entt.git
 [submodule "glslang"]
 	path = lib/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "assimp"]
+	path = lib/assimp
+	url = git@github.com:assimp/assimp.git
+[submodule "stb"]
+	path = lib/stb/stb
+	url = git@github.com:nothings/stb.git

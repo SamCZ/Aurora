@@ -3,7 +3,7 @@
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
-#include "SMaterial.hpp"
+#include "Material.hpp"
 
 namespace Aurora
 {
@@ -33,7 +33,7 @@ namespace Aurora
 	///////////////////////////////////// PassShaderDef /////////////////////////////////////
 
 	MaterialPassDef::MaterialPassDef(ShaderProgramDesc shaderProgramDesc, MaterialPassState passState)
-		: m_ShaderBaseDescription(std::move(shaderProgramDesc)), m_PassStates(std::move(passState)) {}
+		: m_ShaderBaseDescription(std::move(shaderProgramDesc)), m_PassStates(passState) {}
 
 	Shader_ptr MaterialPassDef::GetShader(const ShaderMacros& macros)
 	{
@@ -45,7 +45,7 @@ namespace Aurora
 		{
 			ShaderProgramDesc programDesc = m_ShaderBaseDescription;
 			programDesc.AddShaderMacros(macros);
-			Shader_ptr newShader = GetEngine()->GetRenderDevice()->CreateShaderProgram(programDesc);
+			Shader_ptr newShader = GEngine->GetRenderDevice()->CreateShaderProgram(programDesc);
 
 			if(newShader == nullptr)
 			{
@@ -107,7 +107,7 @@ namespace Aurora
 					MTextureVar textureVar;
 					textureVar.Name = samplerName;
 					textureVar.InShaderName = samplerName;
-					textureVar.Texture = GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png", GraphicsFormat::SRGBA8_UNORM, {});
+					textureVar.Texture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png", GraphicsFormat::SRGBA8_UNORM, {});
 					textureVar.Sampler = Samplers::WrapWrapLinearLinear;
 					m_TextureVars[samplerId] = textureVar;
 				}
@@ -241,9 +241,9 @@ namespace Aurora
 		return nullptr;
 	}
 
-	std::shared_ptr<SMaterial> MaterialDefinition::CreateInstance(const MaterialOverrides &overrides)
+	std::shared_ptr<Material> MaterialDefinition::CreateInstance(const MaterialOverrides &overrides)
 	{
-		auto mat = std::make_shared<SMaterial>(this);
+		auto mat = std::make_shared<Material>(this);
 		AddRef(mat);
 		return mat;
 	}

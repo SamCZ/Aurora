@@ -5,31 +5,34 @@
 #endif
 #include <GLFW/glfw3.h>
 
-#include "Aurora/Logger/file_sink.hpp"
-#include "Aurora/Logger/std_sink.hpp"
+#include "Logger/file_sink.hpp"
+#include "Logger/std_sink.hpp"
 
-#include "Aurora/Core/assert.hpp"
-#include "Aurora/Core/Profiler.hpp"
+#include "Core/assert.hpp"
+#include "Core/Profiler.hpp"
 
-#include "Aurora/App/GLFWWindow.hpp"
-#include "Aurora/App/Input/GLFW/Manager.hpp"
+#include "App/GLFWWindow.hpp"
+#include "App/Input/GLFW/Manager.hpp"
 
-#include "Aurora/Graphics/OpenGL/GLSwapChain.hpp"
-#include "Aurora/Graphics/OpenGL/GLRenderDevice.hpp"
-#include "Aurora/Graphics/RenderManager.hpp"
-#include "Aurora/Resource/ResourceManager.hpp"
+#include "Graphics/OpenGL/GLSwapChain.hpp"
+#include "Graphics/OpenGL/GLRenderDevice.hpp"
+#include "Graphics/RenderManager.hpp"
+#include "Graphics/ViewPortManager.hpp"
+#include "Resource/ResourceManager.hpp"
 
-#include "Aurora/RmlUI/RmlUI.hpp"
+#include "RmlUI/RmlUI.hpp"
 
-#include "Aurora/Render/VgRender.hpp"
+#include "Render/VgRender.hpp"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include "Tools/IconsFontAwesome5.hpp"
 
 #include <TracyOpenGL.hpp>
 
-#include "Aurora/Physics/PhysicsWorld.hpp"
+#include "Physics/PhysicsWorld.hpp"
+#include "Editor/MainEditorPanel.hpp"
 
 #undef DrawText
 
@@ -46,12 +49,13 @@ __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
 
 namespace Aurora
 {
-	static AuroraContext* g_Context = nullptr;
+	AuroraContext* GEngine = nullptr;
 
-	AuroraContext* GetEngine()
-	{
-		return g_Context;
-	}
+	GameContext* AppContext::m_GameContext = nullptr;
+	GameModeBase* AppContext::m_GameMode = nullptr;
+	bool AppContext::m_EditorMode = false;
+
+	ImFont* m_ImGuiDefaultFont = nullptr;
 
 	AuroraEngine::AuroraEngine() :
 		m_Window(),
@@ -62,7 +66,10 @@ namespace Aurora
 		m_InputManager(nullptr),
 		m_AppContext(nullptr),
 		m_RmlUI(nullptr),
-		m_VgRender(nullptr)
+		m_ViewPortManager(nullptr),
+		m_VgRender(nullptr),
+		m_EditorPanel(nullptr),
+		m_RenderViewPort(nullptr)
 #ifdef NEWTON
         ,m_PhysicsWorld(nullptr)
 #endif
@@ -73,23 +80,27 @@ namespace Aurora
 	AuroraEngine::~AuroraEngine()
 	{
 		delete m_AppContext;
+		delete m_EditorPanel;
 #ifdef NEWTON
 		delete m_PhysicsWorld;
 #endif
-		delete g_Context;
 		delete m_VgRender;
 		delete m_RmlUI;
 		delete m_ResourceManager;
 		delete m_RenderManager;
+		delete m_ViewPortManager;
 		delete m_RenderDevice;
 		delete m_SwapChain;
 		delete m_Window;
+		delete GEngine;
 		glfwTerminate();
 	}
 
-	void AuroraEngine::Init(AppContext* appContext, WindowDefinition& windowDefinition)
+	void AuroraEngine::Init(AppContext* appContext, WindowDefinition& windowDefinition, bool editor)
 	{
 		au_assert(appContext != nullptr);
+
+		AppContext::m_EditorMode = editor;
 
 		Logger::AddSink<std_sink>();
 		Logger::AddSink<file_sink>("latest-log.txt");
@@ -98,7 +109,8 @@ namespace Aurora
 
 		glfwInit();
 
-		g_Context = new AuroraContext();
+		GEngine = new AuroraContext();
+		GEngine->m_AppContext = appContext;
 
 		// Init and create window
 		m_Window = new GLFWWindow();
@@ -137,9 +149,29 @@ namespace Aurora
 		{ // Init imgui, TODO: add define for it
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
-			ImGuiIO& io = ImGui::GetIO(); (void)io;
-			//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+			ImGuiIO& io = ImGui::GetIO();
+			//io.Fonts->AddFontFromFileTTF("../../Assets/Fonts/LatoLatin-Bold.ttf", 16);
+
+			//ImFont* font = io.Fonts->AddFontDefault();
+			static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
+
+			auto fontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf"));
+			io.Fonts->AddFontFromMemoryTTF(fontData->data(), fontData->size(), 15);
+
+			ImFontConfig config;
+			config.MergeMode = true;
+			//config.PixelSnapH = true;
+			auto iconFontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/fa-solid-900.ttf"));
+			io.Fonts->AddFontFromMemoryTTF(iconFontData->data(), iconFontData->size(), 15, &config, icons_ranges);
+			io.Fonts->Build();
+
+			io.IniFilename = "../../imgui.ini";
+			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 			//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+			//io.ConfigViewportsNoAutoMerge = true;
+			//io.ConfigViewportsNoTaskBarIcon = true;
 
 			// Setup Dear ImGui style
 			ImGui::StyleColorsDark();
@@ -148,22 +180,25 @@ namespace Aurora
 			// Setup Platform/Renderer backends
 			ImGui_ImplGlfw_InitForOpenGL(((GLFWWindow*)m_Window)->GetHandle(), true);
 			ImGui_ImplOpenGL3_Init("#version 330 core");
+
+			//auto fontData = m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf");
+			//m_ImGuiDefaultFont = io.Fonts->AddFontFromMemoryCompressedTTF(fontData.data(), fontData.size(), 12);
 		}
 
 		// Init global context
-		g_Context->m_Window = m_Window;
-		g_Context->m_InputManager = m_Window->GetInputManager().get();
-		g_Context->m_RenderDevice = m_RenderDevice;
-		g_Context->m_RenderManager = m_RenderManager;
-		g_Context->m_ResourceManager = m_ResourceManager;
+		GEngine->m_Window = m_Window;
+		GEngine->m_InputManager = m_Window->GetInputManager().get();
+		GEngine->m_RenderDevice = m_RenderDevice;
+		GEngine->m_RenderManager = m_RenderManager;
+		GEngine->m_ResourceManager = m_ResourceManager;
 
 		// Init RmlUI
 		m_RmlUI = new RmlUI("RmlContext");
-		g_Context->m_RmlUI = m_RmlUI;
+		GEngine->m_RmlUI = m_RmlUI;
 
 		// Init NanoVG render
 		m_VgRender = new VgRender();
-		g_Context->m_VgRender = m_VgRender;
+		GEngine->m_VgRender = m_VgRender;
 		m_VgRender->LoadFont("default", "Assets/Fonts/LatoLatin-Bold.ttf");
 
 #ifdef NEWTON
@@ -171,6 +206,24 @@ namespace Aurora
 		m_PhysicsWorld = new PhysicsWorld();
 		g_Context->m_PhysicsWorld = m_PhysicsWorld;
 #endif
+
+		m_ViewPortManager = new ViewPortManager();
+		GEngine->m_ViewPortManager = m_ViewPortManager;
+
+		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
+
+		if(editor)
+		{
+			m_EditorPanel = new MainEditorPanel();
+		}
+		else
+		{
+			m_Window->AddResizeListener([this](int w, int h) -> void
+			{
+				m_RenderViewPort->Resize({w, h});
+			});
+			m_RenderViewPort->Resize(m_Window->GetSize());
+		}
 
 		// Init App context
 		m_AppContext = appContext;
@@ -236,8 +289,20 @@ namespace Aurora
 #endif
 
 			{
+				bool updateScene = true;
+
+				if(m_EditorPanel)
+				{
+					updateScene = m_EditorPanel->IsPlayMode();
+				}
+
 				CPU_DEBUG_SCOPE("Game update");
-				m_AppContext->Update(delta);
+				Scene* currentScene = AppContext::GetScene();
+				if(currentScene && updateScene)
+				{
+					currentScene->Update(delta);
+				}
+				m_AppContext->InternalUpdate(delta);
 			}
 
 			{
@@ -245,10 +310,23 @@ namespace Aurora
 				m_RmlUI->Update();
 			}
 
+			if (m_EditorPanel)
+			{
+				CPU_DEBUG_SCOPE("Editor update");
+				m_EditorPanel->Update(delta);
+			}
+
 			{
 				CPU_DEBUG_SCOPE("Game render");
 				GPU_DEBUG_SCOPE("Game render");
 				m_AppContext->Render();
+
+				if(!m_EditorPanel)
+				{
+					glEnable(GL_FRAMEBUFFER_SRGB);
+					m_RenderManager->Blit(m_RenderViewPort->Target);
+					glDisable(GL_FRAMEBUFFER_SRGB);
+				}
 			}
 
 			m_RenderDevice->SetViewPort(FViewPort(m_Window->GetSize()));
@@ -258,25 +336,6 @@ namespace Aurora
 				GPU_DEBUG_SCOPE("NanoVG");
 
 				m_VgRender->Begin(m_Window->GetSize(), 1.0f); // TODO: Fix hdpi devices
-
-				/*nvgBeginPath(vg);
-				nvgRect(vg, 100,100, 120,30);
-				nvgFillColor(vg, nvgRGBA(255,192,0,255));
-				nvgFill(vg);
-
-				{
-					nvgSave(vg);
-					nvgBeginPath(vg);
-					nvgTranslate(vg, 100 - 15, 100 - 16);
-					nvgMoveTo(vg, 10, 17);
-					nvgLineTo(vg, 13, 20);
-					nvgLineTo(vg, 20, 13);
-					nvgStrokeWidth(vg, 1.0f);
-					nvgStrokeColor(vg, {1, 0, 1, 1});
-					nvgStroke(vg);
-					nvgRestore(vg);
-				}*/
-
 				m_AppContext->RenderVg();
 
 				{
@@ -333,23 +392,27 @@ namespace Aurora
 			{
 				CPU_DEBUG_SCOPE("ImGui render");
 				GPU_DEBUG_SCOPE("ImGui render");
+
+				DrawCallState drawCallState;
+				drawCallState.ViewPort = m_Window->GetSize();
+				m_RenderDevice->BindRenderTargets(drawCallState);
+
 				ImGui::Render();
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-				static bool canRender = false;
-
-				if(canRender)
-					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-				if(GLFWWindow* window = dynamic_cast<GLFWWindow*>(m_Window))
+				// Update and Render additional Platform Windows
+				// (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
+				//  For this specific demo app we could also call glfwMakeContextCurrent(window) directly)
+				if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 				{
-					if(glfwGetKey(window->GetHandle(), GLFW_KEY_I) == GLFW_PRESS)
-					{
-						canRender = !canRender;
-					}
+					GLFWwindow* backup_current_context = glfwGetCurrentContext();
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+					glfwMakeContextCurrent(backup_current_context);
 				}
 			}
 
-			g_Context->m_RenderDevice->InvalidateState();
+			GEngine->m_RenderDevice->InvalidateState();
 
 			{
 				m_RenderManager->EndFrame();

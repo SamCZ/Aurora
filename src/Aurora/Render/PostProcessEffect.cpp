@@ -20,7 +20,7 @@ namespace Aurora
 
 	void PostProcessEffect::RenderState(const DrawCallState& state)
 	{
-		GetEngine()->GetRenderDevice()->Draw(state, {DrawArguments(4)});
-		GetEngine()->GetRenderManager()->GetUniformBufferCache().Reset();
+		GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)});
+		GEngine->GetRenderManager()->GetUniformBufferCache().Reset();
 	}
 }

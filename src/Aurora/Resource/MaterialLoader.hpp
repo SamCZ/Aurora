@@ -8,7 +8,7 @@ namespace Aurora
 {
 	struct MaterialDefinitionDesc;
 	class MaterialDefinition;
-	class SMaterial;
+	class Material;
 
 	class MaterialLoader
 	{

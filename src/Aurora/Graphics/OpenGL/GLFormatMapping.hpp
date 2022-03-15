@@ -42,6 +42,7 @@ namespace Aurora
 			{ GraphicsFormat::RGBA16_SNORM,         GL_RGBA16_SNORM,        GL_RGBA,            GL_INT,                         4, 8, false },
 			{ GraphicsFormat::RG32_UINT,            GL_RG32UI,              GL_RG_INTEGER,      GL_UNSIGNED_INT,                2, 8, false },
 			{ GraphicsFormat::RG32_FLOAT,           GL_RG32F,               GL_RG,              GL_FLOAT,                       2, 8, false },
+			{ GraphicsFormat::RGB8_UNORM,           GL_RGB8,                GL_RGB,             GL_UNSIGNED_BYTE,                3, 8, false },
 			{ GraphicsFormat::RGB32_UINT,           GL_RGB32UI,             GL_RGB_INTEGER,     GL_UNSIGNED_INT,                3, 12, false },
 			{ GraphicsFormat::RGB32_FLOAT,          GL_RGB32F,              GL_RGB,             GL_FLOAT,                       3, 12, false },
 			{ GraphicsFormat::RGBA16_UINT,          GL_RGBA16UI,            GL_RGBA_INTEGER,    GL_UNSIGNED_INT,                4, 16, false },

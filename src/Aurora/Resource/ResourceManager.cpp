@@ -4,10 +4,14 @@
 #include <regex>
 #include "Aurora/Core/FileSystem.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "stb/stb_image_resize.h"
+#include <stb_image_resize.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 #include "MaterialLoader.hpp"
 
@@ -428,7 +432,7 @@ namespace Aurora
 		return (m_MaterialDefinitions[path] = std::make_shared<MaterialDefinition>(materialDefinitionDesc));
 	}
 
-	std::shared_ptr<SMaterial> ResourceManager::LoadMaterial(const Path &path)
+	std::shared_ptr<Material> ResourceManager::LoadMaterial(const Path &path)
 	{
 		// TODO: Load overrides from file
 		/*const MaterialDefinition_ptr& materialDefinition = GetOrLoadMaterialDefinition(definitionPath);

@@ -1,10 +1,18 @@
 #pragma once
 
-//#include <ImGuiUtils.hpp>
+#include "Aurora/Core/Vector.hpp"
+
+#define IM_VEC2_CLASS_EXTRA \
+		ImVec2(const glm::vec2& f) { x = f.x; y = f.y; }\
+		operator glm::vec2() const { return glm::vec2(x,y); }
+
+#define IM_VEC4_CLASS_EXTRA \
+		ImVec4(const glm::vec4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }\
+		operator glm::vec4() const { return glm::vec4(x,y,z,w); }
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <string>
-#include "Aurora/Core/Vector.hpp"
 
 namespace ImGui
 {
@@ -41,40 +49,7 @@ namespace ImGui
 		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 	}
 
-	void DrawSplitter(int split_vertically, float thickness, float* size0, float* size1, float min_size0, float min_size1)
-	{
-		ImVec2 backup_pos = ImGui::GetCursorPos();
-		if (split_vertically)
-			ImGui::SetCursorPosY(backup_pos.y + *size0);
-		else
-			ImGui::SetCursorPosX(backup_pos.x + *size0);
-
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0,0,0,0));          // We don't draw while active/pressed because as we move the panes the splitter button will be 1 frame late
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f,0.6f,0.6f,0.10f));
-		ImGui::Button("##Splitter", ImVec2(!split_vertically ? thickness : -1.0f, split_vertically ? thickness : -1.0f));
-		ImGui::PopStyleColor(3);
-
-		ImGui::SetItemAllowOverlap(); // This is to allow having other buttons OVER our splitter.
-
-		if (ImGui::IsItemActive())
-		{
-			float mouse_delta = split_vertically ? ImGui::GetIO().MouseDelta.y : ImGui::GetIO().MouseDelta.x;
-
-			// Minimum pane size
-			if (mouse_delta < min_size0 - *size0)
-				mouse_delta = min_size0 - *size0;
-			if (mouse_delta > *size1 - min_size1)
-				mouse_delta = *size1 - min_size1;
-
-			// Apply resize
-			*size0 += mouse_delta;
-			*size1 -= mouse_delta;
-		}
-		ImGui::SetCursorPos(backup_pos);
-	}
-
-	inline void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f)
+	inline void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 70.0f)
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
@@ -90,47 +65,47 @@ namespace ImGui
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+		ImVec2 buttonSize = { lineHeight + 3.0f - 5, lineHeight };
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
-		ImGui::PushFont(boldFont);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 0.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 0.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 0.0f });
+		//ImGui::PushFont(boldFont);
 		if (ImGui::Button("X", buttonSize))
 			values.x = resetValue;
-		ImGui::PopFont();
+		//ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.6f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
-		ImGui::PushFont(boldFont);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.2f, 0.7f, 0.2f, 0.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.3f, 0.8f, 0.3f, 0.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 0.0f });
+		//ImGui::PushFont(boldFont);
 		if (ImGui::Button("Y", buttonSize))
 			values.y = resetValue;
-		ImGui::PopFont();
+		//ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.6f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 1.0f });
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
-		ImGui::PushFont(boldFont);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.1f, 0.25f, 0.8f, 0.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.2f, 0.35f, 0.9f, 0.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 0.0f });
+		//ImGui::PushFont(boldFont);
 		if (ImGui::Button("Z", buttonSize))
 			values.z = resetValue;
-		ImGui::PopFont();
+		//ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.6f");
 		ImGui::PopItemWidth();
 
 		ImGui::PopStyleVar();
@@ -164,7 +139,7 @@ namespace ImGui
 		return state;
 	}
 
-	inline void InputText(const std::string& label, std::string& text, bool enableLabel = true)
+	inline bool InputText(const std::string& label, std::string& text, bool enableLabel = true)
 	{
 		if(enableLabel) {
 			ImGui::Text("%s", label.c_str());
@@ -176,7 +151,9 @@ namespace ImGui
 		text.copy(name, 64);
 		if (ImGui::InputText(("##" + label).c_str(), name, 64)) {
 			text = std::string(name);
+			return true;
 		}
+		return false;
 	}
 
 	inline void InputInt(const std::string& label, int& i)
@@ -202,14 +179,6 @@ namespace ImGui
 		}
 	}
 
-	inline bool IsItemActivePreviousFrame()
-	{
-		ImGuiContext& g = *GImGui;
-		if (g.ActiveIdPreviousFrame)
-			return g.ActiveIdPreviousFrame== GImGui->CurrentWindow->DC.LastItemId;
-		return false;
-	}
-
 	inline void BeginWindow(const std::string& name, float x, float y, float width, float height, bool stay = false, int padding = -1, bool* p_open = nullptr) {
 		if (padding >= 0) {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { (float)padding, (float)padding });
@@ -225,4 +194,24 @@ namespace ImGui
 	inline void EndWindow() {
 		ImGui::End();
 	}
+}
+
+namespace ImGui
+{
+	void RenderHollowBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col, float thickness = 1.0f);
+
+	void Bullet(bool hollow);
+	void Bullet(bool hollow, glm::vec4 color);
+}
+
+namespace ImGui
+{
+	void NodePin(bool fill, glm::vec4 color);
+	void NodePin_Execute(bool fill, glm::vec4 color);
+}
+
+namespace ImGui
+{
+	//bool IconButton(const char* name);
+	bool IconCheckbox(const char* name, bool* v);
 }

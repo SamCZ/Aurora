@@ -30,12 +30,12 @@ namespace Aurora
 
 	void RmShellSystemInterface::SetClipboardText(const Rml::String &text)
 	{
-		GetEngine()->GetWindow()->SetClipboardString(text);
+		GEngine->GetWindow()->SetClipboardString(text);
 	}
 
 	void RmShellSystemInterface::GetClipboardText(Rml::String &text)
 	{
-		text = GetEngine()->GetWindow()->GetClipboardString();
+		text = GEngine->GetWindow()->GetClipboardString();
 	}
 
 	bool RmShellSystemInterface::LogMessage(Rml::Log::Type type, const Rml::String &message)

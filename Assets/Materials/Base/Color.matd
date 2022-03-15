@@ -1,0 +1,22 @@
+{
+	"name": "Color",
+	"passes": [
+		{
+			"name": "Ambient",
+			"shaders": {
+				"vertex": "Assets/Shaders/Test/color.vert",
+				"pixel": "Assets/Shaders/Test/color.frag"
+			}
+		}
+	],
+	"variables": [
+		{
+			"name": "Color",
+			"type": "Vector",
+			"widget": "Color",
+			"in_shader_name": "u_Color",
+			"value": [255, 255, 1, 255]
+		}
+	],
+	"macros": {}
+}

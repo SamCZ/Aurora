@@ -19,7 +19,7 @@ namespace Aurora
 
 		}
 
-		void Log(const std::string& severity, const std::string& file, const std::string& function, int line, const std::string& message) override
+		void Log(const Logger::Severity& severity, const std::string& severityStr, const std::string& file, const std::string& function, int line, const std::string& message) override
 		{
 			if(!m_Stream.good()) {
 				m_Stream.open(m_Path);
@@ -30,9 +30,9 @@ namespace Aurora
 			}
 
 			if(!file.empty()) {
-				m_Stream << severity << ": " << file << ": " << function << "(): " << line << ": " << message << std::endl;
+				m_Stream << severityStr << ": " << file << ": " << function << "(): " << line << ": " << message << std::endl;
 			} else {
-				m_Stream << severity << ": " << message << std::endl;
+				m_Stream << severityStr << ": " << message << std::endl;
 			}
 
 			m_Stream.flush();

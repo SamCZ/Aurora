@@ -2,120 +2,191 @@
 #include <Aurora/Resource/ResourceManager.hpp>
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
-#include <Aurora/Graphics/Material/SMaterial.hpp>
+#include <Aurora/Graphics/Material/Material.hpp>
+#include <Aurora/Graphics/ViewPortManager.hpp>
 #include <Aurora/Resource/MaterialLoader.hpp>
 
 #include <Shaders/World/PBRBasic/cb_pbr.h>
 
+#include <Aurora/Memory/Aum.hpp>
+#include <Aurora/Framework/Scene.hpp>
+#include <Aurora/Framework/Actor.hpp>
+#include <Aurora/Framework/SceneComponent.hpp>
+#include <Aurora/Framework/CameraComponent.hpp>
+#include <Aurora/Framework/StaticMeshComponent.hpp>
+
+#include <Aurora/Resource/AssimpModelLoader.hpp>
+
+#include "Aurora/Editor/MainEditorPanel.hpp"
+
+#include <Aurora/Render/VgRender.hpp>
+
+#include <Aurora/Render/SceneRenderer.hpp>
+
 using namespace Aurora;
 
-void HSVtoRGB(float& fR, float& fG, float& fB, float& fH, float& fS, float& fV) {
-	float fC = fV * fS; // Chroma
-	float fHPrime = fmod(fH / 60.0, 6);
-	float fX = fC * (1 - fabs(fmod(fHPrime, 2) - 1));
-	float fM = fV - fC;
+class TestActor : public Actor
+{
+public:
+	CLASS_OBJ(TestActor, Actor);
 
-	if(0 <= fHPrime && fHPrime < 1) {
-		fR = fC;
-		fG = fX;
-		fB = 0;
-	} else if(1 <= fHPrime && fHPrime < 2) {
-		fR = fX;
-		fG = fC;
-		fB = 0;
-	} else if(2 <= fHPrime && fHPrime < 3) {
-		fR = 0;
-		fG = fC;
-		fB = fX;
-	} else if(3 <= fHPrime && fHPrime < 4) {
-		fR = 0;
-		fG = fX;
-		fB = fC;
-	} else if(4 <= fHPrime && fHPrime < 5) {
-		fR = fX;
-		fG = 0;
-		fB = fC;
-	} else if(5 <= fHPrime && fHPrime < 6) {
-		fR = fC;
-		fG = 0;
-		fB = fX;
-	} else {
-		fR = 0;
-		fG = 0;
-		fB = 0;
+	TestActor()
+	{
+		std::cout << "TestActor created " << PointerToString(this) << std::endl;
 	}
 
-	fR += fM;
-	fG += fM;
-	fB += fM;
-}
+	void InitializeComponents() override
+	{
+		GetRootComponent()->GetTransform().Location.x = 10;
+	}
 
+	void Tick(double delta) override
+	{
+		GetRootComponent()->GetTransform().Rotation.y += delta * 10.0f;
+	}
+
+	~TestActor() override
+	{
+		std::cout << "TestActor deleted" << std::endl;
+	}
+};
+
+class CameraActor : public Actor
+{
+private:
+	CameraComponent* m_Camera;
+public:
+	CLASS_OBJ(CameraActor, Actor);
+	DEFAULT_COMPONENT(CameraComponent);
+
+	void InitializeComponents() override
+	{
+		m_Camera = CameraComponent::Cast(GetRootComponent());
+		m_Camera->SetViewPort(GEngine->GetViewPortManager()->Get());
+		m_Camera->SetPerspective(75, 0.1f, 2000.0f);
+	}
+
+	CameraComponent* GetCamera()
+	{
+		return m_Camera;
+	}
+};
+
+enum UI_TYPES
+{
+	UI_MAINMENU = 0,
+	UI_SETTINGS = 1
+};
+
+class TestUI : public UserInterface
+{
+public:
+	explicit TestUI(UIID_t id) : UserInterface(id) {}
+
+	void BeginPlay() override
+	{
+
+	}
+
+	void BeginDestroy() override
+	{
+
+	}
+
+	void Tick(double delta) override
+	{
+
+	}
+};
+
+class TestGameMode : public GameModeBase
+{
+public:
+	void BeginPlay() override
+	{
+		AddUserInterface<TestUI>(UI_MAINMENU);
+	}
+
+	void BeginDestroy() override
+	{
+
+	}
+
+	void Tick(double delta) override
+	{
+
+	}
+};
 
 class BaseAppContext : public AppContext
 {
-	MaterialDefinition_ptr matDef;
-	std::shared_ptr<SMaterial> mat;
-	std::shared_ptr<SMaterial> mat2;
-	std::shared_ptr<SMaterial> mat3;
+	SceneRenderer* sceneRenderer;
+
+	Actor* testActor = nullptr;
+	Actor* testActor2 = nullptr;
+
+	~BaseAppContext() override
+	{
+		delete sceneRenderer;
+	}
 
 	void Init() override
 	{
-		matDef = GetEngine()->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Test2D.matd");
+		SetGameContext<GameContext>();
+		SwitchGameMode<TestGameMode>();
 
-		mat = matDef->CreateInstance();
+		sceneRenderer = new SceneRenderer();
 
-		//mat->SetVariable("Color"_HASH, Vector4(0, 1, 0, 1));
+		AssimpModelLoader modelLoader;
+		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/sponza.fbx"));
 
-		mat2 = mat->Clone();
-		//mat2->SetVariable("Color"_HASH, Vector4(1, 1, 1, 1));
+		testActor = GetScene()->SpawnActor<Actor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.0001f));
+		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
-		mat2->SetTexture("Texture"_HASH, GetEngine()->GetResourceManager()->LoadTexture("Assets/Textures/logo_as.png", GraphicsFormat::RGBA8_UNORM, {}));
+		if (importedData)
+		{
+			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
+
+			auto* meshComponent = testActor->AddComponent<StaticMeshComponent>("Mesh");
+			meshComponent->SetMesh(importedData.Mesh);
+
+			for (auto &item : meshComponent->GetMaterialSet())
+			{
+				auto matInstance = matDef->CreateInstance();
+				matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
+				item.second.Material = matInstance;
+			}
+		}
+
+		testActor2 = GetScene()->SpawnActor<TestActor>("Box", Vector3(0, 0, 0), {}, Vector3(0.01f));
+		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"));
+		if(importedData2)
+		{
+			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+
+			auto* meshComponent = testActor2->AddComponent<StaticMeshComponent>("Mesh");
+			meshComponent->SetMesh(importedData2.Mesh);
+
+			auto matInstance = matDef->CreateInstance();
+
+			for (auto &item : meshComponent->GetMaterialSet())
+			{
+				//matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
+				item.second.Material = matInstance;
+			}
+		}
+
+		GetScene()->SpawnActor<CameraActor>("Camera", {0, 0, 5});
 	}
-
-	float a = 0;
 
 	void Update(double delta) override
 	{
-		float fR = 0, fG = 0, fB = 0, fH = 0, fS = 0, fV = 0;
 
-		fH = a * 255;
-		fS = 0.19;
-		fV = 255;
-
-		HSVtoRGB(fR, fG, fB, fH, fS, fV);
-
-		mat->SetVariable("Color"_HASH, Vector4(fR / 256.0f, fG / 256.0f, fB / 256.0f, 1));
-
-		a += delta * 1.0f;
-		if(a > 255) a = 0;
 	}
 
 	void Render() override
 	{
-		DrawCallState drawCallState;
-		drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
-		drawCallState.ViewPort = FViewPort(GetEngine()->GetWindow()->GetSize());
-
-		GetEngine()->GetRenderDevice()->BindRenderTargets(drawCallState);
-		GetEngine()->GetRenderDevice()->ClearRenderTargets(drawCallState);
-
-		{
-			drawCallState.ViewPort = FViewPort(0, 0, 256, 256);
-			GetEngine()->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
-
-			mat->BeginPass((uint8)EPassType::Ambient ,drawCallState);
-			GetEngine()->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
-			mat->EndPass((uint8)EPassType::Ambient, drawCallState);
-		}
-
-		{
-			drawCallState.ViewPort = FViewPort(0, 256 + 16, 256, 256);
-			GetEngine()->GetRenderDevice()->SetViewPort(drawCallState.ViewPort);
-
-			mat2->BeginPass((uint8)EPassType::Ambient ,drawCallState);
-			GetEngine()->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4)}, false);
-			mat2->EndPass((uint8)EPassType::Ambient, drawCallState);
-		}
+		sceneRenderer->Render(GetScene());
 	}
 
 	void RenderVg() override
@@ -130,11 +201,11 @@ int main()
 	windowDefinition.Width = 1270;
 	windowDefinition.Height = 720;
 	windowDefinition.HasOSWindowBorder = true;
-	windowDefinition.Maximized = false;
+	windowDefinition.Maximized = true;
 	windowDefinition.Title = "BaseApp";
 
 	Aurora::AuroraEngine engine;
-	engine.Init(new BaseAppContext(), windowDefinition);
+	engine.Init(new BaseAppContext(), windowDefinition, true);
 	engine.Run();
 	return 0;
 }

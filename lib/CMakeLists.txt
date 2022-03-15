@@ -128,17 +128,33 @@ if(NOT TARGET tracy)
 endif()
 
 #------------------------------
-# TinyGLTF
+# ASSIMP
 # Model loading library
 #------------------------------
-if(NOT TARGET tinygltf)
-    set(TINYGLTF_BUILD_LOADER_EXAMPLE OFF)
-    set(TINYGLTF_BUILD_GL_EXAMPLES OFF)
-    set(TINYGLTF_BUILD_VALIDATOR_EXAMPLE OFF)
-    set(TINYGLTF_BUILD_BUILDER_EXAMPLE OFF)
-    set(TINYGLTF_HEADER_ONLY OFF)
-    set(TINYGLTF_INSTALL OFF)
-    add_subdirectory(tinygltf)
+if(NOT TARGET assimp)
+    IF (CMAKE_BUILD_TYPE MATCHES Debug AND NOT PLATFORM_ANDROID)
+        set(BUILD_SHARED_LIBS ON)
+    ELSE()
+        set(BUILD_SHARED_LIBS OFF)
+    ENDIF()
+
+    set(BUILD_SHARED_LIBS ON)
+
+    set(ASM686 OFF)
+    set(AMD64 ON)
+    set(ASSIMP_BUILD_ZLIB ON)
+    set(ASSIMP_BUILD_TESTS OFF)
+    set(ZLIB_AMD64 ON)
+    set(ASSIMP_NO_EXPORT ON)
+    set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
+    set(ASSIMP_BUILD_FBX_IMPORTER ON)
+    set(ASSIMP_BUILD_GLTF_IMPORTER OFF)
+    set(ASSIMP_BUILD_COLLADA_IMPORTER OFF)
+    set(ASSIMP_BUILD_DRACO OFF)
+    add_subdirectory(assimp)
+
+    set_property(TARGET assimp PROPERTY FOLDER "GameLib")
+    set(BUILD_SHARED_LIBS OFF)
 endif()
 
 #------------------------------
@@ -158,4 +174,8 @@ if(NOT TARGET glslang)
     set(BUILD_SHARED_LIBS OFF)
     add_subdirectory(glslang)
     set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_CACHE})
+endif()
+
+if(NOT TARGET stb_utils)
+    add_subdirectory(stb)
 endif()

@@ -4,13 +4,15 @@
 
 namespace Aurora
 {
-	typedef uint8 PassType_t;
+	typedef uint8_t PassType_t;
 
-	enum class EPassType : PassType_t
+	namespace Pass
 	{
-		Ambient = 0,
-		Depth = 1
-	};
+		constexpr PassType_t Ambient = 0;
+		constexpr PassType_t Depth = 1;
+
+		constexpr PassType_t Count = 2;
+	}
 
 	constexpr char const* PassTypesToString[2] = {
 			"Ambient",

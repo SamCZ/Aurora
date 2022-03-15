@@ -5,7 +5,7 @@
 namespace Aurora
 {
 	GLShaderProgram::GLShaderProgram(GLuint handle, ShaderProgramDesc desc)
-	: m_Desc(std::move(desc)), m_Handle(handle), m_Resources(), m_HasInputLayout(false), m_InputVariables()
+	: m_Desc(std::move(desc)), m_Handle(handle), m_Resources(), m_HasInputLayout(false), m_InputVariables(), m_ConstantBufferDescriptorCacheInitialized(false), m_SamplerDescriptorCacheInitialized(false)
 	{
 		//std::cout << "Loading uniforms for " << m_Desc.GetName() << std::endl;
 		m_Resources.LoadUniforms(m_Handle);
@@ -55,6 +55,9 @@ namespace Aurora
 					case GL_UNSIGNED_INT:
 						inputVariable.Format = GraphicsFormat::R32_UINT;
 						break;
+					case GL_FLOAT:
+						inputVariable.Format = GraphicsFormat::R32_FLOAT;
+						break;
 					case GL_FLOAT_MAT4:
 					{
 						auto vec4Size = GetOpenGLDataTypeSize(GL_FLOAT_VEC4);
@@ -90,13 +93,16 @@ namespace Aurora
 
 	std::vector<ShaderResourceDesc> GLShaderProgram::GetResources(const ShaderResourceType& resourceType)
 	{
-		switch (resourceType) {
-
+		switch (resourceType)
+		{
 			case ShaderResourceType::Unknown:
 				break;
 			case ShaderResourceType::ConstantBuffer:
 			{
-				std::vector<ShaderResourceDesc> descriptors;
+				if(m_ConstantBufferDescriptorCacheInitialized)
+				{
+					return m_ConstantBufferDescriptorCache;
+				}
 
 				for(const auto& ub : m_Resources.GetUniformBlocks()) {
 					ShaderResourceDesc resourceDesc = {};
@@ -107,15 +113,20 @@ namespace Aurora
 					resourceDesc.ShadersIn = ub.ShadersIn;
 					resourceDesc.Variables = ub.Variables;
 
-					descriptors.emplace_back(resourceDesc);
+					m_ConstantBufferDescriptorCache.emplace_back(resourceDesc);
 				}
 
-				return descriptors;
+				m_ConstantBufferDescriptorCacheInitialized = true;
+
+				return m_ConstantBufferDescriptorCache;
 			}
 			case ShaderResourceType::Sampler:
 			case ShaderResourceType::TextureSRV:
 			{
-				std::vector<ShaderResourceDesc> descriptors;
+				if(m_SamplerDescriptorCacheInitialized)
+				{
+					return m_SamplerDescriptorCache;
+				}
 
 				for(const auto& ub : m_Resources.GetSamplers()) {
 					ShaderResourceDesc resourceDesc = {};
@@ -125,10 +136,12 @@ namespace Aurora
 					resourceDesc.ArraySize = ub.ArraySize;
 					resourceDesc.ShadersIn = EShaderType::Unknown;
 
-					descriptors.emplace_back(resourceDesc);
+					m_SamplerDescriptorCache.emplace_back(resourceDesc);
 				}
 
-				return descriptors;
+				m_SamplerDescriptorCacheInitialized = true;
+
+				return m_SamplerDescriptorCache;
 			}
 			case ShaderResourceType::BufferSRV:
 				break;
@@ -142,6 +155,6 @@ namespace Aurora
 				break;
 		}
 
-		return std::vector<ShaderResourceDesc>();
+		return {};
 	}
 }

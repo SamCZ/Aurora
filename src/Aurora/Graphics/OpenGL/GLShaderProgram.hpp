@@ -14,6 +14,12 @@ namespace Aurora
 		GLShaderResources m_Resources;
 		bool m_HasInputLayout : 1;
 		ShaderInputVariables_t m_InputVariables;
+
+		std::vector<ShaderResourceDesc> m_ConstantBufferDescriptorCache;
+		bool m_ConstantBufferDescriptorCacheInitialized;
+
+		std::vector<ShaderResourceDesc> m_SamplerDescriptorCache;
+		bool m_SamplerDescriptorCacheInitialized;
 	public:
 		GLShaderProgram(GLuint handle, ShaderProgramDesc desc);
 		~GLShaderProgram();

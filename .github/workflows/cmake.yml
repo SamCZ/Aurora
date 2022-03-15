@@ -32,7 +32,11 @@ jobs:
             -DCMAKE_C_COMPILER=gcc-10 \
             -DBUILD_TESTING=OFF \
             -DNEWTON_BUILD_SANDBOX_DEMOS=OFF \
-            -DCMAKE_CXX_COMPILER=g++-10
+            -DCMAKE_CXX_COMPILER=g++-10 \
+            -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=OFF \
+            -DASSIMP_BUILD_FBX_IMPORTER=ON \
+            -DASSIMP_BUILD_DRACO=OFF \
+            -DASSIMP_NO_EXPORT=ON
 
       - name: Build Engine
         working-directory: ${{runner.workspace}}/build
@@ -67,6 +71,10 @@ jobs:
             -DNEWTON_BUILD_SANDBOX_DEMOS=OFF `
             -DCMAKE_C_COMPILER=gcc-10 `
             -DCMAKE_CXX_COMPILER=g++-10 `
+            -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=OFF `
+            -DASSIMP_BUILD_FBX_IMPORTER=ON `
+            -DASSIMP_BUILD_DRACO=OFF `
+            -DASSIMP_NO_EXPORT=ON `
             -G "Visual Studio 16 2019" -A x64
 
       - name: Build Engine

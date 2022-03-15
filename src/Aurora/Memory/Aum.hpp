@@ -12,6 +12,20 @@ namespace Aurora
 	typedef uint32_t MemSize;
 	static constexpr MemSize MemSizeOf = sizeof(MemSize);
 
+	template<typename T>
+	constexpr T Align(T val, uint64_t alignment)
+	{
+		uint64_t mask = ~(alignment - 1);
+		uint64_t final = ((uint64_t)val + alignment - 1) & mask;
+		return (T)final;
+	}
+
+	template<typename T>
+	constexpr T IsAligned(T val, uint64_t alignment)
+	{
+		return !((uint64_t)val & (alignment - 1));
+	}
+
 	class AU_API Aum
 	{
 		struct MemoryFragment
@@ -40,7 +54,7 @@ namespace Aurora
 		Aum(const Aum& left) = delete;
 		Aum & operator=(const Aum&) = delete;
 
-		void* Alloc(MemSize size);
+		MemPtr Alloc(MemSize size);
 
 		template<typename T>
 		T* Alloc(MemSize count = 1)
@@ -87,6 +101,6 @@ namespace Aurora
 	private:
 		MemoryBlock& AllocateMemoryBlock();
 		void DestroyMemory();
-		void* AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator framentIt, MemSize size);
+		MemPtr AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator framentIt, MemSize size);
 	};
 }

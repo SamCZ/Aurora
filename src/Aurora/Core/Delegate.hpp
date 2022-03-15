@@ -65,15 +65,60 @@ namespace Aurora
 	typedef uint32_t EventID;
 #endif
 
+	class EventEmitterBase
+	{
+	public:
+		virtual ~EventEmitterBase() = default;
+		virtual bool Unbind(EventID eventId) = 0;
+	};
+
+	class UniqueEvent
+	{
+	private:
+		mutable EventEmitterBase* m_EmitterBase;
+		EventID m_EventID;
+	public:
+		UniqueEvent() : m_EmitterBase(nullptr), m_EventID(0) {}
+		UniqueEvent(EventEmitterBase* emitterBase, EventID eventId) : m_EmitterBase(emitterBase), m_EventID(eventId) { }
+
+		UniqueEvent(const UniqueEvent& other) = delete;
+		UniqueEvent& operator=(const UniqueEvent& other)
+		{
+			if(m_EmitterBase == other.m_EmitterBase && m_EventID == other.m_EventID)
+			{
+				return *this;
+			}
+
+			// Unbind current event
+			if(m_EmitterBase)
+				m_EmitterBase->Unbind(m_EventID);
+
+			// Copy data from other to current
+			m_EmitterBase = other.m_EmitterBase;
+			m_EventID = other.m_EventID;
+
+			// Set other emitter to null to prevent deleting now current event
+			other.m_EmitterBase = nullptr;
+
+			return *this;
+		}
+
+		~UniqueEvent()
+		{
+			if(m_EmitterBase)
+				m_EmitterBase->Unbind(m_EventID);
+		}
+	};
+
 	template<typename... ArgsTypes>
-	class EventEmitter
+	class EventEmitter : public EventEmitterBase
 	{
 	public:
 		typedef IDelegate<void, ArgsTypes...>* Delegate;
 	private:
 		std::vector<Delegate> m_Delegates;
 	public:
-		~EventEmitter()
+		~EventEmitter() override
 		{
 			for(Delegate delegate : m_Delegates)
 			{
@@ -87,7 +132,18 @@ namespace Aurora
 			return reinterpret_cast<EventID>(delegate);
 		}
 
+		UniqueEvent BindUnique(Delegate delegate)
+		{
+			m_Delegates.push_back(delegate);
+			return UniqueEvent(this, reinterpret_cast<EventID>(delegate));
+		}
+
 		EventID Bind(typename FunctionAction<void, ArgsTypes...>::Type function)
+		{
+			return Bind(new FunctionDelegate<void, ArgsTypes...>(function));
+		}
+
+		UniqueEvent BindUnique(typename FunctionAction<void, ArgsTypes...>::Type function)
 		{
 			return Bind(new FunctionDelegate<void, ArgsTypes...>(function));
 		}
@@ -98,7 +154,13 @@ namespace Aurora
 			return Bind(new MethodDelegate<UserClass, void, ArgsTypes...>(instance, method));
 		}
 
-		bool Unbind(EventID eventId)
+		template<class UserClass>
+		UniqueEvent BindUnique(UserClass* instance, typename MethodAction<UserClass, void, ArgsTypes...>::Type method)
+		{
+			return BindUnique(new MethodDelegate<UserClass, void, ArgsTypes...>(instance, method));
+		}
+
+		bool Unbind(EventID eventId) override
 		{
 			auto it = std::find(m_Delegates.begin(), m_Delegates.end(), reinterpret_cast<Delegate>(eventId));
 
@@ -111,9 +173,9 @@ namespace Aurora
 			return true;
 		}
 
-		void Invoke(ArgsTypes&& ...args)
+		void Invoke(ArgsTypes&& ...args) const
 		{
-			for(Delegate delegate : m_Delegates)
+			for(const Delegate& delegate : m_Delegates)
 			{
 				delegate->Invoke(std::forward<ArgsTypes>(args)...);
 			}

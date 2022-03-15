@@ -46,7 +46,7 @@ namespace Aurora
 		return m_Memory.emplace_back(memoryBlock);
 	}
 
-	void* Aum::AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator fragmentIt, MemSize size)
+	MemPtr Aum::AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator fragmentIt, MemSize size)
 	{
 		MemoryFragment& fragment = *fragmentIt;
 
@@ -74,7 +74,7 @@ namespace Aurora
 		return newMemoryStart;
 	}
 
-	void* Aum::Alloc(MemSize size)
+	MemPtr Aum::Alloc(MemSize size)
 	{
 		au_assert(size);
 		au_assert(size <= m_BlockSize);
@@ -112,14 +112,21 @@ namespace Aurora
 			AU_LOG_FATAL("Cound not find size for pointer ", PointerToString(mem), " !");
 		}
 
+		m_MemorySizes.erase(it);
+
 		MemSize size = it->second;
 		MemPtr memPtrEnd = memPtrBegin + size;
+
+		std::memset(memPtrBegin, 0, size);
 
 		for (MemoryBlock& memoryBlock : m_Memory)
 		{
 			if(memPtrBegin >= memoryBlock.Memory && memPtrEnd <= (memoryBlock.Memory + m_BlockSize))
 			{
-				memoryBlock.Fragments.emplace_back(MemoryFragment{memPtrBegin, memPtrEnd, size});
+				//memoryBlock.Fragments.emplace_back(MemoryFragment{memPtrBegin, memPtrEnd, size});
+				// Insert free fragment at the beginning
+				memoryBlock.Fragments.insert(memoryBlock.Fragments.begin(), MemoryFragment{memPtrBegin, memPtrEnd, size});
+				memoryBlock.FreeMemory += size;
 
 				// TODO: merge blocks with same begin or end
 

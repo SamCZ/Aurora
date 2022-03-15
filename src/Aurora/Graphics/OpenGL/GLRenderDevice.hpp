@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include "../Base/IRenderDevice.hpp"
 #include "GL.hpp"
 #include "GLContextState.hpp"
@@ -9,8 +10,59 @@ namespace Aurora
 {
 	AU_API GLBuffer* GetBuffer(const Buffer_ptr& buffer);
 	AU_API GLTexture* GetTexture(const Texture_ptr& texture);
+	AU_API GLTexture* GetTexture(ITexture* texture);
 	AU_API GLSampler* GetSampler(const Sampler_ptr& sampler);
 	AU_API GLShaderProgram* GetShader(const Shader_ptr& shader);
+
+	struct FrameBufferKey
+	{
+		static constexpr int MaxRenderTargets = 8;
+		std::array<TargetBinding, MaxRenderTargets> RenderTargets;
+		Texture_ptr DepthTarget;
+		uint32_t DepthIndex;
+		uint32_t DepthMipSlice;
+
+		[[nodiscard]] int compare(const FrameBufferKey &other) const
+		{
+			/*if (Width < other.Width) return -1;
+			if (Width > other.Width) return 1;*/
+
+			if (DepthTarget < other.DepthTarget) return -1;
+			if (DepthTarget > other.DepthTarget) return 1;
+
+			if (DepthIndex < other.DepthIndex) return -1;
+			if (DepthIndex > other.DepthIndex) return 1;
+
+			if (DepthMipSlice < other.DepthMipSlice) return -1;
+			if (DepthMipSlice > other.DepthMipSlice) return 1;
+
+			for (int i = 0; i < MaxRenderTargets; ++i)
+			{
+				const TargetBinding& binding = RenderTargets[i];
+				const TargetBinding& bindingOther = other.RenderTargets[i];
+
+				if (binding.Texture < bindingOther.Texture) return -1;
+				if (binding.Texture > bindingOther.Texture) return 1;
+
+				if (binding.Index < bindingOther.Index) return -1;
+				if (binding.Index > bindingOther.Index) return 1;
+
+				if (binding.MipSlice < bindingOther.MipSlice) return -1;
+				if (binding.MipSlice > bindingOther.MipSlice) return 1;
+			}
+
+			return 0;
+		}
+
+		bool operator<(const FrameBufferKey &other) const
+		{ return compare(other) < 0; }
+
+		bool operator>(const FrameBufferKey &other) const
+		{ return compare(other) > 0; }
+
+		bool operator==(const FrameBufferKey &other) const
+		{ return compare(other) == 0; }
+	};
 
 	class FrameBuffer
 	{
@@ -45,7 +97,7 @@ namespace Aurora
 		GLuint m_nVAOEmpty;
 		GLuint m_LastVao;
 		FrameBuffer_ptr m_CurrentFrameBuffer = nullptr;
-		robin_hood::unordered_map<uint32_t, FrameBuffer_ptr> m_CachedFrameBuffers;
+		std::vector<std::pair<FrameBufferKey, FrameBuffer_ptr>> m_CachedFrameBuffers;
 
 		GLContextState m_ContextState;
 
