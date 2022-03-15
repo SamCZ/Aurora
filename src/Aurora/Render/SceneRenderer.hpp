@@ -1,13 +1,16 @@
 #pragma once
 
 #include <array>
+#include "Aurora/Core/Delegate.hpp"
 #include "Aurora/Tools/robin_hood.h"
 #include "Aurora/Graphics/Material/Material.hpp"
+#include "Aurora/Graphics/PassType.hpp"
 #include "Aurora/Framework/Mesh/Mesh.hpp"
 
 namespace Aurora
 {
 	class Scene;
+	class FFrustum;
 
 	constexpr uint32_t MaxInstances = 1024;
 
@@ -41,15 +44,21 @@ namespace Aurora
 
 	using RenderSet = std::vector<ModelContext>;
 
+	typedef EventEmitter<PassType_t, DrawCallState&, const FFrustum&, const glm::mat4&> PassRenderEventEmitter;
+
 	class SceneRenderer
 	{
 	private:
 		Buffer_ptr m_BaseVsDataBuffer;
 
 		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
+
+		std::array<PassRenderEventEmitter, Pass::Count> m_InjectedPasses;
 	public:
 		SceneRenderer();
 
 		void Render(Scene* scene);
+
+		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }
 	};
 }

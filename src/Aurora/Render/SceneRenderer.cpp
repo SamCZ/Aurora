@@ -57,10 +57,13 @@ namespace Aurora
 
 			auto depthBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Depth", {viewPort->ViewPort.Width, viewPort->ViewPort.Height}, GraphicsFormat::D32);
 
+			const FFrustum& frustum = camera->GetFrustum();
+			Matrix4 viewMatrix = camera->GetViewMatrix();
+
 			BaseVSData baseVsData;
 			baseVsData.ProjectionMatrix = camera->GetProjectionMatrix();
 			baseVsData.ProjectionViewMatrix = camera->GetProjectionViewMatrix();
-			baseVsData.ViewMatrix = camera->GetViewMatrix();
+			baseVsData.ViewMatrix = viewMatrix;
 			drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
 
 			drawCallState.ViewPort = viewPort->ViewPort;
@@ -258,6 +261,8 @@ namespace Aurora
 				{
 					currentMaterial->EndPass(pass, drawCallState);
 				}
+
+				m_InjectedPasses[pass].Invoke(std::forward<PassType_t>(pass), drawCallState, std::forward<const FFrustum&>(frustum), viewMatrix);
 			}
 
 			depthBuffer.Free();
