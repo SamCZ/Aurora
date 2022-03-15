@@ -64,6 +64,8 @@ namespace Aurora
 			baseVsData.ProjectionMatrix = camera->GetProjectionMatrix();
 			baseVsData.ProjectionViewMatrix = camera->GetProjectionViewMatrix();
 			baseVsData.ViewMatrix = viewMatrix;
+			GEngine->GetRenderDevice()->WriteBuffer(m_BaseVsDataBuffer, &baseVsData);
+
 			drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
 
 			drawCallState.ViewPort = viewPort->ViewPort;
