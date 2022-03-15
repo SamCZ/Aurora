@@ -11,10 +11,16 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
+#include "Aurora/Tools/ImGuizmo.h"
+
+ImVec2 operator+(const ImVec2& left, const ImVec2& right)
+{
+	return {left.x + right.x, left.y + right.y};
+}
 
 namespace Aurora
 {
-	MainEditorPanel::MainEditorPanel() : m_SelectedActor(nullptr), m_MouseViewportGrabbed(false)
+	MainEditorPanel::MainEditorPanel() : m_SelectedActor(nullptr), m_MouseViewportGrabbed(false), m_SelectedComponent(nullptr)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		Logger::AddSinkPtr(m_ConsoleWindow);
@@ -72,9 +78,18 @@ namespace Aurora
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 
+			int flags = m_SelectedComponent == component ? ImGuiTreeNodeFlags_Selected : 0;
+
 			if(childComponents.empty())
 			{
-				ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+				ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | flags);
+
+				if(ImGui::IsItemClicked())
+				{
+					m_SelectedActor = nullptr;
+					m_SelectedComponent = component;
+				}
+
 				/*ImGui::TableNextColumn();
 				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
 				ImGui::TableNextColumn();
@@ -89,7 +104,14 @@ namespace Aurora
 			}
 			else
 			{
-				bool open = ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+				bool open = ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow | flags);
+
+				if(ImGui::IsItemClicked())
+				{
+					m_SelectedActor = nullptr;
+					m_SelectedComponent = component;
+				}
+
 				/*ImGui::TableNextColumn();
 				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
 				ImGui::TableNextColumn();
@@ -142,7 +164,16 @@ namespace Aurora
 					ImGui::TableNextRow();
 					ImGui::TableNextColumn();
 
-					bool open = ImGui::TreeNodeEx(actor->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow);
+					int flags = m_SelectedActor == actor ? ImGuiTreeNodeFlags_Selected : 0;
+
+					bool open = ImGui::TreeNodeEx(actor->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow | flags);
+
+					if(ImGui::IsItemClicked())
+					{
+						m_SelectedActor = actor;
+						m_SelectedComponent = nullptr;
+					}
+
 					/*ImGui::TableNextColumn();
 					ImGui::TextDisabled(ICON_FA_USER);*/
 					ImGui::TableNextColumn();
@@ -214,6 +245,38 @@ namespace Aurora
 			}
 
 			EUI::Image(m_RenderViewPort->Target, (Vector2)m_RenderViewPort->ViewPort);
+
+			//Manipulator
+			ImGuizmo::SetDrawlist();
+			ImGuizmo::SetRect(
+				ImGui::GetWindowPos().x,
+				ImGui::GetWindowPos().y,
+				ImGui::GetWindowWidth(),
+				ImGui::GetWindowHeight()
+				);
+
+			if(CameraComponent* camera = *AppContext::GetScene()->GetComponents<CameraComponent>().begin())
+			{
+				Matrix4 proj = camera->GetProjectionMatrix();
+				Matrix4 view = camera->GetViewMatrix();
+
+				if(m_SelectedActor || m_SelectedComponent)
+				{
+					Matrix4 transform = m_SelectedActor ? m_SelectedActor->GetRootComponent()->GetTransformationMatrix() : m_SelectedComponent->GetTransformationMatrix();
+
+					bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), ImGuizmo::TRANSLATE, ImGuizmo::WORLD, glm::value_ptr(transform));
+					if(manipulated)
+					{
+						if(m_SelectedActor)
+							m_SelectedActor->GetRootComponent()->GetTransform().SetFromMatrix(transform);
+						else
+						if(m_SelectedComponent)
+							m_SelectedComponent->GetTransform().SetFromMatrix(transform);
+					}
+				}
+
+				//ImGuizmo::ViewManipulate(glm::value_ptr(view), 1, ImGui::GetWindowPos() + ImVec2(ImGui::GetWindowWidth() - 128, 30), ImVec2(128, 128), 0);
+			}
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();

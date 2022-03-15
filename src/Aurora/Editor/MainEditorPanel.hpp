@@ -18,6 +18,7 @@ namespace Aurora
 		Texture_ptr m_FileTexture;
 
 		class Actor* m_SelectedActor;
+		class SceneComponent* m_SelectedComponent;
 
 		bool m_MouseViewportGrabbed;
 	public:
