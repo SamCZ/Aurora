@@ -89,6 +89,8 @@ namespace Aurora
 		void SetViewPort(RenderViewPort* wp);
 		[[nodiscard]] inline RenderViewPort* GetViewPort() const { return m_ViewPort; }
 
+		const FFrustum& GetFrustum() const { return m_Frustum; }
+
 		inline void SetClearColor(const Color& color) { m_ClearColor = color; }
 		[[nodiscard]] inline const Color& GetClearColor() const { return m_ClearColor; }
 	};
