@@ -10,6 +10,8 @@ namespace Aurora
 	class RenderManager;
 	class ResourceManager;
 	class ViewPortManager;
+	struct RenderViewPort;
+	class MainEditorPanel;
 
 	namespace Input
 	{
@@ -33,6 +35,9 @@ namespace Aurora
 		ViewPortManager* m_ViewPortManager;
 
 		AppContext* m_AppContext;
+
+		RenderViewPort* m_RenderViewPort;
+		MainEditorPanel* m_EditorPanel;
 	public:
 		AuroraEngine();
 		~AuroraEngine();

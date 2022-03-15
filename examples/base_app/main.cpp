@@ -131,16 +131,14 @@ public:
 
 class BaseAppContext : public AppContext
 {
-	MainEditorPanel* mainEditorPanel;
 	SceneRenderer* sceneRenderer;
 
-	Actor* testActor;
-	Actor* testActor2;
+	Actor* testActor = nullptr;
+	Actor* testActor2 = nullptr;
 
 	~BaseAppContext() override
 	{
 		delete sceneRenderer;
-		delete mainEditorPanel;
 	}
 
 	void Init() override
@@ -148,7 +146,6 @@ class BaseAppContext : public AppContext
 		SetGameContext<GameContext>();
 		SwitchGameMode<TestGameMode>();
 
-		mainEditorPanel = new MainEditorPanel();
 		sceneRenderer = new SceneRenderer();
 
 		AssimpModelLoader modelLoader;
@@ -195,13 +192,15 @@ class BaseAppContext : public AppContext
 
 	void Update(double delta) override
 	{
-		mainEditorPanel->Update(delta);
-
 		//testActor->GetRootComponent()->GetTransform().Rotation.x += delta * 50.0f;
 		//testActor->GetRootComponent()->GetTransform().Rotation.y += delta * 50.0f;
 
-		testActor2->GetRootComponent()->GetTransform().Location.x = 10;
-		testActor2->GetRootComponent()->GetTransform().Rotation.y += delta * 20.0f;
+		if(testActor2)
+		{
+			testActor2->GetRootComponent()->GetTransform().Location.x = 10;
+			testActor2->GetRootComponent()->GetTransform().Rotation.y += delta * 20.0f;
+		}
+
 	}
 
 	void Render() override

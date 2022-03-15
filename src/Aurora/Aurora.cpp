@@ -32,6 +32,7 @@
 #include <TracyOpenGL.hpp>
 
 #include "Physics/PhysicsWorld.hpp"
+#include "Editor/MainEditorPanel.hpp"
 
 #undef DrawText
 
@@ -65,7 +66,9 @@ namespace Aurora
 		m_AppContext(nullptr),
 		m_RmlUI(nullptr),
 		m_ViewPortManager(nullptr),
-		m_VgRender(nullptr)
+		m_VgRender(nullptr),
+		m_EditorPanel(nullptr),
+		m_RenderViewPort(nullptr)
 #ifdef NEWTON
         ,m_PhysicsWorld(nullptr)
 #endif
@@ -76,10 +79,10 @@ namespace Aurora
 	AuroraEngine::~AuroraEngine()
 	{
 		delete m_AppContext;
+		delete m_EditorPanel;
 #ifdef NEWTON
 		delete m_PhysicsWorld;
 #endif
-		delete GEngine;
 		delete m_VgRender;
 		delete m_RmlUI;
 		delete m_ResourceManager;
@@ -88,6 +91,7 @@ namespace Aurora
 		delete m_RenderDevice;
 		delete m_SwapChain;
 		delete m_Window;
+		delete GEngine;
 		glfwTerminate();
 	}
 
@@ -203,6 +207,21 @@ namespace Aurora
 		m_ViewPortManager = new ViewPortManager();
 		GEngine->m_ViewPortManager = m_ViewPortManager;
 
+		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
+
+		if(editor)
+		{
+			m_EditorPanel = new MainEditorPanel();
+		}
+		else
+		{
+			m_Window->AddResizeListener([this](int w, int h) -> void
+			{
+				m_RenderViewPort->Resize({w, h});
+			});
+			m_RenderViewPort->Resize(m_Window->GetSize());
+		}
+
 		// Init App context
 		m_AppContext = appContext;
 		m_AppContext->Init();
@@ -276,10 +295,23 @@ namespace Aurora
 				m_RmlUI->Update();
 			}
 
+			if (m_EditorPanel)
+			{
+				CPU_DEBUG_SCOPE("Editor update");
+				m_EditorPanel->Update(delta);
+			}
+
 			{
 				CPU_DEBUG_SCOPE("Game render");
 				GPU_DEBUG_SCOPE("Game render");
 				m_AppContext->Render();
+
+				if(!m_EditorPanel)
+				{
+					glEnable(GL_FRAMEBUFFER_SRGB);
+					m_RenderManager->Blit(m_RenderViewPort->Target);
+					glDisable(GL_FRAMEBUFFER_SRGB);
+				}
 			}
 
 			m_RenderDevice->SetViewPort(FViewPort(m_Window->GetSize()));
@@ -289,25 +321,6 @@ namespace Aurora
 				GPU_DEBUG_SCOPE("NanoVG");
 
 				m_VgRender->Begin(m_Window->GetSize(), 1.0f); // TODO: Fix hdpi devices
-
-				/*nvgBeginPath(vg);
-				nvgRect(vg, 100,100, 120,30);
-				nvgFillColor(vg, nvgRGBA(255,192,0,255));
-				nvgFill(vg);
-
-				{
-					nvgSave(vg);
-					nvgBeginPath(vg);
-					nvgTranslate(vg, 100 - 15, 100 - 16);
-					nvgMoveTo(vg, 10, 17);
-					nvgLineTo(vg, 13, 20);
-					nvgLineTo(vg, 20, 13);
-					nvgStrokeWidth(vg, 1.0f);
-					nvgStrokeColor(vg, {1, 0, 1, 1});
-					nvgStroke(vg);
-					nvgRestore(vg);
-				}*/
-
 				m_AppContext->RenderVg();
 
 				{
