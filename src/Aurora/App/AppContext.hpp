@@ -27,6 +27,7 @@ namespace Aurora
 	private:
 		static GameContext* m_GameContext;
 		static GameModeBase* m_GameMode;
+		static bool m_EditorMode;
 	public:
 		friend class AuroraEngine;
 
@@ -79,9 +80,21 @@ namespace Aurora
 			m_GameContext->m_Scene = new Scene();
 
 			m_GameMode = new T(std::forward<Args>(args)...);
-			m_GameMode->BeginPlay();
+
+			if(!m_EditorMode)
+			{
+				m_GameMode->BeginPlay();
+			}
 
 			return (T*)m_GameMode;
+		}
+
+		static GameModeBase* GetGameModeBase() { return m_GameMode; }
+
+		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameModeBase, T>::value>::type* = nullptr>
+		static T* GetGameMode()
+		{
+			return static_cast<T*>(m_GameMode);
 		}
 
 		static Scene* GetScene() { return m_GameContext->GetScene(); }

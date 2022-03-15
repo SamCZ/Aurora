@@ -11,7 +11,6 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
-#include "Aurora/Tools/ImGuizmo.h"
 
 ImVec2 operator+(const ImVec2& left, const ImVec2& right)
 {
@@ -20,7 +19,13 @@ ImVec2 operator+(const ImVec2& left, const ImVec2& right)
 
 namespace Aurora
 {
-	MainEditorPanel::MainEditorPanel() : m_SelectedActor(nullptr), m_MouseViewportGrabbed(false), m_SelectedComponent(nullptr)
+	MainEditorPanel::MainEditorPanel()
+	: m_SelectedActor(nullptr),
+		m_MouseViewportGrabbed(false),
+		m_SelectedComponent(nullptr),
+		m_CurrentManipulatorOperation(ImGuizmo::OPERATION::TRANSLATE),
+		m_CurrentManipulatorMode(ImGuizmo::MODE::WORLD),
+		m_IsPlayMode(false)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		Logger::AddSinkPtr(m_ConsoleWindow);
@@ -48,6 +53,29 @@ namespace Aurora
 			return ICON_FA_LAYER_GROUP;
 
 		return ICON_FA_QUESTION;
+	}
+
+	void SwitchToPlayMode()
+	{
+		// TODO: Copy scene here
+		GameModeBase* gameModeBase = AppContext::GetGameModeBase();
+
+		if(gameModeBase)
+		{
+			gameModeBase->BeginPlay();
+		}
+	}
+
+	void SwitchToStopMode()
+	{
+		// TODO: Replace scene here
+
+		GameModeBase* gameModeBase = AppContext::GetGameModeBase();
+
+		if(gameModeBase)
+		{
+			gameModeBase->BeginDestroy();
+		}
 	}
 
 	void MainEditorPanel::Update(double delta)
@@ -144,7 +172,14 @@ namespace Aurora
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Scene");
 		{
-			static ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
+			if(ImGui::IsItemClicked())
+			{
+				m_SelectedActor = nullptr;
+				m_SelectedComponent = nullptr;
+			}
+
+			// ImGuiTableFlags_RowBg
+			static ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoBordersInBody;
 			if(ImGui::BeginTable("SceneView", 3, tableFlags))
 			{
 				ImGui::PushID(ID++);
@@ -221,15 +256,16 @@ namespace Aurora
 			if (ImGui::BeginMenuBar())
 			{
 				ImGui::Spacing();
-				static bool isPlaying = false;
-				if (ImGui::BeginMenu("Play", !isPlaying))
+				if (ImGui::BeginMenu("Play", !m_IsPlayMode))
 				{
-					isPlaying = true;
+					m_IsPlayMode = true;
+					SwitchToPlayMode();
 					ImGui::EndMenu();
 				}
-				if (ImGui::BeginMenu("Stop", isPlaying))
+				if (ImGui::BeginMenu("Stop", m_IsPlayMode))
 				{
-					isPlaying = false;
+					m_IsPlayMode = false;
+					SwitchToStopMode();
 					ImGui::EndMenu();
 				}
 				ImGui::EndMenuBar();
@@ -257,6 +293,26 @@ namespace Aurora
 
 			if(CameraComponent* camera = *AppContext::GetScene()->GetComponents<CameraComponent>().begin())
 			{
+				if(!ImGui::GetIO().WantTextInput && !m_MouseViewportGrabbed)
+				{
+					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
+					{
+						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::SCALE;
+					}
+
+					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_R)])
+					{
+						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::ROTATE;
+					}
+
+					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_T)])
+					{
+						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::TRANSLATE;
+					}
+				}
+
+
+
 				Matrix4 proj = camera->GetProjectionMatrix();
 				Matrix4 view = camera->GetViewMatrix();
 
@@ -264,7 +320,7 @@ namespace Aurora
 				{
 					Matrix4 transform = m_SelectedActor ? m_SelectedActor->GetRootComponent()->GetTransformationMatrix() : m_SelectedComponent->GetTransformationMatrix();
 
-					bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), ImGuizmo::TRANSLATE, ImGuizmo::WORLD, glm::value_ptr(transform));
+					bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), m_CurrentManipulatorOperation, m_CurrentManipulatorMode, glm::value_ptr(transform));
 					if(manipulated)
 					{
 						if(m_SelectedActor)
@@ -280,8 +336,6 @@ namespace Aurora
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();
-
-
 
 		ImGui::Begin("Resources");
 		{
@@ -313,20 +367,42 @@ namespace Aurora
 		m_ConsoleWindow->Draw();
 
 		ImGui::Begin("Properties");
-		if(m_SelectedActor)
 		{
-			std::string name = m_SelectedActor->GetName();
-			if(ImGui::InputText("Name", name))
+			SceneComponent* root = nullptr;
+
+			if(m_SelectedActor)
 			{
-				m_SelectedActor->SetName(name);
+				root = m_SelectedActor->GetRootComponent();
+				std::string name = m_SelectedActor->GetName();
+				if(ImGui::InputText("Name", name))
+				{
+					m_SelectedActor->SetName(name);
+				}
 			}
+			else
+			{
+				root = m_SelectedComponent;
+			}
+
+			if(root)
+			{
+				ImGui::Separator();
+				if(ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::DrawVec3Control("Location", root->GetTransform().Location);
+					ImGui::DrawVec3Control("Rotation", root->GetTransform().Rotation);
+					ImGui::DrawVec3Control("Scale", root->GetTransform().Scale);
+				}
+			}
+
+
 		}
 		ImGui::End();
 
 		//ImGui::ShowDemoWindow();
 
 		// FIXME: This is just for debugging purposes
-		if(m_MouseViewportGrabbed)
+		if (m_MouseViewportGrabbed)
 		{
 			if(CameraComponent* camera = *AppContext::GetScene()->GetComponents<CameraComponent>().begin())
 			{

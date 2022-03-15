@@ -53,6 +53,7 @@ namespace Aurora
 
 	GameContext* AppContext::m_GameContext = nullptr;
 	GameModeBase* AppContext::m_GameMode = nullptr;
+	bool AppContext::m_EditorMode = false;
 
 	ImFont* m_ImGuiDefaultFont = nullptr;
 
@@ -98,6 +99,8 @@ namespace Aurora
 	void AuroraEngine::Init(AppContext* appContext, WindowDefinition& windowDefinition, bool editor)
 	{
 		au_assert(appContext != nullptr);
+
+		AppContext::m_EditorMode = editor;
 
 		Logger::AddSink<std_sink>();
 		Logger::AddSink<file_sink>("latest-log.txt");
@@ -286,9 +289,16 @@ namespace Aurora
 #endif
 
 			{
+				bool updateScene = true;
+
+				if(m_EditorPanel)
+				{
+					updateScene = m_EditorPanel->IsPlayMode();
+				}
+
 				CPU_DEBUG_SCOPE("Game update");
 				Scene* currentScene = AppContext::GetScene();
-				if(currentScene)
+				if(currentScene && updateScene)
 				{
 					currentScene->Update(delta);
 				}

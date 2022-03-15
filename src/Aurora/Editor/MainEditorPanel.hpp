@@ -4,6 +4,9 @@
 
 #include "Aurora/Graphics/Base/Texture.hpp"
 
+#include "Aurora/Tools/ImGuiHelper.hpp"
+#include "Aurora/Tools/ImGuizmo.h"
+
 namespace Aurora
 {
 	struct RenderViewPort;
@@ -21,6 +24,11 @@ namespace Aurora
 		class SceneComponent* m_SelectedComponent;
 
 		bool m_MouseViewportGrabbed;
+
+		ImGuizmo::OPERATION m_CurrentManipulatorOperation;
+		ImGuizmo::MODE m_CurrentManipulatorMode;
+
+		bool m_IsPlayMode;
 	public:
 		MainEditorPanel();
 		~MainEditorPanel();
@@ -29,5 +37,7 @@ namespace Aurora
 
 		void BeginDockSpace();
 		void DrawMainMenu();
+
+		[[nodiscard]] bool IsPlayMode() const { return m_IsPlayMode; }
 	};
 }
