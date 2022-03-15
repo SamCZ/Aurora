@@ -18,8 +18,8 @@ namespace Aurora
 			delete m_Scene;
 		}
 
-		Scene& GetScene() { return *m_Scene; }
-		[[nodiscard]] const Scene& GetScene() const { return *m_Scene; }
+		Scene* GetScene() { return m_Scene; }
+		[[nodiscard]] const Scene* GetScene() const { return m_Scene; }
 	};
 
 	class AppContext
@@ -84,6 +84,6 @@ namespace Aurora
 			return (T*)m_GameMode;
 		}
 
-		static Scene& GetScene() { return m_GameContext->GetScene(); }
+		static Scene* GetScene() { return m_GameContext->GetScene(); }
 	};
 }

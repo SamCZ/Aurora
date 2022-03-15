@@ -27,33 +27,22 @@ using namespace Aurora;
 
 class TestActor : public Actor
 {
-private:
-	int number;
-	SceneComponent* m_Test;
 public:
 	CLASS_OBJ(TestActor, Actor);
 
-	TestActor() : number(10)
+	TestActor()
 	{
 		std::cout << "TestActor created " << PointerToString(this) << std::endl;
 	}
 
 	void InitializeComponents() override
 	{
-		m_Test = AddComponent<SceneComponent>("Test");
-		//m_Test->GetTransform().Location.x = 15;
-
-		//GetRootComponent()->GetTransform().Location.x = 1000;
+		GetRootComponent()->GetTransform().Location.x = 10;
 	}
 
 	void Tick(double delta) override
 	{
-		std::cout << "tick" << std::endl;
-	}
-
-	void Test()
-	{
-		std::cout << "TestActor Test() " << number << " " << m_Test->GetTransform().Location.x << " " << GetRootComponent()->GetTransform().Location.x << std::endl;
+		GetRootComponent()->GetTransform().Rotation.y += delta * 10.0f;
 	}
 
 	~TestActor() override
@@ -151,7 +140,7 @@ class BaseAppContext : public AppContext
 		AssimpModelLoader modelLoader;
 		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/sponza.fbx"));
 
-		testActor = GetScene().SpawnActor<TestActor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.0001f));
+		testActor = GetScene()->SpawnActor<Actor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.0001f));
 		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
 		if (importedData)
@@ -169,7 +158,7 @@ class BaseAppContext : public AppContext
 			}
 		}
 
-		testActor2 = GetScene().SpawnActor<Actor>("Box", Vector3(0, 0, 0), {}, Vector3(0.01f));
+		testActor2 = GetScene()->SpawnActor<TestActor>("Box", Vector3(0, 0, 0), {}, Vector3(0.01f));
 		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"));
 		if(importedData2)
 		{
@@ -187,25 +176,17 @@ class BaseAppContext : public AppContext
 			}
 		}
 
-		GetScene().SpawnActor<CameraActor>("Camera", {0, 0, 5});
+		GetScene()->SpawnActor<CameraActor>("Camera", {0, 0, 5});
 	}
 
 	void Update(double delta) override
 	{
-		//testActor->GetRootComponent()->GetTransform().Rotation.x += delta * 50.0f;
-		//testActor->GetRootComponent()->GetTransform().Rotation.y += delta * 50.0f;
-
-		if(testActor2)
-		{
-			testActor2->GetRootComponent()->GetTransform().Location.x = 10;
-			testActor2->GetRootComponent()->GetTransform().Rotation.y += delta * 20.0f;
-		}
 
 	}
 
 	void Render() override
 	{
-		sceneRenderer->Render(&GetScene());
+		sceneRenderer->Render(GetScene());
 	}
 
 	void RenderVg() override

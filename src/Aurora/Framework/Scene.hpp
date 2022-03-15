@@ -69,6 +69,8 @@ namespace Aurora
 			return m_ComponentStorage.template GetComponents<T>();
 		}
 
+		void Update(double delta);
+
 	public:
 		void FinishSpawningActor(Actor* actor);
 		void DestroyActor(Actor* actor);

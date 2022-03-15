@@ -5,6 +5,8 @@
 #include <Aurora/Core/Object.hpp>
 #include "SceneComponent.hpp"
 #include "ComponentStorage.hpp"
+#include "Scene.hpp"
+
 
 #define DEFAULT_COMPONENT(name) typedef name DefaultComponent_t
 

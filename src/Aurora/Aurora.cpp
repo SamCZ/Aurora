@@ -287,6 +287,11 @@ namespace Aurora
 
 			{
 				CPU_DEBUG_SCOPE("Game update");
+				Scene* currentScene = AppContext::GetScene();
+				if(currentScene)
+				{
+					currentScene->Update(delta);
+				}
 				m_AppContext->InternalUpdate(delta);
 			}
 

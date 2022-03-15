@@ -48,4 +48,18 @@ namespace Aurora
 
 		m_ActorMemory.DeAllocAndUnload<Actor>(actor);
 	}
+
+	void Scene::Update(double delta)
+	{
+		// Iterate from end to enable destroy while updating
+		for (size_t i = m_Actors.size(); i --> 0;)
+		{
+			m_Actors[i]->Tick(delta);
+		}
+
+		for(ActorComponent* actorComponent : GetComponents<ActorComponent>())
+		{
+			actorComponent->Tick(delta);
+		}
+	}
 }

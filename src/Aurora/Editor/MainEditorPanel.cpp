@@ -133,7 +133,7 @@ namespace Aurora
 				ImGui::TableHeadersRow();
 				ImGui::PopID();
 
-				for (Actor* actor : AppContext::GetGameContext<GameContext>()->GetScene())
+				for (Actor* actor : *AppContext::GetGameContext<GameContext>()->GetScene())
 				{
 					//String name = String("[") + actor->GetTypeName() + "] " + actor->GetName();
 
@@ -265,7 +265,7 @@ namespace Aurora
 		// FIXME: This is just for debugging purposes
 		if(m_MouseViewportGrabbed)
 		{
-			if(CameraComponent* camera = *AppContext::GetScene().GetComponents<CameraComponent>().begin())
+			if(CameraComponent* camera = *AppContext::GetScene()->GetComponents<CameraComponent>().begin())
 			{
 				camera->GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
 				camera->GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
