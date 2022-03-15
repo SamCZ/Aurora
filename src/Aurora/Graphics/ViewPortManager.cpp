@@ -7,6 +7,9 @@ namespace Aurora
 
 	void RenderViewPort::Resize(const Vector2i &size)
 	{
+		if(size.x == 0 || size.y == 0)
+			return;
+
 		if(ViewPort.Width != size.x || ViewPort.Height != size.y)
 		{
 			int diffX = (int)glm::abs((int)size.x - (int)ViewPort.Width);
