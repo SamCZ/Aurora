@@ -58,4 +58,14 @@ namespace Aurora
 	{
 		return m_Scene->m_ComponentStorage;
 	}
+
+	const Transform& Actor::GetTransform() const
+	{
+		return m_RootComponent->GetTransform();
+	}
+
+	Transform& Actor::GetTransform()
+	{
+		return m_RootComponent->GetTransform();
+	}
 }

@@ -18,6 +18,7 @@ namespace Aurora
 
 		SceneComponent();
 
+		const Transform& GetTransform() const { return m_Transform; }
 		Transform& GetTransform() { return m_Transform; }
 
 		[[nodiscard]] const Vector3& GetLocation() const { return m_Transform.Location; }

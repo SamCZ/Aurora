@@ -113,6 +113,9 @@ namespace Aurora
 
 		void DestroyComponent(SceneComponent*& component);
 		virtual void Destroy();
+
+		const Transform& GetTransform() const;
+		Transform& GetTransform();
 	private:
 		void InitializeComponent(SceneComponent* component);
 		ComponentStorage& GetComponentStorage();
