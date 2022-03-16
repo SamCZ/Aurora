@@ -17,9 +17,6 @@ namespace Aurora
 		std::shared_ptr<ConsoleWindow> m_ConsoleWindow;
 		RenderViewPort* m_RenderViewPort;
 
-		Texture_ptr m_FolderTexture;
-		Texture_ptr m_FileTexture;
-
 		class Actor* m_SelectedActor;
 		class SceneComponent* m_SelectedComponent;
 
@@ -29,6 +26,8 @@ namespace Aurora
 		ImGuizmo::MODE m_CurrentManipulatorMode;
 
 		bool m_IsPlayMode;
+
+		float m_FlySpeed;
 	public:
 		MainEditorPanel();
 		~MainEditorPanel();

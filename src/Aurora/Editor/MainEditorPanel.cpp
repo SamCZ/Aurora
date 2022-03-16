@@ -25,16 +25,14 @@ namespace Aurora
 		m_SelectedComponent(nullptr),
 		m_CurrentManipulatorOperation(ImGuizmo::OPERATION::TRANSLATE),
 		m_CurrentManipulatorMode(ImGuizmo::MODE::WORLD),
-		m_IsPlayMode(false)
+		m_IsPlayMode(true),
+		m_FlySpeed(10.0f)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		Logger::AddSinkPtr(m_ConsoleWindow);
 
 		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
 		m_RenderViewPort->Resize({1270, 720});
-
-		m_FolderTexture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/Editor/folder.png", GraphicsFormat::RGBA8_UNORM, {});
-		m_FileTexture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/Editor/file.png", GraphicsFormat::RGBA8_UNORM, {});
 
 		SetEditorStyle();
 	}
@@ -268,6 +266,11 @@ namespace Aurora
 					SwitchToStopMode();
 					ImGui::EndMenu();
 				}
+
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 0.25f));
+				ImGui::Text("Fly speed: %.1fx", m_FlySpeed);
+				ImGui::PopStyleColor();
+
 				ImGui::EndMenuBar();
 			}
 
@@ -404,6 +407,10 @@ namespace Aurora
 		// FIXME: This is just for debugging purposes
 		if (m_MouseViewportGrabbed)
 		{
+			m_FlySpeed += +ImGui::GetIO().MouseWheel;
+
+			if(m_FlySpeed < 0) m_FlySpeed = 0;
+
 			if(CameraComponent* camera = *AppContext::GetScene()->GetComponents<CameraComponent>().begin())
 			{
 				camera->GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
@@ -411,26 +418,24 @@ namespace Aurora
 
 				Matrix4 transform = camera->GetTransformationMatrix();
 
-				float speed = 5.0f;
-
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
 				{
-					camera->GetTransform().Location -= Vector3(transform[2]) * (float)delta * speed;
+					camera->GetTransform().Location -= Vector3(transform[2]) * (float)delta * m_FlySpeed;
 				}
 
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
 				{
-					camera->GetTransform().Location += Vector3(transform[2]) * (float)delta * speed;
+					camera->GetTransform().Location += Vector3(transform[2]) * (float)delta * m_FlySpeed;
 				}
 
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
 				{
-					camera->GetTransform().Location -= Vector3(transform[0]) * (float)delta * speed;
+					camera->GetTransform().Location -= Vector3(transform[0]) * (float)delta * m_FlySpeed;
 				}
 
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
 				{
-					camera->GetTransform().Location += Vector3(transform[0]) * (float)delta * speed;
+					camera->GetTransform().Location += Vector3(transform[0]) * (float)delta * m_FlySpeed;
 				}
 			}
 		}
