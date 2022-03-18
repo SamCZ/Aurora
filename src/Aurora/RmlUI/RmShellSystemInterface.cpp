@@ -3,7 +3,7 @@
 #include "Aurora/Aurora.hpp"
 #include "Aurora/Core/Time.hpp"
 #include "Aurora/Logger/Logger.hpp"
-#include "Aurora/App/IWindow.hpp"
+#include "Aurora/App/ISystemWindow.hpp"
 
 namespace Aurora
 {

@@ -1,4 +1,4 @@
-#include "GLFWWindow.hpp"
+ #include "GLFWWindow.hpp"
 
 #include <Aurora/Core/UTF8.hpp>
 
@@ -16,6 +16,7 @@
 
 #include <Aurora/Engine.hpp>
 #include <Aurora/RmlUI/RmlUI.hpp>
+#include <Aurora/Graphics/ViewPortManager.hpp>
 #define RML_UI_ENABLED 1
 
 namespace Aurora
@@ -152,7 +153,7 @@ namespace Aurora
 			//{ GLFW_KEY_VOLUME_UP, Rml::Input::KI_VOLUME_UP },
 	};
 #endif
-	GLFWWindow::GLFWWindow() : IWindow(), m_WindowHandle(nullptr), m_Focused(false),
+	GLFWWindow::GLFWWindow() : ISystemWindow(), m_WindowHandle(nullptr), m_Focused(false),
 							   m_CursorMode(ECursorMode::Normal), m_InputManager(Input::Manager_ptr(new Input::Manager(this))),
 							   m_SwapChain(nullptr), m_Vsync(true)
 	{
@@ -227,7 +228,7 @@ namespace Aurora
 		AU_LOG_INFO(MessageSS.str());
 	}
 
-	void GLFWWindow::Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<IWindow>& parentWindow)
+	void GLFWWindow::Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<ISystemWindow>& parentWindow)
 	{
 		m_Title = windowDefinition.Title;
 
@@ -509,10 +510,6 @@ namespace Aurora
 		for(auto& listener : window->m_ResizeListeners) {
 			if(listener) listener(width, height);
 		}
-#ifdef RML_UI_ENABLED
-		if(GEngine->GetRmlUI() == nullptr || GEngine->GetRmlUI()->GetRmlContext() == nullptr) return;
-		GEngine->GetRmlUI()->GetRmlContext()->SetDimensions({width, height});
-#endif
 	}
 
 	void GLFWWindow::OnFocusCallback(GLFWwindow *rawWindow, int focused)
@@ -588,8 +585,29 @@ namespace Aurora
 		std::dynamic_pointer_cast<Input::Manager>(window->GetInputManager())->OnMouseMove(newPosition);
 #ifdef RML_UI_ENABLED
 		// Rml
+
 		if(GEngine->GetRmlUI() == nullptr || GEngine->GetRmlUI()->GetRmlContext() == nullptr) return;
-		GEngine->GetRmlUI()->GetRmlContext()->ProcessMouseMove(xpos, ypos, ModifiersGLFWToRml(currentMods));
+
+		if(RenderViewPort* wp = GEngine->GetViewPortManager()->Get())
+		{
+			Vector2i proxyLocation = wp->ProxyLocation;
+
+			Vector2i viewportSize;
+			viewportSize.x = wp->ViewPort.Width;
+			viewportSize.y = wp->ViewPort.Height;
+
+			int cursorX = static_cast<int>((xpos)) - proxyLocation.x;
+			int cursorY = static_cast<int>((ypos)) - proxyLocation.y;
+
+			if(cursorX >= 0 && cursorY >= 0)
+			{
+				GEngine->GetRmlUI()->GetRmlContext()->ProcessMouseMove(cursorX, cursorY, ModifiersGLFWToRml(currentMods));
+			}
+		}
+		else
+		{
+			GEngine->GetRmlUI()->GetRmlContext()->ProcessMouseMove(static_cast<int>(round(xpos)), static_cast<int>(round(ypos)), ModifiersGLFWToRml(currentMods));
+		}
 #endif
 	}
 

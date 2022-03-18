@@ -1,6 +1,6 @@
 #pragma once
 
-#include "App/IWindow.hpp"
+#include "App/ISystemWindow.hpp"
 #include "App/AppContext.hpp"
 #include "Engine.hpp"
 
@@ -21,7 +21,7 @@ namespace Aurora
 	class AU_API AuroraEngine
 	{
 	private:
-		IWindow* m_Window;
+		ISystemWindow* m_Window;
 		ISwapChain* m_SwapChain;
 		IRenderDevice* m_RenderDevice;
 		RenderManager* m_RenderManager;

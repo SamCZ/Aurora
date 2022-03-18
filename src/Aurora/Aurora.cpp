@@ -212,6 +212,12 @@ namespace Aurora
 
 		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
 
+		m_RenderViewPort->ResizeEmitter.Bind([](const glm::ivec2& coord) ->void
+		{
+			if(GEngine->GetRmlUI() == nullptr || GEngine->GetRmlUI()->GetRmlContext() == nullptr) return;
+			GEngine->GetRmlUI()->GetRmlContext()->SetDimensions({coord.x, coord.y});
+		});
+
 		if(editor)
 		{
 			m_EditorPanel = new MainEditorPanel();
@@ -331,6 +337,8 @@ namespace Aurora
 
 			m_RenderDevice->SetViewPort(FViewPort(m_Window->GetSize()));
 
+			// Disabled vg render for now
+			if(false)
 			{
 				CPU_DEBUG_SCOPE("NanoVG");
 				GPU_DEBUG_SCOPE("NanoVG");
@@ -386,7 +394,15 @@ namespace Aurora
 			{
 				CPU_DEBUG_SCOPE("RmlUI render");
 				GPU_DEBUG_SCOPE("RmlUI render");
-				m_RmlUI->Render();
+
+				RenderViewPort* rwp = m_ViewPortManager->Get();
+
+				DrawCallState drawCallState;
+				drawCallState.BindTarget(0, rwp->Target);
+				drawCallState.ViewPort = rwp->ViewPort;
+				m_RenderDevice->BindRenderTargets(drawCallState);
+
+				m_RmlUI->Render(drawCallState);
 			}
 
 			{

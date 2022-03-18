@@ -6,12 +6,12 @@
 #include <Windows.h>
 #endif
 
-#include "IWindow.hpp"
+#include "ISystemWindow.hpp"
 #include <GLFW/glfw3.h>
 
 namespace Aurora
 {
-	class AU_API GLFWWindow : public IWindow
+	class AU_API GLFWWindow : public ISystemWindow
 	{
 		friend class Input::IManager;
 	private:
@@ -31,7 +31,7 @@ namespace Aurora
 		GLFWWindow();
 		~GLFWWindow() override;
 
-		void Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<IWindow>& parentWindow) override;
+		void Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<ISystemWindow>& parentWindow) override;
 
 		inline GLFWwindow* GetHandle()
 		{

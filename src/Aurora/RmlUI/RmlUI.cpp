@@ -9,7 +9,7 @@
 #include "RmlUIFileInterface.hpp"
 
 #include "Aurora/Aurora.hpp"
-#include "Aurora/App/IWindow.hpp"
+#include "Aurora/App/ISystemWindow.hpp"
 #include "Aurora/Logger/Logger.hpp"
 
 namespace Aurora
@@ -154,11 +154,11 @@ namespace Aurora
 		m_RmlContext->Update();
 	}
 
-	void RmlUI::Render()
+	void RmlUI::Render(const DrawCallState& drawCallState)
 	{
 		auto* shellRenderInterfaceOpenGl = static_cast<RmShellRenderInterfaceOpenGL*>(Rml::GetRenderInterface());
 
-		shellRenderInterfaceOpenGl->PrepareRenderBuffer();
+		shellRenderInterfaceOpenGl->PrepareRenderBuffer(drawCallState);
 		m_RmlContext->Render();
 		shellRenderInterfaceOpenGl->PresentRenderBuffer();
 	}

@@ -12,7 +12,7 @@
 
 #include "Binding.hpp"
 
-#include <Aurora/App/IWindow.hpp>
+#include <Aurora/App/ISystemWindow.hpp>
 
 namespace Aurora::Input
 {

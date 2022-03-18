@@ -13,6 +13,7 @@ namespace Aurora
 	struct RenderViewPort
 	{
 		FViewPort ViewPort;
+		Vector2i ProxyLocation;
 		TextureDesc TargetDesc;
 		Texture_ptr Target;
 		EventEmitter<const Vector2i&> ResizeEmitter;

@@ -283,6 +283,16 @@ namespace Aurora
 				m_RenderViewPort->Resize(viewPortSize);
 			}
 
+
+			ImGuiViewport* imwp = ImGui::GetWindowViewport();
+			// This outputs coords without the title bar... so we need to subtract that from CursorPos
+			// because all positions in imgui are without the windows title bar
+			// TODO: Create some helper function for this
+			ImVec2 pos = ImGui::GetCurrentWindow()->DC.CursorPos;
+			ImVec2 offset = imwp->Pos;
+			// Sets proxy for rmlui cursor pos
+			m_RenderViewPort->ProxyLocation = {pos.x - offset.x, pos.y - offset.y };
+
 			EUI::Image(m_RenderViewPort->Target, (Vector2)m_RenderViewPort->ViewPort);
 
 			//Manipulator
@@ -401,8 +411,6 @@ namespace Aurora
 
 		}
 		ImGui::End();
-
-		//ImGui::ShowDemoWindow();
 
 		// FIXME: This is just for debugging purposes
 		if (m_MouseViewportGrabbed)

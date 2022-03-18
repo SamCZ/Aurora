@@ -5,12 +5,11 @@
 #include "Aurora/Logger/Logger.hpp"
 #include "Aurora/Memory/Aum.hpp"
 #include "ComponentStorage.hpp"
-#include "Actor.hpp"
 #include "SceneComponent.hpp"
+#include "Actor.hpp"
 
 namespace Aurora
 {
-
 	class Scene
 	{
 	private:

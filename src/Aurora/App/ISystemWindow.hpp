@@ -25,12 +25,12 @@ namespace Aurora
 		String Title;
 	};
 
-	class AU_API IWindow
+	class AU_API ISystemWindow
 	{
 	public:
-		virtual ~IWindow() = default;
+		virtual ~ISystemWindow() = default;
 	public:
-		virtual void Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<IWindow>& parentWindow) = 0;
+		virtual void Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<ISystemWindow>& parentWindow) = 0;
 
 		virtual void SetSize(int width, int height) = 0;
 		virtual void SetSize(const Vector2i& size) = 0;

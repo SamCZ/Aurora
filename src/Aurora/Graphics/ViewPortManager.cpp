@@ -52,6 +52,7 @@ namespace Aurora
 		wp->TargetDesc.MipLevels = 1;
 		wp->TargetDesc.IsRenderTarget = true;
 		wp->TargetDesc.ImageFormat = format;
+		wp->ProxyLocation = {0, 0};
 		return wp;
 	}
 

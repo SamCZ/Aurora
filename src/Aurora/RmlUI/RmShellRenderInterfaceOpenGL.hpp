@@ -3,10 +3,7 @@
 #include <map>
 #include <RmlUi/Core/RenderInterface.h>
 #include "Aurora/Core/Library.hpp"
-#include "Aurora/Graphics/Base/Texture.hpp"
-#include "Aurora/Graphics/Base/ShaderBase.hpp"
-#include "Aurora/Graphics/Base/Buffer.hpp"
-#include "Aurora/Graphics/Base/InputLayout.hpp"
+#include "Aurora/Graphics/Base/IRenderDevice.hpp"
 
 namespace Aurora
 {
@@ -48,6 +45,8 @@ namespace Aurora
 
 		Matrix4 m_CurrentProjection;
 		Vector2i m_LastScreenSize;
+
+		DrawCallState m_CurrentState;
 	public:
 		RmShellRenderInterfaceOpenGL();
 		~RmShellRenderInterfaceOpenGL() override;
@@ -89,7 +88,7 @@ namespace Aurora
 
 		// ShellRenderInterfaceExtensions
 		void SetViewport(int width, int height);
-		void PrepareRenderBuffer();
+		void PrepareRenderBuffer(const DrawCallState& drawCallState);
 		void PresentRenderBuffer();
 
 		bool SetCustomTextureHandleForeName(const std::string& name, const Texture_ptr& texture = nullptr);

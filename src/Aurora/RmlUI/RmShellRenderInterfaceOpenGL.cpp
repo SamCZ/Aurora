@@ -46,9 +46,9 @@ namespace Aurora
 
 	void RmShellRenderInterfaceOpenGL::RenderGeometry(Rml::Vertex* vertices, int num_vertices, int* indices, int num_indices, const Rml::TextureHandle texture, const Rml::Vector2f& translation)
 	{
-		auto screenSize = GEngine->GetWindow()->GetSize();
+		glm::ivec2 screenSize = {m_CurrentState.ViewPort.Width, m_CurrentState.ViewPort.Height};
 
-		if(m_LastScreenSize != screenSize)
+		if (m_LastScreenSize != screenSize)
 		{
 			m_LastScreenSize = screenSize;
 			m_CurrentProjection = glm::ortho(0.0f, (float)screenSize.x, (float)screenSize.y, 0.0f, 0.0f, 1.0f);
@@ -60,25 +60,23 @@ namespace Aurora
 		GEngine->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices, sizeof(Rml::Vertex) * num_vertices, 0);
 		GEngine->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices, sizeof(uint32_t) * num_indices, 0);
 
-		DrawCallState drawCallState;
-		drawCallState.ViewPort = screenSize;
-		drawCallState.Shader = texture ? m_TexturedShader : m_ColorShader;
-		drawCallState.InputLayoutHandle = texture ? m_TexturedInputLayout : m_ColorInputLayout;
+		m_CurrentState.Shader = texture ? m_TexturedShader : m_ColorShader;
+		m_CurrentState.InputLayoutHandle = texture ? m_TexturedInputLayout : m_ColorInputLayout;
 
-		drawCallState.SetVertexBuffer(0, m_VertexBuffer);
-		drawCallState.SetIndexBuffer(m_IndexBuffer, EIndexBufferFormat::Uint32);
+		m_CurrentState.SetVertexBuffer(0, m_VertexBuffer);
+		m_CurrentState.SetIndexBuffer(m_IndexBuffer, EIndexBufferFormat::Uint32);
 
 		if(texture) {
 			auto* texture_handle = (TexHandle*)texture;
-			drawCallState.BindTexture("Texture", texture_handle->Texture);
-			drawCallState.BindSampler("Texture", Samplers::WrapWrapNearNearestFarLinear);
+			m_CurrentState.BindTexture("Texture", texture_handle->Texture);
+			m_CurrentState.BindSampler("Texture", Samplers::WrapWrapNearNearestFarLinear);
 		}
 
-		drawCallState.DepthStencilState.DepthEnable = false;
-		drawCallState.ClearColorTarget = false;
-		drawCallState.ClearDepthTarget = false;
+		m_CurrentState.DepthStencilState.DepthEnable = false;
+		m_CurrentState.ClearColorTarget = false;
+		m_CurrentState.ClearDepthTarget = false;
 
-		drawCallState.RasterState.CullMode = ECullMode::None;
+		m_CurrentState.RasterState.CullMode = ECullMode::None;
 
 		BEGIN_UBW(VertexUniform, desc);
 			desc->Projection = m_CurrentProjection;
@@ -91,13 +89,21 @@ namespace Aurora
 			{
 				desc->ModelMat = glm::translate(Vector3(translation.x, translation.y, 0));
 			}
-		END_UBW(drawCallState, m_VertexUniformBuffer, "VertexUniform");
+		END_UBW(m_CurrentState, m_VertexUniformBuffer, "VertexUniform");
 
 		BEGIN_UBW(Scissors, desc);
 			*desc = m_Scissors;
-		END_UBW(drawCallState, m_ScissorBuffer, "Scissors");
+		END_UBW(m_CurrentState, m_ScissorBuffer, "Scissors");
 
-		GEngine->GetRenderDevice()->DrawIndexed(drawCallState, {DrawArguments(num_indices)});
+		GEngine->GetRenderDevice()->SetShader(m_CurrentState.Shader);
+		GEngine->GetRenderDevice()->BindShaderInputs(m_CurrentState);
+		GEngine->GetRenderDevice()->BindShaderResources(m_CurrentState);
+
+		GEngine->GetRenderDevice()->SetBlendState(m_CurrentState);
+		GEngine->GetRenderDevice()->SetRasterState(m_CurrentState.RasterState);
+		GEngine->GetRenderDevice()->SetDepthStencilState(m_CurrentState.DepthStencilState);
+
+		GEngine->GetRenderDevice()->DrawIndexed(m_CurrentState, {DrawArguments(num_indices)}, false);
 	}
 
 	Rml::CompiledGeometryHandle RmShellRenderInterfaceOpenGL::CompileGeometry(Rml::Vertex* RMLUI_UNUSED_PARAMETER(vertices), int RMLUI_UNUSED_PARAMETER(num_vertices), int* RMLUI_UNUSED_PARAMETER(indices), int RMLUI_UNUSED_PARAMETER(num_indices), const Rml::TextureHandle RMLUI_UNUSED_PARAMETER(texture))
@@ -257,8 +263,10 @@ namespace Aurora
 		m_Height = height;
 	}
 
-	void RmShellRenderInterfaceOpenGL::PrepareRenderBuffer()
+	void RmShellRenderInterfaceOpenGL::PrepareRenderBuffer(const DrawCallState& drawCallState)
 	{
+		m_CurrentState = drawCallState;
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}

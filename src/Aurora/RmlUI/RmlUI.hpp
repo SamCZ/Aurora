@@ -9,6 +9,7 @@
 #include <RmlUi/Core/Core.h>
 
 #include "Aurora/Core/Library.hpp"
+#include "Aurora/Graphics/Base/IRenderDevice.hpp"
 
 namespace Aurora
 {
@@ -39,7 +40,7 @@ namespace Aurora
 		bool IsInputCaptured() const;
 
 		void Update();
-		void Render();
+		void Render(const DrawCallState& drawCallState);
 
 		Rml::ElementDocument* ReloadDocument(Rml::ElementDocument* document);
 
