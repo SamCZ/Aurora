@@ -141,15 +141,6 @@ if(NOT TARGET assimp)
     set(BUILD_SHARED_LIBS OFF)
 endif()
 
-#------------------------------
-# EnTT
-# ECS library
-#------------------------------
-if(NOT TARGET EnTT)
-    add_subdirectory(entt)
-    set_property(TARGET EnTT PROPERTY FOLDER "GameLib")
-endif()
-
 if(NOT TARGET glslang)
     set(BUILD_SHARED_LIBS_CACHE ${BUILD_SHARED_LIBS})
     set(SKIP_GLSLANG_INSTALL ON)
