@@ -94,22 +94,6 @@ if(NOT TARGET RmlUI)
 endif()
 
 #------------------------------
-# newton-dynamics
-# Physics library
-#------------------------------
-if(NOT TARGET newton-dynamics)
-    set(NEWTON_BUILD_SANDBOX_DEMOS OFF)
-    set(NEWTON_BUILD_SINGLE_THREADED OFF)
-    set(NEWTON_DOUBLE_PRECISION OFF)
-    set(NEWTON_ENABLE_AVX ON)
-    set(NEWTON_ENABLE_AVX2_SOLVER ON)
-    set(NEWTON_BUILD_CREATE_SUB_PROJECTS OFF)
-    set(NEWTON_STATIC_RUNTIME_LIBRARIES ON)
-    add_subdirectory(newton-dynamics/newton-4.00)
-    set_property(TARGET ndNewton PROPERTY FOLDER "GameLib")
-endif()
-
-#------------------------------
 # RmlUI
 # UI render library
 #------------------------------
