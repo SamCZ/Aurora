@@ -18,10 +18,6 @@
 	path = lib/RmlUI
 	url = git@github.com:SamCZ/RmlUi.git
 	branch = 4.1
-[submodule "newton-dynamics"]
-	path = lib/newton-dynamics
-	url = git@github.com:MADEAPPS/newton-dynamics.git
-	branch = master
 [submodule "tracy"]
 	path = lib/tracy
 	url = git@github.com:wolfpld/tracy.git
