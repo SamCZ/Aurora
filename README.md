@@ -23,7 +23,6 @@
 | [GLAD](https://github.com/Dav1dde/glad) ([web](https://glad.dav1d.de/)) | [MIT](https://github.com/Dav1dde/glad/blob/master/LICENSE)                              | `OpenGL 4.6` |
 | [ImGui](https://github.com/ocornut/imgui)                               | [MIT](https://github.com/ocornut/imgui/blob/docking/LICENSE.txt)                        | branch: [`docking`]
 | [nlohmann JSON](https://nlohmann.github.io/json/)                       | [MIT](https://github.com/nlohmann/json/blob/master/LICENSE.MIT)                         | branch: [`master`](https://github.com/nlohmann/json/tree/master) |
-| [newton-dynamics](https://github.com/MADEAPPS/newton-dynamics)          | [Newton zlib license](https://github.com/MADEAPPS/newton-dynamics/blob/master/LICENSE)  | branch: [`master`](https://github.com/MADEAPPS/newton-dynamics/tree/master) |
 | [FMOD](https://fmod.com/)                                               | [Proprietary](https://fmod.com/legal)                                                   | [2.01.09 (build 115889)](https://fmod.com/download) |
 | [freetype](https://www.freetype.org/)                                   | [BSD-style](https://www.freetype.org/license.html)                                      | local |
 | [glslang](https://github.com/KhronosGroup/glslang)                      | [3-Clause BSD License](https://github.com/KhronosGroup/glslang/blob/master/LICENSE.txt) | branch: [`master`] |
@@ -33,7 +32,16 @@
 
 ## Installation
 
-### Msys2 - for windows building
+### MSVC
+ - Install [cmake-gui](https://cmake.org/download/)
+ - Start cmake-gui
+ - Open root project folder (Aurora)
+ - Select build folder
+ - Click configure
+ - Click generate
+ - Open VS project
+
+### Msys2 - for windows gcc building
 - Install [msys2](https://www.msys2.org/)
 - Update msys2 package list (`pacman -Syuu`) (two times, first time it will close the window and you need to run it again)
 - Install GCC `pacman -S mingw-w64-x86_64-gcc`
