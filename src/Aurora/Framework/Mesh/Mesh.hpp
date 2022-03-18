@@ -108,7 +108,7 @@ namespace Aurora
 				return nullptr;
 			}
 #ifdef DEBUG
-			return dynamic_cast<VertexBuffer<BufferTypename>*>(lodResource.Vertices);
+			return dynamic_cast<VertexBuffer<BufferTypename>*>(lodResource.Vertices.get());
 #else
 			return static_cast<VertexBuffer<BufferTypename>*>(lodResource.Vertices.get());
 #endif
