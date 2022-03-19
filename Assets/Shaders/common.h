@@ -6,7 +6,6 @@
 using namespace Aurora;
 
 #define uniformbuffer struct
-#define layout(...)
 
 typedef Matrix4 mat4;
 typedef Vector4 vec4;

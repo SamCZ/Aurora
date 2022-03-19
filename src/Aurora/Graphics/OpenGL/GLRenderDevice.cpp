@@ -10,10 +10,6 @@
 #include <Aurora/Core/Profiler.hpp>
 
 
-#ifdef GLSLANG_COMPILER
-#include <glslang/Public/ShaderLang.h>
-#endif
-
 static const char* g_BlitVS = R"(
 const vec4 Tri[3] = {
 	vec4(-1, 3, 0, 1),
@@ -96,16 +92,10 @@ namespace Aurora
 	{
 		glDeleteVertexArrays(1, &m_nVAO);
 		glDeleteVertexArrays(1, &m_nVAOEmpty);
-#ifdef GLSLANG_COMPILER
-		glslang::FinalizeProcess();
-#endif
 	}
 
 	void GLRenderDevice::Init()
 	{
-#ifdef GLSLANG_COMPILER
-		glslang::InitializeProcess();
-#endif
 		glGenVertexArrays(1, &m_nVAO);
 		glGenVertexArrays(1, &m_nVAOEmpty);
 		glBindVertexArray(m_nVAO);
@@ -162,10 +152,6 @@ namespace Aurora
 			AU_LOG_INFO("GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT is ", size);
 		}
 
-#ifdef GLSLANG_COMPILER
-		AU_LOG_INFO("GLSL Version ", glslang::GetGlslVersionString());
-#endif
-
 		glDisable(GL_MULTISAMPLE);
 
 		InvalidateState();
@@ -182,189 +168,7 @@ namespace Aurora
 
 		glFlush();
 	}
-#ifdef GLSLANG_COMPILER
-	EShLanguage ShaderTypeToShLanguage(EShaderType ShaderType)
-	{
-		switch (ShaderType)
-		{
-			case EShaderType::Vertex:           return EShLangVertex;
-			case EShaderType::Hull:             return EShLangTessControl;
-			case EShaderType::Domain:           return EShLangTessEvaluation;
-			case EShaderType::Geometry:         return EShLangGeometry;
-			case EShaderType::Pixel:            return EShLangFragment;
-			case EShaderType::Compute:          return EShLangCompute;
-			case EShaderType::Amplification:    return EShLangTaskNV;
-			case EShaderType::Mesh:             return EShLangMeshNV;
-			case EShaderType::RayGen:          return EShLangRayGen;
-			case EShaderType::RayMiss:         return EShLangMiss;
-			case EShaderType::RayClosestHit:  return EShLangClosestHit;
-			case EShaderType::RayAnyHit:      return EShLangAnyHit;
-			case EShaderType::RayIntersection: return EShLangIntersect;
-			case EShaderType::Callable:         return EShLangCallable;
-			default:
-				AU_LOG_FATAL("Unexpected shader type");
-				return EShLangCount;
-		}
-	}
 
-	TBuiltInResource InitResources()
-	{
-		TBuiltInResource Resources;
-
-		Resources.maxLights                                 = 32;
-		Resources.maxClipPlanes                             = 6;
-		Resources.maxTextureUnits                           = 32;
-		Resources.maxTextureCoords                          = 32;
-		Resources.maxVertexAttribs                          = 64;
-		Resources.maxVertexUniformComponents                = 4096;
-		Resources.maxVaryingFloats                          = 64;
-		Resources.maxVertexTextureImageUnits                = 32;
-		Resources.maxCombinedTextureImageUnits              = 80;
-		Resources.maxTextureImageUnits                      = 32;
-		Resources.maxFragmentUniformComponents              = 4096;
-		Resources.maxDrawBuffers                            = 32;
-		Resources.maxVertexUniformVectors                   = 128;
-		Resources.maxVaryingVectors                         = 8;
-		Resources.maxFragmentUniformVectors                 = 16;
-		Resources.maxVertexOutputVectors                    = 16;
-		Resources.maxFragmentInputVectors                   = 15;
-		Resources.minProgramTexelOffset                     = -8;
-		Resources.maxProgramTexelOffset                     = 7;
-		Resources.maxClipDistances                          = 8;
-		Resources.maxComputeWorkGroupCountX                 = 65535;
-		Resources.maxComputeWorkGroupCountY                 = 65535;
-		Resources.maxComputeWorkGroupCountZ                 = 65535;
-		Resources.maxComputeWorkGroupSizeX                  = 1024;
-		Resources.maxComputeWorkGroupSizeY                  = 1024;
-		Resources.maxComputeWorkGroupSizeZ                  = 64;
-		Resources.maxComputeUniformComponents               = 1024;
-		Resources.maxComputeTextureImageUnits               = 16;
-		Resources.maxComputeImageUniforms                   = 8;
-		Resources.maxComputeAtomicCounters                  = 8;
-		Resources.maxComputeAtomicCounterBuffers            = 1;
-		Resources.maxVaryingComponents                      = 60;
-		Resources.maxVertexOutputComponents                 = 64;
-		Resources.maxGeometryInputComponents                = 64;
-		Resources.maxGeometryOutputComponents               = 128;
-		Resources.maxFragmentInputComponents                = 128;
-		Resources.maxImageUnits                             = 8;
-		Resources.maxCombinedImageUnitsAndFragmentOutputs   = 8;
-		Resources.maxCombinedShaderOutputResources          = 8;
-		Resources.maxImageSamples                           = 0;
-		Resources.maxVertexImageUniforms                    = 0;
-		Resources.maxTessControlImageUniforms               = 0;
-		Resources.maxTessEvaluationImageUniforms            = 0;
-		Resources.maxGeometryImageUniforms                  = 0;
-		Resources.maxFragmentImageUniforms                  = 8;
-		Resources.maxCombinedImageUniforms                  = 8;
-		Resources.maxGeometryTextureImageUnits              = 16;
-		Resources.maxGeometryOutputVertices                 = 256;
-		Resources.maxGeometryTotalOutputComponents          = 1024;
-		Resources.maxGeometryUniformComponents              = 1024;
-		Resources.maxGeometryVaryingComponents              = 64;
-		Resources.maxTessControlInputComponents             = 128;
-		Resources.maxTessControlOutputComponents            = 128;
-		Resources.maxTessControlTextureImageUnits           = 16;
-		Resources.maxTessControlUniformComponents           = 1024;
-		Resources.maxTessControlTotalOutputComponents       = 4096;
-		Resources.maxTessEvaluationInputComponents          = 128;
-		Resources.maxTessEvaluationOutputComponents         = 128;
-		Resources.maxTessEvaluationTextureImageUnits        = 16;
-		Resources.maxTessEvaluationUniformComponents        = 1024;
-		Resources.maxTessPatchComponents                    = 120;
-		Resources.maxPatchVertices                          = 32;
-		Resources.maxTessGenLevel                           = 64;
-		Resources.maxViewports                              = 16;
-		Resources.maxVertexAtomicCounters                   = 0;
-		Resources.maxTessControlAtomicCounters              = 0;
-		Resources.maxTessEvaluationAtomicCounters           = 0;
-		Resources.maxGeometryAtomicCounters                 = 0;
-		Resources.maxFragmentAtomicCounters                 = 8;
-		Resources.maxCombinedAtomicCounters                 = 8;
-		Resources.maxAtomicCounterBindings                  = 1;
-		Resources.maxVertexAtomicCounterBuffers             = 0;
-		Resources.maxTessControlAtomicCounterBuffers        = 0;
-		Resources.maxTessEvaluationAtomicCounterBuffers     = 0;
-		Resources.maxGeometryAtomicCounterBuffers           = 0;
-		Resources.maxFragmentAtomicCounterBuffers           = 1;
-		Resources.maxCombinedAtomicCounterBuffers           = 1;
-		Resources.maxAtomicCounterBufferSize                = 16384;
-		Resources.maxTransformFeedbackBuffers               = 4;
-		Resources.maxTransformFeedbackInterleavedComponents = 64;
-		Resources.maxCullDistances                          = 8;
-		Resources.maxCombinedClipAndCullDistances           = 8;
-		Resources.maxSamples                                = 4;
-		Resources.maxMeshOutputVerticesNV                   = 256;
-		Resources.maxMeshOutputPrimitivesNV                 = 512;
-		Resources.maxMeshWorkGroupSizeX_NV                  = 32;
-		Resources.maxMeshWorkGroupSizeY_NV                  = 1;
-		Resources.maxMeshWorkGroupSizeZ_NV                  = 1;
-		Resources.maxTaskWorkGroupSizeX_NV                  = 32;
-		Resources.maxTaskWorkGroupSizeY_NV                  = 1;
-		Resources.maxTaskWorkGroupSizeZ_NV                  = 1;
-		Resources.maxMeshViewCountNV                        = 4;
-
-		Resources.limits.nonInductiveForLoops                 = 1;
-		Resources.limits.whileLoops                           = 1;
-		Resources.limits.doWhileLoops                         = 1;
-		Resources.limits.generalUniformIndexing               = 1;
-		Resources.limits.generalAttributeMatrixVectorIndexing = 1;
-		Resources.limits.generalVaryingIndexing               = 1;
-		Resources.limits.generalSamplerIndexing               = 1;
-		Resources.limits.generalVariableIndexing              = 1;
-		Resources.limits.generalConstantMatrixVectorIndexing  = 1;
-
-		return Resources;
-	}
-
-	class IncluderImpl : public ::glslang::TShader::Includer
-	{
-	public:
-		IncluderImpl()
-		{}
-
-		// For the "system" or <>-style includes; search the "system" paths.
-		virtual IncludeResult* includeSystem(const char* headerName,
-		                                     const char* /*includerName*/,
-		                                     size_t /*inclusionDepth*/)
-		{
-			std::cout << "Trying to include (System) " << headerName << std::endl;
-
-			/*const char* test = "yo\nnasdsdfsdf";
-
-			auto* pNewInclude =
-					new IncludeResult{
-							headerName,
-							reinterpret_cast<const char*>(test),
-							strlen(test),
-							nullptr};
-
-			return pNewInclude;*/
-			return nullptr;
-		}
-
-		// For the "local"-only aspect of a "" include. Should not search in the
-		// "system" paths, because on returning a failure, the parser will
-		// call includeSystem() to look in the "system" locations.
-		virtual IncludeResult* includeLocal(const char* headerName,
-		                                    const char* includerName,
-		                                    size_t      inclusionDepth)
-		{
-			std::cout << "Trying to include (Local) " << headerName << std::endl;
-			return nullptr;
-		}
-
-		// Signals that the parser will no longer use the contents of the
-		// specified IncludeResult.
-		virtual void releaseInclude(IncludeResult* IncldRes)
-		{
-			delete IncldRes;
-		}
-
-	private:
-
-	};
-#endif
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
 	{
 		CPU_DEBUG_SCOPE("CreateShaderProgram");
@@ -430,33 +234,7 @@ namespace Aurora
 
 			ss << shaderDesc.Source;
 
-			std::string glslSourcePreprocessed;
-			EShMessages messages = (EShMessages)(EShMsgAST);
-			{
-				EShLanguage        ShLang = ShaderTypeToShLanguage(type);
-				auto* Shader = new ::glslang::TShader(ShLang);
-
-				Shader->setEnvInput(::glslang::EShSourceGlsl, ShLang, ::glslang::EShClientOpenGL, 450);
-				Shader->setEnvClient(::glslang::EShClientOpenGL, ::glslang::EShTargetOpenGL_450);
-				//Shader->setEnvTarget(::glslang::EShTargetSpv, ::glslang::EShTargetSpv_1_0);
-				Shader->setEntryPoint("main");
-				//Shader->setSourceEntryPoint("main");
-
-				String source = ss.str();
-
-				const char* ShaderStrings[]       = {source.c_str()};
-				const int   ShaderStringLengths[] = {static_cast<int>(source.length())};
-				const char* Names[]               = {"main"};
-				Shader->setStringsWithLengthsAndNames(ShaderStrings, ShaderStringLengths, Names, 1);
-				Shader->setAutoMapBindings(true);
-
-				TBuiltInResource Resources = InitResources();
-				IncluderImpl includer;
-				if (!Shader->preprocess(&Resources, 450, ECoreProfile, false, false, messages, &glslSourcePreprocessed, includer))
-				{
-					AU_LOG_FATAL("Failed to preprocess shader: \n", Shader->getInfoLog(), Shader->getInfoDebugLog());
-				}
-			}
+			String glslSourcePreprocessed = ss.str();
 
 			if (type == EShaderType::Pixel && shaderDesc.EnableBindless)
 			{

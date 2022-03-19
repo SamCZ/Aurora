@@ -64,7 +64,7 @@ if(WIN32)
     target_link_libraries(Aurora PRIVATE opengl32 gdi32)
 endif()
 
-target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui TracyClient glslang assimp stb_utils)
+target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui TracyClient assimp stb_utils)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
 add_subdirectory(examples)

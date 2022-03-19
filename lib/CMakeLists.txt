@@ -120,7 +120,11 @@ if(NOT TARGET assimp)
         set(BUILD_SHARED_LIBS OFF)
     ENDIF()
 
-    set(BUILD_SHARED_LIBS ON)
+    set(BUILD_SHARED_LIBS_CACHE ${BUILD_SHARED_LIBS})
+
+    if(NOT BUILD_SHARED_LIBS)
+        set(BUILD_SHARED_LIBS ON)
+    endif()
 
     set(ASM686 OFF)
     set(AMD64 ON)
@@ -137,16 +141,6 @@ if(NOT TARGET assimp)
     add_subdirectory(assimp)
 
     set_property(TARGET assimp PROPERTY FOLDER "GameLib")
-    set(BUILD_SHARED_LIBS OFF)
-endif()
-
-if(NOT TARGET glslang)
-    set(BUILD_SHARED_LIBS_CACHE ${BUILD_SHARED_LIBS})
-    set(SKIP_GLSLANG_INSTALL ON)
-    set(ENABLE_HLSL OFF)
-    set(BUILD_EXTERNAL OFF)
-    set(BUILD_SHARED_LIBS OFF)
-    add_subdirectory(glslang)
     set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_CACHE})
 endif()
 
