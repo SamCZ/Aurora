@@ -1,3 +1,5 @@
 .idea
 !.idea/cmake.xml
 cmake-build-*/
+.build
+.buildVS

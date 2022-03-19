@@ -1,5 +1,3 @@
-cmake_policy(SET CMP0077 NEW) # set() overrides option()
-
 #------------------------------
 # GLFW
 # Desktop Window Library
@@ -135,6 +133,7 @@ if(NOT TARGET assimp)
     set(ASSIMP_BUILD_GLTF_IMPORTER OFF)
     set(ASSIMP_BUILD_COLLADA_IMPORTER OFF)
     set(ASSIMP_BUILD_DRACO OFF)
+    set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
     add_subdirectory(assimp)
 
     set_property(TARGET assimp PROPERTY FOLDER "GameLib")
