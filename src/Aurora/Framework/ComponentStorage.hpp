@@ -15,8 +15,9 @@ namespace Aurora
 	{
 	private:
 		T** m_Current;
+		size_t m_Index;
 	public:
-		explicit ComponentIterator(T** current) : m_Current(current) {}
+		explicit ComponentIterator(T** current, size_t index) : m_Current(current), m_Index(index) {}
 
 		T* operator*()
 		{
@@ -26,17 +27,19 @@ namespace Aurora
 		ComponentIterator& operator++()
 		{
 			m_Current++;
+			m_Index++;
+
 			return *this;
 		}
 
 		bool operator==(const ComponentIterator<T>& other) const
 		{
-			return m_Current == other.m_Current;
+			return m_Index == other.m_Index;
 		}
 
 		bool operator!=(const ComponentIterator<T>& other) const
 		{
-			return m_Current != other.m_Current;
+			return m_Index != other.m_Index;
 		}
 	};
 
@@ -54,20 +57,20 @@ namespace Aurora
 		{
 			if(!m_DataVector)
 			{
-				return ComponentIterator<T>(nullptr);
+				return ComponentIterator<T>(nullptr, 0);
 			}
 
-			return ComponentIterator<T>(reinterpret_cast<T**>(&(*m_DataVector)[0]));
+			return ComponentIterator<T>(reinterpret_cast<T**>(&(*m_DataVector)[0]), 0);
 		}
 
 		ComponentIterator<T> end()
 		{
 			if(!m_DataVector)
 			{
-				return ComponentIterator<T>(nullptr);
+				return ComponentIterator<T>(nullptr, 0);
 			}
 
-			return ComponentIterator<T>(reinterpret_cast<T**>(&(*m_DataVector)[m_DataVector->size()]));
+			return ComponentIterator<T>(nullptr, m_DataVector->size());
 		}
 	};
 
