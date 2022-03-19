@@ -25,7 +25,6 @@
 | [nlohmann JSON](https://nlohmann.github.io/json/)                       | [MIT](https://github.com/nlohmann/json/blob/master/LICENSE.MIT)                         | branch: [`master`](https://github.com/nlohmann/json/tree/master) |
 | [FMOD](https://fmod.com/)                                               | [Proprietary](https://fmod.com/legal)                                                   | [2.01.09 (build 115889)](https://fmod.com/download) |
 | [freetype](https://www.freetype.org/)                                   | [BSD-style](https://www.freetype.org/license.html)                                      | local |
-| [glslang](https://github.com/KhronosGroup/glslang)                      | [3-Clause BSD License](https://github.com/KhronosGroup/glslang/blob/master/LICENSE.txt) | branch: [`master`] |
 | [RmlUI](https://github.com/mikke89/RmlUi)                               | [MIT License](https://github.com/mikke89/RmlUi/blob/master/LICENSE.txt)                 | branch: [`master`] |
 | [Assimp](https://github.com/syoyo/tinygltf)                             | [Poly2Tri License](https://github.com/assimp/assimp/blob/master/LICENSE)               | branch: [`master`] |
 | [tracy](https://github.com/wolfpld/tracy)                               | [3-clause BSD license](https://github.com/wolfpld/tracy/blob/master/LICENSE)            | branch: [`master`] |
