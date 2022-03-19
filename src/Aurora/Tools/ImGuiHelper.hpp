@@ -139,7 +139,7 @@ namespace ImGui
 		return state;
 	}
 
-	inline bool InputText(const std::string& label, std::string& text, bool enableLabel = true)
+	inline bool InputTextLabel(const std::string& label, std::string& text, bool enableLabel = true)
 	{
 		if(enableLabel) {
 			ImGui::Text("%s", label.c_str());
@@ -193,6 +193,16 @@ namespace ImGui
 
 	inline void EndWindow() {
 		ImGui::End();
+	}
+
+	inline bool IsWindowClicked(uint8_t button = 0)
+	{
+		return ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[button];
+	}
+
+	inline bool IsWindowMouseDown(uint8_t button = 0)
+	{
+		return ImGui::IsWindowHovered() && ImGui::GetIO().MouseDown[button];
 	}
 }
 

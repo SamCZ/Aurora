@@ -168,13 +168,31 @@ namespace Aurora
 		const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		ImGui::Begin("Scene");
+		ImGui::Begin(ICON_FA_LIST " Hierarchy");
 		{
-			if(ImGui::IsItemClicked())
+			if(ImGui::IsWindowClicked())
 			{
 				m_SelectedActor = nullptr;
 				m_SelectedComponent = nullptr;
 			}
+
+			ImGui::BeginGroup();
+			{
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 1));
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.16f, 0.16f, 0.16f));
+
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+				ImGui::Button(ICON_FA_PLUS "##AddActorToScene");
+				ImGui::PopStyleVar(2);
+
+				ImGui::PopStyleColor(2);
+
+				ImGui::SameLine();
+				static String searchText;
+				ImGui::InputTextLabel(ICON_FA_SEARCH, searchText, true);
+			}
+			ImGui::EndGroup();
 
 			// ImGuiTableFlags_RowBg
 			static ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoBordersInBody;
@@ -245,7 +263,7 @@ namespace Aurora
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_MenuBar);
 		{
-			if(ImGui::IsWindowHovered() && ImGui::GetIO().MouseDown[1])
+			if(ImGui::IsWindowMouseDown(1))
 			{
 				m_MouseViewportGrabbed = true;
 				GEngine->GetWindow()->SetCursorMode(ECursorMode::Disabled);
@@ -387,7 +405,7 @@ namespace Aurora
 			{
 				root = m_SelectedActor->GetRootComponent();
 				std::string name = m_SelectedActor->GetName();
-				if(ImGui::InputText("Name", name))
+				if(ImGui::InputTextLabel("Name", name))
 				{
 					m_SelectedActor->SetName(name);
 				}
@@ -415,7 +433,7 @@ namespace Aurora
 		// FIXME: This is just for debugging purposes
 		if (m_MouseViewportGrabbed)
 		{
-			m_FlySpeed += +ImGui::GetIO().MouseWheel;
+			m_FlySpeed += ImGui::GetIO().MouseWheel;
 
 			if(m_FlySpeed < 0) m_FlySpeed = 0;
 
@@ -423,6 +441,9 @@ namespace Aurora
 			{
 				camera->GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
 				camera->GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
+
+				camera->GetTransform().Rotation.x = glm::clamp(camera->GetTransform().Rotation.x, -90.0f, 90.0f);
+				camera->GetTransform().Rotation.y = fmod(camera->GetTransform().Rotation.y, 360.0f);
 
 				Matrix4 transform = camera->GetTransformationMatrix();
 
