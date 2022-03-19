@@ -51,7 +51,13 @@ namespace Aurora
 	public:
 		ComponentView() : m_DataVector(nullptr) {}
 
-		explicit ComponentView(std::vector<std::uintptr_t>* data) : m_DataVector(data) { }
+		explicit ComponentView(std::vector<std::uintptr_t>* data) : m_DataVector(data)
+		{
+			if (m_DataVector->empty())
+			{
+				m_DataVector = nullptr;
+			}
+		}
 
 		ComponentIterator<T> begin()
 		{
