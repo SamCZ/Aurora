@@ -108,6 +108,7 @@ namespace Aurora
 
 			if(childComponents.empty())
 			{
+				ImGui::AlignTextToFramePadding();
 				ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | flags);
 
 				if(ImGui::IsItemClicked())
@@ -119,9 +120,10 @@ namespace Aurora
 				/*ImGui::TableNextColumn();
 				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
 				ImGui::TableNextColumn();
+				ImGui::AlignTextToFramePadding();
 				ImGui::Text("%s %s", GetIconForComponent(component), component->GetTypeName());
 				ImGui::TableNextColumn();
-
+				ImGui::AlignTextToFramePadding();
 				bool active = component->IsActive() && component->IsParentActive();
 				if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
 				{
@@ -130,6 +132,7 @@ namespace Aurora
 			}
 			else
 			{
+				ImGui::AlignTextToFramePadding();
 				bool open = ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow | flags);
 
 				if(ImGui::IsItemClicked())
@@ -141,8 +144,10 @@ namespace Aurora
 				/*ImGui::TableNextColumn();
 				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
 				ImGui::TableNextColumn();
+				ImGui::AlignTextToFramePadding();
 				ImGui::Text("%s %s", GetIconForComponent(component), component->GetTypeName());
 				ImGui::TableNextColumn();
+				ImGui::AlignTextToFramePadding();
 				bool active = component->IsActive() && component->IsParentActive();
 				if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
 				{
@@ -168,7 +173,7 @@ namespace Aurora
 		const float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		ImGui::Begin(ICON_FA_LIST " Hierarchy");
+		ImGui::Begin(ICON_FA_LIST " Hierarchy", nullptr, ImGuiWindowFlags_NoCollapse);
 		{
 			if(ImGui::IsWindowClicked())
 			{
@@ -176,23 +181,59 @@ namespace Aurora
 				m_SelectedComponent = nullptr;
 			}
 
-			ImGui::BeginGroup();
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10, 5));
+			ImGui::BeginChildFrame(ImGui::GetID("search_frame"), ImVec2(0, 32));
+			ImGui::PopStyleVar(1);
 			{
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 1));
 				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.16f, 0.16f, 0.16f));
 
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-				ImGui::Button(ICON_FA_PLUS "##AddActorToScene");
+				if (ImGui::Button(ICON_FA_PLUS "##AddActorToScene"))
+				{
+					ImGui::OpenPopup("add_new_to_scene");
+				}
 				ImGui::PopStyleVar(2);
-
 				ImGui::PopStyleColor(2);
+
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
+				bool popupOpened = ImGui::BeginPopup("add_new_to_scene");
+
+				if (popupOpened)
+				{
+					static const char* types[] = {
+						"Empty Actor",
+						"Directional light",
+						"Point light",
+						"-",
+						"Box",
+						"Sphere"
+					};
+
+					for (auto& type : types)
+					{
+						if(strlen(type) == 1)
+						{
+							ImGui::Separator();
+							continue;
+						}
+
+						if (ImGui::Selectable(type))
+						{
+
+						}
+					}
+
+					ImGui::EndPopup();
+				}
+				ImGui::PopStyleVar(1);
 
 				ImGui::SameLine();
 				static String searchText;
 				ImGui::InputTextLabel(ICON_FA_SEARCH, searchText, true);
 			}
-			ImGui::EndGroup();
+			ImGui::EndChildFrame();
 
 			// ImGuiTableFlags_RowBg
 			static ImGuiTableFlags tableFlags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_NoBordersInBody;
@@ -217,6 +258,7 @@ namespace Aurora
 
 					int flags = m_SelectedActor == actor ? ImGuiTreeNodeFlags_Selected : 0;
 
+					ImGui::AlignTextToFramePadding();
 					bool open = ImGui::TreeNodeEx(actor->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow | flags);
 
 					if(ImGui::IsItemClicked())
@@ -225,12 +267,11 @@ namespace Aurora
 						m_SelectedComponent = nullptr;
 					}
 
-					/*ImGui::TableNextColumn();
-					ImGui::TextDisabled(ICON_FA_USER);*/
 					ImGui::TableNextColumn();
+					ImGui::AlignTextToFramePadding();
 					ImGui::Text("%s %s", ICON_FA_USER, actor->GetTypeName());
 					ImGui::TableNextColumn();
-					//ImGui::TextUnformatted(ICON_FA_EYE);
+					ImGui::AlignTextToFramePadding();
 
 					bool active = actor->IsActive();
 					if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
@@ -399,7 +440,7 @@ namespace Aurora
 
 		ImGui::Begin("Properties");
 		{
-			SceneComponent* root = nullptr;
+			SceneComponent* root;
 
 			if(m_SelectedActor)
 			{
@@ -429,6 +470,24 @@ namespace Aurora
 
 		}
 		ImGui::End();
+
+		static bool isDemoWindowRendering = false;
+
+		if (ImGui::IsKeyPressed(ImGuiKey_F9, false))
+		{
+			isDemoWindowRendering = !isDemoWindowRendering;
+		}
+
+		if (isDemoWindowRendering)
+			ImGui::ShowDemoWindow();
+
+		// Handle input
+
+		if (m_SelectedActor && ImGui::IsKeyPressed(ImGuiKey_Delete, false))
+		{
+			m_SelectedActor->Destroy();
+			m_SelectedActor = nullptr;
+		}
 
 		// FIXME: This is just for debugging purposes
 		if (m_MouseViewportGrabbed)
@@ -519,11 +578,7 @@ namespace Aurora
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-		}
-		else
-		{
-
+			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags | ImGuiDockNodeFlags_NoWindowMenuButton);
 		}
 
 		/*if (ImGui::BeginMenuBar())
