@@ -2,6 +2,7 @@
 
 #include <array>
 #include "Aurora/Core/Delegate.hpp"
+#include "Aurora/Core/Library.hpp"
 #include "Aurora/Tools/robin_hood.h"
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Graphics/PassType.hpp"
@@ -46,7 +47,7 @@ namespace Aurora
 
 	typedef EventEmitter<PassType_t, DrawCallState&, const FFrustum&, const glm::mat4&> PassRenderEventEmitter;
 
-	class SceneRenderer
+	class AU_API SceneRenderer
 	{
 	private:
 		Buffer_ptr m_BaseVsDataBuffer;

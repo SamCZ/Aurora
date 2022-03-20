@@ -5,7 +5,7 @@
 
 namespace Aurora
 {
-	class SceneComponent : public ActorComponent
+	class AU_API SceneComponent : public ActorComponent
 	{
 	private:
 		Transform m_Transform;
@@ -17,8 +17,9 @@ namespace Aurora
 		CLASS_OBJ(SceneComponent, ActorComponent);
 
 		SceneComponent();
+		~SceneComponent() override = default;
 
-		const Transform& GetTransform() const { return m_Transform; }
+		[[nodiscard]] const Transform& GetTransform() const { return m_Transform; }
 		Transform& GetTransform() { return m_Transform; }
 
 		[[nodiscard]] const Vector3& GetLocation() const { return m_Transform.Location; }

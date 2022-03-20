@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <vector>
+#include "Aurora/Core/Library.hpp"
 
 namespace Aurora
 {
@@ -45,7 +46,7 @@ namespace Aurora
 			: InTangent(inTangent), InWeight(inWeight), OutTangent(outTangent), OutWeight(outWeight), Time(time), Value(value), WeightMode(weightedMode) { }
 	};
 
-	class AnimationCurve
+	class AU_API AnimationCurve
 	{
 	public:
 		std::vector<ACKeyFrame> Keys;

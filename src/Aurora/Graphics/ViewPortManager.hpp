@@ -2,6 +2,7 @@
 
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Delegate.hpp"
+#include "Aurora/Core/Library.hpp"
 #include "Aurora/Tools/robin_hood.h"
 #include "Base/Texture.hpp"
 #include "ViewPort.hpp"
@@ -34,7 +35,7 @@ namespace Aurora
 		[[nodiscard]] int GetHeight() const { return ViewPort.Height; }
 	};
 
-	class ViewPortManager
+	class AU_API ViewPortManager
 	{
 	private:
 		robin_hood::unordered_map<uint8, RenderViewPort*> m_ViewPorts;

@@ -10,7 +10,7 @@ namespace Aurora
 {
 	struct RenderViewPort;
 
-	class CameraComponent : public SceneComponent
+	class AU_API CameraComponent : public SceneComponent
 	{
 	public:
 		enum class ProjectionType : uint8_t

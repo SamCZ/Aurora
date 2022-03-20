@@ -6,13 +6,14 @@
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/String.hpp>
 #include <Aurora/Core/Vector.hpp>
+#include <Aurora/Core/Library.hpp>
 #include <Aurora/RmlUI/RmlUI.hpp>
 
 namespace Aurora
 {
 	typedef uint8_t UIID_t;
 
-	class UserInterface
+	class AU_API UserInterface
 	{
 	protected:
 		UIID_t m_ID;

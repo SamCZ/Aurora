@@ -80,7 +80,7 @@ namespace Aurora
 		}
 	};
 
-	class ComponentStorage
+	class AU_API ComponentStorage
 	{
 	private:
 		robin_hood::unordered_map<TTypeID, Aum*> m_ComponentMemory;

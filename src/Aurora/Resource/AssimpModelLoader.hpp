@@ -4,6 +4,7 @@
 
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/String.hpp"
+#include "Aurora/Core/Library.hpp"
 
 #include "Aurora/Framework/Mesh/Mesh.hpp"
 
@@ -30,7 +31,7 @@ namespace Aurora
 		}
 	};
 
-	class AssimpModelLoader
+	class AU_API AssimpModelLoader
 	{
 	private:
 		Assimp::Importer m_Importer;

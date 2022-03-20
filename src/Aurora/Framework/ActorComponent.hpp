@@ -5,10 +5,10 @@
 
 namespace Aurora
 {
-	class Actor;
-	class Scene;
+	class AU_API Actor;
+	class AU_API Scene;
 
-	class ActorComponent : public ObjectBase
+	class AU_API ActorComponent : public ObjectBase
 	{
 	protected:
 		String m_Name;
@@ -19,7 +19,7 @@ namespace Aurora
 		friend class Actor;
 		CLASS_OBJ(ActorComponent, ObjectBase);
 	public:
-		inline ActorComponent() : ObjectBase(), m_IsActive(false), m_Owner(nullptr), m_Scene(nullptr) { }
+		ActorComponent() : ObjectBase(), m_IsActive(false), m_Owner(nullptr), m_Scene(nullptr) { }
 		~ActorComponent() override = default;
 
 		virtual inline void SetActive(bool newActive) { m_IsActive = newActive; }

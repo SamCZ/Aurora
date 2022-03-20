@@ -10,7 +10,7 @@
 
 namespace Aurora
 {
-	class Scene
+	class AU_API Scene
 	{
 	private:
 		Aum m_ActorMemory;

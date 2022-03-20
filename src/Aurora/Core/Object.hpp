@@ -4,18 +4,19 @@
 #include <memory>
 
 #include "Hash.hpp"
+#include "Library.hpp"
 
 namespace Aurora
 {
 	class ObjectBase;
 
 	template <typename Type>
-	struct TypeIDCache
+	struct AU_API TypeIDCache
 	{
 		constexpr static const TTypeID value = Hash_djb2(Type::TypeName());
 	};
 
-	class ObjectBase
+	class AU_API ObjectBase
 	{
 	protected:
 		virtual ~ObjectBase() = default;

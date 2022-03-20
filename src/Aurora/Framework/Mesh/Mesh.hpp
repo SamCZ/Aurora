@@ -3,6 +3,7 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Core/Object.hpp"
+#include "Aurora/Core/Library.hpp"
 #include "Aurora/Graphics/Base/Buffer.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Tools/robin_hood.h"

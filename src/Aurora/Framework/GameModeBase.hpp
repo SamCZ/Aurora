@@ -6,7 +6,7 @@
 
 namespace Aurora
 {
-	class GameModeBase
+	class AU_API GameModeBase
 	{
 	private:
 		robin_hood::unordered_map<UIID_t, UserInterface*> m_UserInterfaces;

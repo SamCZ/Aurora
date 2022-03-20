@@ -22,7 +22,7 @@ namespace Aurora
 		[[nodiscard]] const Scene* GetScene() const { return m_Scene; }
 	};
 
-	class AppContext
+	class AU_API AppContext
 	{
 	private:
 		static GameContext* m_GameContext;

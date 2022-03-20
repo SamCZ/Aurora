@@ -10,7 +10,7 @@
 
 namespace Aurora
 {
-	class Scene;
+	class AU_API Scene;
 
 	class AU_API Actor : public ObjectBase
 	{
