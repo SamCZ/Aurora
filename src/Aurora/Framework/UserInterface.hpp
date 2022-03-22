@@ -23,8 +23,10 @@ namespace Aurora
 		explicit UserInterface(UIID_t id) : m_ID(id), m_Enabled(true) {}
 		virtual ~UserInterface() = default;
 
+		virtual void Destroy();
+
 		virtual void BeginPlay() = 0;
-		virtual void BeginDestroy() = 0;
+		virtual void BeginDestroy() {}
 		virtual void Tick(double delta) {}
 
 		Rml::ElementDocument* LoadAndRegisterDocument(const String& path);

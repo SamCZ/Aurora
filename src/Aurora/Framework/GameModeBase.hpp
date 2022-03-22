@@ -88,7 +88,7 @@ namespace Aurora
 		inline static void DestroyUI(UserInterface* ui)
 		{
 			if(ui)
-				ui->BeginDestroy();
+				ui->Destroy();
 			delete ui;
 		}
 	};

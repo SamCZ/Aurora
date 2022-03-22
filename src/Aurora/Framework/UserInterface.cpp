@@ -15,4 +15,14 @@ namespace Aurora
 
 		return RegisterDocument(doc);
 	}
+
+	void UserInterface::Destroy()
+	{
+		BeginDestroy();
+
+		for(auto document : m_Documents)
+		{
+			document->Close();
+		}
+	}
 }

@@ -70,6 +70,8 @@ namespace Aurora
 		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameModeBase, T>::value>::type* = nullptr>
 		static T* SwitchGameMode(Args... args)
 		{
+			bool hadGameMode = m_GameMode;
+
 			if(m_GameMode)
 			{
 				m_GameMode->BeginDestroy();
@@ -81,7 +83,7 @@ namespace Aurora
 
 			m_GameMode = new T(std::forward<Args>(args)...);
 
-			if(!m_EditorMode)
+			if(hadGameMode)
 			{
 				m_GameMode->BeginPlay();
 			}
