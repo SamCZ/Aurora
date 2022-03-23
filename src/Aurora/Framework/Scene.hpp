@@ -68,6 +68,12 @@ namespace Aurora
 			return m_ComponentStorage.template GetComponents<T>();
 		}
 
+		template<typename T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
+		T* FindFirstComponent()
+		{
+			return m_ComponentStorage.template FindFirstComponent<T>();
+		}
+
 		void Update(double delta);
 
 	public:

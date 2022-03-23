@@ -160,5 +160,23 @@ namespace Aurora
 
 			return ComponentView<T>(&m_FindComponentCache);
 		}
+
+		template<typename T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
+		T* FindFirstComponent()
+		{
+			for(auto& it : m_ComponentPointers)
+			{
+				if(it.second.empty()) continue;
+
+				auto* typeBase = reinterpret_cast<ObjectBase*>(it.second[0]);
+
+				if(typeBase->HasType(T::TypeID()))
+				{
+					return reinterpret_cast<T*>(*it.second.begin());
+				}
+			}
+
+			return nullptr;
+		}
 	};
 }
