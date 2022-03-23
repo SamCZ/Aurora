@@ -334,18 +334,11 @@ namespace Aurora
 			{
 				CPU_DEBUG_SCOPE("Game render");
 				GPU_DEBUG_SCOPE("Game render");
-				m_RenderDevice->ClearTextureUInt(m_RenderViewPort->Target, 0);
+				//m_RenderDevice->ClearTextureUInt(m_RenderViewPort->Target, 0);
 				m_AppContext->Render();
-
-				if(!m_EditorPanel)
-				{
-					glEnable(GL_FRAMEBUFFER_SRGB);
-					m_RenderManager->Blit(m_RenderViewPort->Target);
-					glDisable(GL_FRAMEBUFFER_SRGB);
-				}
 			}
 
-			m_RenderDevice->SetViewPort(FViewPort(m_Window->GetSize()));
+
 
 			// Disabled vg render for now
 			if(false)
@@ -414,6 +407,15 @@ namespace Aurora
 
 				m_RmlUI->Render(drawCallState);
 			}
+
+			if(!m_EditorPanel)
+			{
+				glEnable(GL_FRAMEBUFFER_SRGB);
+				m_RenderManager->Blit(m_RenderViewPort->Target);
+				glDisable(GL_FRAMEBUFFER_SRGB);
+			}
+
+			m_RenderDevice->SetViewPort(FViewPort(m_Window->GetSize()));
 
 			{
 				CPU_DEBUG_SCOPE("ImGui render");
