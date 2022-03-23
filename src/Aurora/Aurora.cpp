@@ -53,6 +53,7 @@ namespace Aurora
 
 	GameContext* AppContext::m_GameContext = nullptr;
 	GameModeBase* AppContext::m_GameMode = nullptr;
+	GameModeBase* AppContext::m_GameModeToSwitch = nullptr;
 	bool AppContext::m_EditorMode = false;
 
 	ImFont* m_ImGuiDefaultFont = nullptr;
@@ -79,6 +80,7 @@ namespace Aurora
 
 	AuroraEngine::~AuroraEngine()
 	{
+		delete Aurora::AppContext::m_GameMode; // Needs to be deleted here because of destroy order
 		delete m_AppContext;
 		delete m_EditorPanel;
 #ifdef NEWTON
@@ -280,6 +282,13 @@ namespace Aurora
 			glfwPollEvents();
 			std::static_pointer_cast<Input::Manager>(m_Window->GetInputManager())->Update(frameTime);
 
+			// IMPORTANT THIS WILL UPDATE SWITCHING GAME MODE
+			if(AppContext::m_GameModeToSwitch != nullptr)
+			{
+				AppContext::SwitchGameModeRaw(AppContext::m_GameModeToSwitch);
+				AppContext::m_GameModeToSwitch = nullptr;
+			}
+
 			{ // ImGui update
 				CPU_DEBUG_SCOPE("ImGui update");
 				ImGui_ImplOpenGL3_NewFrame();
@@ -325,6 +334,7 @@ namespace Aurora
 			{
 				CPU_DEBUG_SCOPE("Game render");
 				GPU_DEBUG_SCOPE("Game render");
+				m_RenderDevice->ClearTextureUInt(m_RenderViewPort->Target, 0);
 				m_AppContext->Render();
 
 				if(!m_EditorPanel)

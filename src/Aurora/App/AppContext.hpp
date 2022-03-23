@@ -7,6 +7,8 @@
 
 namespace Aurora
 {
+	class SceneRenderer;
+
 	class GameContext
 	{
 		friend class AppContext;
@@ -27,13 +29,13 @@ namespace Aurora
 	private:
 		static GameContext* m_GameContext;
 		static GameModeBase* m_GameMode;
+		static GameModeBase* m_GameModeToSwitch;
 		static bool m_EditorMode;
 	public:
 		friend class AuroraEngine;
 
 		virtual ~AppContext()
 		{
-			delete m_GameMode;
 			delete m_GameContext;
 		}
 	private:
@@ -43,12 +45,17 @@ namespace Aurora
 				m_GameMode->Tick(delta);
 
 			Update(delta);
+
+			if(m_GameMode)
+				m_GameMode->TickUI(delta);
 		}
 	public:
 		virtual void Init() {}
 		virtual void Update(double delta) {}
 		virtual void Render() {}
 		virtual void RenderVg() {}
+
+		virtual SceneRenderer* GetSceneRenderer() { return nullptr; }
 
 		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameContext, T>::value>::type* = nullptr>
 		static T* SetGameContext(Args... args)
@@ -70,6 +77,11 @@ namespace Aurora
 		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameModeBase, T>::value>::type* = nullptr>
 		static T* SwitchGameMode(Args... args)
 		{
+			return static_cast<T*>(m_GameModeToSwitch = new T(std::forward<Args>(args)...));
+		}
+
+		static GameModeBase* SwitchGameModeRaw(GameModeBase* gameModeBase)
+		{
 			bool hadGameMode = m_GameMode;
 
 			if(m_GameMode)
@@ -81,14 +93,21 @@ namespace Aurora
 			// TODO: Think if this should be the place that resets scene
 			m_GameContext->m_Scene = new Scene();
 
-			m_GameMode = new T(std::forward<Args>(args)...);
+			m_GameMode = gameModeBase;
 
 			if(hadGameMode)
 			{
 				m_GameMode->BeginPlay();
 			}
 
-			return (T*)m_GameMode;
+			return m_GameMode;
+		}
+
+		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameModeBase, T>::value>::type* = nullptr>
+		static T* SwitchGameModeImmediately(Args... args)
+		{
+
+			return (T*)SwitchGameModeRaw(new T(std::forward<Args>(args)...));
 		}
 
 		static GameModeBase* GetGameModeBase() { return m_GameMode; }
