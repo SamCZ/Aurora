@@ -194,17 +194,10 @@ namespace Aurora
 			ImGui::BeginChildFrame(ImGui::GetID("search_frame"), ImVec2(0, 32));
 			ImGui::PopStyleVar(1);
 			{
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 1));
-				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.16f, 0.16f, 0.16f));
-
-				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-				if (ImGui::Button(ICON_FA_PLUS "##AddActorToScene"))
+				if (ImGui::IconButton(ICON_FA_PLUS "##AddActorToScene"))
 				{
 					ImGui::OpenPopup("add_new_to_scene");
 				}
-				ImGui::PopStyleVar(2);
-				ImGui::PopStyleColor(2);
 
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5, 5));
 				bool popupOpened = ImGui::BeginPopup("add_new_to_scene");
@@ -459,6 +452,8 @@ namespace Aurora
 				ImGui::PushID(fileName.c_str());
 
 				ImGui::PushFont(m_BigIconFont);
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
 				if(directoryIt.is_directory())
 				{
 					ImGui::Selectable(ICON_FA_FOLDER);
@@ -474,6 +469,7 @@ namespace Aurora
 
 					}
 				}
+				ImGui::PopStyleVar(2);
 				ImGui::PopFont();
 
 				ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());

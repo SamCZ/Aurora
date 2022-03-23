@@ -1,5 +1,5 @@
 #include "ConsoleWindow.hpp"
-#include <imgui.h>
+#include "Aurora/Tools/ImGuiHelper.hpp"
 
 namespace Aurora
 {
@@ -11,7 +11,7 @@ namespace Aurora
 			return;
 		}
 
-		if(ImGui::Button("Clear"))
+		if(ImGui::IconButton("Clear"))
 		{
 			m_Messages.clear();
 		}

@@ -171,7 +171,7 @@ namespace Aurora
 			}
 		}
 
-		auto texturePtr = GEngine->GetResourceManager()->LoadTexture(path, GraphicsFormat::RGBA8_UNORM, {false});
+		auto texturePtr = GEngine->GetResourceManager()->LoadTexture(path);
 
 		if(!texturePtr) {
 			return false;

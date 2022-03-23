@@ -152,9 +152,7 @@ namespace Aurora
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
-			//io.Fonts->AddFontFromFileTTF("../../Assets/Fonts/LatoLatin-Bold.ttf", 16);
 
-			//ImFont* font = io.Fonts->AddFontDefault();
 			static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
 
 			auto fontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf"));
@@ -167,24 +165,16 @@ namespace Aurora
 			io.Fonts->AddFontFromMemoryTTF(iconFontData->data(), iconFontData->size(), 15, &config, icons_ranges);
 			io.Fonts->Build();
 
-			io.IniFilename = "../../imgui.ini";
+			io.IniFilename = AURORA_PROJECT_DIR "/Assets/imgui.ini";
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
 			//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
 			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-			//io.ConfigViewportsNoAutoMerge = true;
-			//io.ConfigViewportsNoTaskBarIcon = true;
 
-			// Setup Dear ImGui style
 			ImGui::StyleColorsDark();
-			//ImGui::StyleColorsClassic();
 
-			// Setup Platform/Renderer backends
 			ImGui_ImplGlfw_InitForOpenGL(((GLFWWindow*)m_Window)->GetHandle(), true);
 			ImGui_ImplOpenGL3_Init("#version 330 core");
-
-			//auto fontData = m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf");
-			//m_ImGuiDefaultFont = io.Fonts->AddFontFromMemoryCompressedTTF(fontData.data(), fontData.size(), 12);
 		}
 
 		// Init global context

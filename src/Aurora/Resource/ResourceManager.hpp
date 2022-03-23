@@ -12,12 +12,6 @@
 
 namespace Aurora
 {
-	struct TextureLoadInfo
-	{
-		bool SRGB = true;
-		bool Bindless = false;
-	};
-
 	class AU_API ResourceManager
 	{
 	private:
@@ -37,6 +31,7 @@ namespace Aurora
 
 		DataBlob LoadFile(const Path& path, bool* isFromAssetPackage = nullptr);
 		[[nodiscard]] bool FileExists(const Path& path, bool* isFromAssetPackage = nullptr) const;
+		[[nodiscard]] bool GetRealPath(const Path& path, Path& path_out) const;
 		String LoadFileToString(const Path& path, bool* isFromAssetPackage = nullptr);
 
 		String ReadShaderSource(const Path& path, std::vector<Path>& alreadyIncluded);
@@ -56,10 +51,12 @@ namespace Aurora
 
 		bool LoadJson(const Path &path, nlohmann::json &json);
 
-		Texture_ptr LoadTexture(const Path& path, GraphicsFormat format, const TextureLoadInfo& textureLoadInfo);
+		Texture_ptr LoadTexture(const Path& path);
 		Texture_ptr LoadLutTexture(const Path& path);
 
 		const MaterialDefinition_ptr& GetOrLoadMaterialDefinition(const Path& path);
 		std::shared_ptr<Material> LoadMaterial(const Path& path);
+
+		nlohmann::json GetOrCreateMetaForPath(const Path& path, const nlohmann::json& defaults);
 	};
 }

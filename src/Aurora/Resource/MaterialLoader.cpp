@@ -78,7 +78,7 @@ namespace Aurora
 				MTextureVar textureVar;
 				textureVar.Name = name;
 				textureVar.InShaderName = in_shader_name;
-				textureVar.Texture = GEngine->GetResourceManager()->LoadTexture(value.get<String>(), GraphicsFormat::RGBA8_UNORM, {});
+				textureVar.Texture = GEngine->GetResourceManager()->LoadTexture(value.get<String>());
 				textureVar.Sampler = sampler;
 
 				if(descOut.Textures.contains(nameId))

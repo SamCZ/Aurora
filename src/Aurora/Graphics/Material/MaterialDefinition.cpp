@@ -107,7 +107,7 @@ namespace Aurora
 					MTextureVar textureVar;
 					textureVar.Name = samplerName;
 					textureVar.InShaderName = samplerName;
-					textureVar.Texture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png", GraphicsFormat::SRGBA8_UNORM, {});
+					textureVar.Texture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png");
 					textureVar.Sampler = Samplers::WrapWrapLinearLinear;
 					m_TextureVars[samplerId] = textureVar;
 				}

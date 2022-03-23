@@ -107,6 +107,28 @@ namespace Aurora
 		return FS::FileExists(path);
 	}
 
+	bool ResourceManager::GetRealPath(const Path& path, Path& path_out) const
+	{
+		for (const auto &item : m_FileSearchPaths)
+		{
+			Path newPath = item / path;
+
+			if(FS::FileExists(newPath))
+			{
+				path_out = newPath;
+				return true;
+			}
+		}
+
+		if (FS::FileExists(path))
+		{
+			path_out = path;
+			return true;
+		}
+
+		return false;
+	}
+
 	String ResourceManager::ReadShaderSource(const Path &path, std::vector<Path>& alreadyIncluded)
 	{
 		String shaderSource = LoadFileToString(path);
@@ -285,15 +307,16 @@ namespace Aurora
 		return true;
 	}
 
-	Texture_ptr ResourceManager::LoadTexture(const Path &path, GraphicsFormat format, const TextureLoadInfo &textureLoadInfo)
+	Texture_ptr ResourceManager::LoadTexture(const Path &path)
 	{
-		if(m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
+		if (m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
 			return m_LoadedTextures[path];
 		}
 
-		auto fileData = LoadFile(path);
+		bool fromAssetPackage = false;
+		auto fileData = LoadFile(path, &fromAssetPackage);
 
-		if(fileData.empty()) {
+		if (fileData.empty()) {
 			return nullptr;
 		}
 
@@ -301,9 +324,49 @@ namespace Aurora
 
 		int width,height,channels_in_file;
 		unsigned char *data = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(fileData.data()), fileData.size(), &width, &height, &channels_in_file, STBI_rgb_alpha);
-		if(!data) {
+		if (!data) {
 			AU_LOG_ERROR("Cannot load texture !", path.string());
 			return nullptr;
+		}
+
+		GraphicsFormat format = GraphicsFormat::Unknown;
+
+		switch (channels_in_file)
+		{
+			case 1:
+				format = GraphicsFormat::R8_UNORM;
+				break;
+			case 2:
+				format = GraphicsFormat::RG8_UNORM;
+				break;
+			case 3:
+				format = GraphicsFormat::RGB8_UNORM;
+				break;
+			case 4:
+				format = GraphicsFormat::RGBA8_UNORM;
+				break;
+			default: break;
+		}
+
+		if (format == GraphicsFormat::Unknown)
+		{
+			stbi_image_free(data);
+			AU_LOG_ERROR("Could not load image ", path.string(), " wrong format !");
+			return nullptr;
+		}
+
+		Path realPath;
+		if (!fromAssetPackage && GetRealPath(path, realPath))
+		{
+			nlohmann::json metaFile = GetOrCreateMetaForPath(realPath, {{"srgb", true}});
+
+			if (metaFile.contains("srgb"))
+			{
+				if (metaFile["srgb"].get<bool>() && format == GraphicsFormat::RGBA8_UNORM)
+				{
+					format = GraphicsFormat::SRGBA8_UNORM;
+				}
+			}
 		}
 
 		TextureDesc textureDesc;
@@ -312,7 +375,7 @@ namespace Aurora
 		textureDesc.MipLevels = textureDesc.GetMipLevelCount();
 		textureDesc.ImageFormat = format;
 		textureDesc.Name = path.string();
-		textureDesc.UseAsBindless = textureLoadInfo.Bindless;
+		textureDesc.UseAsBindless = false;
 		texture = m_RenderDevice->CreateTexture(textureDesc, nullptr);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
@@ -442,5 +505,33 @@ namespace Aurora
 
 		return matInstance;*/
 		return nullptr;
+	}
+
+	nlohmann::json ResourceManager::GetOrCreateMetaForPath(const Path& originalFilePath, const nlohmann::json &defaults)
+	{
+		Path metaPath = originalFilePath.string() + ".meta";
+
+		nlohmann::json json;
+
+		if (FileExists(metaPath))
+		{
+			return LoadJson(metaPath, json);
+		}
+		else
+		{
+			json = defaults;
+
+			AU_LOG_INFO("Creating meta ", metaPath.string());
+
+			std::ofstream stream;
+			stream.open(metaPath);
+			if(stream.is_open())
+			{
+				stream << std::setw(4) << json << std::endl;
+				stream.close();
+			}
+		}
+
+		return json;
 	}
 }
