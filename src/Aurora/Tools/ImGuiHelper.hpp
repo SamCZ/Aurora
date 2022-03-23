@@ -191,6 +191,20 @@ namespace ImGui
 		}
 	}
 
+	inline bool IconButton(const char* name)
+	{
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 1));
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.16f, 0.16f, 0.16f, 0.16f));
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+		bool clicked = ImGui::Button(name);
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(2);
+
+		return clicked;
+	}
+
 	inline void EndWindow() {
 		ImGui::End();
 	}

@@ -19,6 +19,8 @@ ImVec2 operator+(const ImVec2& left, const ImVec2& right)
 
 namespace Aurora
 {
+	ImFont* m_BigIconFont;
+
 	MainEditorPanel::MainEditorPanel()
 	: m_SelectedActor(nullptr),
 		m_MouseViewportGrabbed(false),
@@ -35,6 +37,13 @@ namespace Aurora
 		m_RenderViewPort->Resize({1270, 720});
 
 		SetEditorStyle();
+
+		static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
+		ImFontConfig config;
+		config.MergeMode = false;
+		//config.PixelSnapH = true;
+		auto iconFontData = new std::vector<uint8>(GEngine->GetResourceManager()->LoadFile("Assets/Fonts/fa-solid-900.ttf"));
+		m_BigIconFont = ImGui::GetIO().Fonts->AddFontFromMemoryTTF(iconFontData->data(), iconFontData->size(), 56, &config, icons_ranges);
 	}
 
 	MainEditorPanel::~MainEditorPanel() = default;
@@ -363,7 +372,7 @@ namespace Aurora
 				ImGui::GetWindowHeight()
 				);
 
-			if(CameraComponent* camera = *AppContext::GetScene()->GetComponents<CameraComponent>().begin())
+			if(CameraComponent* camera = AppContext::GetScene()->FindFirstComponent<CameraComponent>())
 			{
 				if(!ImGui::GetIO().WantTextInput && !m_MouseViewportGrabbed)
 				{
@@ -411,28 +420,82 @@ namespace Aurora
 
 		ImGui::Begin("Resources");
 		{
-			/*for (auto& directory : std::filesystem::directory_iterator("../"))
-			{
-				ImGui::BeginGroup();
-				{
-					if(directory.is_directory())
-					{
-						EUI::ImageButton(m_FolderTexture, 64);
-						ImGui::Text("%s", directory.path().filename().string().c_str());
-					}
-					else
-					{
-						EUI::ImageButton(m_FileTexture, 64);
-						ImGui::Text("%s", directory.path().filename().string().c_str());
-					}
-				}
-				ImGui::EndGroup();
+			ImGui::PushFont(m_BigIconFont);
+			const float BIG_ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_FOLDER).x;
+			ImGui::PopFont();
 
-				if(ImGui::GetCursorPosX() < 500)
+			static const Path basePath = AURORA_PROJECT_DIR "/Assets";
+			static Path currentPath = AURORA_PROJECT_DIR "/Assets";
+			static String searchText;
+
+			{ // Top menu
+				if(currentPath == basePath)
+					ImGui::BeginDisabled();
+
+				if(ImGui::IconButton(ICON_FA_ARROW_LEFT))
 				{
-					ImGui::SameLine();
+					currentPath = currentPath.parent_path();
 				}
-			}*/
+
+				if(currentPath == basePath)
+					ImGui::EndDisabled();
+
+				ImGui::SameLine();
+				ImGui::InputTextLabel(ICON_FA_SEARCH, searchText);
+				ImGui::Separator();
+			}
+
+			float regionAvail = ImGui::GetContentRegionAvail().x;
+			float columnSize = BIG_ICON_BASE_WIDTH + 15;
+			int columnCount = std::max(1, (int)floor(regionAvail / columnSize));
+			ImGui::Columns(columnCount, "resource-columns", false);
+
+			auto drawFile = [](const std::filesystem::directory_entry& directoryIt) -> void
+			{
+				const Path& path = directoryIt.path();
+
+				String fileName = path.filename().string();
+
+				ImGui::PushID(fileName.c_str());
+
+				ImGui::PushFont(m_BigIconFont);
+				if(directoryIt.is_directory())
+				{
+					ImGui::Selectable(ICON_FA_FOLDER);
+					if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0))
+					{
+						currentPath = path;
+					}
+				}
+				else
+				{
+					if(ImGui::Selectable(ICON_FA_FILE))
+					{
+
+					}
+				}
+				ImGui::PopFont();
+
+				ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
+
+				ImGui::NextColumn();
+
+				ImGui::PopID();
+			};
+
+			for (auto& directoryIt : std::filesystem::directory_iterator(currentPath))
+			{
+				if(directoryIt.is_directory())
+					drawFile(directoryIt);
+			}
+
+			for (auto& directoryIt : std::filesystem::directory_iterator(currentPath))
+			{
+				if(!directoryIt.is_directory())
+					drawFile(directoryIt);
+			}
+
+			ImGui::Columns(1);
 		}
 		ImGui::End();
 
@@ -496,7 +559,7 @@ namespace Aurora
 
 			if(m_FlySpeed < 0) m_FlySpeed = 0;
 
-			if(CameraComponent* camera = *AppContext::GetScene()->GetComponents<CameraComponent>().begin())
+			if(auto* camera = AppContext::GetScene()->FindFirstComponent<CameraComponent>())
 			{
 				camera->GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
 				camera->GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
