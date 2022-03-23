@@ -8,6 +8,7 @@
 #include <Aurora/Core/Vector.hpp>
 #include <Aurora/Core/Library.hpp>
 #include <Aurora/RmlUI/RmlUI.hpp>
+#include <RmlUi/Core/DataModelHandle.h>
 
 namespace Aurora
 {
@@ -29,9 +30,9 @@ namespace Aurora
 		virtual void BeginDestroy() {}
 		virtual void Tick(double delta) {}
 
-		Rml::ElementDocument* LoadAndRegisterDocument(const String& path);
+		Rml::ElementDocument* LoadAndRegisterDocument(const String& path, bool defaultVisible = true);
 
-		Rml::ElementDocument* RegisterDocument(Rml::ElementDocument* document)
+		Rml::ElementDocument* RegisterDocument(Rml::ElementDocument* document, bool defaultVisible = true)
 		{
 			m_Documents.push_back(document);
 
@@ -39,7 +40,7 @@ namespace Aurora
 			{
 				document->Hide();
 			}
-			else if(!document->IsVisible() && m_Enabled)
+			else if(!document->IsVisible() && m_Enabled && defaultVisible)
 			{
 				document->Show();
 			}
@@ -58,6 +59,16 @@ namespace Aurora
 		{
 			VectorRemove(m_Documents, document);
 			document = RegisterDocument(GEngine->GetRmlUI()->ReloadDocument(document));
+		}
+
+		inline static Rml::DataModelConstructor CreateDataModel(const String& name)
+		{
+			return GEngine->GetRmlUI()->GetRmlContext()->CreateDataModel(name);
+		}
+
+		inline static bool RemoveDataModel(const String& name)
+		{
+			return GEngine->GetRmlUI()->GetRmlContext()->RemoveDataModel(name);
 		}
 
 		[[nodiscard]] inline UIID_t GetID() const { return m_ID; }

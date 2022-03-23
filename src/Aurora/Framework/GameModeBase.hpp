@@ -84,6 +84,14 @@ namespace Aurora
 				}
 			}
 		}
+
+		void TickUI(double delta)
+		{
+			for (auto &item : m_UserInterfaces)
+			{
+				item.second->Tick(delta);
+			}
+		}
 	private:
 		inline static void DestroyUI(UserInterface* ui)
 		{

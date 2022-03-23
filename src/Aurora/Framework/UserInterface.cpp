@@ -4,7 +4,7 @@
 
 namespace Aurora
 {
-	Rml::ElementDocument *UserInterface::LoadAndRegisterDocument(const String& path)
+	Rml::ElementDocument *UserInterface::LoadAndRegisterDocument(const String& path, bool defaultVisible)
 	{
 		Rml::ElementDocument* doc = GEngine->GetRmlUI()->LoadDocument(path);
 
@@ -13,7 +13,7 @@ namespace Aurora
 			return nullptr;
 		}
 
-		return RegisterDocument(doc);
+		return RegisterDocument(doc, defaultVisible);
 	}
 
 	void UserInterface::Destroy()
