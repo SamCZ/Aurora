@@ -96,6 +96,7 @@ namespace Aurora
 
 	void FileWatcher::Update()
 	{
+#if defined(_WIN32)
 		std::lock_guard<std::mutex> lock(m_Mutex);
 
 		while(!m_ThreadEvents.empty())
@@ -104,5 +105,6 @@ namespace Aurora
 			m_ThreadEvents.pop();
 			m_EventListeners.Invoke(std::forward<EFileAction>(e.Action), e.FilePath);
 		}
+#endif
 	}
 }
