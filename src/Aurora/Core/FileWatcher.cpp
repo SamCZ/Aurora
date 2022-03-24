@@ -3,6 +3,7 @@
 
 namespace Aurora
 {
+#if defined(_WIN32)
 	static void wcharToCharArray(const WCHAR* src, char* dest, int len) {
 		for (unsigned int i = 0; i < len / sizeof(WCHAR); ++i) {
 			dest[i] = static_cast<char>(src[i]);
@@ -59,9 +60,11 @@ namespace Aurora
 			}
 		}
 	};
+	#endif
 
 	FileWatcher::FileWatcher(Path path) : m_WatchingPath(std::move(path))
 	{
+#if defined(_WIN32)
 		m_handle = CreateFile(m_WatchingPath.string().c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, nullptr);
 		if (m_handle == INVALID_HANDLE_VALUE)
 		{
@@ -79,14 +82,16 @@ namespace Aurora
 				SleepEx(INFINITE, TRUE);
 			}
 		});
-		AU_LOG_INFO("Main id:  ", std::this_thread::get_id());
+#endif
 	}
 
 	FileWatcher::~FileWatcher()
 	{
+#if defined(_WIN32)
 		CancelIoEx(m_handle, nullptr);
 		CloseHandle(m_handle);
 		m_Thread.join();
+#endif
 	}
 
 	void FileWatcher::Update()
