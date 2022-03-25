@@ -138,6 +138,7 @@ if(NOT TARGET assimp)
     set(ASSIMP_BUILD_COLLADA_IMPORTER OFF)
     set(ASSIMP_BUILD_DRACO OFF)
     set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+    set(ASSIMP_INSTALL OFF)
     add_subdirectory(assimp)
 
     set_property(TARGET assimp PROPERTY FOLDER "GameLib")

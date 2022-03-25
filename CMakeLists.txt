@@ -5,10 +5,16 @@ set(CMAKE_CXX_STANDARD 20)
 option(AU_GPU_PROFILE "GPU profiling" ON)
 option(AU_CPU_PROFILE "CPU profiling" OFF)
 option(AU_IN_PROJECT_ASSETS "Adds Aurora search paths from source code" ON)
+option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_TESTING "Build tests" ON)
 
 SET(RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls and binaries")
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for binaries")
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls")
+
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls and binaries")
+#SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for binaries")
+#SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls")
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(lib)
@@ -67,4 +73,10 @@ endif()
 target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui TracyClient assimp stb_utils)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
-add_subdirectory(examples)
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

@@ -133,7 +133,7 @@ class BaseAppContext : public AppContext
 	void Init() override
 	{
 		SetGameContext<GameContext>();
-		SwitchGameMode<TestGameMode>();
+		SwitchGameModeImmediately<TestGameMode>()->BeginPlay();
 
 		sceneRenderer = new SceneRenderer();
 

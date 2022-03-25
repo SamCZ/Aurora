@@ -31,6 +31,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_C_COMPILER=gcc-10 \
             -DBUILD_TESTING=OFF \
+            -DBUILD_EXAMPLES=ON \
             -DNEWTON_BUILD_SANDBOX_DEMOS=OFF \
             -DCMAKE_CXX_COMPILER=g++-10 \
             -DASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT=OFF \
@@ -68,6 +69,7 @@ jobs:
           cmake "${env:GITHUB_WORKSPACE}" `
             -DCMAKE_BUILD_TYPE=Release `
             -DBUILD_TESTING=OFF `
+            -DBUILD_EXAMPLES=ON `
             -DNEWTON_BUILD_SANDBOX_DEMOS=OFF `
             -DCMAKE_C_COMPILER=gcc-10 `
             -DCMAKE_CXX_COMPILER=g++-10 `
