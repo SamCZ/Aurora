@@ -171,9 +171,9 @@ class BaseAppContext : public AppContext
 		sceneRenderer = new SceneRenderer();
 
 		AssimpModelLoader modelLoader;
-		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/sponza.fbx"));
+		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/socuwan.fbx"));
 
-		testActor = GetScene()->SpawnActor<Actor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.0001f));
+		testActor = GetScene()->SpawnActor<Actor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.01f));
 		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
 		if (importedData)
@@ -197,7 +197,7 @@ class BaseAppContext : public AppContext
 
 		for (int i = 0; i < 10; ++i)
 		{
-			Actor* testActor2 = GetScene()->SpawnActor<TestActor>("Box", Vector3(i * 2.2f, 0, 0), {}, Vector3(0.01f));
+			Actor* testActor2 = GetScene()->SpawnActor<TestActor>("Box", Vector3(i * 2.2f, 0, -20), {}, Vector3(0.01f));
 
 			if(importedData2)
 			{
@@ -238,7 +238,7 @@ int main()
 	windowDefinition.Height = 720;
 	windowDefinition.HasOSWindowBorder = true;
 	windowDefinition.Maximized = true;
-	windowDefinition.Title = "BaseApp";
+	windowDefinition.Title = "Aurora - BaseApp";
 
 	Aurora::AuroraEngine engine;
 	engine.Init(new BaseAppContext(), windowDefinition, true);

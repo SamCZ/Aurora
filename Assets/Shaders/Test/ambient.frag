@@ -14,5 +14,9 @@ void main()
 {
 	vec3 N = normalize(Normal);
 	FragColor = texture(Texture, TexCoord);
+
+	if(FragColor.a < 0.5)
+		discard;
+
 	FragColor.rgb *= max(dot(N, vec3(0.5, 0.5, 0.5)), 0.2);
 }
