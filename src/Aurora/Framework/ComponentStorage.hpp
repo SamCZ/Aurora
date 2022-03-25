@@ -47,36 +47,32 @@ namespace Aurora
 	class ComponentView
 	{
 	private:
-		std::vector<std::uintptr_t>* m_DataVector;
+		std::vector<std::uintptr_t> m_DataVector;
 	public:
-		ComponentView() : m_DataVector(nullptr) {}
+		ComponentView() : m_DataVector() {}
 
-		explicit ComponentView(std::vector<std::uintptr_t>* data) : m_DataVector(data)
+		explicit ComponentView(std::vector<std::uintptr_t> data) : m_DataVector(std::move(data))
 		{
-			if (m_DataVector->empty())
-			{
-				m_DataVector = nullptr;
-			}
 		}
 
 		ComponentIterator<T> begin()
 		{
-			if(!m_DataVector)
+			if(m_DataVector.empty())
 			{
 				return ComponentIterator<T>(nullptr, 0);
 			}
 
-			return ComponentIterator<T>(reinterpret_cast<T**>(&(*m_DataVector)[0]), 0);
+			return ComponentIterator<T>(reinterpret_cast<T**>(&m_DataVector[0]), 0);
 		}
 
 		ComponentIterator<T> end()
 		{
-			if(!m_DataVector)
+			if(m_DataVector.empty())
 			{
 				return ComponentIterator<T>(nullptr, 0);
 			}
 
-			return ComponentIterator<T>(nullptr, m_DataVector->size());
+			return ComponentIterator<T>(nullptr, m_DataVector.size());
 		}
 	};
 
@@ -85,7 +81,6 @@ namespace Aurora
 	private:
 		robin_hood::unordered_map<TTypeID, Aum*> m_ComponentMemory;
 		robin_hood::unordered_map<TTypeID, std::vector<std::uintptr_t>> m_ComponentPointers;
-		std::vector<std::uintptr_t> m_FindComponentCache;
 	public:
 		~ComponentStorage()
 		{
@@ -144,7 +139,7 @@ namespace Aurora
 		template<typename T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
 		ComponentView<T> GetComponents()
 		{
-			m_FindComponentCache.clear();
+			std::vector<std::uintptr_t> foundComponents;
 
 			for(auto& it : m_ComponentPointers)
 			{
@@ -154,11 +149,11 @@ namespace Aurora
 
 				if(typeBase->HasType(T::TypeID()))
 				{
-					m_FindComponentCache.insert(m_FindComponentCache.end(), it.second.begin(), it.second.end());
+					foundComponents.insert(foundComponents.end(), it.second.begin(), it.second.end());
 				}
 			}
 
-			return ComponentView<T>(&m_FindComponentCache);
+			return ComponentView<T>(std::forward<std::vector<std::uintptr_t>>(foundComponents));
 		}
 
 		template<typename T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
