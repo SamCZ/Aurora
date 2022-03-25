@@ -12,7 +12,7 @@ namespace Aurora
 	class CameraComponent;
 	struct RenderViewPort;
 
-	class GameViewportPanel
+	class GameViewportWindow
 	{
 	private:
 		MainEditorPanel* m_MainPanel;
@@ -28,8 +28,8 @@ namespace Aurora
 		ImGuizmo::MODE m_CurrentManipulatorMode;
 		float m_FlySpeed;
 	public:
-		explicit GameViewportPanel(MainEditorPanel* m_MainPanel);
-		~GameViewportPanel();
+		explicit GameViewportWindow(MainEditorPanel* m_MainPanel);
+		~GameViewportWindow();
 
 		void OnSceneChanged(Scene* scene);
 

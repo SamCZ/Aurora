@@ -1,4 +1,4 @@
-#include "GameViewportPanel.hpp"
+#include "GameViewportWindow.hpp"
 
 #include "Utils.hpp"
 
@@ -39,7 +39,7 @@ namespace Aurora
 		}
 	}
 
-	GameViewportPanel::GameViewportPanel(MainEditorPanel* mainEditorPanel)
+	GameViewportWindow::GameViewportWindow(MainEditorPanel* mainEditorPanel)
 		: m_MainPanel(mainEditorPanel),
 		m_MouseViewportGrabbed(false),
 		m_CurrentManipulatorOperation(ImGuizmo::OPERATION::TRANSLATE),
@@ -49,15 +49,15 @@ namespace Aurora
 		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
 		m_RenderViewPort->Resize({1270, 720});
 
-		m_SceneChangeEvent = AppContext::GetSceneChangeEmitter().BindUnique(this, &GameViewportPanel::OnSceneChanged);
+		m_SceneChangeEvent = AppContext::GetSceneChangeEmitter().BindUnique(this, &GameViewportWindow::OnSceneChanged);
 	}
 
-	GameViewportPanel::~GameViewportPanel()
+	GameViewportWindow::~GameViewportWindow()
 	{
 
 	}
 
-	void GameViewportPanel::OnSceneChanged(Scene* scene)
+	void GameViewportWindow::OnSceneChanged(Scene* scene)
 	{
 		if(m_CurrentScene == scene)
 			return;
@@ -72,7 +72,7 @@ namespace Aurora
 		m_EditorCamera->SetPerspective(70.0f, 0.1f, 2000.0f);
 	}
 
-	void GameViewportPanel::Update(double delta)
+	void GameViewportWindow::Update(double delta)
 	{
 		if(m_MouseViewportGrabbed && !ImGui::GetIO().MouseDown[1])
 		{
@@ -186,7 +186,7 @@ namespace Aurora
 		HandleEditorCamera(delta);
 	}
 
-	void GameViewportPanel::HandleEditorCamera(double delta)
+	void GameViewportWindow::HandleEditorCamera(double delta)
 	{
 		bool playMode = m_MainPanel->IsPlayMode();
 
@@ -239,7 +239,7 @@ namespace Aurora
 		}
 	}
 
-	CameraComponent *GameViewportPanel::GetCurrentCamera()
+	CameraComponent *GameViewportWindow::GetCurrentCamera()
 	{
 		if (!m_MainPanel->IsPlayMode())
 		{
