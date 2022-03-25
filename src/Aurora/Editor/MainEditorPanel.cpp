@@ -23,18 +23,12 @@ namespace Aurora
 
 	MainEditorPanel::MainEditorPanel()
 	: m_SelectedActor(nullptr),
-		m_MouseViewportGrabbed(false),
 		m_SelectedComponent(nullptr),
-		m_CurrentManipulatorOperation(ImGuizmo::OPERATION::TRANSLATE),
-		m_CurrentManipulatorMode(ImGuizmo::MODE::WORLD),
-		m_IsPlayMode(true),
-		m_FlySpeed(10.0f)
+		m_IsPlayMode(false)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
+		m_GameViewportWindow = std::make_shared<GameViewportPanel>(this);
 		Logger::AddSinkPtr(m_ConsoleWindow);
-
-		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
-		m_RenderViewPort->Resize({1270, 720});
 
 		SetEditorStyle();
 
@@ -60,29 +54,6 @@ namespace Aurora
 			return ICON_FA_LAYER_GROUP;
 
 		return ICON_FA_QUESTION;
-	}
-
-	void SwitchToPlayMode()
-	{
-		// TODO: Copy scene here
-		GameModeBase* gameModeBase = AppContext::GetGameModeBase();
-
-		if(gameModeBase)
-		{
-			gameModeBase->BeginPlay();
-		}
-	}
-
-	void SwitchToStopMode()
-	{
-		// TODO: Replace scene here
-
-		GameModeBase* gameModeBase = AppContext::GetGameModeBase();
-
-		if(gameModeBase)
-		{
-			gameModeBase->BeginDestroy();
-		}
 	}
 
 	void MainEditorPanel::Update(double delta)
@@ -297,119 +268,6 @@ namespace Aurora
 		ImGui::End();
 		ImGui::PopStyleVar();
 
-		if(m_MouseViewportGrabbed && !ImGui::GetIO().MouseDown[1])
-		{
-			m_MouseViewportGrabbed = false;
-			GEngine->GetWindow()->SetCursorMode(ECursorMode::Normal);
-		}
-
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-		ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_MenuBar);
-		{
-			if(ImGui::IsWindowMouseDown(1))
-			{
-				m_MouseViewportGrabbed = true;
-				GEngine->GetWindow()->SetCursorMode(ECursorMode::Disabled);
-			}
-
-			if (ImGui::BeginMenuBar())
-			{
-				ImGui::Spacing();
-				if (ImGui::BeginMenu("Play", !m_IsPlayMode))
-				{
-					m_IsPlayMode = true;
-					SwitchToPlayMode();
-					ImGui::EndMenu();
-				}
-				if (ImGui::BeginMenu("Stop", m_IsPlayMode))
-				{
-					m_IsPlayMode = false;
-					SwitchToStopMode();
-					ImGui::EndMenu();
-				}
-
-				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 0.25f));
-				ImGui::Text("Fly speed: %.1fx", m_FlySpeed);
-				ImGui::PopStyleColor();
-
-				ImGui::EndMenuBar();
-			}
-
-			ImVec2 avail_size = ImGui::GetContentRegionAvail();
-			ImVec2 dragDelta = ImGui::GetMouseDragDelta();
-			Vector2i viewPortSize = {avail_size.x, avail_size.y};
-
-			if((dragDelta.x == 0 && dragDelta.y == 0) || !m_RenderViewPort->Initialized())
-			{
-				m_RenderViewPort->Resize(viewPortSize);
-			}
-
-
-			ImGuiViewport* imwp = ImGui::GetWindowViewport();
-			// This outputs coords without the title bar... so we need to subtract that from CursorPos
-			// because all positions in imgui are without the windows title bar
-			// TODO: Create some helper function for this
-			ImVec2 pos = ImGui::GetCurrentWindow()->DC.CursorPos;
-			ImVec2 offset = imwp->Pos;
-			// Sets proxy for rmlui cursor pos
-			m_RenderViewPort->ProxyLocation = {pos.x - offset.x, pos.y - offset.y };
-
-			EUI::Image(m_RenderViewPort->Target, (Vector2)m_RenderViewPort->ViewPort);
-
-			//Manipulator
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(
-				ImGui::GetWindowPos().x,
-				ImGui::GetWindowPos().y,
-				ImGui::GetWindowWidth(),
-				ImGui::GetWindowHeight()
-				);
-
-			if(CameraComponent* camera = AppContext::GetScene()->FindFirstComponent<CameraComponent>())
-			{
-				if(!ImGui::GetIO().WantTextInput && !m_MouseViewportGrabbed)
-				{
-					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
-					{
-						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::SCALE;
-					}
-
-					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_R)])
-					{
-						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::ROTATE;
-					}
-
-					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_T)])
-					{
-						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::TRANSLATE;
-					}
-				}
-
-
-
-				Matrix4 proj = camera->GetProjectionMatrix();
-				Matrix4 view = camera->GetViewMatrix();
-
-				if(m_SelectedActor || m_SelectedComponent)
-				{
-					Matrix4 transform = m_SelectedActor ? m_SelectedActor->GetRootComponent()->GetTransformationMatrix() : m_SelectedComponent->GetTransformationMatrix();
-
-					bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), m_CurrentManipulatorOperation, m_CurrentManipulatorMode, glm::value_ptr(transform));
-					if(manipulated)
-					{
-						if(m_SelectedActor)
-							m_SelectedActor->GetRootComponent()->GetTransform().SetFromMatrix(transform);
-						else
-						if(m_SelectedComponent)
-							m_SelectedComponent->GetTransform().SetFromMatrix(transform);
-					}
-				}
-
-				//ImGuizmo::ViewManipulate(glm::value_ptr(view), 1, ImGui::GetWindowPos() + ImVec2(ImGui::GetWindowWidth() - 128, 30), ImVec2(128, 128), 0);
-			}
-		}
-		ImGui::End();
-		ImGui::PopStyleVar();
 
 		ImGui::Begin("Resources");
 		{
@@ -496,6 +354,7 @@ namespace Aurora
 		ImGui::End();
 
 		m_ConsoleWindow->Draw();
+		m_GameViewportWindow->Update(delta);
 
 		ImGui::Begin("Properties");
 		{
@@ -546,45 +405,6 @@ namespace Aurora
 		{
 			m_SelectedActor->Destroy();
 			m_SelectedActor = nullptr;
-		}
-
-		// FIXME: This is just for debugging purposes
-		if (m_MouseViewportGrabbed)
-		{
-			m_FlySpeed += ImGui::GetIO().MouseWheel;
-
-			if(m_FlySpeed < 0) m_FlySpeed = 0;
-
-			if(auto* camera = AppContext::GetScene()->FindFirstComponent<CameraComponent>())
-			{
-				camera->GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
-				camera->GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
-
-				camera->GetTransform().Rotation.x = glm::clamp(camera->GetTransform().Rotation.x, -90.0f, 90.0f);
-				camera->GetTransform().Rotation.y = fmod(camera->GetTransform().Rotation.y, 360.0f);
-
-				Matrix4 transform = camera->GetTransformationMatrix();
-
-				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
-				{
-					camera->GetTransform().Location -= Vector3(transform[2]) * (float)delta * m_FlySpeed;
-				}
-
-				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
-				{
-					camera->GetTransform().Location += Vector3(transform[2]) * (float)delta * m_FlySpeed;
-				}
-
-				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
-				{
-					camera->GetTransform().Location -= Vector3(transform[0]) * (float)delta * m_FlySpeed;
-				}
-
-				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
-				{
-					camera->GetTransform().Location += Vector3(transform[0]) * (float)delta * m_FlySpeed;
-				}
-			}
 		}
 	}
 
@@ -687,5 +507,33 @@ namespace Aurora
 
 			ImGui::EndMainMenuBar();
 		}
+	}
+
+	bool MainEditorPanel::GetSelectedObjectTransform(Matrix4 &matrix) const
+	{
+		if(!IsAnySceneObjectSelected())
+			return false;
+
+		if(m_SelectedActor)
+			matrix = m_SelectedActor->GetTransform().GetTransform();
+
+		if(m_SelectedComponent)
+			matrix = m_SelectedComponent->GetTransform().GetTransform();
+
+		return true;
+	}
+
+	bool MainEditorPanel::SetSelectedObjectTransform(const Matrix4 &matrix)
+	{
+		if(!IsAnySceneObjectSelected())
+			return false;
+
+		if(m_SelectedActor)
+			m_SelectedActor->GetTransform().SetFromMatrix(matrix);
+
+		if(m_SelectedComponent)
+			m_SelectedComponent->GetTransform().SetFromMatrix(matrix);
+
+		return true;
 	}
 }

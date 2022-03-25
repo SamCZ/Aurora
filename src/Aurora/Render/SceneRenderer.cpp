@@ -38,7 +38,7 @@ namespace Aurora
 
 		for (CameraComponent* camera : scene->GetComponents<CameraComponent>())
 		{
-			if (!camera->IsActive())
+			if (!camera->GetOwner()->IsActive() || !camera->IsActive())
 				continue;
 
 			RenderViewPort* viewPort = camera->GetViewPort();

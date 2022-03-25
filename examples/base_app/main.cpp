@@ -62,6 +62,7 @@ public:
 	void InitializeComponents() override
 	{
 		m_Camera = CameraComponent::Cast(GetRootComponent());
+		m_Camera->SetName("Camera");
 		m_Camera->SetViewPort(GEngine->GetViewPortManager()->Get());
 		m_Camera->SetPerspective(75, 0.1f, 2000.0f);
 	}

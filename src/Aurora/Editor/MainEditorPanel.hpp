@@ -1,11 +1,10 @@
 #pragma once
 
 #include "ConsoleWindow.hpp"
+#include "GameViewportPanel.hpp"
 
+#include "Aurora/Core/Vector.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
-
-#include "Aurora/Tools/ImGuiHelper.hpp"
-#include "Aurora/Tools/ImGuizmo.h"
 
 namespace Aurora
 {
@@ -15,19 +14,12 @@ namespace Aurora
 	{
 	private:
 		std::shared_ptr<ConsoleWindow> m_ConsoleWindow;
-		RenderViewPort* m_RenderViewPort;
+		std::shared_ptr<GameViewportPanel> m_GameViewportWindow;
 
 		class Actor* m_SelectedActor;
 		class SceneComponent* m_SelectedComponent;
 
-		bool m_MouseViewportGrabbed;
-
-		ImGuizmo::OPERATION m_CurrentManipulatorOperation;
-		ImGuizmo::MODE m_CurrentManipulatorMode;
-
 		bool m_IsPlayMode;
-
-		float m_FlySpeed;
 	public:
 		MainEditorPanel();
 		~MainEditorPanel();
@@ -38,5 +30,10 @@ namespace Aurora
 		void DrawMainMenu();
 
 		[[nodiscard]] bool IsPlayMode() const { return m_IsPlayMode; }
+		void SetPlayMode(bool playMode) { m_IsPlayMode = playMode; }
+
+		[[nodiscard]] inline bool IsAnySceneObjectSelected() const { return m_SelectedActor || m_SelectedComponent; }
+		[[nodiscard]] bool GetSelectedObjectTransform(Matrix4& matrix) const;
+		[[nodiscard]] bool SetSelectedObjectTransform(const Matrix4& matrix);
 	};
 }

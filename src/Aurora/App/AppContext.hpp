@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include "Aurora/Core/Delegate.hpp"
 #include "Aurora/Logger/Logger.hpp"
 #include "Aurora/Framework/GameModeBase.hpp"
 #include "Aurora/Framework/Scene.hpp"
@@ -31,6 +32,7 @@ namespace Aurora
 		static GameModeBase* m_GameMode;
 		static GameModeBase* m_GameModeToSwitch;
 		static bool m_EditorMode;
+		static EventEmitter<Scene*> m_SceneChangeEmitter;
 	public:
 		friend class AuroraEngine;
 
@@ -56,6 +58,8 @@ namespace Aurora
 		virtual void RenderVg() {}
 
 		virtual SceneRenderer* GetSceneRenderer() { return nullptr; }
+
+		static EventEmitter<Scene*>& GetSceneChangeEmitter() { return m_SceneChangeEmitter; }
 
 		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameContext, T>::value>::type* = nullptr>
 		static T* SetGameContext(Args... args)
@@ -91,7 +95,9 @@ namespace Aurora
 			}
 
 			// TODO: Think if this should be the place that resets scene
-			m_GameContext->m_Scene = new Scene();
+			Scene* newScene = new Scene();
+			m_GameContext->m_Scene = newScene;
+			m_SceneChangeEmitter.Invoke(std::forward<Scene*>(newScene));
 
 			m_GameMode = gameModeBase;
 

@@ -54,6 +54,7 @@ namespace Aurora
 	GameContext* AppContext::m_GameContext = nullptr;
 	GameModeBase* AppContext::m_GameMode = nullptr;
 	GameModeBase* AppContext::m_GameModeToSwitch = nullptr;
+	EventEmitter<Scene*> AppContext::m_SceneChangeEmitter;
 	bool AppContext::m_EditorMode = false;
 
 	ImFont* m_ImGuiDefaultFont = nullptr;
