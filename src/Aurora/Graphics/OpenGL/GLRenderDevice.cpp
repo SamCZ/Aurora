@@ -660,7 +660,7 @@ namespace Aurora
 
 			if (desc.IsDMA)
 			{
-				glBufferStorage(bindTarget, desc.ByteSize, data, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+				glBufferStorage(bindTarget, desc.ByteSize, nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 				mappedData = (uint8_t*)glMapBufferRange(bindTarget, 0, desc.ByteSize, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 				if(data) memcpy(mappedData, data, desc.ByteSize);
 			}
