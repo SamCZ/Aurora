@@ -42,6 +42,11 @@ namespace Aurora
 			return {Width, Height};
 		}
 
+		explicit operator glm::ivec2() const
+		{
+			return {Width, Height};
+		}
+
 		explicit operator glm::vec4() const
 		{
 			return {X, Y, Width, Height};

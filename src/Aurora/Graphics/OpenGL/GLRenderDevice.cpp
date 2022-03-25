@@ -720,7 +720,7 @@ namespace Aurora
 		glBufferSubData(glBuffer->BindTarget(), offset, GLsizeiptr(dataSize), data);
 		CHECK_GL_ERROR();
 
-		glBindBuffer(glBuffer->BindTarget(), GL_NONE);
+		//glBindBuffer(glBuffer->BindTarget(), GL_NONE);
 
 		m_FrameRenderStatistics.BufferWrites++;
 	}

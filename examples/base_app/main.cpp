@@ -37,7 +37,7 @@ public:
 
 	void InitializeComponents() override
 	{
-		GetRootComponent()->GetTransform().Location.x = 10;
+
 	}
 
 	void Tick(double delta) override
@@ -65,6 +65,39 @@ public:
 		m_Camera->SetName("Camera");
 		m_Camera->SetViewPort(GEngine->GetViewPortManager()->Get());
 		m_Camera->SetPerspective(75, 0.1f, 2000.0f);
+	}
+
+	void Tick(double delta) override
+	{
+		float m_FlySpeed = 10.0f;
+
+		GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
+		GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
+
+		GetTransform().Rotation.x = glm::clamp(GetTransform().Rotation.x, -90.0f, 90.0f);
+		GetTransform().Rotation.y = fmod(GetTransform().Rotation.y, 360.0f);
+
+		Matrix4 transform = m_Camera->GetTransformationMatrix();
+
+		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
+		{
+			GetTransform().Location -= Vector3(transform[2]) * (float)delta * m_FlySpeed;
+		}
+
+		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
+		{
+			GetTransform().Location += Vector3(transform[2]) * (float)delta * m_FlySpeed;
+		}
+
+		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
+		{
+			GetTransform().Location -= Vector3(transform[0]) * (float)delta * m_FlySpeed;
+		}
+
+		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
+		{
+			GetTransform().Location += Vector3(transform[0]) * (float)delta * m_FlySpeed;
+		}
 	}
 
 	CameraComponent* GetCamera()
@@ -124,7 +157,6 @@ class BaseAppContext : public AppContext
 	SceneRenderer* sceneRenderer;
 
 	Actor* testActor = nullptr;
-	Actor* testActor2 = nullptr;
 
 	~BaseAppContext() override
 	{
@@ -159,21 +191,24 @@ class BaseAppContext : public AppContext
 			}
 		}
 
-		testActor2 = GetScene()->SpawnActor<TestActor>("Box", Vector3(0, 0, 0), {}, Vector3(0.01f));
 		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"));
-		if(importedData2)
+		auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+		auto matInstance = matDef->CreateInstance();
+
+		for (int i = 0; i < 10; ++i)
 		{
-			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+			Actor* testActor2 = GetScene()->SpawnActor<TestActor>("Box", Vector3(i * 2.2f, 0, 0), {}, Vector3(0.01f));
 
-			auto* meshComponent = testActor2->AddComponent<StaticMeshComponent>("Mesh");
-			meshComponent->SetMesh(importedData2.Mesh);
-
-			auto matInstance = matDef->CreateInstance();
-
-			for (auto &item : meshComponent->GetMaterialSet())
+			if(importedData2)
 			{
-				//matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
-				item.second.Material = matInstance;
+				auto* meshComponent = testActor2->AddComponent<StaticMeshComponent>("Mesh");
+				meshComponent->SetMesh(importedData2.Mesh);
+
+				for (auto &item : meshComponent->GetMaterialSet())
+				{
+					//matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
+					item.second.Material = matInstance;
+				}
 			}
 		}
 

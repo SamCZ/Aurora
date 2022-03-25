@@ -12,6 +12,7 @@ namespace Aurora
 {
 	class Scene;
 	class FFrustum;
+	class CameraComponent;
 
 	constexpr uint32_t MaxInstances = 1024;
 
@@ -45,12 +46,13 @@ namespace Aurora
 
 	using RenderSet = std::vector<ModelContext>;
 
-	typedef EventEmitter<PassType_t, DrawCallState&, const FFrustum&, const glm::mat4&> PassRenderEventEmitter;
+	typedef EventEmitter<PassType_t, DrawCallState&, CameraComponent*> PassRenderEventEmitter;
 
 	class AU_API SceneRenderer
 	{
 	private:
 		Buffer_ptr m_BaseVsDataBuffer;
+		Buffer_ptr m_InstancesBuffer;
 
 		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
 
@@ -58,7 +60,11 @@ namespace Aurora
 	public:
 		SceneRenderer();
 
+		void PrepareVisibleEntities(Scene* scene, CameraComponent* camera);
+		void FillRenderSet(RenderSet& renderSet);
+
 		void Render(Scene* scene);
+		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet);
 
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }
 	};
