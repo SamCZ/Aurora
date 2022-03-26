@@ -62,6 +62,8 @@ namespace Aurora
 
 	void ResourceWindow::Update(double delta)
 	{
+		LoadTexturePreviews();
+
 		ImGui::Begin("Resources");
 		{
 			ImGui::PushFont(m_BigIconFont);
@@ -133,20 +135,27 @@ namespace Aurora
 				int columnCount = std::max(1, (int)floor(regionAvail / columnSize));
 				ImGui::Columns(columnCount, "resource-columns", false);
 
-				auto drawFile = [this](const std::filesystem::directory_entry& directoryIt) -> void
+				auto drawFile = [this, BIG_ICON_BASE_WIDTH](const std::filesystem::directory_entry& directoryIt) -> void
 				{
 					const Path& path = directoryIt.path();
 
-					String fileName = path.filename().string();
+					if(ResourceManager::IsIgnoredFileType(path))
+						return;
+
+					String fileName = path.filename().stem().string();
 
 					ImGui::PushID(fileName.c_str());
 
-					ImGui::PushFont(m_BigIconFont);
-					ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-					ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+
 					if(directoryIt.is_directory())
 					{
+						ImGui::PushFont(m_BigIconFont);
+						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+						ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
 						ImGui::Selectable(ICON_FA_FOLDER);
+						ImGui::PopStyleVar(2);
+						ImGui::PopFont();
+
 						if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0))
 						{
 							m_CurrentPath = path;
@@ -154,13 +163,44 @@ namespace Aurora
 					}
 					else
 					{
-						if(ImGui::Selectable(ICON_FA_FILE))
-						{
+						bool selected = false;
 
+						ImGui::PushFont(m_BigIconFont);
+						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+						ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+
+						if (ResourceManager::IsFileType(path, FT_IMAGE))
+						{
+							auto it = m_TextureIcons.find(path);
+
+							if (it != m_TextureIcons.end())
+							{
+								selected = EUI::ImageButton(it->second, BIG_ICON_BASE_WIDTH);
+							}
+							else
+							{
+								if (!VectorContains(m_TextureIconsToLoad, path))
+								{
+									m_TextureIconsToLoad.push_back(path);
+								}
+
+								selected = ImGui::Selectable(ICON_FA_IMAGE);
+							}
 						}
+						else
+						{
+							selected = ImGui::Selectable(ICON_FA_FILE);
+						}
+
+						ImGui::PopStyleVar(2);
+						ImGui::PopFont();
+
+						if (ImGui::IsItemHovered())
+						{
+							ImGui::SetTooltip("%s", path.filename().string().c_str());
+						}
+
 					}
-					ImGui::PopStyleVar(2);
-					ImGui::PopFont();
 
 					ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
 
@@ -200,5 +240,29 @@ namespace Aurora
 
 			GEngine->GetResourceManager()->ImportAsset(item, m_CurrentPath);
 		}
+	}
+
+	void ResourceWindow::LoadTexturePreviews()
+	{
+		if (m_TextureIconsToLoad.empty())
+			return;
+
+		ImGui::PushFont(m_BigIconFont);
+		const float BIG_ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_FOLDER).x;
+		ImGui::PopFont();
+
+		Path path = m_TextureIconsToLoad[0];
+		m_TextureIconsToLoad.erase(m_TextureIconsToLoad.begin());
+
+		TextureLoadDesc loadDesc = {
+			.Width = static_cast<int>(BIG_ICON_BASE_WIDTH),
+			.Height = static_cast<int>(BIG_ICON_BASE_WIDTH),
+			.GenerateMips = false,
+			.GenerateMetaFile = false,
+			.ForceSRGB = false,
+		};
+
+		Texture_ptr texture_icon = GEngine->GetResourceManager()->LoadTexture(path, loadDesc);
+		m_TextureIcons[path] = texture_icon;
 	}
 }

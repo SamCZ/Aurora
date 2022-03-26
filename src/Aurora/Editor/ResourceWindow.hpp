@@ -1,9 +1,11 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Delegate.hpp"
+#include "Aurora/Graphics/Base/Texture.hpp"
 
 #include "Aurora/Tools/ImGuiHelper.hpp"
 #include "Aurora/Tools/ImGuizmo.h"
@@ -23,6 +25,9 @@ namespace Aurora
 		Path m_CurrentBasePath;
 
 		int m_TreeId;
+
+		std::map<Path, Texture_ptr> m_TextureIcons;
+		std::vector<Path> m_TextureIconsToLoad;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 
@@ -32,5 +37,6 @@ namespace Aurora
 
 	private:
 		void DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath);
+		void LoadTexturePreviews();
 	};
 }
