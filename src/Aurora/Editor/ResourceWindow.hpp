@@ -21,6 +21,8 @@ namespace Aurora
 
 		Path m_CurrentPath;
 		Path m_CurrentBasePath;
+
+		int m_TreeId;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 

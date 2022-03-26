@@ -14,7 +14,7 @@
 namespace Aurora
 {
 	ResourceWindow::ResourceWindow(MainEditorPanel* mainEditorPanel)
-	: m_MainPanel(mainEditorPanel), m_CurrentPath(AURORA_PROJECT_DIR "/Assets"), m_CurrentBasePath(AURORA_PROJECT_DIR)
+	: m_MainPanel(mainEditorPanel), m_CurrentPath(AURORA_PROJECT_DIR "/Assets"), m_CurrentBasePath(AURORA_PROJECT_DIR), m_TreeId(0)
 	{
 		static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
 		ImFontConfig config;
@@ -28,6 +28,7 @@ namespace Aurora
 
 	void ResourceWindow::DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath)
 	{
+		ImGui::PushID(m_TreeId++);
 		for (auto& directoryIt : std::filesystem::directory_iterator(rootPath))
 		{
 			Path path = directoryIt.path();
@@ -56,6 +57,7 @@ namespace Aurora
 				ImGui::TreePop();
 			}
 		}
+		ImGui::PopID();
 	}
 
 	void ResourceWindow::Update(double delta)
@@ -74,13 +76,18 @@ namespace Aurora
 
 			//EUI::Splitter(true, 0.0f, &sizeFirst.x, &sizeSecond.y, 0, 50);
 
+			m_TreeId = 0;
+
 			ImGui::BeginChild("resource-file-list", sizeFirst);
 			{
 				for (const auto& path : GEngine->GetResourceManager()->GetFileSearchPaths())
 				{
 					String name = path.filename().string();
+					String id = name;
+					id.append("##header_");
+					id.append(name);
 
-					bool open = ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
+					bool open = ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
 					if (ImGui::IsItemClicked())
 					{
 						m_CurrentPath = path / "Assets";
