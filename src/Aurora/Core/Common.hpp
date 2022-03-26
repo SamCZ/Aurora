@@ -57,7 +57,7 @@ inline bool VectorRemove(std::vector<T>& vector, T data)
 }
 
 template<typename T>
-inline bool VectorContains(std::vector<T>& vector, T&& data)
+inline bool VectorContains(std::vector<T>& vector, T data)
 {
 	return std::find(vector.begin(), vector.end(), data) != vector.end();
 }
