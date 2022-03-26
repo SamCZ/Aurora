@@ -19,26 +19,18 @@ ImVec2 operator+(const ImVec2& left, const ImVec2& right)
 
 namespace Aurora
 {
-	ImFont* m_BigIconFont;
-
 	MainEditorPanel::MainEditorPanel()
 	: m_SelectedActor(nullptr),
 		m_SelectedComponent(nullptr),
 		m_IsPlayMode(false),
-		m_SceneHierarchyWindow(this)
+		m_SceneHierarchyWindow(this),
+		m_ResourceWindow(this)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		m_GameViewportWindow = std::make_shared<GameViewportWindow>(this);
 		Logger::AddSinkPtr(m_ConsoleWindow);
 
 		SetEditorStyle();
-
-		static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
-		ImFontConfig config;
-		config.MergeMode = false;
-		//config.PixelSnapH = true;
-		auto iconFontData = new std::vector<uint8>(GEngine->GetResourceManager()->LoadFile("Assets/Fonts/fa-solid-900.ttf"));
-		m_BigIconFont = ImGui::GetIO().Fonts->AddFontFromMemoryTTF(iconFontData->data(), iconFontData->size(), 56, &config, icons_ranges);
 	}
 
 	MainEditorPanel::~MainEditorPanel() = default;
@@ -49,90 +41,7 @@ namespace Aurora
 		BeginDockSpace();
 
 		m_SceneHierarchyWindow.Update(delta);
-
-		ImGui::Begin("Resources");
-		{
-			ImGui::PushFont(m_BigIconFont);
-			const float BIG_ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_FOLDER).x;
-			ImGui::PopFont();
-
-			static const Path basePath = AURORA_PROJECT_DIR "/Assets";
-			static Path currentPath = AURORA_PROJECT_DIR "/Assets";
-			static String searchText;
-
-			{ // Top menu
-				if(currentPath == basePath)
-					ImGui::BeginDisabled();
-
-				if(ImGui::IconButton(ICON_FA_ARROW_LEFT))
-				{
-					currentPath = currentPath.parent_path();
-				}
-
-				if(currentPath == basePath)
-					ImGui::EndDisabled();
-
-				ImGui::SameLine();
-				ImGui::InputTextLabel(ICON_FA_SEARCH, searchText);
-				ImGui::Separator();
-			}
-
-			float regionAvail = ImGui::GetContentRegionAvail().x;
-			float columnSize = BIG_ICON_BASE_WIDTH + 15;
-			int columnCount = std::max(1, (int)floor(regionAvail / columnSize));
-			ImGui::Columns(columnCount, "resource-columns", false);
-
-			auto drawFile = [](const std::filesystem::directory_entry& directoryIt) -> void
-			{
-				const Path& path = directoryIt.path();
-
-				String fileName = path.filename().string();
-
-				ImGui::PushID(fileName.c_str());
-
-				ImGui::PushFont(m_BigIconFont);
-				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
-				if(directoryIt.is_directory())
-				{
-					ImGui::Selectable(ICON_FA_FOLDER);
-					if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0))
-					{
-						currentPath = path;
-					}
-				}
-				else
-				{
-					if(ImGui::Selectable(ICON_FA_FILE))
-					{
-
-					}
-				}
-				ImGui::PopStyleVar(2);
-				ImGui::PopFont();
-
-				ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
-
-				ImGui::NextColumn();
-
-				ImGui::PopID();
-			};
-
-			for (auto& directoryIt : std::filesystem::directory_iterator(currentPath))
-			{
-				if(directoryIt.is_directory())
-					drawFile(directoryIt);
-			}
-
-			for (auto& directoryIt : std::filesystem::directory_iterator(currentPath))
-			{
-				if(!directoryIt.is_directory())
-					drawFile(directoryIt);
-			}
-
-			ImGui::Columns(1);
-		}
-		ImGui::End();
+		m_ResourceWindow.Update(delta);
 
 		m_ConsoleWindow->Draw();
 		m_GameViewportWindow->Update(delta);

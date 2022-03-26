@@ -35,6 +35,24 @@ namespace Aurora
 
 	}
 
+	void SceneHierarchyWindow::LookAtObject(Actor* actor)
+	{
+		CameraComponent* editorCamera = m_MainEditorPanel->GetGameViewPortWindow()->GetEditorCamera();
+
+		// Check if not clicking on same actor
+		if(editorCamera->GetOwner() == actor)
+			return;
+
+		Vector3 actorWorldLocation = actor->GetRootComponent()->GetTransform().Location;
+
+		float cameraDistance = 3.0f; // TODO:: Compute this by the actor mesh size (if present)
+
+		Vector3 newCameraLocation = actorWorldLocation + cameraDistance;
+
+		editorCamera->GetTransform().Location = newCameraLocation;
+		editorCamera->GetTransform().Rotation = Vector3(-35, 45, 0);
+	}
+
 	void SceneHierarchyWindow::Update(double delta)
 	{
 		static int ID = 0;
@@ -207,9 +225,16 @@ namespace Aurora
 					ImGui::AlignTextToFramePadding();
 					bool open = ImGui::TreeNodeEx(actor->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow | flags);
 
-					if(ImGui::IsItemClicked())
+					bool itemClicked = ImGui::IsItemClicked();
+
+					if (itemClicked)
 					{
 						m_MainEditorPanel->SetSelectedActor(actor);
+					}
+
+					if (itemClicked && ImGui::IsMouseDoubleClicked(0) && !m_MainEditorPanel->IsPlayMode())
+					{
+						LookAtObject(actor);
 					}
 
 					ImGui::TableNextColumn();

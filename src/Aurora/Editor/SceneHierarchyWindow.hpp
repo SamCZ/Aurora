@@ -6,6 +6,7 @@
 namespace Aurora
 {
 	class MainEditorPanel;
+	class Actor;
 
 	class SceneHierarchyWindow
 	{
@@ -15,5 +16,8 @@ namespace Aurora
 		explicit SceneHierarchyWindow(MainEditorPanel* mainEditorPanel);
 
 		void Update(double delta);
+
+	private:
+		void LookAtObject(Actor* actor);
 	};
 }

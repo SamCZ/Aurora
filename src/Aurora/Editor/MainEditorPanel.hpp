@@ -3,6 +3,7 @@
 #include "ConsoleWindow.hpp"
 #include "GameViewportWindow.hpp"
 #include "SceneHierarchyWindow.hpp"
+#include "ResourceWindow.hpp"
 
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
@@ -19,6 +20,7 @@ namespace Aurora
 		std::shared_ptr<ConsoleWindow> m_ConsoleWindow;
 		std::shared_ptr<GameViewportWindow> m_GameViewportWindow;
 		SceneHierarchyWindow m_SceneHierarchyWindow;
+		ResourceWindow m_ResourceWindow;
 
 		Actor* m_SelectedActor;
 		SceneComponent* m_SelectedComponent;
@@ -61,5 +63,7 @@ namespace Aurora
 		[[nodiscard]] inline bool IsAnySceneObjectSelected() const { return m_SelectedActor || m_SelectedComponent; }
 		[[nodiscard]] bool GetSelectedObjectTransform(Matrix4& matrix) const;
 		[[nodiscard]] bool SetSelectedObjectTransform(const Matrix4& matrix);
+
+		GameViewportWindow* GetGameViewPortWindow() { return m_GameViewportWindow.get(); }
 	};
 }

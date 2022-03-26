@@ -534,4 +534,9 @@ namespace Aurora
 
 		return json;
 	}
+
+	void ResourceManager::ImportAsset(const Path& from, const Path& to)
+	{
+		AU_LOG_WARNING("Import no implemented ! From: ", from.string(), ", To: ", to.string());
+	}
 }

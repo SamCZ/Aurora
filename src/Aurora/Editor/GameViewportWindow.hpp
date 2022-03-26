@@ -37,5 +37,6 @@ namespace Aurora
 		void HandleEditorCamera(double delta);
 
 		CameraComponent* GetCurrentCamera();
+		CameraComponent* GetEditorCamera() { return m_EditorCamera; }
 	};
 }

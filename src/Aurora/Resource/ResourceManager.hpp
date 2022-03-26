@@ -58,5 +58,9 @@ namespace Aurora
 		std::shared_ptr<Material> LoadMaterial(const Path& path);
 
 		nlohmann::json GetOrCreateMetaForPath(const Path& path, const nlohmann::json& defaults);
+
+		void ImportAsset(const Path& from, const Path& to);
+
+		[[nodiscard]] inline const std::vector<Path>& GetFileSearchPaths() const { return m_FileSearchPaths; }
 	};
 }

@@ -29,11 +29,11 @@ namespace Aurora
 	class AU_API ISystemWindow
 	{
 	protected:
-		EventEmitter<std::vector<Path>> m_DropFileEmitter;
+		EventEmitter<const std::vector<Path>&> m_DropFileEmitter;
 	public:
 		virtual ~ISystemWindow() = default;
 
-		EventEmitter<std::vector<Path>>& GetFileDropEmitter() { return m_DropFileEmitter; }
+		EventEmitter<const std::vector<Path>&>& GetFileDropEmitter() { return m_DropFileEmitter; }
 	public:
 		virtual void Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<ISystemWindow>& parentWindow) = 0;
 
