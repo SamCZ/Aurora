@@ -12,6 +12,20 @@
 
 namespace Aurora
 {
+	enum FileType
+	{
+		FT_IMAGE = BITF(0)
+	};
+
+	struct TextureLoadDesc
+	{
+		int Width = 0;
+		int Height = 0;
+		bool GenerateMips = true;
+		bool GenerateMetaFile = true;
+		bool ForceSRGB = false;
+	};
+
 	class AU_API ResourceManager
 	{
 	private:
@@ -51,7 +65,7 @@ namespace Aurora
 
 		bool LoadJson(const Path &path, nlohmann::json &json);
 
-		Texture_ptr LoadTexture(const Path& path);
+		Texture_ptr LoadTexture(const Path& path, const TextureLoadDesc& loadDesc = TextureLoadDesc());
 		Texture_ptr LoadLutTexture(const Path& path);
 
 		const MaterialDefinition_ptr& GetOrLoadMaterialDefinition(const Path& path);
@@ -62,5 +76,8 @@ namespace Aurora
 		void ImportAsset(const Path& from, const Path& to);
 
 		[[nodiscard]] inline const std::vector<Path>& GetFileSearchPaths() const { return m_FileSearchPaths; }
+
+		static bool IsFileType(const Path& path, FileType types);
+		static bool IsIgnoredFileType(const Path& path);
 	};
 }

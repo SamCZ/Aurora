@@ -307,7 +307,7 @@ namespace Aurora
 		return true;
 	}
 
-	Texture_ptr ResourceManager::LoadTexture(const Path &path)
+	Texture_ptr ResourceManager::LoadTexture(const Path &path, const TextureLoadDesc& loadDesc)
 	{
 		if (m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
 			return m_LoadedTextures[path];
@@ -355,24 +355,44 @@ namespace Aurora
 			return nullptr;
 		}
 
-		Path realPath;
-		if (!fromAssetPackage && GetRealPath(path, realPath))
+		// Resize if requested
+		if (loadDesc.Width > 0 && loadDesc.Height > 0)
 		{
-			nlohmann::json metaFile = GetOrCreateMetaForPath(realPath, {{"srgb", true}});
+			auto* resizedData = new uint8_t[loadDesc.Width * loadDesc.Height * channels_in_file];
+			stbir_resize_uint8(data, width, height, 0, resizedData, loadDesc.Width, loadDesc.Height, 0, channels_in_file);
+			stbi_image_free(data);
 
-			if (metaFile.contains("srgb"))
+			width = loadDesc.Width;
+			height = loadDesc.Height;
+			data = resizedData;
+		}
+
+		if (loadDesc.GenerateMetaFile)
+		{
+			Path realPath;
+			if (!fromAssetPackage && GetRealPath(path, realPath))
 			{
-				if (metaFile["srgb"].get<bool>() && format == GraphicsFormat::RGBA8_UNORM)
+				nlohmann::json metaFile = GetOrCreateMetaForPath(realPath, {{"srgb", true}});
+
+				if (metaFile.contains("srgb"))
 				{
-					format = GraphicsFormat::SRGBA8_UNORM;
+					if (metaFile["srgb"].get<bool>() && format == GraphicsFormat::RGBA8_UNORM)
+					{
+						format = GraphicsFormat::SRGBA8_UNORM;
+					}
 				}
 			}
+		}
+
+		if (loadDesc.ForceSRGB)
+		{
+			format = GraphicsFormat::SRGBA8_UNORM;
 		}
 
 		TextureDesc textureDesc;
 		textureDesc.Width = width;
 		textureDesc.Height = height;
-		textureDesc.MipLevels = textureDesc.GetMipLevelCount();
+		textureDesc.MipLevels = loadDesc.GenerateMips ? textureDesc.GetMipLevelCount() : 1;
 		textureDesc.ImageFormat = format;
 		textureDesc.Name = path.string();
 		textureDesc.UseAsBindless = false;
@@ -538,5 +558,50 @@ namespace Aurora
 	void ResourceManager::ImportAsset(const Path& from, const Path& to)
 	{
 		AU_LOG_WARNING("Import no implemented ! From: ", from.string(), ", To: ", to.string());
+	}
+
+	static const char* ImageExtensions[] = {
+		".png",
+		".jpg",
+		".jpeg",
+		".bmp",
+		".tga"
+	};
+
+	bool ResourceManager::IsFileType(const Path &path, FileType types)
+	{
+		Path extension = path.extension();
+
+		if((types & FT_IMAGE))
+		{
+			for (const auto& item : ImageExtensions)
+			{
+				if (item == extension)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	static const char* IgnoredFileExtensions[] = {
+		".meta"
+	};
+
+	bool ResourceManager::IsIgnoredFileType(const Path &path)
+	{
+		Path extension = path.extension();
+
+		for (const auto& item : IgnoredFileExtensions)
+		{
+			if (item == extension)
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
