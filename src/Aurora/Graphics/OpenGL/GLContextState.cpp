@@ -23,8 +23,8 @@ namespace Aurora
 		glUseProgram(0);
 		//glBindProgramPipeline(0);
 		//glBindVertexArray(0);
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		//glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 		m_ActiveTexture = -1;
 		m_LastShaderHandle = -1;

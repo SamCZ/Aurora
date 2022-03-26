@@ -99,6 +99,11 @@ namespace Aurora
 		glfwTerminate();
 	}
 
+    void GLFWErrorCallback(int errorCode, const char* description)
+    {
+        AU_LOG_FATAL("GLFW Error ", errorCode, ": ", description);
+    }
+
 	void AuroraEngine::Init(AppContext* appContext, WindowDefinition& windowDefinition, bool editor)
 	{
 		au_assert(appContext != nullptr);
@@ -110,7 +115,12 @@ namespace Aurora
 
 		LocalProfileScope::Reset("GameInit");
 
-		glfwInit();
+		if(!glfwInit())
+        {
+            AU_LOG_FATAL("Could not initialize GLFW!");
+        }
+
+        glfwSetErrorCallback(GLFWErrorCallback);
 
 		GEngine = new AuroraContext();
 		GEngine->m_AppContext = appContext;

@@ -200,7 +200,7 @@ namespace Aurora
 
 			std::stringstream ss;
 
-			ss << "#version 450 core\n";
+			ss << "#version 430 core\n";
 			ss << "layout(std140) uniform;\n";
 
 			switch (type)
