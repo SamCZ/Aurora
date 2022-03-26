@@ -348,7 +348,7 @@ namespace Aurora
 
 		glfwSetCharModsCallback(m_WindowHandle, GLFWWindow::CharModsCallback);
 
-
+		glfwSetDropCallback(m_WindowHandle, GLFWWindow::OnFileDropListener);
 
 		glDisable(GL_FRAMEBUFFER_SRGB);
 	}
@@ -682,5 +682,24 @@ namespace Aurora
 		GEngine->GetRmlUI()->GetRmlContext()->ProcessTextInput(str);
 #endif
 	}
-}
+
+	 void GLFWWindow::OnFileDropListener(GLFWwindow* rawWindow, int count, const char** paths)
+	 {
+		if (!count)
+		{
+			return;
+		}
+
+		 auto* window = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(rawWindow));
+
+		std::vector<Path> files;
+
+		 for (int i = 0; i < count; ++i)
+		 {
+			 files.emplace_back(paths[i]);
+		 }
+
+		 window->m_DropFileEmitter.Invoke(std::forward<std::vector<Path>>(files));
+	 }
+ }
 #endif

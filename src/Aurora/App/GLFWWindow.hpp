@@ -16,9 +16,7 @@ namespace Aurora
 		friend class Input::IManager;
 	private:
 		String m_Title;
-#if GLFW_ENABLED
 		GLFWwindow* m_WindowHandle;
-#endif
 		bool m_Focused;
 		ECursorMode m_CursorMode;
 		bool m_Vsync;
@@ -100,9 +98,9 @@ namespace Aurora
 		[[nodiscard]] bool IsFocused() const override;
 
 		[[nodiscard]] bool IsShouldClose() const override;
-#if GLFW_ENABLED
+
 		virtual GLFWwindow* GetWindowHandle();
-#endif
+
 		void SetCursorMode(const ECursorMode& mode) override;
 		[[nodiscard]] const ECursorMode& GetCursorMode() const override;
 
@@ -127,7 +125,6 @@ namespace Aurora
 			return m_SwapChain;
 		}
 	private:
-#if GLFW_ENABLED
 		static void OnResizeCallback(GLFWwindow* rawWindow,int width,int height);
 		static void OnFocusCallback(GLFWwindow* rawWindow, int focused);
 		static void OnKeyCallback(GLFWwindow* rawWindow, int key, int scancode, int action, int mods);
@@ -135,7 +132,7 @@ namespace Aurora
 		static void OnMouseScrollCallback(GLFWwindow* rawWindow, double xOffset, double yOffset);
 		static void OnMouseButtonCallback(GLFWwindow* rawWindow, int button, int action, int mods);
 		static void CharModsCallback(GLFWwindow* rawWindow, uint32_t codepoint, int mods);
-#endif
+		static void OnFileDropListener(GLFWwindow* rawWindow, int count, const char** paths);
 	};
 }
 #endif
