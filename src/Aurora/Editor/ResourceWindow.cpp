@@ -14,7 +14,7 @@
 namespace Aurora
 {
 	ResourceWindow::ResourceWindow(MainEditorPanel* mainEditorPanel)
-	: m_MainPanel(mainEditorPanel), m_CurrentPath(AURORA_PROJECT_DIR "/Assets")
+	: m_MainPanel(mainEditorPanel), m_CurrentPath(AURORA_PROJECT_DIR "/Assets"), m_CurrentBasePath(AURORA_PROJECT_DIR)
 	{
 		static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
 		ImFontConfig config;
@@ -26,7 +26,7 @@ namespace Aurora
 		m_FileDropEvent = GEngine->GetWindow()->GetFileDropEmitter().BindUnique(this, &ResourceWindow::OnFilesDrop);
 	}
 
-	void ResourceWindow::DrawPathDirectoryNodes(const Path& rootPath)
+	void ResourceWindow::DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath)
 	{
 		for (auto& directoryIt : std::filesystem::directory_iterator(rootPath))
 		{
@@ -47,11 +47,12 @@ namespace Aurora
 			if(ImGui::IsItemClicked())
 			{
 				m_CurrentPath = path;
+				m_CurrentBasePath = basePath;
 			}
 
 			if(open)
 			{
-				DrawPathDirectoryNodes(path);
+				DrawPathDirectoryNodes(path, basePath);
 				ImGui::TreePop();
 			}
 		}
@@ -83,11 +84,12 @@ namespace Aurora
 					if (ImGui::IsItemClicked())
 					{
 						m_CurrentPath = path / "Assets";
+						m_CurrentBasePath = path;
 					}
 
 					if (open)
 					{
-						DrawPathDirectoryNodes(path / "Assets");
+						DrawPathDirectoryNodes(path / "Assets", path);
 					}
 				}
 			}
@@ -114,6 +116,10 @@ namespace Aurora
 					ImGui::InputTextLabel(ICON_FA_SEARCH, searchText);
 					ImGui::Separator();
 				}
+
+				Path currentRelative = std::filesystem::relative(m_CurrentPath, m_CurrentBasePath);
+
+				ImGui::Text("%s", currentRelative.string().c_str());
 
 				float regionAvail = ImGui::GetContentRegionAvail().x;
 				float columnSize = BIG_ICON_BASE_WIDTH + 15;

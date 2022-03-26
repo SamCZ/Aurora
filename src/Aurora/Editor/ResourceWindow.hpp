@@ -20,6 +20,7 @@ namespace Aurora
 		UniqueEvent m_FileDropEvent;
 
 		Path m_CurrentPath;
+		Path m_CurrentBasePath;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 
@@ -28,6 +29,6 @@ namespace Aurora
 		void OnFilesDrop(const std::vector<Path>& files);
 
 	private:
-		void DrawPathDirectoryNodes(const Path& rootPath);
+		void DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath);
 	};
 }
