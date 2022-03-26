@@ -125,5 +125,7 @@ namespace Aurora
 		}
 
 		static Scene* GetScene() { return m_GameContext->GetScene(); }
+
+		static bool IsEditorMode() { return m_EditorMode; }
 	};
 }
