@@ -15,7 +15,7 @@
 			"type": "Vector",
 			"widget": "Color",
 			"in_shader_name": "u_Color",
-			"value": [255, 255, 1, 255]
+			"value": [1, 1, 1, 1]
 		}
 	],
 	"macros": {}

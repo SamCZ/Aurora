@@ -96,7 +96,7 @@ namespace Aurora
 					MNumericValDesc numericValDesc;
 					numericValDesc.Name = name;
 					numericValDesc.InShaderName = in_shader_name;
-					numericValDesc.InShaderNameID = Hash_djb2(name.c_str());
+					numericValDesc.InShaderNameID = Hash_djb2(in_shader_name.c_str());
 					numericValDesc.Numbers = value.get<std::vector<float>>();
 
 					if(descOut.Variables.contains(numericValDesc.InShaderNameID))

@@ -193,7 +193,6 @@ class BaseAppContext : public AppContext
 
 		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"));
 		auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
-		auto matInstance = matDef->CreateInstance();
 
 		for (int i = 0; i < 10; ++i)
 		{
@@ -207,7 +206,7 @@ class BaseAppContext : public AppContext
 				for (auto &item : meshComponent->GetMaterialSet())
 				{
 					//matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
-					item.second.Material = matInstance;
+					item.second.Material = matDef;
 				}
 			}
 		}

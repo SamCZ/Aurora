@@ -101,7 +101,7 @@ namespace Aurora
 						int componentCount = var.Size / sizeof(float);
 						uint8* varMemory = m_CurrentMaterial->GetVariableMemory(it.first, var.Size);
 
-						ImGui::DragScalarN(var.Name.c_str(), ImGuiDataType_Float, varMemory, componentCount);
+						ImGui::DragScalarN(var.Name.c_str(), ImGuiDataType_Float, varMemory, componentCount, 0.01f);
 					}
 				}
 
