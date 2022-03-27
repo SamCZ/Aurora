@@ -13,8 +13,6 @@
 
 #include "MainEditorPanel.hpp"
 
-#include <climits>
-
 namespace Aurora
 {
 	ResourceWindow::ResourceWindow(MainEditorPanel* mainEditorPanel)
@@ -246,7 +244,7 @@ namespace Aurora
 			if (ImGui::BeginDragDropSource())
 			{
 				String strPath = path.string();
-				char rawPath[PATH_MAX];
+				char rawPath[260];
 				strcpy(rawPath, strPath.c_str());
 
 				ImGui::SetDragDropPayload("RESOURCE_PATH", rawPath, strPath.length()+1);
