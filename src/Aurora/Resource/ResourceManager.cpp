@@ -400,7 +400,7 @@ namespace Aurora
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = loadDesc.GenerateMips ? textureDesc.GetMipLevelCount() : 1;
-		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
+		textureDesc.ImageFormat = format;
 		textureDesc.Name = path.string();
 		textureDesc.UseAsBindless = false;
 		texture = m_RenderDevice->CreateTexture(textureDesc, nullptr);
