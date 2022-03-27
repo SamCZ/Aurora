@@ -369,9 +369,11 @@ namespace Aurora
 
 	void ResourceWindow::OpenAsset(const Path &path)
 	{
-		if (ResourceManager::IsFileType(path, static_cast<FileType>(FT_MATERIAL_DEF | FT_MATERIAL_INS)))
+		Path relativePath = std::filesystem::relative(path, m_CurrentBasePath);
+
+		if (ResourceManager::IsFileType(relativePath, static_cast<FileType>(FT_MATERIAL_DEF | FT_MATERIAL_INS)))
 		{
-			m_MainPanel->GetMaterialWindow()->Open(path);
+			m_MainPanel->GetMaterialWindow()->Open(relativePath);
 		}
 	}
 
