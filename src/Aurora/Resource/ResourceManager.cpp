@@ -309,7 +309,7 @@ namespace Aurora
 
 	Texture_ptr ResourceManager::LoadTexture(const Path &path, const TextureLoadDesc& loadDesc)
 	{
-		if (m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
+		if (!loadDesc.DoNotCache && m_LoadedTextures.find(path) != m_LoadedTextures.end()) {
 			return m_LoadedTextures[path];
 		}
 
@@ -426,7 +426,8 @@ namespace Aurora
 
 		stbi_image_free(data);
 
-		m_LoadedTextures[path] = texture;
+		if (!loadDesc.DoNotCache)
+			m_LoadedTextures[path] = texture;
 
 		return texture;
 	}
@@ -562,9 +563,31 @@ namespace Aurora
 		return json;
 	}
 
-	void ResourceManager::ImportAsset(const Path& from, const Path& to)
+	void ResourceManager::ImportAsset(const Path& from, const Path& toFolder)
 	{
-		AU_LOG_WARNING("Import no implemented ! From: ", from.string(), ", To: ", to.string());
+		Path destPath = toFolder / from.filename();
+
+		if (IsFileType(from, FT_IMAGE))
+		{
+			std::error_code errorCode;
+			std::filesystem::copy(from, destPath, errorCode);
+
+			if (errorCode)
+			{
+				AU_LOG_WARNING("Could not import asset: ", from.string(), ", reason: ", errorCode.message());
+				return;
+			}
+
+			// TODO: Create meta file
+			return;
+		}
+
+		AU_LOG_WARNING("Import no implemented ! From: ", from.string(), ", To: ", toFolder.string());
+	}
+
+	void ResourceManager::UnloadAsset(const Path& path)
+	{
+		// TODO: Unload asset
 	}
 
 	static const char* ImageExtensions[] = {

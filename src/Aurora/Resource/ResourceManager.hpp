@@ -24,6 +24,7 @@ namespace Aurora
 		bool GenerateMips = true;
 		bool GenerateMetaFile = true;
 		bool ForceSRGB = false;
+		bool DoNotCache = false;
 	};
 
 	class AU_API ResourceManager
@@ -74,6 +75,7 @@ namespace Aurora
 		nlohmann::json GetOrCreateMetaForPath(const Path& path, const nlohmann::json& defaults);
 
 		void ImportAsset(const Path& from, const Path& to);
+		void UnloadAsset(const Path& path);
 
 		[[nodiscard]] inline const std::vector<Path>& GetFileSearchPaths() const { return m_FileSearchPaths; }
 

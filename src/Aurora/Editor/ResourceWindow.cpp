@@ -62,7 +62,32 @@ namespace Aurora
 
 	void ResourceWindow::Update(double delta)
 	{
+		(void) delta;
+
 		LoadTexturePreviews();
+
+		{ // Delete queued files
+			while (!m_FilesToDelete.empty())
+			{
+				Path path = m_FilesToDelete.front();
+				m_FilesToDelete.pop();
+
+				// Just to ensure that path exists if somehow managed to add it to queue twice
+				if (!std::filesystem::exists(path))
+				{
+					continue;
+				}
+
+				if (ResourceManager::IsFileType(path, FT_IMAGE))
+				{
+					m_TextureIcons.erase(path);
+					VectorRemove(m_TextureIconsToLoad, path);
+				}
+
+				GEngine->GetResourceManager()->UnloadAsset(path);
+				std::filesystem::remove(path);
+			}
+		}
 
 		ImGui::Begin("Resources");
 		{
@@ -200,6 +225,23 @@ namespace Aurora
 							ImGui::SetTooltip("%s", path.filename().string().c_str());
 						}
 
+						if(ImGui::IsItemClicked(ImGuiMouseButton_Right))
+						{
+							ImGui::OpenPopup("resourceManagerContextMenu");
+						}
+
+						if (ImGui::BeginPopup("resourceManagerContextMenu"))
+						{
+							ImGui::Text("File menu");
+							ImGui::Separator();
+							if (ImGui::Button("Delete"))
+							{
+								QueueDeleteFile(path);
+							}
+
+							ImGui::EndPopup();
+						}
+
 					}
 
 					ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
@@ -260,9 +302,15 @@ namespace Aurora
 			.GenerateMips = false,
 			.GenerateMetaFile = false,
 			.ForceSRGB = false,
+			.DoNotCache = true
 		};
 
 		Texture_ptr texture_icon = GEngine->GetResourceManager()->LoadTexture(path, loadDesc);
 		m_TextureIcons[path] = texture_icon;
+	}
+
+	void ResourceWindow::QueueDeleteFile(const Path& path)
+	{
+		m_FilesToDelete.push(path);
 	}
 }

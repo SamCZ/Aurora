@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <queue>
 
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Delegate.hpp"
@@ -28,6 +29,7 @@ namespace Aurora
 
 		std::map<Path, Texture_ptr> m_TextureIcons;
 		std::vector<Path> m_TextureIconsToLoad;
+		std::queue<Path> m_FilesToDelete;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 
@@ -38,5 +40,6 @@ namespace Aurora
 	private:
 		void DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath);
 		void LoadTexturePreviews();
+		void QueueDeleteFile(const Path& path);
 	};
 }
