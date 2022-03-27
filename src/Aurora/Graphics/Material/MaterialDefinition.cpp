@@ -7,29 +7,6 @@
 
 namespace Aurora
 {
-	uint64_t HashShaderMacros(const ShaderMacros& macros)
-	{
-		std::stringstream ss;
-
-		for(const auto& it : macros)
-		{
-			ss << it.first;
-			ss << it.second;
-		}
-
-		return std::hash<String>()(ss.str());
-	}
-
-	std::ostream& operator<<(std::ostream &out, ShaderMacros const& macros)
-	{
-		for(const auto& it : macros)
-		{
-			out << "#define " << it.first << " " << it.second << std::endl;
-		}
-
-		return out;
-	}
-
 	///////////////////////////////////// PassShaderDef /////////////////////////////////////
 
 	MaterialPassDef::MaterialPassDef(ShaderProgramDesc shaderProgramDesc, MaterialPassState passState)
@@ -76,7 +53,7 @@ namespace Aurora
 	}
 
 	MaterialDefinition::MaterialDefinition(const MaterialDefinitionDesc& desc)
-		: m_Name(desc.Name), m_Path(desc.Filepath), m_PassDefs(desc.ShaderPasses.size())
+		: Material(this), m_Name(desc.Name), m_Path(desc.Filepath), m_PassDefs(desc.ShaderPasses.size())
 	{
 		size_t memorySize = 0;
 
@@ -195,7 +172,7 @@ namespace Aurora
 			}
 		}
 
-		m_BaseUniformData.resize(memorySize);
+		m_UniformData.resize(memorySize);
 
 		// Write defaults
 		for(auto& pair : defaultsToWrite)
@@ -204,7 +181,7 @@ namespace Aurora
 			size_t size = std::get<1>(pair);
 			const std::vector<float>& values = std::get<2>(pair);
 
-			std::memcpy(m_BaseUniformData.data() + offset, values.data(), size);
+			std::memcpy(m_UniformData.data() + offset, values.data(), size);
 		}
 	}
 
@@ -243,7 +220,7 @@ namespace Aurora
 
 	std::shared_ptr<Material> MaterialDefinition::CreateInstance(const MaterialOverrides &overrides)
 	{
-		auto mat = std::make_shared<Material>(this);
+		auto mat = std::make_shared<Material>(this, true);
 		AddRef(mat);
 		return mat;
 	}

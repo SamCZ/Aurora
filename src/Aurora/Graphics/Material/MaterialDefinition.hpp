@@ -8,95 +8,12 @@
 #include "Aurora/Core/Hash.hpp"
 #include "Aurora/Tools/robin_hood.h"
 
-#include "Aurora/Graphics/Base/ShaderBase.hpp"
-#include "Aurora/Graphics/Base/Texture.hpp"
-#include "Aurora/Graphics/Base/Sampler.hpp"
-#include "Aurora/Graphics/Base/RasterState.hpp"
-#include "Aurora/Graphics/Base/BlendState.hpp"
-#include "Aurora/Graphics/Base/FDepthStencilState.hpp"
+#include "Material.hpp"
 
 #include "../PassType.hpp"
 
 namespace Aurora
 {
-	class Material;
-
-	class MMacro
-	{
-	private:
-		String Name;
-	};
-
-	class MMSwitchMacro
-	{
-
-	};
-
-	struct MNumericValDesc
-	{
-		String Name;
-		String InShaderName;
-		TTypeID InShaderNameID;
-		String Widget; // TODO: Change to enum
-		std::vector<float> Numbers;
-
-		[[nodiscard]] inline size_t MemorySize() const
-		{
-			return Numbers.size() * sizeof(float);
-		}
-	};
-
-	struct MTextureVar
-	{
-		String Name;
-		String InShaderName;
-		Texture_ptr Texture;
-		Sampler_ptr Sampler;
-	};
-
-	struct MUniformVar
-	{
-		String Name;
-		size_t Size;
-		size_t Offset;
-
-		String ConnectedName;
-		String Widget;
-		bool Connected;
-	};
-
-	struct MUniformBlock
-	{
-		String Name;
-		TTypeID NameID;
-		size_t Size;
-		size_t Offset;
-
-		robin_hood::unordered_map<TTypeID, MUniformVar> Vars;
-
-		MUniformVar* FindVar(TTypeID id)
-		{
-			const auto& it = Vars.find(id);
-
-			if(it == Vars.end())
-				return nullptr;
-
-			return &it->second;
-		}
-	};
-
-	[[nodiscard]] AU_API uint64_t HashShaderMacros(const ShaderMacros& macros);
-	AU_API std::ostream& operator<<(std::ostream &out, ShaderMacros const& macros);
-
-	struct MaterialPassState
-	{
-		FRasterState RasterState;
-		FDepthStencilState DepthStencilState;
-		FBlendState BlendState;
-
-		MaterialPassState() : RasterState(), DepthStencilState(), BlendState() {}
-	};
-
 	class AU_API MaterialPassDef
 	{
 	private:
@@ -132,7 +49,7 @@ namespace Aurora
 	/*
 	 * Holds variable patterns, macro sets, shader permutations
 	 */
-	AU_CLASS(MaterialDefinition)
+	AU_CLASS(MaterialDefinition) : public Material
 	{
 		friend class Material;
 	private:
@@ -146,9 +63,6 @@ namespace Aurora
 		std::vector<MUniformBlock> m_UniformBlocksDef;
 		robin_hood::unordered_map<PassType_t, std::vector<uint8>> m_PassUniformBlockMapping;
 		robin_hood::unordered_map<PassType_t, std::vector<TTypeID>> m_PassTextureMapping;
-
-		std::vector<uint8> m_BaseUniformData;
-		robin_hood::unordered_map<TTypeID, MTextureVar> m_TextureVars;
 	public:
 		explicit MaterialDefinition(const MaterialDefinitionDesc& desc);
 
@@ -159,6 +73,9 @@ namespace Aurora
 
 		[[nodiscard]] inline const String& GetName() const { return m_Name; }
 		[[nodiscard]] inline const Path& GetPath() const { return m_Path; }
+
+		[[nodiscard]] const std::vector<MUniformBlock>& GetUniformBlocks() const { return m_UniformBlocksDef; }
+		[[nodiscard]] const robin_hood::unordered_map<TTypeID, MTextureVar>& GetTextureVars() const { return m_TextureVars; }
 	private:
 		MUniformBlock* FindUniformBlock(TTypeID id);
 		MUniformVar* FindUniformVar(TTypeID id, MUniformBlock** blockOut = nullptr);

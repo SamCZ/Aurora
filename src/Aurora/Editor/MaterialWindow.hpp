@@ -9,8 +9,7 @@ namespace Aurora
 	class MaterialWindow
 	{
 	private:
-		MaterialDefinition_ptr m_CurrentMaterialDef;
-		Material_ptr m_CurrentMaterialInstanceDef;
+		Material_ptr m_CurrentMaterial;
 		bool m_WindowOpened;
 		bool m_WindowNeedsFocus;
 	public:

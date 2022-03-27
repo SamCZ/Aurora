@@ -539,14 +539,37 @@ namespace Aurora
 
 	std::shared_ptr<Material> ResourceManager::LoadMaterial(const Path &path)
 	{
-		// TODO: Load overrides from file
-		/*const MaterialDefinition_ptr& materialDefinition = GetOrLoadMaterialDefinition(definitionPath);
+		auto it = m_Materials.find(path);
+
+		if (it != m_Materials.end())
+		{
+			return it->second;
+		}
+
+		nlohmann::json json;
+		if(!LoadJson(path, json))
+		{
+			AU_LOG_FATAL("Cannot load engine without test material !");
+		}
+
+		if(!json.contains("base"))
+		{
+			AU_LOG_WARNING("Material ", path.string(), " does not have base file defined !");
+			return nullptr;
+		}
+
+		Path definitionPath = json["base"].get<String>();
+
+		const MaterialDefinition_ptr& materialDefinition = GetOrLoadMaterialDefinition(definitionPath);
 
 		MaterialOverrides overrides;
+		// TODO: Load overrides from file
+
 		auto matInstance = materialDefinition->CreateInstance(overrides);
 
-		return matInstance;*/
-		return nullptr;
+		m_Materials[path] = matInstance;
+
+		return matInstance;
 	}
 
 	nlohmann::json ResourceManager::GetOrCreateMetaForPath(const Path& originalFilePath, const nlohmann::json &defaults)

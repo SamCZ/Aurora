@@ -31,11 +31,67 @@ namespace Aurora
 
 		if (ImGui::Begin("MaterialWindow", &m_WindowOpened))
 		{
-			ImGui::Text("yay");
+			MaterialDefinition* matdef = m_CurrentMaterial->GetMaterialDef();
 
-			if (m_CurrentMaterialDef)
+			ImGui::Text(matdef->GetName());
+
+			static int ID = 0;
+			ID = 0;
+
+			const auto& textures = matdef->GetTextureVars();
+
+			if (!textures.empty() && ImGui::CollapsingHeader("Textures", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				ImGui::Text(m_CurrentMaterialDef->GetName());
+				for (const auto& it : textures)
+				{
+					MTextureVar* var = m_CurrentMaterial->GetTextureVar(it.first);
+
+					if (!var->Texture)
+					{
+						ImGui::Text("%s: No Image", var->Name.c_str());
+					}
+					else
+					{
+						ImGui::Text("%s", var->Name.c_str());
+						EUI::Image(var->Texture, Vector2(55, 55), false);
+					}
+
+					if (ImGui::BeginDragDropTarget())
+					{
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE_PATH"))
+						{
+							Path filePath = (char*)payload->Data;
+
+							if (ResourceManager::IsFileType(filePath, FT_IMAGE))
+							{
+								m_CurrentMaterial->SetTexture(it.first, GEngine->GetResourceManager()->LoadTexture(filePath));
+							}
+						}
+
+						ImGui::EndDragDropTarget();
+					}
+				}
+			}
+
+			for (const auto& block : matdef->GetUniformBlocks())
+			{
+				ImGui::PushID(ID++);
+				if (ImGui::CollapsingHeader(block.Name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					//ImGui::Indent();
+					for (const auto& it : block.Vars)
+					{
+						ImGui::Text("%s", it.second.Name.c_str());
+
+						const MUniformVar& var = it.second;
+						int componentCount = var.Size / sizeof(float);
+						uint8* varMemory = m_CurrentMaterial->GetVariableMemory(it.first, var.Size);
+
+						ImGui::DragScalarN(var.Name.c_str(), ImGuiDataType_Float, varMemory, componentCount);
+					}
+				}
+
+				ImGui::PopID();
 			}
 		}
 		ImGui::End();
@@ -49,8 +105,7 @@ namespace Aurora
 		}
 		else if(ResourceManager::IsFileType(path, FT_MATERIAL_INS))
 		{
-			AU_LOG_WARNING("Opening material instances in material window is not implemented yet!");
-			//Open(GEngine->GetResourceManager()->LoadMaterial(path))
+			Open(GEngine->GetResourceManager()->LoadMaterial(path));
 		}
 		else
 		{
@@ -66,8 +121,7 @@ namespace Aurora
 			m_WindowNeedsFocus = true;
 		}
 
-		m_CurrentMaterialDef = materialDef;
-		m_CurrentMaterialInstanceDef = nullptr;
+		m_CurrentMaterial = materialDef;
 	}
 
 	void MaterialWindow::Open(const Material_ptr& materialInstance)
@@ -78,7 +132,6 @@ namespace Aurora
 			m_WindowNeedsFocus = true;
 		}
 
-		m_CurrentMaterialDef = nullptr;
-		m_CurrentMaterialInstanceDef = materialInstance;
+		m_CurrentMaterial = materialInstance;
 	}
 }

@@ -2,10 +2,40 @@
 #include "Aurora/Engine.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
 
+#include "MaterialDefinition.hpp"
+
 namespace Aurora
 {
-	Material::Material(MaterialDefinition* matDef)
-		: m_MatDef(matDef), m_UniformData(matDef->m_BaseUniformData)
+	uint64_t HashShaderMacros(const ShaderMacros& macros)
+	{
+		std::stringstream ss;
+
+		for(const auto& it : macros)
+		{
+			ss << it.first;
+			ss << it.second;
+		}
+
+		return std::hash<String>()(ss.str());
+	}
+
+	std::ostream& operator<<(std::ostream &out, ShaderMacros const& macros)
+	{
+		for(const auto& it : macros)
+		{
+			out << "#define " << it.first << " " << it.second << std::endl;
+		}
+
+		return out;
+	}
+
+	Material::Material(MaterialDefinition *matDef) : m_MatDef(matDef)
+	{
+
+	}
+
+	Material::Material(MaterialDefinition* matDef, bool instance)
+		:  m_MatDef(matDef), m_UniformData(matDef->m_UniformData)
 	{
 		for(const auto& it : m_MatDef->m_PassDefs)
 		{
@@ -13,9 +43,21 @@ namespace Aurora
 		}
 	}
 
-	Material::~Material() = default;
+	FRasterState& Material::RasterState(PassType_t pass)
+	{
+		return m_PassStates[pass].RasterState;
+	}
 
-	///////////////////////////////////// RENDER PASS /////////////////////////////////////
+	FDepthStencilState& Material::DepthStencilState(PassType_t pass)
+	{
+		return m_PassStates[pass].DepthStencilState;
+	}
+
+	FBlendState& Material::BlendState(PassType_t pass)
+	{
+		return m_PassStates[pass].BlendState;
+	}
+
 #pragma region RenderPass
 
 	void Material::BeginPass(PassType_t pass, DrawCallState& drawState)
@@ -84,24 +126,9 @@ namespace Aurora
 		GEngine->GetRenderManager()->GetUniformBufferCache().Reset();
 	}
 
-	FRasterState& Material::RasterState(PassType_t pass)
-	{
-		return m_PassStates[pass].RasterState;
-	}
-
-	FDepthStencilState& Material::DepthStencilState(PassType_t pass)
-	{
-		return m_PassStates[pass].DepthStencilState;
-	}
-
-	FBlendState& Material::BlendState(PassType_t pass)
-	{
-		return m_PassStates[pass].BlendState;
-	}
-
 	std::shared_ptr<Material> Material::Clone()
 	{
-		auto cloned = std::make_shared<Material>(m_MatDef);
+		auto cloned = std::make_shared<Material>(m_MatDef, true);
 		cloned->m_UniformData = m_UniformData;
 		cloned->m_PassStates = m_PassStates;
 		cloned->m_TextureVars = m_TextureVars;
@@ -112,8 +139,6 @@ namespace Aurora
 	}
 
 #pragma endregion RenderPass
-
-	///////////////////////////////////// BLOCKS /////////////////////////////////////
 
 	uint8* Material::GetBlockMemory(TTypeID id, size_t size)
 	{
@@ -149,7 +174,7 @@ namespace Aurora
 		return memoryStart;
 	}
 
-	uint8 *Material::GetVariableMemory(TTypeID varId, size_t size)
+	uint8* Material::GetVariableMemory(TTypeID varId, size_t size)
 	{
 		MUniformBlock* block = nullptr;
 		MUniformVar* var = m_MatDef->FindUniformVar(varId, &block);
@@ -199,7 +224,7 @@ namespace Aurora
 
 	///////////////////////////////////// TEXTURES /////////////////////////////////////
 
-	MTextureVar *Material::GetTextureVar(TTypeID varId)
+	MTextureVar* Material::GetTextureVar(TTypeID varId)
 	{
 		const auto& it = m_TextureVars.find(varId);
 

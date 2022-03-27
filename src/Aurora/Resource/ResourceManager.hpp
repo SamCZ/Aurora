@@ -41,6 +41,7 @@ namespace Aurora
 		std::map<String, Shader_ptr> m_ShaderPrograms;
 		std::map<Path, Texture_ptr> m_LoadedTextures;
 		std::map<Path, MaterialDefinition_ptr> m_MaterialDefinitions;
+		std::map<Path, Material_ptr> m_Materials;
 	public:
 		explicit ResourceManager(IRenderDevice* renderDevice);
 

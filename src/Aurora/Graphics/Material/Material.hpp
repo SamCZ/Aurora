@@ -1,13 +1,94 @@
 #pragma once
 
 #include "Aurora/Core/Types.hpp"
-#include "Aurora/Graphics/Base/IRenderDevice.hpp"
-#include "Aurora/Graphics/PassType.hpp"
+#include "Aurora/Core/Object.hpp"
+#include "Aurora/Core/String.hpp"
 
-#include "MaterialDefinition.hpp"
+#include "Aurora/Tools/robin_hood.h"
+
+#include "Aurora/Graphics/PassType.hpp"
+#include "Aurora/Graphics/Base/IRenderDevice.hpp"
 
 namespace Aurora
 {
+	class MaterialDefinition;
+
+	[[nodiscard]] AU_API uint64_t HashShaderMacros(const ShaderMacros& macros);
+	AU_API std::ostream& operator<<(std::ostream &out, ShaderMacros const& macros);
+
+	class MMacro
+	{
+	private:
+		String Name;
+	};
+
+	class MMSwitchMacro
+	{
+
+	};
+
+	struct MNumericValDesc
+	{
+		String Name;
+		String InShaderName;
+		TTypeID InShaderNameID;
+		String Widget; // TODO: Change to enum
+		std::vector<float> Numbers;
+
+		[[nodiscard]] inline size_t MemorySize() const
+		{
+			return Numbers.size() * sizeof(float);
+		}
+	};
+
+	struct MTextureVar
+	{
+		String Name;
+		String InShaderName;
+		Texture_ptr Texture;
+		Sampler_ptr Sampler;
+	};
+
+	struct MUniformVar
+	{
+		String Name;
+		size_t Size;
+		size_t Offset;
+
+		String ConnectedName;
+		String Widget;
+		bool Connected;
+	};
+
+	struct MUniformBlock
+	{
+		String Name;
+		TTypeID NameID;
+		size_t Size;
+		size_t Offset;
+
+		robin_hood::unordered_map<TTypeID, MUniformVar> Vars;
+
+		MUniformVar* FindVar(TTypeID id)
+		{
+			const auto& it = Vars.find(id);
+
+			if(it == Vars.end())
+				return nullptr;
+
+			return &it->second;
+		}
+	};
+
+	struct MaterialPassState
+	{
+		FRasterState RasterState;
+		FDepthStencilState DepthStencilState;
+		FBlendState BlendState;
+
+		MaterialPassState() : RasterState(), DepthStencilState(), BlendState() {}
+	};
+
 	typedef uint64_t SortID;
 
 	enum class RenderSortType : uint8
@@ -31,38 +112,41 @@ namespace Aurora
 
 	AU_CLASS(Material)
 	{
-	private:
+	protected:
 		MaterialDefinition* m_MatDef;
-		std::vector<uint8> m_UniformData;	// All of the uniforms blocks from passes packed in here
+
+		std::vector<uint8> m_UniformData;
+		robin_hood::unordered_map<TTypeID, MTextureVar> m_TextureVars;
+
 		ShaderMacros m_Macros; // TODO: Finish macros
 
 		robin_hood::unordered_map<PassType_t, MaterialPassState> m_PassStates;
-		robin_hood::unordered_map<TTypeID, MTextureVar> m_TextureVars;
 
 		RenderSortType m_SortType = RenderSortType::Opaque;
 		uint8_t m_Flags = MF_INSTANCED | MF_TRANSFORM;
 	public:
 		explicit Material(MaterialDefinition* matDef);
-		~Material();
+		Material(MaterialDefinition* matDef, bool instance);
 
-		void BeginPass(PassType_t pass, DrawCallState& state);
-		void EndPass(PassType_t pass, DrawCallState& state);
-
-		FRasterState& RasterState(PassType_t pass = 0);
-		FDepthStencilState& DepthStencilState(PassType_t pass = 0);
-		FBlendState& BlendState(PassType_t pass = 0);
-
-		std::shared_ptr<Material> Clone();
+		inline MaterialDefinition* GetMaterialDef() { return m_MatDef; }
 
 		void SetSortType(RenderSortType sortType) { m_SortType = sortType; }
 		[[nodiscard]] RenderSortType GetSortType() const { return m_SortType; }
 		[[nodiscard]] uint8_t GetFlags() const { return m_Flags; }
 		[[nodiscard]] bool HasFlag(uint8_t flag) const { return m_Flags & flag; }
 		void SetFlags(uint8_t flags) { m_Flags = flags; }
-		//////// Blocks ////////
-	private:
+
+		FRasterState& RasterState(PassType_t pass = 0);
+		FDepthStencilState& DepthStencilState(PassType_t pass = 0);
+		FBlendState& BlendState(PassType_t pass = 0);
+
+		void BeginPass(PassType_t pass, DrawCallState& state);
+		void EndPass(PassType_t pass, DrawCallState& state);
+
+		std::shared_ptr<Material> Clone();
+
 		uint8* GetBlockMemory(TTypeID id, size_t size);
-	public:
+
 		template<typename VarBlock>
 		bool SetVarBlock(TTypeID id, VarBlock& block)
 		{
@@ -111,7 +195,7 @@ namespace Aurora
 		}
 
 		//////// Textures ////////
-	private:
+	public:
 		MTextureVar* GetTextureVar(TTypeID varId);
 	public:
 		bool SetTexture(TTypeID varId, const Texture_ptr& texture);
