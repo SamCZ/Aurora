@@ -13,6 +13,8 @@
 
 #include "MainEditorPanel.hpp"
 
+#include <climits>
+
 namespace Aurora
 {
 	ResourceWindow::ResourceWindow(MainEditorPanel* mainEditorPanel)
