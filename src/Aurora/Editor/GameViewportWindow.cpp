@@ -133,6 +133,16 @@ namespace Aurora
 
 			EUI::Image(m_RenderViewPort->Target, (Vector2)m_RenderViewPort->ViewPort);
 
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE_PATH"))
+				{
+					AU_LOG_INFO("Dropped into viewport: ", (char*)payload->Data);
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+
 			//Manipulator
 			ImGuizmo::SetDrawlist();
 			ImGuizmo::SetRect(

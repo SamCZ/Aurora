@@ -12,9 +12,13 @@
 
 namespace Aurora
 {
-	enum FileType
+	enum FileType : uint32_t
 	{
-		FT_IMAGE = BITF(0)
+		FT_IMAGE = BITF(0),
+		FT_MATERIAL_DEF = BITF(1),
+		FT_MATERIAL_INS = BITF(2),
+
+		FT_SHADER = BITF(3),
 	};
 
 	struct TextureLoadDesc
@@ -67,6 +71,7 @@ namespace Aurora
 		bool LoadJson(const Path &path, nlohmann::json &json);
 
 		Texture_ptr LoadTexture(const Path& path, const TextureLoadDesc& loadDesc = TextureLoadDesc());
+		Texture_ptr LoadIcon(const Path& path, int size = 0);
 		Texture_ptr LoadLutTexture(const Path& path);
 
 		const MaterialDefinition_ptr& GetOrLoadMaterialDefinition(const Path& path);

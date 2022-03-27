@@ -11,6 +11,8 @@
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 
+#include "MainEditorPanel.hpp"
+
 namespace Aurora
 {
 	ResourceWindow::ResourceWindow(MainEditorPanel* mainEditorPanel)
@@ -24,6 +26,8 @@ namespace Aurora
 		m_BigIconFont = ImGui::GetIO().Fonts->AddFontFromMemoryTTF(iconFontData->data(), iconFontData->size(), 56, &config, icons_ranges);
 
 		m_FileDropEvent = GEngine->GetWindow()->GetFileDropEmitter().BindUnique(this, &ResourceWindow::OnFilesDrop);
+
+		m_ShaderIcon = GEngine->GetResourceManager()->LoadIcon("Assets/Textures/Editor/shader.png", 56);
 	}
 
 	void ResourceWindow::DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath)
@@ -89,61 +93,64 @@ namespace Aurora
 			}
 		}
 
-		ImGui::Begin("Resources");
+		ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		{
 			ImGui::PushFont(m_BigIconFont);
 			const float BIG_ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_FOLDER).x;
 			ImGui::PopFont();
 
-			static const Path basePath = AURORA_PROJECT_DIR "/Assets";
-			static String searchText;
-
-			static ImVec2 sizeFirst(250, 0);
-			static ImVec2 sizeSecond(0, 0);
-
-			//EUI::Splitter(true, 0.0f, &sizeFirst.x, &sizeSecond.y, 0, 50);
-
 			m_TreeId = 0;
 
-			ImGui::BeginChild("resource-file-list", sizeFirst);
+			int tableFlags = ImGuiTableFlags_Resizable;
+			if (ImGui::BeginTable("table-content-browser", 2, tableFlags))
 			{
-				for (const auto& path : GEngine->GetResourceManager()->GetFileSearchPaths())
+				ImGui::TableNextColumn();
+
+				ImGui::BeginChild("resource-file-list");
 				{
-					String name = path.filename().string();
-					String id = name;
-					id.append("##header_");
-					id.append(name);
-
-					bool open = ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
-					if (ImGui::IsItemClicked())
+					for (const auto& path : GEngine->GetResourceManager()->GetFileSearchPaths())
 					{
-						m_CurrentPath = path / "Assets";
-						m_CurrentBasePath = path;
-					}
+						String name = path.filename().string();
+						String id = name;
+						id.append("##header_");
+						id.append(name);
 
-					if (open)
-					{
-						DrawPathDirectoryNodes(path / "Assets", path);
+						bool open = ImGui::CollapsingHeader(id.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
+						if (ImGui::IsItemClicked())
+						{
+							m_CurrentPath = path / "Assets";
+							m_CurrentBasePath = path;
+						}
+
+						if (open)
+						{
+							DrawPathDirectoryNodes(path / "Assets", path);
+						}
 					}
 				}
-			}
-			ImGui::EndChild();
+				ImGui::EndChild();
 
-			ImGui::SameLine();
+				ImGui::TableNextColumn();
 
-			ImGui::BeginChild("resource-file-folder-view", sizeSecond);
-			//if(false)
-			{
+				ImGui::BeginChild("resource-file-folder-view-container");
+
+				static String searchText;
+
+
+				float regionAvail = ImGui::GetContentRegionAvail().x;
+
+				Path baseAssetPath = m_CurrentBasePath / "Assets";
+
 				{ // Top menu
-					if(m_CurrentPath == basePath)
+					if (m_CurrentPath == baseAssetPath)
 						ImGui::BeginDisabled();
 
-					if(ImGui::IconButton(ICON_FA_ARROW_LEFT))
+					if (ImGui::IconButton(ICON_FA_ARROW_LEFT))
 					{
 						m_CurrentPath = m_CurrentPath.parent_path();
 					}
 
-					if(m_CurrentPath == basePath)
+					if(m_CurrentPath == baseAssetPath)
 						ImGui::EndDisabled();
 
 					ImGui::SameLine();
@@ -151,123 +158,159 @@ namespace Aurora
 					ImGui::Separator();
 				}
 
-				Path currentRelative = std::filesystem::relative(m_CurrentPath, m_CurrentBasePath);
+				ImGui::BeginChild("resource-file-folder-view");
 
-				ImGui::Text("%s", currentRelative.string().c_str());
-
-				float regionAvail = ImGui::GetContentRegionAvail().x;
 				float columnSize = BIG_ICON_BASE_WIDTH + 15;
 				int columnCount = std::max(1, (int)floor(regionAvail / columnSize));
-				ImGui::Columns(columnCount, "resource-columns", false);
 
-				auto drawFile = [this, BIG_ICON_BASE_WIDTH](const std::filesystem::directory_entry& directoryIt) -> void
+				if (ImGui::BeginTable("table-content-items", columnCount))
 				{
-					const Path& path = directoryIt.path();
+					ImGui::TableNextColumn();
 
-					if(ResourceManager::IsIgnoredFileType(path))
-						return;
-
-					String fileName = path.filename().stem().string();
-
-					ImGui::PushID(fileName.c_str());
-
-
-					if(directoryIt.is_directory())
+					for (auto& directoryIt : std::filesystem::directory_iterator(m_CurrentPath))
 					{
-						ImGui::PushFont(m_BigIconFont);
-						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-						ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
-						ImGui::Selectable(ICON_FA_FOLDER);
-						ImGui::PopStyleVar(2);
-						ImGui::PopFont();
+						if(directoryIt.is_directory())
+							DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+					}
 
-						if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0))
+					for (auto& directoryIt : std::filesystem::directory_iterator(m_CurrentPath))
+					{
+						if(!directoryIt.is_directory())
+							DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+					}
+
+
+					ImGui::EndTable();
+				}
+
+				ImGui::EndChild();
+				ImGui::EndChild();
+
+				ImGui::EndTable();
+			}
+		}
+		ImGui::End();
+	}
+
+	void ResourceWindow::DrawFile(const std::filesystem::directory_entry& directoryIt, float iconSize)
+	{
+		const Path& path = directoryIt.path();
+
+		if(ResourceManager::IsIgnoredFileType(path))
+			return;
+
+		String fileName = path.filename().stem().string();
+
+		ImGui::PushID(fileName.c_str());
+
+
+		if(directoryIt.is_directory())
+		{
+			ImGui::PushFont(m_BigIconFont);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+			ImGui::Selectable(ICON_FA_FOLDER);
+			ImGui::PopStyleVar(2);
+			ImGui::PopFont();
+
+			if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0))
+			{
+				m_CurrentPath = path;
+			}
+		}
+		else
+		{
+			bool selected = false;
+
+			ImGui::PushFont(m_BigIconFont);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
+
+			Texture_ptr texture = nullptr;
+			const char* icon = GetFileTypeIconOrTexture(path, texture);
+
+			if (texture)
+			{
+				selected = EUI::ImageButton(texture, iconSize);
+			}
+			else
+			{
+				selected = ImGui::Selectable(icon);
+			}
+
+			ImGui::PopStyleVar(2);
+			ImGui::PopFont();
+
+			if (ImGui::BeginDragDropSource())
+			{
+				String strPath = path.string();
+				char rawPath[PATH_MAX];
+				strcpy(rawPath, strPath.c_str());
+
+				ImGui::SetDragDropPayload("RESOURCE_PATH", rawPath, strPath.length()+1);
+
+				{ // Move this to some method to remove duplicated code
+					if (ResourceManager::IsFileType(path, FT_IMAGE))
+					{
+						auto it = m_TextureIcons.find(path);
+
+						if (it != m_TextureIcons.end())
 						{
-							m_CurrentPath = path;
+							EUI::ImageButton(it->second, iconSize);
+						}
+						else
+						{
+							ImGui::Text(ICON_FA_IMAGE);
 						}
 					}
 					else
 					{
-						bool selected = false;
-
-						ImGui::PushFont(m_BigIconFont);
-						ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-						ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
-
-						if (ResourceManager::IsFileType(path, FT_IMAGE))
-						{
-							auto it = m_TextureIcons.find(path);
-
-							if (it != m_TextureIcons.end())
-							{
-								selected = EUI::ImageButton(it->second, BIG_ICON_BASE_WIDTH);
-							}
-							else
-							{
-								if (!VectorContains(m_TextureIconsToLoad, path))
-								{
-									m_TextureIconsToLoad.push_back(path);
-								}
-
-								selected = ImGui::Selectable(ICON_FA_IMAGE);
-							}
-						}
-						else
-						{
-							selected = ImGui::Selectable(ICON_FA_FILE);
-						}
-
-						ImGui::PopStyleVar(2);
-						ImGui::PopFont();
-
-						if (ImGui::IsItemHovered())
-						{
-							ImGui::SetTooltip("%s", path.filename().string().c_str());
-						}
-
-						if(ImGui::IsItemClicked(ImGuiMouseButton_Right))
-						{
-							ImGui::OpenPopup("resourceManagerContextMenu");
-						}
-
-						if (ImGui::BeginPopup("resourceManagerContextMenu"))
-						{
-							ImGui::Text("File menu");
-							ImGui::Separator();
-							if (ImGui::Button("Delete"))
-							{
-								QueueDeleteFile(path);
-							}
-
-							ImGui::EndPopup();
-						}
-
+						ImGui::Text(ICON_FA_FILE);
 					}
-
-					ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
-
-					ImGui::NextColumn();
-
-					ImGui::PopID();
-				};
-
-				for (auto& directoryIt : std::filesystem::directory_iterator(m_CurrentPath))
-				{
-					if(directoryIt.is_directory())
-						drawFile(directoryIt);
 				}
 
-				for (auto& directoryIt : std::filesystem::directory_iterator(m_CurrentPath))
-				{
-					if(!directoryIt.is_directory())
-						drawFile(directoryIt);
-				}
-
-				ImGui::Columns(1);
+				ImGui::EndDragDropSource();
 			}
-			ImGui::EndChild();
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("%s", path.filename().string().c_str());
+			}
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
+			{
+				SelectAsset(path);
+			}
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+			{
+				ImGui::OpenPopup("resourceManagerContextMenu");
+			}
+
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			{
+				OpenAsset(path);
+			}
+
+			if (ImGui::BeginPopup("resourceManagerContextMenu"))
+			{
+				ImGui::Text("File menu");
+				ImGui::Separator();
+				if (ImGui::Button("Delete"))
+				{
+					QueueDeleteFile(path);
+				}
+
+				ImGui::EndPopup();
+			}
+
 		}
-		ImGui::End();
+
+		ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
+
+		ImGui::TableNextColumn();
+
+		ImGui::PopID();
 	}
 
 	void ResourceWindow::OnFilesDrop(const std::vector<Path>& files)
@@ -312,5 +355,52 @@ namespace Aurora
 	void ResourceWindow::QueueDeleteFile(const Path& path)
 	{
 		m_FilesToDelete.push(path);
+
+		if(path == m_SelectedAssetPath)
+		{
+			m_SelectedAssetPath = "";
+		}
+	}
+
+	void ResourceWindow::SelectAsset(const Path &path)
+	{
+		m_SelectedAssetPath = path;
+	}
+
+	void ResourceWindow::OpenAsset(const Path &path)
+	{
+		if (ResourceManager::IsFileType(path, static_cast<FileType>(FT_MATERIAL_DEF | FT_MATERIAL_INS)))
+		{
+			m_MainPanel->GetMaterialWindow()->Open(path);
+		}
+	}
+
+	const char *ResourceWindow::GetFileTypeIconOrTexture(const Path &path, Texture_ptr &textureOut)
+	{
+		if (ResourceManager::IsFileType(path, FT_IMAGE))
+		{
+			auto it = m_TextureIcons.find(path);
+
+			if (it != m_TextureIcons.end())
+			{
+				textureOut = it->second;
+			}
+			else
+			{
+				if (!VectorContains(m_TextureIconsToLoad, path))
+				{
+					m_TextureIconsToLoad.push_back(path);
+				}
+			}
+			return ICON_FA_IMAGE;
+		}
+
+		if (ResourceManager::IsFileType(path, FT_SHADER))
+		{
+			textureOut = m_ShaderIcon;
+			return ICON_FA_FILE;
+		}
+
+		return ICON_FA_FILE;
 	}
 }

@@ -4,6 +4,7 @@
 #include "GameViewportWindow.hpp"
 #include "SceneHierarchyWindow.hpp"
 #include "ResourceWindow.hpp"
+#include "MaterialWindow.hpp"
 
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
@@ -21,6 +22,7 @@ namespace Aurora
 		std::shared_ptr<GameViewportWindow> m_GameViewportWindow;
 		SceneHierarchyWindow m_SceneHierarchyWindow;
 		ResourceWindow m_ResourceWindow;
+		MaterialWindow m_MaterialWindow;
 
 		Actor* m_SelectedActor;
 		SceneComponent* m_SelectedComponent;
@@ -64,6 +66,7 @@ namespace Aurora
 		[[nodiscard]] bool GetSelectedObjectTransform(Matrix4& matrix) const;
 		[[nodiscard]] bool SetSelectedObjectTransform(const Matrix4& matrix);
 
-		GameViewportWindow* GetGameViewPortWindow() { return m_GameViewportWindow.get(); }
+		inline GameViewportWindow* GetGameViewPortWindow() { return m_GameViewportWindow.get(); }
+		inline MaterialWindow* GetMaterialWindow() { return &m_MaterialWindow; }
 	};
 }

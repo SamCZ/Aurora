@@ -24,7 +24,8 @@ namespace Aurora
 		m_SelectedComponent(nullptr),
 		m_IsPlayMode(false),
 		m_SceneHierarchyWindow(this),
-		m_ResourceWindow(this)
+		m_ResourceWindow(this),
+		m_MaterialWindow()
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		m_GameViewportWindow = std::make_shared<GameViewportWindow>(this);
@@ -45,6 +46,8 @@ namespace Aurora
 
 		m_ConsoleWindow->Draw();
 		m_GameViewportWindow->Update(delta);
+
+		m_MaterialWindow.Update(delta);
 
 		ImGui::Begin("Properties");
 		{

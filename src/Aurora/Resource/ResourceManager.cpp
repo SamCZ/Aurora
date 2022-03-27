@@ -432,6 +432,20 @@ namespace Aurora
 		return texture;
 	}
 
+	Texture_ptr ResourceManager::LoadIcon(const Path &path, int size)
+	{
+		TextureLoadDesc loadDesc = {
+			.Width = size,
+			.Height = size,
+			.GenerateMips = false,
+			.GenerateMetaFile = false,
+			.ForceSRGB = false,
+			.DoNotCache = true
+		};
+
+		return LoadTexture(path, loadDesc);
+	}
+
 	Texture_ptr ResourceManager::LoadLutTexture(const Path& path)
 	{
 		//Path hashPath = path / ".lut";
@@ -598,13 +612,40 @@ namespace Aurora
 		".tga"
 	};
 
+	static const char* ShaderExtensions[] = {
+		".fss",
+		".vss",
+		".glsl",
+		".vert",
+		".frag",
+		".geom",
+		".compute"
+	};
+
 	bool ResourceManager::IsFileType(const Path &path, FileType types)
 	{
 		Path extension = path.extension();
 
-		if((types & FT_IMAGE))
+		if ((types & FT_IMAGE) == FT_IMAGE)
 		{
 			for (const auto& item : ImageExtensions)
+			{
+				if (item == extension)
+				{
+					return true;
+				}
+			}
+		}
+
+		if ((types & FT_MATERIAL_DEF) == FT_MATERIAL_DEF && extension == ".matd")
+			return true;
+
+		if ((types & FT_MATERIAL_INS) == FT_MATERIAL_INS && extension == ".mat")
+			return true;
+
+		if ((types & FT_SHADER) == FT_SHADER)
+		{
+			for (const auto &item : ShaderExtensions)
 			{
 				if (item == extension)
 				{
