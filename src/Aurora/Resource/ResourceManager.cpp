@@ -329,9 +329,13 @@ namespace Aurora
 			return nullptr;
 		}
 
-		GraphicsFormat format = GraphicsFormat::Unknown;
+		channels_in_file = 4;
 
-		switch (channels_in_file)
+		GraphicsFormat format = GraphicsFormat::RGBA8_UNORM;
+
+		// stbi_load will return you actual channels_in_file even if you request something
+		// YES if will change the channels, but the original channel count its returned into the channels_in_file property
+		/*switch (channels_in_file)
 		{
 			case 1:
 				format = GraphicsFormat::R8_UNORM;
@@ -353,17 +357,20 @@ namespace Aurora
 			stbi_image_free(data);
 			AU_LOG_ERROR("Could not load image ", path.string(), " wrong format !");
 			return nullptr;
-		}
+		}*/
 
 		// Resize if requested
 		if (loadDesc.Width > 0 && loadDesc.Height > 0)
 		{
-			auto* resizedData = new uint8_t[loadDesc.Width * loadDesc.Height * channels_in_file];
-			stbir_resize_uint8(data, width, height, 0, resizedData, loadDesc.Width, loadDesc.Height, 0, channels_in_file);
+			int targetWidth = std::min<int>(loadDesc.Width, width);
+			int targetHeight = std::min<int>(loadDesc.Height, height);
+
+			auto* resizedData = new uint8_t[targetWidth * targetHeight * channels_in_file];
+			stbir_resize_uint8(data, width, height, 0, resizedData, targetWidth, targetHeight, 0, channels_in_file);
 			stbi_image_free(data);
 
-			width = loadDesc.Width;
-			height = loadDesc.Height;
+			width = targetWidth;
+			height = targetHeight;
 			data = resizedData;
 		}
 
@@ -393,7 +400,7 @@ namespace Aurora
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = loadDesc.GenerateMips ? textureDesc.GetMipLevelCount() : 1;
-		textureDesc.ImageFormat = format;
+		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
 		textureDesc.Name = path.string();
 		textureDesc.UseAsBindless = false;
 		texture = m_RenderDevice->CreateTexture(textureDesc, nullptr);
