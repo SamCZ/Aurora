@@ -52,8 +52,22 @@ namespace Aurora
 					}
 					else
 					{
-						ImGui::Text("%s", var->Name.c_str());
-						EUI::Image(var->Texture, Vector2(55, 55), false);
+						if(var->Texture->GetDesc().DimensionType != EDimensionType::TYPE_2D)
+						{
+							if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_2DArray)
+								ImGui::Text("%s: [TextureArray(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+
+							if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_3D)
+								ImGui::Text("%s: [Texture3D(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+
+							if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_CubeMap)
+								ImGui::Text("%s: [CubeMap(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+						}
+						else
+						{
+							ImGui::Text("%s", var->Name.c_str());
+							EUI::Image(var->Texture, Vector2(55, 55), false);
+						}
 					}
 
 					if (ImGui::BeginDragDropTarget())
