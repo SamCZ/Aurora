@@ -61,8 +61,8 @@ namespace Aurora
 	class AU_API UUID
 	{
 	private:
-		const uint64_t m_Low;
-		const uint64_t m_High;
+		uint64_t m_Low;
+		uint64_t m_High;
 	public:
 		UUID() : m_Low(0), m_High(0) {}
 		constexpr UUID(uint64_t low, uint64_t high) : m_Low(low), m_High(high) {}
@@ -73,7 +73,12 @@ namespace Aurora
 		[[nodiscard]] uint64_t Low() const { return m_Low; }
 		[[nodiscard]] uint64_t High() const { return m_High; }
 
-		constexpr int Compare(const UUID& other) const
+		[[nodiscard]] inline constexpr bool Zero() const
+		{
+			return m_Low == 0 && m_High == 0;
+		}
+
+		[[nodiscard]] constexpr int Compare(const UUID& other) const
 		{
 			if (m_Low < other.m_Low)
 				return -1;
@@ -106,6 +111,11 @@ namespace Aurora
 		constexpr bool operator!=(const UUID& other) const
 		{
 			return !operator==(other);
+		}
+
+		constexpr operator bool() const
+		{
+			return !Zero();
 		}
 
 		template<typename StringType>
