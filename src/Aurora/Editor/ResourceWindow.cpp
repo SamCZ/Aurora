@@ -4,6 +4,7 @@
 
 #include "Aurora/Engine.hpp"
 #include "Aurora/Aurora.hpp"
+#include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
@@ -27,11 +28,13 @@ namespace Aurora
 
 		m_FileDropEvent = GEngine->GetWindow()->GetFileDropEmitter().BindUnique(this, &ResourceWindow::OnFilesDrop);
 
-		m_ShaderIcon = GEngine->GetResourceManager()->LoadIcon("Assets/Textures/Editor/shader.png", 56);
+		m_ShaderIcon = GEngine->GetResourceManager()->LoadResourceIcon("Assets/Textures/Editor/shader.png", 56);
 	}
 
 	void ResourceWindow::DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath)
 	{
+		CPU_DEBUG_SCOPE("DrawPathDirectoryNodes");
+
 		ImGui::PushID(m_TreeId++);
 		for (auto& directoryIt : std::filesystem::directory_iterator(rootPath))
 		{
@@ -68,9 +71,13 @@ namespace Aurora
 	{
 		(void) delta;
 
+		CPU_DEBUG_SCOPE("ResourceWindow");
+
 		LoadTexturePreviews();
 
 		{ // Delete queued files
+			CPU_DEBUG_SCOPE("DeleteQueue");
+
 			while (!m_FilesToDelete.empty())
 			{
 				Path path = m_FilesToDelete.front();
@@ -95,6 +102,7 @@ namespace Aurora
 
 		ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		{
+			CPU_DEBUG_SCOPE("ResourceWindowBegin");
 			ImGui::PushFont(m_BigIconFont);
 			const float BIG_ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_FOLDER).x;
 			ImGui::PopFont();
@@ -165,6 +173,7 @@ namespace Aurora
 
 				if (ImGui::BeginTable("table-content-items", columnCount))
 				{
+					CPU_DEBUG_SCOPE("ResourceIcons");
 					ImGui::TableNextColumn();
 
 					for (auto& directoryIt : std::filesystem::directory_iterator(m_CurrentPath))
@@ -194,18 +203,29 @@ namespace Aurora
 
 	void ResourceWindow::DrawFile(const std::filesystem::directory_entry& directoryIt, float iconSize)
 	{
+		CPU_DEBUG_SCOPE("DrawFile");
+
 		const Path& path = directoryIt.path();
 
 		if(ResourceManager::IsIgnoredFileType(path))
 			return;
 
-		String fileName = path.filename().stem().string();
-
-		ImGui::PushID(fileName.c_str());
-
-
-		if(directoryIt.is_directory())
 		{
+			CPU_DEBUG_SCOPE("PushID");
+			String fileName = path.filename().stem().string();
+			ImGui::PushID(fileName.c_str());
+		}
+
+		bool isDir = false;
+
+		{
+			CPU_DEBUG_SCOPE("is_directory");
+			isDir = directoryIt.is_directory();
+		}
+
+		if (isDir)
+		{
+			CPU_DEBUG_SCOPE("DirMode");
 			ImGui::PushFont(m_BigIconFont);
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 3.0f);
@@ -220,6 +240,7 @@ namespace Aurora
 		}
 		else
 		{
+			CPU_DEBUG_SCOPE("FileMode");
 			bool selected = false;
 
 			ImGui::PushFont(m_BigIconFont);
@@ -231,10 +252,12 @@ namespace Aurora
 
 			if (texture)
 			{
+				CPU_DEBUG_SCOPE("DrawImageButton");
 				selected = EUI::ImageButton(texture, iconSize);
 			}
 			else
 			{
+				CPU_DEBUG_SCOPE("DrawIconButton");
 				selected = ImGui::Selectable(icon);
 			}
 
@@ -306,7 +329,7 @@ namespace Aurora
 
 		}
 
-		ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
+		//ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
 
 		ImGui::TableNextColumn();
 
@@ -329,6 +352,8 @@ namespace Aurora
 
 	void ResourceWindow::LoadTexturePreviews()
 	{
+		CPU_DEBUG_SCOPE("LoadTexturePreviews");
+
 		if (m_TextureIconsToLoad.empty())
 			return;
 

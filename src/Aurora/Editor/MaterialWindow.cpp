@@ -4,6 +4,7 @@
 
 #include "Aurora/Engine.hpp"
 #include "Aurora/Aurora.hpp"
+#include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 
@@ -17,6 +18,8 @@ namespace Aurora
 
 	void MaterialWindow::Update(double delta)
 	{
+		CPU_DEBUG_SCOPE("MaterialWindow");
+
 		if (!m_WindowOpened)
 		{
 			m_WindowNeedsFocus = true;

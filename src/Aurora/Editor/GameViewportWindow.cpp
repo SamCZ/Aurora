@@ -4,6 +4,7 @@
 
 #include "Aurora/Engine.hpp"
 #include "Aurora/Aurora.hpp"
+#include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
@@ -74,6 +75,8 @@ namespace Aurora
 
 	void GameViewportWindow::Update(double delta)
 	{
+		CPU_DEBUG_SCOPE("GameViewportWindow");
+
 		if(m_MouseViewportGrabbed && !ImGui::GetIO().MouseDown[1])
 		{
 			m_MouseViewportGrabbed = false;

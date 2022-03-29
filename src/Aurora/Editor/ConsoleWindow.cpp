@@ -1,10 +1,13 @@
 #include "ConsoleWindow.hpp"
 #include "Aurora/Tools/ImGuiHelper.hpp"
+#include "Aurora/Core/Profiler.hpp"
 
 namespace Aurora
 {
 	void ConsoleWindow::Draw()
 	{
+		CPU_DEBUG_SCOPE("ConsoleWindow");
+
 		if(!ImGui::Begin("Console"))
 		{
 			ImGui::End();

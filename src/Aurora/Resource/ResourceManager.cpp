@@ -15,6 +15,8 @@
 
 #include "MaterialLoader.hpp"
 
+#include "Aurora/Core/Profiler.hpp"
+
 namespace Aurora
 {
 
@@ -432,7 +434,7 @@ namespace Aurora
 		return texture;
 	}
 
-	Texture_ptr ResourceManager::LoadIcon(const Path &path, int size)
+	Texture_ptr ResourceManager::LoadResourceIcon(const Path &path, int size)
 	{
 		TextureLoadDesc loadDesc = {
 			.Width = size,
@@ -647,6 +649,8 @@ namespace Aurora
 
 	bool ResourceManager::IsFileType(const Path &path, FileType types)
 	{
+		CPU_DEBUG_SCOPE("IsFileType");
+
 		Path extension = path.extension();
 
 		if ((types & FT_IMAGE) == FT_IMAGE)

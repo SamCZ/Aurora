@@ -12,6 +12,9 @@
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 
+
+#include "Aurora/Core/Profiler.hpp"
+
 ImVec2 operator+(const ImVec2& left, const ImVec2& right)
 {
 	return {left.x + right.x, left.y + right.y};
@@ -52,6 +55,8 @@ namespace Aurora
 
 		ImGui::Begin("Properties");
 		{
+			CPU_DEBUG_SCOPE("PropertiesWindow");
+
 			SceneComponent* root;
 
 			if(m_SelectedActor)
@@ -85,6 +90,7 @@ namespace Aurora
 
 		if(m_MaterialInstancesWindowOpened)
 		{
+			CPU_DEBUG_SCOPE("MaterialInstancesWindow");
 			static int ID = 0;
 
 			ImGui::Begin("Material instances", &m_MaterialInstancesWindowOpened);
@@ -217,6 +223,8 @@ namespace Aurora
 
 	void MainEditorPanel::DrawMainMenu()
 	{
+		CPU_DEBUG_SCOPE("DrawMainMenu");
+
 		if(ImGui::BeginMainMenuBar())
 		{
 

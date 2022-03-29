@@ -72,7 +72,7 @@ namespace Aurora
 		bool LoadJson(const Path &path, nlohmann::json &json);
 
 		Texture_ptr LoadTexture(const Path& path, const TextureLoadDesc& loadDesc = TextureLoadDesc());
-		Texture_ptr LoadIcon(const Path& path, int size = 0);
+		Texture_ptr LoadResourceIcon(const Path& path, int size = 0);
 		Texture_ptr LoadLutTexture(const Path& path);
 
 		const MaterialDefinition_ptr& GetOrLoadMaterialDefinition(const Path& path);
