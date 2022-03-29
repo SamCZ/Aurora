@@ -74,6 +74,8 @@ namespace Aurora
 		robin_hood::unordered_map<LOD, MeshLodResource> LODResources;
 		MaterialSet MaterialSlots;
 
+		virtual VertexLayout GetVertexLayoutDesc() const = 0;
+
 		void UploadToGPU(bool keepCPUData, bool dynamic = false);
 	};
 
@@ -161,6 +163,17 @@ namespace Aurora
 			Vector3 Tangent;
 			Vector3 BiTangent;
 		};
+
+		VertexLayout GetVertexLayoutDesc() const override
+		{
+			return {
+				{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Position), 0, sizeof(StaticMesh::Vertex), false, false},
+				{"TEXCOORD", GraphicsFormat::RG32_FLOAT, 0, offsetof(StaticMesh::Vertex, TexCoord), 1, sizeof(StaticMesh::Vertex), false, false},
+				{"NORMAL", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Normal), 2, sizeof(StaticMesh::Vertex), false, false},
+				{"TANGENT", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Tangent), 3, sizeof(StaticMesh::Vertex), false, false},
+				{"BITANGENT", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, BiTangent), 4, sizeof(StaticMesh::Vertex), false, false}
+			};
+		}
 	};
 
 	AU_CLASS(SkeletalMesh) : public Mesh, public MeshBufferHelper<SkeletalMesh>
@@ -179,5 +192,19 @@ namespace Aurora
 			Vector4ui BoneIndices;
 			Vector4 BoneWeights;
 		};
+
+		VertexLayout GetVertexLayoutDesc() const override
+		{
+			return {
+				{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, Position), 0, sizeof(SkeletalMesh::Vertex), false, false},
+				{"TEXCOORD", GraphicsFormat::RG32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, TexCoord), 1, sizeof(SkeletalMesh::Vertex), false, false},
+				{"NORMAL", GraphicsFormat::RGB32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, Normal), 2, sizeof(SkeletalMesh::Vertex), false, false},
+				{"TANGENT", GraphicsFormat::RGB32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, Tangent), 3, sizeof(SkeletalMesh::Vertex), false, false},
+				{"BITANGENT", GraphicsFormat::RGB32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, BiTangent), 4, sizeof(SkeletalMesh::Vertex), false, false},
+
+				{"BONEINDICES", GraphicsFormat::RGBA32_UINT, 0, offsetof(SkeletalMesh::Vertex, BoneIndices), 5, sizeof(SkeletalMesh::Vertex), false, false},
+				{"BONEWEIGHTS", GraphicsFormat::RGBA32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, BoneWeights), 6, sizeof(SkeletalMesh::Vertex), false, false}
+			};
+		}
 	};
 }

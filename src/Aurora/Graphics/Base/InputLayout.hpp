@@ -31,13 +31,14 @@ namespace Aurora
 	};
 
 	typedef std::map<uint32_t, ShaderInputVariable> ShaderInputVariables_t;
+	typedef std::vector<VertexAttributeDesc> VertexLayout;
 
 	class IInputLayout : public TypeBase<IInputLayout>
 	{
 	public:
 		virtual ~IInputLayout() = 0;
 
-		virtual const std::vector<VertexAttributeDesc>& GetDescriptors() const noexcept = 0;
+		virtual const VertexLayout& GetDescriptors() const noexcept = 0;
 		virtual bool GetDescriptor(int index, VertexAttributeDesc& out_desc) const noexcept = 0;
 		virtual bool GetDescriptorByName(const std::string& name, VertexAttributeDesc& out_desc) const noexcept = 0;
 		virtual bool GetDescriptorBySemanticID(uint32_t semantic, VertexAttributeDesc& out_desc) const noexcept = 0;
@@ -46,14 +47,14 @@ namespace Aurora
 	class AU_API BasicInputLayout : public IInputLayout
 	{
 	private:
-		std::vector<VertexAttributeDesc> m_Descriptors;
+		VertexLayout m_Descriptors;
 	public:
-		inline explicit BasicInputLayout(std::vector<VertexAttributeDesc> descriptors) : m_Descriptors(std::move(descriptors))
+		inline explicit BasicInputLayout(VertexLayout descriptors) : m_Descriptors(std::move(descriptors))
 		{
 		}
 		~BasicInputLayout() override = default;
 
-		inline const std::vector<VertexAttributeDesc>& GetDescriptors() const noexcept override { return m_Descriptors; }
+		inline const VertexLayout& GetDescriptors() const noexcept override { return m_Descriptors; }
 		inline bool GetDescriptor(int index, VertexAttributeDesc& out_desc) const noexcept override
 		{
 			if(index >= m_Descriptors.size() - 1) {

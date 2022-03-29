@@ -15,17 +15,8 @@
 
 namespace Aurora
 {
-	static InputLayout_ptr testInputLayout = nullptr;
-	BufferLockManager lock(true);
-
 	SceneRenderer::SceneRenderer()
 	{
-		testInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
-			{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Position), 0, sizeof(StaticMesh::Vertex), false, false},
-			{"TEXCOORD", GraphicsFormat::RG32_FLOAT, 0, offsetof(StaticMesh::Vertex, TexCoord), 1, sizeof(StaticMesh::Vertex), false, false},
-			{"NORMAL", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Normal), 2, sizeof(StaticMesh::Vertex), false, false}
-		});
-
 		m_BaseVsDataBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
 		m_InstancesBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Instances", sizeof(Matrix4) * MaxInstances, EBufferType::UniformBuffer, EBufferUsage::DynamicDraw, false));
 	}
@@ -241,13 +232,12 @@ namespace Aurora
 
 			if (!(currentMesh == modelContext.Mesh && currentLodResource == modelContext.LodResource && currentSection == modelContext.MeshSection))
 			{
-				currentMesh == modelContext.Mesh;
+				currentMesh = modelContext.Mesh;
 				currentLodResource = modelContext.LodResource;
 				currentSection = modelContext.MeshSection;
 
 				drawCallState.PrimitiveType = currentSection->PrimitiveType;
-				// TODO: drawCallState.InputLayoutHandle =
-				drawCallState.InputLayoutHandle = testInputLayout;
+				drawCallState.InputLayoutHandle = GetInputLayoutForMesh(currentMesh);
 				if (currentLodResource->IndexBuffer)
 				{
 					drawCallState.SetIndexBuffer(currentLodResource->IndexBuffer, currentLodResource->IndexFormat);
@@ -280,5 +270,17 @@ namespace Aurora
 		}
 
 		m_InjectedPasses[pass].Invoke(std::forward<PassType_t>(pass), drawCallState, std::forward<CameraComponent*>(camera));
+	}
+
+	const InputLayout_ptr &SceneRenderer::GetInputLayoutForMesh(Mesh* mesh)
+	{
+		auto it = m_MeshInputLayouts.find(mesh->GetTypeID());
+
+		if(it != m_MeshInputLayouts.end())
+		{
+			return it->second;
+		}
+
+		return (m_MeshInputLayouts[mesh->GetTypeID()] = GEngine->GetRenderDevice()->CreateInputLayout(mesh->GetVertexLayoutDesc()));
 	}
 }

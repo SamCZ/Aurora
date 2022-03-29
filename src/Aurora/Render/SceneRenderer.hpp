@@ -54,8 +54,9 @@ namespace Aurora
 		Buffer_ptr m_BaseVsDataBuffer;
 		Buffer_ptr m_InstancesBuffer;
 
-		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
+		robin_hood::unordered_map<TTypeID, InputLayout_ptr> m_MeshInputLayouts;
 
+		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
 		std::array<PassRenderEventEmitter, Pass::Count> m_InjectedPasses;
 	public:
 		SceneRenderer();
@@ -65,6 +66,8 @@ namespace Aurora
 
 		void Render(Scene* scene);
 		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet);
+
+		const InputLayout_ptr& GetInputLayoutForMesh(Mesh* mesh);
 
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }
 	};
