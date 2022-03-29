@@ -28,6 +28,7 @@ namespace Aurora
 		SceneComponent* m_SelectedComponent;
 
 		bool m_IsPlayMode;
+		bool m_MaterialInstancesWindowOpened;
 	public:
 		MainEditorPanel();
 		~MainEditorPanel();

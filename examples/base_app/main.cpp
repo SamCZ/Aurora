@@ -1,4 +1,6 @@
 #include <Aurora/Aurora.hpp>
+
+#include <Aurora/Core/UUID.hpp>
 #include <Aurora/Resource/ResourceManager.hpp>
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
@@ -16,6 +18,7 @@
 #include <Aurora/Framework/StaticMeshComponent.hpp>
 
 #include <Aurora/Resource/AssimpModelLoader.hpp>
+#include <Aurora/Resource/ResourceName.hpp>
 
 #include "Aurora/Editor/MainEditorPanel.hpp"
 
@@ -212,6 +215,32 @@ class BaseAppContext : public AppContext
 		}
 
 		GetScene()->SpawnActor<CameraActor>("Camera", {0, 0, 5});
+
+		AU_LOG_INFO("Random: ", (String)UUID::Generate());
+		if(UUID::IsValid<String>("0de49ab9-2c9d-b155-70e6-0c9067010000"))
+		{
+			UUID uuid = UUID::FromString<String>("0de49ab9-2c9d-b155-70e6-0c9067010000").value();
+			UUID uuid2 = UUID::FromString<String>((String)uuid).value();
+
+			if(uuid == uuid2)
+			{
+				AU_LOG_INFO("matches !");
+			}
+
+			AU_LOG_INFO("Rand: ", (String)uuid);
+			AU_LOG_INFO("Rand: ", (String)uuid2);
+		}
+
+		{
+			ResourceName rn("Test");
+			AU_LOG_INFO((String)rn.ID, " - ", rn.Name);
+		}
+
+		{
+			ResourceName rn("{0de49ab9-2c9d-b155-70e6-0c9067010000}Test");
+			AU_LOG_INFO((String)rn.ID, " - ", rn.Name);
+		}
+
 	}
 
 	void Update(double delta) override

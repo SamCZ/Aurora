@@ -76,6 +76,7 @@ namespace Aurora
 
 		[[nodiscard]] const std::vector<MUniformBlock>& GetUniformBlocks() const { return m_UniformBlocksDef; }
 		[[nodiscard]] const robin_hood::unordered_map<TTypeID, MTextureVar>& GetTextureVars() const { return m_TextureVars; }
+		[[nodiscard]] const std::vector<std::weak_ptr<Material>>& GetMaterialRefs() const { return m_MaterialRefs; }
 	private:
 		MUniformBlock* FindUniformBlock(TTypeID id);
 		MUniformVar* FindUniformVar(TTypeID id, MUniformBlock** blockOut = nullptr);

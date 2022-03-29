@@ -84,6 +84,7 @@ namespace Aurora
 		void UnloadAsset(const Path& path);
 
 		[[nodiscard]] inline const std::vector<Path>& GetFileSearchPaths() const { return m_FileSearchPaths; }
+		[[nodiscard]] inline const std::map<Path, MaterialDefinition_ptr>& GetMaterialDefs() const { return m_MaterialDefinitions; }
 
 		static bool IsFileType(const Path& path, FileType types);
 		static bool IsIgnoredFileType(const Path& path);

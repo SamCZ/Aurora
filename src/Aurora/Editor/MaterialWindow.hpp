@@ -20,5 +20,7 @@ namespace Aurora
 		void Open(const Path& path);
 		void Open(const MaterialDefinition_ptr& materialDef);
 		void Open(const Material_ptr& materialInstance);
+
+		[[nodiscard]] inline const Material_ptr& GetOpened() const { return m_CurrentMaterial; }
 	};
 }

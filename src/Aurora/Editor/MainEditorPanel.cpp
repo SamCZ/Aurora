@@ -23,6 +23,7 @@ namespace Aurora
 	: m_SelectedActor(nullptr),
 		m_SelectedComponent(nullptr),
 		m_IsPlayMode(false),
+		m_MaterialInstancesWindowOpened(false),
 		m_SceneHierarchyWindow(this),
 		m_ResourceWindow(this),
 		m_MaterialWindow()
@@ -81,6 +82,42 @@ namespace Aurora
 
 		}
 		ImGui::End();
+
+		if(m_MaterialInstancesWindowOpened)
+		{
+			static int ID = 0;
+
+			ImGui::Begin("Material instances", &m_MaterialInstancesWindowOpened);
+			for (const auto& it : GEngine->GetResourceManager()->GetMaterialDefs())
+			{
+				ImGui::PushID(ID++);
+				bool opened = ImGui::CollapsingHeader(it.first.string().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow);
+
+				if (ImGui::IsItemClicked())
+				{
+					m_MaterialWindow.Open(it.second);
+				}
+
+				if (opened)
+				{
+					int i = 0;
+					for (const Material_wptr& weakMat : it.second->GetMaterialRefs())
+					{
+						if(const Material_ptr& mat = weakMat.lock())
+						{
+							bool selected = m_MaterialWindow.GetOpened() == mat;
+							ImGui::Selectable("Material instance #" + std::to_string(i++), &selected);
+							if (ImGui::IsItemClicked())
+							{
+								m_MaterialWindow.Open(mat);
+							}
+						}
+					}
+				}
+				ImGui::PopID();
+			}
+			ImGui::End();
+		}
 
 		static bool isDemoWindowRendering = false;
 
@@ -195,6 +232,15 @@ namespace Aurora
 				if (ImGui::MenuItem("Cut", "CTRL+X")) {}
 				if (ImGui::MenuItem("Copy", "CTRL+C")) {}
 				if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Material"))
+			{
+				if (ImGui::MenuItem("Show material instances"))
+				{
+					m_MaterialInstancesWindowOpened = true;
+				}
 				ImGui::EndMenu();
 			}
 
