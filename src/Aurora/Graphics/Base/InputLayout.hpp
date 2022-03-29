@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include "Aurora/Core/Library.hpp"
 #include "Format.hpp"
 #include "TypeBase.hpp"
 
