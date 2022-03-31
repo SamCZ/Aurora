@@ -216,11 +216,11 @@ class BaseAppContext : public AppContext
 
 		GetScene()->SpawnActor<CameraActor>("Camera", {0, 0, 5});
 
-		AU_LOG_INFO("Random: ", (String)UUID::Generate());
-		if(UUID::IsValid<String>("0de49ab9-2c9d-b155-70e6-0c9067010000"))
+		AU_LOG_INFO("Random: ", (String)Aurora::UUID::Generate());
+		if(Aurora::UUID::IsValid<String>("0de49ab9-2c9d-b155-70e6-0c9067010000"))
 		{
-			UUID uuid = UUID::FromString<String>("0de49ab9-2c9d-b155-70e6-0c9067010000").value();
-			UUID uuid2 = UUID::FromString<String>((String)uuid).value();
+			Aurora::UUID uuid = Aurora::UUID::FromString<String>("0de49ab9-2c9d-b155-70e6-0c9067010000").value();
+			Aurora::UUID uuid2 = Aurora::UUID::FromString<String>((String)uuid).value();
 
 			if(uuid == uuid2)
 			{

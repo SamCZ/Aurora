@@ -31,16 +31,16 @@ namespace Aurora
 		m_ShaderIcon = GEngine->GetResourceManager()->LoadResourceIcon("Assets/Textures/Editor/shader.png", 56);
 	}
 
-	void ResourceWindow::DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath)
+	void ResourceWindow::DrawPathDirectoryNodes(const PathNode& rootPath, const Path& basePath)
 	{
 		CPU_DEBUG_SCOPE("DrawPathDirectoryNodes");
 
 		ImGui::PushID(m_TreeId++);
-		for (auto& directoryIt : std::filesystem::directory_iterator(rootPath))
+		for (const PathNode& node : rootPath)
 		{
-			Path path = directoryIt.path();
+			const Path& path = node.Path;
 
-			if(!directoryIt.is_directory())
+			if(!node.IsDirectory)
 				continue;
 
 			bool selected = path == m_CurrentPath;
@@ -60,7 +60,7 @@ namespace Aurora
 
 			if(open)
 			{
-				DrawPathDirectoryNodes(path, basePath);
+				DrawPathDirectoryNodes(node, basePath);
 				ImGui::TreePop();
 			}
 		}
@@ -130,9 +130,26 @@ namespace Aurora
 							m_CurrentBasePath = path;
 						}
 
+						if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+						{
+							ImGui::OpenPopup("resource-file-list-context");
+						}
+
+#ifdef _WIN32
+						if (ImGui::BeginPopupContextItem())
+						{
+							if (ImGui::Selectable("Open in explorer"))
+							{
+								ShellExecuteA(NULL, "open", ((path / "Assets").string()).c_str(), NULL, NULL, SW_SHOWDEFAULT);
+							}
+							ImGui::EndPopup();
+						}
+#endif
+
 						if (open)
 						{
-							DrawPathDirectoryNodes(path / "Assets", path);
+							FileTree* tree = GEngine->GetResourceManager()->GetFileTree(path / "Assets");
+							DrawPathDirectoryNodes(*tree, path);
 						}
 					}
 				}
@@ -168,28 +185,57 @@ namespace Aurora
 
 				ImGui::BeginChild("resource-file-folder-view");
 
-				float columnSize = BIG_ICON_BASE_WIDTH + 15;
-				int columnCount = std::max(1, (int)floor(regionAvail / columnSize));
-
-				if (ImGui::BeginTable("table-content-items", columnCount))
+#ifdef _WIN32
+				if (ImGui::BeginPopupContextWindow())
 				{
-					CPU_DEBUG_SCOPE("ResourceIcons");
-					ImGui::TableNextColumn();
-
-					for (auto& directoryIt : std::filesystem::directory_iterator(m_CurrentPath))
+					if (ImGui::Selectable("Open in explorer"))
 					{
-						if(directoryIt.is_directory())
-							DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+						ShellExecuteA(NULL, "open", m_CurrentPath.string().c_str(), NULL, NULL, SW_SHOWDEFAULT);
 					}
+					ImGui::EndPopup();
+				}
+#endif
 
-					for (auto& directoryIt : std::filesystem::directory_iterator(m_CurrentPath))
+				bool foundPath = false;
+
+				if (FileTree* tree = GEngine->GetResourceManager()->GetFileTree(m_CurrentBasePath / "Assets"))
+				{
+					if (PathNode* subNode = tree->Find(m_CurrentPath))
 					{
-						if(!directoryIt.is_directory())
-							DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+						foundPath = true;
+
+						float columnSize = BIG_ICON_BASE_WIDTH + 15;
+						int columnCount = std::max(1, (int)floor(regionAvail / columnSize));
+
+						if (ImGui::BeginTable("table-content-items", columnCount))
+						{
+							CPU_DEBUG_SCOPE("ResourceIcons");
+							ImGui::TableNextColumn();
+
+							for (const auto& directoryIt : *subNode)
+							{
+								if(directoryIt.IsDirectory)
+									DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+							}
+
+							for (const auto& directoryIt : *subNode)
+							{
+								if(!directoryIt.IsDirectory)
+									DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+							}
+
+							ImGui::EndTable();
+						}
 					}
+				}
 
-
-					ImGui::EndTable();
+				if (!foundPath)
+				{
+					ImGui::Text("Path not found %s!", m_CurrentPath.string().c_str());
+					if (ImGui::Button("Click here to return to base path"))
+					{
+						m_CurrentPath = m_CurrentBasePath / "Assets";
+					}
 				}
 
 				ImGui::EndChild();
@@ -201,29 +247,24 @@ namespace Aurora
 		ImGui::End();
 	}
 
-	void ResourceWindow::DrawFile(const std::filesystem::directory_entry& directoryIt, float iconSize)
+	void ResourceWindow::DrawFile(const PathNode& node_root, float iconSize)
 	{
 		CPU_DEBUG_SCOPE("DrawFile");
 
-		const Path& path = directoryIt.path();
+		const Path& path = node_root.Path;
 
 		if(ResourceManager::IsIgnoredFileType(path))
 			return;
 
+
+		String fileName = path.filename().stem().string();
+
 		{
 			CPU_DEBUG_SCOPE("PushID");
-			String fileName = path.filename().stem().string();
 			ImGui::PushID(fileName.c_str());
 		}
 
-		bool isDir = false;
-
-		{
-			CPU_DEBUG_SCOPE("is_directory");
-			isDir = directoryIt.is_directory();
-		}
-
-		if (isDir)
+		if (node_root.IsDirectory)
 		{
 			CPU_DEBUG_SCOPE("DirMode");
 			ImGui::PushFont(m_BigIconFont);
@@ -329,7 +370,7 @@ namespace Aurora
 
 		}
 
-		//ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
+		ImGui::TextWrapped("%s", fileName.substr(0, std::min<int>(10, fileName.length())).c_str());
 
 		ImGui::TableNextColumn();
 

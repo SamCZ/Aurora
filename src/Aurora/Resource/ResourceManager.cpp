@@ -16,18 +16,102 @@
 #include "MaterialLoader.hpp"
 
 #include "Aurora/Core/Profiler.hpp"
+#include "Aurora/App/AppContext.hpp"
 
 namespace Aurora
 {
+	void FileTreeContainer::OnTreeChanged(EFileAction action, const Path &path, const Path& prevPath)
+	{
+		Path relativePath = std::filesystem::relative(path, Root.parent_path());
+
+		switch (action)
+		{
+			case EFileAction::Added:
+				Tree->AddFile(path);
+				AU_LOG_INFO("File Added ", relativePath.string());
+				break;
+			case EFileAction::Renamed:
+				Tree->RenameFile(path, prevPath);
+				AU_LOG_INFO("File Renamed from ", prevPath.string(), " to ", path.string());
+				break;
+			case EFileAction::Modified:
+				AU_LOG_INFO("File Modified ", relativePath.string());
+				break;
+			case EFileAction::Removed:
+				Tree->RemoveFile(path);
+				AU_LOG_INFO("File Removed ", relativePath.string());
+				break;
+			default: break;
+		}
+	}
 
 	ResourceManager::ResourceManager(IRenderDevice* renderDevice) : m_RenderDevice(renderDevice)
 	{
 
 	}
 
+	ResourceManager::~ResourceManager()
+	{
+		for (const auto& [path, treeCont] : m_FileTrees)
+		{
+			delete treeCont;
+		}
+	}
+
+	void ResourceManager::Update()
+	{
+		for (const auto& [path, treeCont] : m_FileTrees)
+		{
+			if (treeCont->FileWatcher)
+				treeCont->FileWatcher->Update();
+		}
+	}
+
 	void ResourceManager::AddFileSearchPath(const String &path)
 	{
 		m_FileSearchPaths.emplace_back(path);
+
+		if (AppContext::IsEditorMode())
+		{
+			CreateFileTree(Path(path) / "Assets", true);
+		}
+	}
+
+	FileTree* ResourceManager::CreateFileTree(const Path &path, bool watch)
+	{
+		auto it = m_FileTrees.find(path);
+
+		if (it != m_FileTrees.end())
+		{
+			return it->second->Tree;
+		}
+
+		auto* container = new FileTreeContainer();
+		container->Root = path;
+		container->Tree = new FileTree(path);
+		container->FileWatcher = nullptr;
+
+		if (watch)
+		{
+			container->FileWatcher = new FileWatcher(path);
+			container->FileWatcher->GetEmitter().Bind(container, &FileTreeContainer::OnTreeChanged);
+		}
+
+		m_FileTrees[path] = container;
+
+		return container->Tree;
+	}
+
+	FileTree* ResourceManager::GetFileTree(const Path& path)
+	{
+		auto it = m_FileTrees.find(path);
+
+		if (it != m_FileTrees.end())
+		{
+			return it->second->Tree;
+		}
+
+		return nullptr;
 	}
 
 	void ResourceManager::LoadPackageFile(const Path& path)
@@ -189,10 +273,10 @@ namespace Aurora
 
 	Shader_ptr ResourceManager::LoadComputeShader(const Path &path, const ShaderMacros &macros)
 	{
-		auto it = m_ShaderPrograms.find(path.string());
+		auto it = m_ShaderPrograms.find(path);
 
 		if(it != m_ShaderPrograms.end()) {
-			return m_ShaderPrograms[path.string()];
+			return m_ShaderPrograms[path];
 		}
 
 		String shaderSource = ReadShaderSource(path);
@@ -205,7 +289,7 @@ namespace Aurora
 			return nullptr;
 		}
 
-		m_ShaderPrograms[path.string()] = shaderProgram;
+		m_ShaderPrograms[path] = shaderProgram;
 
 		return shaderProgram;
 	}

@@ -27,14 +27,23 @@ namespace Aurora
 
 			auto* info = (FILE_NOTIFY_INFORMATION*)task->m_info;
 
+			Path prevPath;
+
 			while (info) {
 				auto action = info->Action;
 
-				EFileAction actionEnum = EFileAction::Unknown;
+				char tmp[MAX_PATH];
+				wcharToCharArray(info->FileName, tmp, info->FileNameLength);
 
+				EFileAction actionEnum = EFileAction::Unknown;
 				switch (action) {
-					case FILE_ACTION_RENAMED_NEW_NAME:
 					case FILE_ACTION_RENAMED_OLD_NAME:
+					{
+						actionEnum = EFileAction::Renamed;
+						prevPath = task->m_WatchingPath / tmp;
+						break;
+					}
+					case FILE_ACTION_RENAMED_NEW_NAME:
 						actionEnum = EFileAction::Renamed;
 						break;
 					case FILE_ACTION_ADDED:
@@ -49,12 +58,12 @@ namespace Aurora
 					default: break;
 				}
 
-				char tmp[MAX_PATH];
-				wcharToCharArray(info->FileName, tmp, info->FileNameLength);
-
-				task->m_Mutex.lock();
-				task->m_ThreadEvents.emplace(actionEnum, task->m_WatchingPath / tmp);
-				task->m_Mutex.unlock();
+				if (actionEnum != EFileAction::Renamed || action == FILE_ACTION_RENAMED_NEW_NAME)
+				{
+					task->m_Mutex.lock();
+					task->m_ThreadEvents.emplace(actionEnum, task->m_WatchingPath / tmp, prevPath);
+					task->m_Mutex.unlock();
+				}
 
 				info = info->NextEntryOffset == 0 ? nullptr : (FILE_NOTIFY_INFORMATION*)(((uint8_t*)info) + info->NextEntryOffset);
 			}
@@ -103,7 +112,7 @@ namespace Aurora
 		{
 			FileEvent e = m_ThreadEvents.front();
 			m_ThreadEvents.pop();
-			m_EventListeners.Invoke(std::forward<EFileAction>(e.Action), e.FilePath);
+			m_EventListeners.Invoke(std::forward<EFileAction>(e.Action), e.FilePath, e.PrevPath);
 		}
 #endif
 	}

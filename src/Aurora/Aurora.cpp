@@ -290,6 +290,11 @@ namespace Aurora
 				AppContext::m_GameModeToSwitch = nullptr;
 			}
 
+			{
+				CPU_DEBUG_SCOPE("ResourceManagerUpdate");
+				m_ResourceManager->Update();
+			}
+
 			{ // ImGui update
 				CPU_DEBUG_SCOPE("ImGui update");
 				ImGui_ImplOpenGL3_NewFrame();

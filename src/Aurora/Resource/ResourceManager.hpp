@@ -4,14 +4,23 @@
 #include "Aurora/Core/Common.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Core/Types.hpp"
+#include "Aurora/Core/FileWatcher.hpp"
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/Material/MaterialDefinition.hpp"
 #include "AssetBank.hpp"
+#include "FileTree.hpp"
 
 #include <nlohmann/json.hpp>
 
 namespace Aurora
 {
+	struct path_hash
+	{
+		std::size_t operator()(const Path& path) const {
+			return hash_value(path);
+		}
+	};
+
 	enum FileType : uint32_t
 	{
 		FT_IMAGE = BITF(0),
@@ -31,21 +40,42 @@ namespace Aurora
 		bool DoNotCache = false;
 	};
 
+	struct FileTreeContainer
+	{
+		Path Root;
+		FileTree* Tree;
+		FileWatcher* FileWatcher;
+
+		~FileTreeContainer()
+		{
+			delete FileWatcher;
+			delete Tree;
+		}
+
+		void OnTreeChanged(EFileAction action, const Path& path, const Path& prevPath);
+	};
+
 	class AU_API ResourceManager
 	{
 	private:
 		IRenderDevice* m_RenderDevice;
 		std::vector<Path> m_FileSearchPaths;
-		std::map<Path, std::pair<Path, ABankHeader>> m_AssetPackageFiles;
-		std::map<Path, std::vector<Path>> m_AssetPackageFolders;
-		std::map<String, Shader_ptr> m_ShaderPrograms;
-		std::map<Path, Texture_ptr> m_LoadedTextures;
-		std::map<Path, MaterialDefinition_ptr> m_MaterialDefinitions;
-		std::map<Path, Material_ptr> m_Materials;
+		std::unordered_map<Path, FileTreeContainer*, path_hash> m_FileTrees;
+		std::unordered_map<Path, std::pair<Path, ABankHeader>, path_hash> m_AssetPackageFiles;
+		std::unordered_map<Path, std::vector<Path>, path_hash> m_AssetPackageFolders;
+		std::unordered_map<Path, Shader_ptr, path_hash> m_ShaderPrograms;
+		std::unordered_map<Path, Texture_ptr, path_hash> m_LoadedTextures;
+		std::unordered_map<Path, MaterialDefinition_ptr, path_hash> m_MaterialDefinitions;
+		std::unordered_map<Path, Material_ptr, path_hash> m_Materials;
 	public:
 		explicit ResourceManager(IRenderDevice* renderDevice);
+		~ResourceManager();
+
+		void Update();
 
 		void AddFileSearchPath(const String& path);
+		FileTree* CreateFileTree(const Path& path, bool watch);
+		FileTree* GetFileTree(const Path& path);
 
 		void LoadPackageFile(const Path& path);
 
@@ -84,7 +114,7 @@ namespace Aurora
 		void UnloadAsset(const Path& path);
 
 		[[nodiscard]] inline const std::vector<Path>& GetFileSearchPaths() const { return m_FileSearchPaths; }
-		[[nodiscard]] inline const std::map<Path, MaterialDefinition_ptr>& GetMaterialDefs() const { return m_MaterialDefinitions; }
+		[[nodiscard]] inline const std::unordered_map<Path, MaterialDefinition_ptr, path_hash>& GetMaterialDefs() const { return m_MaterialDefinitions; }
 
 		static bool IsFileType(const Path& path, FileType types);
 		static bool IsIgnoredFileType(const Path& path);

@@ -7,6 +7,7 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Delegate.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
+#include "Aurora/Resource/FileTree.hpp"
 
 #include "Aurora/Tools/ImGuiHelper.hpp"
 #include "Aurora/Tools/ImGuizmo.h"
@@ -41,9 +42,9 @@ namespace Aurora
 
 		inline const Path& GetSelectedAssetPath() const { return m_SelectedAssetPath; }
 	private:
-		void DrawFile(const std::filesystem::directory_entry& directoryIt, float iconSize);
+		void DrawFile(const PathNode& directoryIt, float iconSize);
 		void OnFilesDrop(const std::vector<Path>& files);
-		void DrawPathDirectoryNodes(const Path& rootPath, const Path& basePath);
+		void DrawPathDirectoryNodes(const PathNode& rootPath, const Path& basePath);
 		void LoadTexturePreviews();
 		void QueueDeleteFile(const Path& path);
 		void SelectAsset(const Path& path);

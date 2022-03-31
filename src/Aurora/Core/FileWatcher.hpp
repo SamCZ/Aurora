@@ -34,10 +34,11 @@ namespace Aurora
 		{
 			EFileAction Action;
 			Path FilePath;
+			Path PrevPath;
 		};
 
 		Path m_WatchingPath;
-		EventEmitter<EFileAction, const Path&> m_EventListeners;
+		EventEmitter<EFileAction, const Path&, const Path&> m_EventListeners;
 #if defined(_WIN32)
 		uint8_t m_info[4096]{};
 		HANDLE m_handle = nullptr;
@@ -53,6 +54,6 @@ namespace Aurora
 
 		void Update();
 
-		EventEmitter<EFileAction, const Path&>& GetEmitter() { return m_EventListeners; }
+		EventEmitter<EFileAction, const Path&, const Path&>& GetEmitter() { return m_EventListeners; }
 	};
 }
