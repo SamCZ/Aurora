@@ -33,6 +33,7 @@
 
 #include "Physics/PhysicsWorld.hpp"
 #include "Editor/MainEditorPanel.hpp"
+#include "Aurora/Core/Timer.hpp"
 
 #undef DrawText
 
@@ -290,9 +291,16 @@ namespace Aurora
 				AppContext::m_GameModeToSwitch = nullptr;
 			}
 
+			// Update resource only when focused and once per second
+			if (m_Window->IsFocused())
 			{
-				CPU_DEBUG_SCOPE("ResourceManagerUpdate");
-				m_ResourceManager->Update();
+				static TickTimer tickTimer(1);
+
+				if (tickTimer)
+				{
+					CPU_DEBUG_SCOPE("ResourceManagerUpdate");
+					m_ResourceManager->Update();
+				}
 			}
 
 			{ // ImGui update
