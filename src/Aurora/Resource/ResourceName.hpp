@@ -54,7 +54,7 @@ namespace Aurora
 				}
 			}
 
-			Name.append(view.begin() + uuidEnd);
+			Name.append(view.substr(uuidEnd));
 		}
 	};
 }
