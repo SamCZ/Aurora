@@ -44,7 +44,7 @@ namespace Aurora
 	{
 		Path Root;
 		FileTree* Tree;
-		FileWatcher* FileWatcher;
+		Aurora::FileWatcher* FileWatcher;
 
 		~FileTreeContainer()
 		{
