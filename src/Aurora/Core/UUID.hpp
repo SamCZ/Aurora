@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <atomic>
 #include <string>
+#include <cstring>
 #include <functional>
 #include <optional>
 #include "Library.hpp"
@@ -205,8 +206,8 @@ namespace Aurora
 
 			uint64_t low = 0;
 			uint64_t high = 0;
-			(void)std::memcmp(&low, data.data(), 8);
-			(void)std::memcmp(&high, data.data() + 8, 8);
+			std::memcpy(&low, data.data(), 8);
+			std::memcpy(&high, data.data() + 8, 8);
 
 			return UUID(low, high);
 		}
