@@ -1,1 +1,2 @@
 add_subdirectory(memory_tests)
+add_subdirectory(uuid_tests)
