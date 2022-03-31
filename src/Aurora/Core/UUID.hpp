@@ -205,8 +205,8 @@ namespace Aurora
 
 			uint64_t low = 0;
 			uint64_t high = 0;
-			memcpy(&low, data.data(), 8);
-			memcpy(&high, data.data() + 8, 8);
+			(void)std::memcmp(&low, data.data(), 8);
+			(void)std::memcmp(&high, data.data() + 8, 8);
 
 			return UUID(low, high);
 		}
