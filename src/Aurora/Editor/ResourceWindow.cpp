@@ -29,6 +29,7 @@ namespace Aurora
 		m_FileDropEvent = GEngine->GetWindow()->GetFileDropEmitter().BindUnique(this, &ResourceWindow::OnFilesDrop);
 
 		m_ShaderIcon = GEngine->GetResourceManager()->LoadResourceIcon("Assets/Textures/Editor/shader.png", 56);
+		m_MaterialIcon = GEngine->GetResourceManager()->LoadResourceIcon("Assets/Textures/Editor/MaterialTexture.png", 56);
 	}
 
 	void ResourceWindow::DrawPathDirectoryNodes(const PathNode& rootPath, const Path& basePath)
@@ -313,24 +314,15 @@ namespace Aurora
 
 				ImGui::SetDragDropPayload("RESOURCE_PATH", rawPath, strPath.length()+1);
 
-				{ // Move this to some method to remove duplicated code
-					if (ResourceManager::IsFileType(path, FT_IMAGE))
-					{
-						auto it = m_TextureIcons.find(path);
-
-						if (it != m_TextureIcons.end())
-						{
-							EUI::ImageButton(it->second, iconSize);
-						}
-						else
-						{
-							ImGui::Text(ICON_FA_IMAGE);
-						}
-					}
-					else
-					{
-						ImGui::Text(ICON_FA_FILE);
-					}
+				if (texture)
+				{
+					EUI::ImageButton(texture, iconSize);
+				}
+				else
+				{
+					ImGui::PushFont(m_BigIconFont);
+					ImGui::Text("%s", icon);
+					ImGui::PopFont();
 				}
 
 				ImGui::EndDragDropSource();
@@ -466,6 +458,12 @@ namespace Aurora
 		if (ResourceManager::IsFileType(path, FT_SHADER))
 		{
 			textureOut = m_ShaderIcon;
+			return ICON_FA_FILE;
+		}
+
+		if (ResourceManager::IsFileType(path, static_cast<FileType>(FT_MATERIAL_DEF | FT_MATERIAL_INS)))
+		{
+			textureOut = m_MaterialIcon;
 			return ICON_FA_FILE;
 		}
 

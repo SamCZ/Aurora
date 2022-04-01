@@ -35,6 +35,7 @@ namespace Aurora
 
 		// Icons
 		Texture_ptr m_ShaderIcon;
+		Texture_ptr m_MaterialIcon;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 
