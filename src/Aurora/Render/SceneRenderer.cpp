@@ -217,6 +217,7 @@ namespace Aurora
 		Mesh* currentMesh = nullptr;
 		MeshLodResource* currentLodResource = nullptr;
 		FMeshSection* currentSection = nullptr;
+		bool updateInputLayout = false;
 
 		for (const ModelContext& modelContext : renderSet)
 		{
@@ -228,6 +229,7 @@ namespace Aurora
 				}
 				currentMaterial = modelContext.Material;
 				currentMaterial->BeginPass(pass, drawCallState);
+				updateInputLayout = true;
 			}
 
 			if (!(currentMesh == modelContext.Mesh && currentLodResource == modelContext.LodResource && currentSection == modelContext.MeshSection))
@@ -243,9 +245,15 @@ namespace Aurora
 					drawCallState.SetIndexBuffer(currentLodResource->IndexBuffer, currentLodResource->IndexFormat);
 				}
 				drawCallState.SetVertexBuffer(0, currentLodResource->VertexBuffer);
-
-				GEngine->GetRenderDevice()->BindShaderInputs(drawCallState, true);
+				updateInputLayout = true;
 			}
+
+			if (updateInputLayout)
+			{
+				GEngine->GetRenderDevice()->BindShaderInputs(drawCallState, true);
+				updateInputLayout = false;
+			}
+
 
 			drawCallState.RasterState.CullMode = ECullMode::Front;
 			GEngine->GetRenderDevice()->SetRasterState(drawCallState.RasterState);
