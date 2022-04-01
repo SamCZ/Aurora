@@ -82,15 +82,25 @@ namespace Aurora
 			if (ImGui::CollapsingHeader(block.Name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				//ImGui::Indent();
-				for (const auto& it : block.Vars)
+				for (const auto& [typeID, var] : block.Vars)
 				{
-					ImGui::Text("%s", it.second.Name.c_str());
+					const char* name = var.Connected ? var.ConnectedName.c_str() : var.Name.c_str();
 
-					const MUniformVar& var = it.second;
 					int componentCount = var.Size / sizeof(float);
-					uint8* varMemory = m_CurrentMaterial->GetVariableMemory(it.first, var.Size);
+					uint8* varMemory = m_CurrentMaterial->GetVariableMemory(typeID, var.Size);
 
-					ImGui::DragScalarN(var.Name.c_str(), ImGuiDataType_Float, varMemory, componentCount, 0.01f);
+					//TODO: Do this some other way than this hardcoded if
+					if (var.Connected && var.Widget == "Color")
+					{
+						if (componentCount == 4)
+							ImGui::ColorEdit4(name, reinterpret_cast<float*>(varMemory), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
+						else if (componentCount == 3)
+							ImGui::ColorEdit3(name, reinterpret_cast<float*>(varMemory), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
+					}
+					else
+					{
+						ImGui::DragScalarN(name, ImGuiDataType_Float, varMemory, componentCount, 0.01f);
+					}
 				}
 			}
 

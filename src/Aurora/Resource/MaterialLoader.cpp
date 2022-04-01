@@ -99,6 +99,9 @@ namespace Aurora
 					numericValDesc.InShaderNameID = Hash_djb2(in_shader_name.c_str());
 					numericValDesc.Numbers = value.get<std::vector<float>>();
 
+					if (it.contains("widget"))
+						numericValDesc.Widget = it["widget"].get<String>();
+
 					if(descOut.Variables.contains(numericValDesc.InShaderNameID))
 					{
 						AU_LOG_WARNING("Variable ", name, " with shader name ", in_shader_name, " already exists !");
