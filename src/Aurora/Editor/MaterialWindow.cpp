@@ -11,107 +11,91 @@
 namespace Aurora
 {
 
-	MaterialWindow::MaterialWindow() : m_WindowOpened(false), m_WindowNeedsFocus(true)
+	MaterialWindow::MaterialWindow() : EditorWindowBase("MaterialWindow", false, false)
 	{
 
 	}
 
-	void MaterialWindow::Update(double delta)
+	void MaterialWindow::OnGui()
 	{
 		CPU_DEBUG_SCOPE("MaterialWindow");
 
-		if (!m_WindowOpened)
+		MaterialDefinition* matdef = m_CurrentMaterial->GetMaterialDef();
+
+		ImGui::Text(matdef->GetName());
+
+		static int ID = 0;
+		ID = 0;
+
+		const auto& textures = matdef->GetTextureVars();
+
+		if (!textures.empty() && ImGui::CollapsingHeader("Textures", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			m_WindowNeedsFocus = true;
-			return;
-		}
-
-		if(m_WindowNeedsFocus)
-		{
-			ImGui::SetNextWindowFocus();
-			m_WindowNeedsFocus = false;
-		}
-
-		if (ImGui::Begin("MaterialWindow", &m_WindowOpened))
-		{
-			MaterialDefinition* matdef = m_CurrentMaterial->GetMaterialDef();
-
-			ImGui::Text(matdef->GetName());
-
-			static int ID = 0;
-			ID = 0;
-
-			const auto& textures = matdef->GetTextureVars();
-
-			if (!textures.empty() && ImGui::CollapsingHeader("Textures", ImGuiTreeNodeFlags_DefaultOpen))
+			for (const auto& it : textures)
 			{
-				for (const auto& it : textures)
-				{
-					MTextureVar* var = m_CurrentMaterial->GetTextureVar(it.first);
+				MTextureVar* var = m_CurrentMaterial->GetTextureVar(it.first);
 
-					if (!var->Texture)
+				if (!var->Texture)
+				{
+					ImGui::Text("%s: No Image", var->Name.c_str());
+				}
+				else
+				{
+					if(var->Texture->GetDesc().DimensionType != EDimensionType::TYPE_2D)
 					{
-						ImGui::Text("%s: No Image", var->Name.c_str());
+						if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_2DArray)
+							ImGui::Text("%s: [TextureArray(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+
+						if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_3D)
+							ImGui::Text("%s: [Texture3D(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+
+						if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_CubeMap)
+							ImGui::Text("%s: [CubeMap(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
 					}
 					else
 					{
-						if(var->Texture->GetDesc().DimensionType != EDimensionType::TYPE_2D)
-						{
-							if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_2DArray)
-								ImGui::Text("%s: [TextureArray(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
-
-							if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_3D)
-								ImGui::Text("%s: [Texture3D(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
-
-							if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_CubeMap)
-								ImGui::Text("%s: [CubeMap(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
-						}
-						else
-						{
-							ImGui::Text("%s", var->Name.c_str());
-							EUI::Image(var->Texture, Vector2(55, 55), false);
-						}
-					}
-
-					if (ImGui::BeginDragDropTarget())
-					{
-						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE_PATH"))
-						{
-							Path filePath = (char*)payload->Data;
-
-							if (ResourceManager::IsFileType(filePath, FT_IMAGE))
-							{
-								m_CurrentMaterial->SetTexture(it.first, GEngine->GetResourceManager()->LoadTexture(filePath));
-							}
-						}
-
-						ImGui::EndDragDropTarget();
+						ImGui::Text("%s", var->Name.c_str());
+						EUI::Image(var->Texture, Vector2(55, 55), false);
 					}
 				}
-			}
 
-			for (const auto& block : matdef->GetUniformBlocks())
-			{
-				ImGui::PushID(ID++);
-				if (ImGui::CollapsingHeader(block.Name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::BeginDragDropTarget())
 				{
-					//ImGui::Indent();
-					for (const auto& it : block.Vars)
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE_PATH"))
 					{
-						ImGui::Text("%s", it.second.Name.c_str());
+						Path filePath = (char*)payload->Data;
 
-						const MUniformVar& var = it.second;
-						int componentCount = var.Size / sizeof(float);
-						uint8* varMemory = m_CurrentMaterial->GetVariableMemory(it.first, var.Size);
-
-						ImGui::DragScalarN(var.Name.c_str(), ImGuiDataType_Float, varMemory, componentCount, 0.01f);
+						if (ResourceManager::IsFileType(filePath, FT_IMAGE))
+						{
+							m_CurrentMaterial->SetTexture(it.first, GEngine->GetResourceManager()->LoadTexture(filePath));
+						}
 					}
-				}
 
-				ImGui::PopID();
+					ImGui::EndDragDropTarget();
+				}
 			}
 		}
-		ImGui::End();
+
+		for (const auto& block : matdef->GetUniformBlocks())
+		{
+			ImGui::PushID(ID++);
+			if (ImGui::CollapsingHeader(block.Name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				//ImGui::Indent();
+				for (const auto& it : block.Vars)
+				{
+					ImGui::Text("%s", it.second.Name.c_str());
+
+					const MUniformVar& var = it.second;
+					int componentCount = var.Size / sizeof(float);
+					uint8* varMemory = m_CurrentMaterial->GetVariableMemory(it.first, var.Size);
+
+					ImGui::DragScalarN(var.Name.c_str(), ImGuiDataType_Float, varMemory, componentCount, 0.01f);
+				}
+			}
+
+			ImGui::PopID();
+		}
 	}
 
 	void MaterialWindow::Open(const Path &path)
@@ -130,23 +114,11 @@ namespace Aurora
 		}
 	}
 
-	void MaterialWindow::Open(const MaterialDefinition_ptr& materialDef)
-	{
-		if (materialDef)
-		{
-			m_WindowOpened = true;
-			m_WindowNeedsFocus = true;
-		}
-
-		m_CurrentMaterial = materialDef;
-	}
-
 	void MaterialWindow::Open(const Material_ptr& materialInstance)
 	{
 		if (materialInstance)
 		{
-			m_WindowOpened = true;
-			m_WindowNeedsFocus = true;
+			OpenWindow(true);
 		}
 
 		m_CurrentMaterial = materialInstance;

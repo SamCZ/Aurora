@@ -16,6 +16,7 @@
 #include "MaterialLoader.hpp"
 
 #include "Aurora/Core/Profiler.hpp"
+#include "Aurora/Core/UUID.hpp"
 #include "Aurora/App/AppContext.hpp"
 
 namespace Aurora
@@ -465,11 +466,13 @@ namespace Aurora
 			Path realPath;
 			if (!fromAssetPackage && GetRealPath(path, realPath))
 			{
-				nlohmann::json metaFile = GetOrCreateMetaForPath(realPath, {{"srgb", true}});
+				nlohmann::json metaFile = GetOrCreateMetaForPath(realPath, {
+					{"srgb", true}
+				});
 
-				if (metaFile.contains("srgb"))
+				if (metaFile.contains("properties") && metaFile["properties"].contains("srgb"))
 				{
-					if (metaFile["srgb"].get<bool>() && format == GraphicsFormat::RGBA8_UNORM)
+					if (metaFile["properties"]["srgb"].get<bool>() && format == GraphicsFormat::RGBA8_UNORM)
 					{
 						format = GraphicsFormat::SRGBA8_UNORM;
 					}
@@ -670,7 +673,8 @@ namespace Aurora
 		}
 		else
 		{
-			json = defaults;
+			json["uuid"] = (String)UUID::Generate();
+			json["properties"] = defaults;
 
 			AU_LOG_INFO("Creating meta ", metaPath.string());
 

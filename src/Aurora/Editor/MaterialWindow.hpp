@@ -1,24 +1,21 @@
 #pragma once
 
-#include "Aurora/Core/Types.hpp"
+#include "WindowBase.hpp"
 #include "Aurora/Graphics/Material/MaterialDefinition.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
 
 namespace Aurora
 {
-	class MaterialWindow
+	class MaterialWindow : public EditorWindowBase
 	{
 	private:
 		Material_ptr m_CurrentMaterial;
-		bool m_WindowOpened;
-		bool m_WindowNeedsFocus;
 	public:
 		MaterialWindow();
 
-		void Update(double delta);
+		void OnGui() override;
 
 		void Open(const Path& path);
-		void Open(const MaterialDefinition_ptr& materialDef);
 		void Open(const Material_ptr& materialInstance);
 
 		[[nodiscard]] inline const Material_ptr& GetOpened() const { return m_CurrentMaterial; }

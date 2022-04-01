@@ -1,5 +1,5 @@
 {
-	"name": "Color",
+	"name": "Textured",
 	"passes": [
 		{
 			"name": "Ambient",
@@ -11,11 +11,11 @@
 	],
 	"variables": [
 		{
-			"name": "Color",
+			"name": "Tint",
 			"type": "Vector",
 			"widget": "Color",
-			"in_shader_name": "u_Color",
-			"value": [255, 255, 1, 255]
+			"in_shader_name": "u_Tint",
+			"value": [1, 1, 1, 1]
 		}
 	],
 	"macros": {}

@@ -5,6 +5,7 @@
 #include "SceneHierarchyWindow.hpp"
 #include "ResourceWindow.hpp"
 #include "MaterialWindow.hpp"
+#include "PropertiesWindow.hpp"
 
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
@@ -23,6 +24,7 @@ namespace Aurora
 		SceneHierarchyWindow m_SceneHierarchyWindow;
 		ResourceWindow m_ResourceWindow;
 		MaterialWindow m_MaterialWindow;
+		PropertiesWindow m_PropertiesWindow;
 
 		Actor* m_SelectedActor;
 		SceneComponent* m_SelectedComponent;
@@ -47,6 +49,9 @@ namespace Aurora
 		{
 			m_SelectedActor = actor;
 			m_SelectedComponent = nullptr;
+
+			if (actor)
+				m_PropertiesWindow.OpenWindow(true);
 		}
 
 		inline SceneComponent* GetSelectedComponent() { return m_SelectedComponent; }
@@ -55,6 +60,9 @@ namespace Aurora
 		{
 			m_SelectedComponent = component;
 			m_SelectedActor = nullptr;
+
+			if (component)
+				m_PropertiesWindow.OpenWindow(true);
 		}
 
 		inline void ClearObjectSelection()

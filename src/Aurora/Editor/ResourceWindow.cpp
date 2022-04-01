@@ -307,7 +307,7 @@ namespace Aurora
 
 			if (ImGui::BeginDragDropSource())
 			{
-				String strPath = path.string();
+				String strPath = std::filesystem::relative(path, m_CurrentBasePath).string();
 				char rawPath[260];
 				strcpy(rawPath, strPath.c_str());
 

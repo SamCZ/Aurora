@@ -2,7 +2,7 @@ out vec4 FragColor;
 
 uniform Color
 {
-	vec4 u_Color;
+	vec4 u_Tint;
 };
 
 in vec2 TexCoord;
@@ -13,7 +13,7 @@ uniform sampler2D Texture;
 void main()
 {
 	vec3 N = normalize(Normal);
-	FragColor = texture(Texture, TexCoord);
+	FragColor = texture(Texture, TexCoord) * u_Tint;
 
 	if(FragColor.a < 0.5)
 		discard;

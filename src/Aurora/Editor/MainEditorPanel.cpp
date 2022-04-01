@@ -29,7 +29,8 @@ namespace Aurora
 		m_MaterialInstancesWindowOpened(false),
 		m_SceneHierarchyWindow(this),
 		m_ResourceWindow(this),
-		m_MaterialWindow()
+		m_MaterialWindow(),
+		m_PropertiesWindow(this)
 	{
 		m_ConsoleWindow = std::make_shared<ConsoleWindow>();
 		m_GameViewportWindow = std::make_shared<GameViewportWindow>(this);
@@ -52,41 +53,7 @@ namespace Aurora
 		m_GameViewportWindow->Update(delta);
 
 		m_MaterialWindow.Update(delta);
-
-		ImGui::Begin("Properties");
-		{
-			CPU_DEBUG_SCOPE("PropertiesWindow");
-
-			SceneComponent* root;
-
-			if(m_SelectedActor)
-			{
-				root = m_SelectedActor->GetRootComponent();
-				std::string name = m_SelectedActor->GetName();
-				if(ImGui::InputTextLabel("Name", name))
-				{
-					m_SelectedActor->SetName(name);
-				}
-			}
-			else
-			{
-				root = m_SelectedComponent;
-			}
-
-			if(root)
-			{
-				ImGui::Separator();
-				if(ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::DrawVec3Control("Location", root->GetTransform().Location);
-					ImGui::DrawVec3Control("Rotation", root->GetTransform().Rotation);
-					ImGui::DrawVec3Control("Scale", root->GetTransform().Scale);
-				}
-			}
-
-
-		}
-		ImGui::End();
+		m_PropertiesWindow.Update(delta);
 
 		if(m_MaterialInstancesWindowOpened)
 		{
