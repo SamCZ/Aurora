@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <vector>
 
@@ -39,7 +38,8 @@ namespace Aurora
 
 		ReturnType Invoke(ArgsTypes&& ...args) override
 		{
-			return std::invoke(m_Method, *m_Instance, args...);
+			return (*m_Instance.*m_Method)(std::forward<ArgsTypes&&>(args)...);
+			//return std::invoke(m_Method, *m_Instance, args...);
 		}
 	};
 
@@ -55,7 +55,7 @@ namespace Aurora
 
 		ReturnType Invoke(ArgsTypes&& ...args) override
 		{
-			return std::invoke(m_Function, args...);
+			return m_Function(std::forward<ArgsTypes&&>(args)...);
 		}
 	};
 
