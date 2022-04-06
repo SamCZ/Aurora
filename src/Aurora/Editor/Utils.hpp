@@ -6,6 +6,11 @@
 
 #include <imgui_internal.h>
 
+namespace Aurora
+{
+	class ActorComponent;
+}
+
 namespace Aurora::EUI
 {
 	static bool ImageButton(ITexture* texture, float size)
@@ -42,4 +47,6 @@ namespace Aurora::EUI
 		bb.Max = bb.Min + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f);
 		return ImGui::SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f);
 	}
+
+	const char* GetIconForComponent(ActorComponent* component);
 }

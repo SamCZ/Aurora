@@ -5,6 +5,7 @@
 #include "Aurora/Framework/Scene.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
+#include "Aurora/Framework/Lights.hpp"
 
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
@@ -204,6 +205,11 @@ namespace Aurora
 			FillRenderSet(modelContexts);
 
 			RenderPass(Pass::Ambient, drawCallState, camera, modelContexts);
+
+			for (DirectionalLightComponent* lightComponent : scene->GetComponents<DirectionalLightComponent>())
+			{
+				
+			}
 
 			depthBuffer.Free();
 		}

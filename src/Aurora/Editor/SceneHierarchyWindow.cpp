@@ -8,6 +8,7 @@
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
+#include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 
@@ -15,19 +16,21 @@
 
 namespace Aurora
 {
-
-	const char* GetIconForComponent(ActorComponent* component)
+	namespace EUI
 	{
-		if(component->HasType(CameraComponent::TypeID()))
-			return ICON_FA_CAMERA;
+		const char* GetIconForComponent(ActorComponent* component)
+		{
+			if(component->HasType(CameraComponent::TypeID()))
+				return ICON_FA_CAMERA;
 
-		if(component->HasType(MeshComponent::TypeID()))
-			return ICON_FA_CUBE;
+			if(component->HasType(MeshComponent::TypeID()))
+				return ICON_FA_CUBE;
 
-		if(component->HasType(SceneComponent::TypeID()))
-			return ICON_FA_LAYER_GROUP;
+			if(component->HasType(SceneComponent::TypeID()))
+				return ICON_FA_LAYER_GROUP;
 
-		return ICON_FA_QUESTION;
+			return ICON_FA_QUESTION;
+		}
 	}
 
 	SceneHierarchyWindow::SceneHierarchyWindow(MainEditorPanel* mainEditorPanel) : m_MainEditorPanel(mainEditorPanel)
@@ -94,7 +97,7 @@ namespace Aurora
 				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
 				ImGui::TableNextColumn();
 				ImGui::AlignTextToFramePadding();
-				ImGui::Text("%s %s", GetIconForComponent(component), component->GetTypeName());
+				ImGui::Text("%s %s", EUI::GetIconForComponent(component), component->GetTypeName());
 				ImGui::TableNextColumn();
 				ImGui::AlignTextToFramePadding();
 				bool active = component->IsActive() && component->IsParentActive();
@@ -117,7 +120,7 @@ namespace Aurora
 				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
 				ImGui::TableNextColumn();
 				ImGui::AlignTextToFramePadding();
-				ImGui::Text("%s %s", GetIconForComponent(component), component->GetTypeName());
+				ImGui::Text("%s %s", EUI::GetIconForComponent(component), component->GetTypeName());
 				ImGui::TableNextColumn();
 				ImGui::AlignTextToFramePadding();
 				bool active = component->IsActive() && component->IsParentActive();
@@ -170,22 +173,45 @@ namespace Aurora
 						"Empty Actor",
 						"Directional light",
 						"Point light",
+						"Spot light",
 						"-",
 						"Box",
 						"Sphere"
 					};
 
-					for (auto& type : types)
+					for (int i = 0; i < std::size(types); ++i)
 					{
-						if(strlen(type) == 1)
+						const char* name = types[i];
+
+						if(strlen(name) == 1)
 						{
 							ImGui::Separator();
 							continue;
 						}
 
-						if (ImGui::Selectable(type))
+						if (ImGui::Selectable(name))
 						{
-
+							switch (i)
+							{
+								case 0:
+									m_MainEditorPanel->SetSelectedActor(
+										AppContext::GetScene()->SpawnActor<Actor>("EmptyActor", {0, 0, 0}) );
+									break;
+								case 1:
+									m_MainEditorPanel->SetSelectedActor(
+										AppContext::GetScene()->SpawnActor<DirectionalLight>("DirectionalLight", {0, 0, 0}) );
+									break;
+								case 2:
+									m_MainEditorPanel->SetSelectedActor(
+										AppContext::GetScene()->SpawnActor<PointLight>("PointLight", {0, 0, 0}) );
+									break;
+								case 3:
+									m_MainEditorPanel->SetSelectedActor(
+										AppContext::GetScene()->SpawnActor<SpotLight>("SpotLight", {0, 0, 0}) );
+									break;
+								default:
+									break;
+							}
 						}
 					}
 

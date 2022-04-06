@@ -105,7 +105,8 @@ namespace Aurora
 
 		Vector4 result = (GetProjectionViewMatrix() * Vector4(position, 1.0f));
 
-		if(result.w > 0.0f) {
+		if(result.w > 0.0f)
+		{
 			// the result of this will be x and y coords in -1..1 projection space
 			const float RHW = 1.0f / result.w;
 			Vector4 PosInScreenSpace = Vector4(result.x * RHW, result.y * RHW, result.z * RHW, result.w);
@@ -117,11 +118,13 @@ namespace Aurora
 			out_ScreenPos.x = NormalizedX * (float)m_ViewPort->GetWidth();
 			out_ScreenPos.y = NormalizedY * (float)m_ViewPort->GetHeight();
 
-			if(out_ScreenPos.x < 0 || out_ScreenPos.x > (float)m_ViewPort->GetWidth()) {
+			if(out_ScreenPos.x < 0 || out_ScreenPos.x > (float)m_ViewPort->GetWidth())
+			{
 				return false;
 			}
 
-			if(out_ScreenPos.y < 0 || out_ScreenPos.y > (float)m_ViewPort->GetHeight()) {
+			if(out_ScreenPos.y < 0 || out_ScreenPos.y > (float)m_ViewPort->GetHeight())
+			{
 				return false;
 			}
 
@@ -133,6 +136,9 @@ namespace Aurora
 
 	void CameraComponent::Tick(double delta)
 	{
+		// TODO: think about updating only when transform changes too
+		m_View = glm::inverse(GetTransformationMatrix());
+
 		UpdateFrustum();
 	}
 }

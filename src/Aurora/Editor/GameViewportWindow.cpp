@@ -9,6 +9,7 @@
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
+#include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 
@@ -71,6 +72,23 @@ namespace Aurora
 		m_EditorCamera->SetName("EditorCamera");
 		m_EditorCamera->SetViewPort(m_RenderViewPort);
 		m_EditorCamera->SetPerspective(70.0f, 0.1f, 2000.0f);
+	}
+
+	const char* GetIconForActor(Actor* actor)
+	{
+		if (actor->HasType(DirectionalLight::TypeID()))
+			return ICON_FA_SUN;
+
+		if (actor->HasType(PointLight::TypeID()))
+			return ICON_FA_LIGHTBULB;
+
+		if (actor->HasType(SpotLight::TypeID()))
+			return ICON_FA_TRAFFIC_LIGHT;
+
+		if (actor->GetRootComponent()->HasType(CameraComponent::TypeID()))
+			return ICON_FA_CAMERA;
+
+		return ICON_FA_USER;
 	}
 
 	void GameViewportWindow::Update(double delta)
@@ -144,6 +162,29 @@ namespace Aurora
 				}
 
 				ImGui::EndDragDropTarget();
+			}
+
+			// Actor icons
+
+			if (m_EditorCameraActor->IsActive())
+			{
+				const float ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_EYE).x;
+
+				char tmps[512];
+				Vector2 screenPos;
+
+				for (Actor* actor : *AppContext::GetScene())
+				{
+					if (actor == m_EditorCameraActor)
+						continue;
+
+					Vector3 location = actor->GetRootComponent()->GetTransform().Location;
+					if (!m_EditorCamera->GetScreenCoordinatesFromWorld(location, screenPos))
+						continue;
+
+					ImFormatString(tmps, sizeof(tmps), GetIconForActor(actor));
+					ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x + screenPos.x - ICON_BASE_WIDTH / 2.0f, pos.y + screenPos.y - ICON_BASE_WIDTH / 2.0f), IM_COL32_WHITE, tmps);
+				}
 			}
 
 			//Manipulator
