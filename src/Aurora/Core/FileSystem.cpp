@@ -39,7 +39,6 @@ namespace Aurora::FS
 			fileData.resize(size);
 			file.seekg(0, std::ios::beg);
 			file.read(reinterpret_cast<char *>(fileData.data()), size);
-			std::streamsize bytes = file.gcount();
 			file.close();
 
 			return fileData;

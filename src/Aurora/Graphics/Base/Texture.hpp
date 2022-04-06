@@ -55,19 +55,19 @@ namespace Aurora
 		bool UseAsBindless;
 
 		TextureDesc() :
-				ImageFormat(GraphicsFormat::Unknown),
 				Width(0),
 				Height(0),
 				DepthOrArraySize(0),
 				MipLevels(1),
+				SampleCount(1),
+				ImageFormat(GraphicsFormat::Unknown),
 				Usage(EUsage::Default),
 				DimensionType(EDimensionType::TYPE_2D),
-				SampleCount(1),
 				Name("Unknown"),
-				IsUAV(false),
 				IsRenderTarget(false),
+				IsUAV(false),
 				DisableGPUsSync(false),
-				UseClearValue(false), ClearValue(0), UseAsBindless(false) { }
+				ClearValue(0), UseClearValue(false), UseAsBindless(false) { }
 
 		[[nodiscard]] inline Vector2i GetSize() const noexcept { return {Width, Height}; }
 

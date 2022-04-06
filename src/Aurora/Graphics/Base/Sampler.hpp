@@ -24,11 +24,11 @@ namespace Aurora
 		Color BorderColor;
 
 		SamplerDesc() :
+				MipBias(0),
+				Anisotropy(1),
 				MinFilter(true),
 				MagFilter(true),
 				MipFilter(true),
-				MipBias(0),
-				Anisotropy(1),
 				ShadowCompare(false),
 				BorderColor(1, 1, 1, 1)
 		{
@@ -36,8 +36,8 @@ namespace Aurora
 		}
 
 		SamplerDesc(bool minFilter, bool magFilter, bool mipFilter, EWrapMode wrapX, EWrapMode wrapY, EWrapMode wrapZ = EWrapMode::Clamp)
-		: MinFilter(minFilter), MagFilter(magFilter), MipFilter(mipFilter),MipBias(0),
-		  Anisotropy(1),
+		: MipBias(0), Anisotropy(1), MinFilter(minFilter),MagFilter(magFilter),
+		  MipFilter(mipFilter),
 		  ShadowCompare(false),
 		  BorderColor(1, 1, 1, 1)
 		{

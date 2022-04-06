@@ -22,6 +22,7 @@ namespace Aurora
 	class IDelegate
 	{
 	public:
+		virtual ~IDelegate() = default;
 		virtual ReturnType Invoke(ArgsTypes&& ...args) = 0;
 	};
 

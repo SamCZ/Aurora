@@ -25,11 +25,11 @@ std::vector<std::string> SplitString(const std::string& str, char delimiter)
 
 std::string FormatBytes(uint64_t bytes)
 {
-	int marker = 1024; // Change to 1000 if required
-	int decimal = 3; // Change as required
-	int kiloBytes = marker; // One Kilobyte is 1024 bytes
-	int megaBytes = marker * marker; // One MB is 1024 KB
-	int gigaBytes = marker * marker * marker; // One GB is 1024 MB
+	uint64_t marker = 1024; // Change to 1000 if required
+	uint64_t decimal = 3; // Change as required
+	uint64_t kiloBytes = marker; // One Kilobyte is 1024 bytes
+	uint64_t megaBytes = marker * marker; // One MB is 1024 KB
+	uint64_t gigaBytes = marker * marker * marker; // One GB is 1024 MB
 	//uint64_t teraBytes = marker * marker * marker * marker; // One TB is 1024 GB
 
 	std::stringstream ss;
@@ -41,15 +41,15 @@ std::string FormatBytes(uint64_t bytes)
 	} // return KB if less than a MB
 	else if(bytes < megaBytes)
 	{
-		ss << std::setprecision(decimal) << ((float)bytes / (float)kiloBytes) << "KB";
+		ss << std::setprecision((int)decimal) << ((float)bytes / (float)kiloBytes) << "KB";
 	}// return MB if less than a GB
 	else if(bytes < gigaBytes)
 	{
-		ss << std::setprecision(decimal) << ((float)bytes / (float)megaBytes) << "MB";
+		ss << std::setprecision((int)decimal) << ((float)bytes / (float)megaBytes) << "MB";
 	} // return GB if less than a TB
 	else
 	{
-		ss << std::setprecision(decimal) << ((float)bytes / (float)gigaBytes) << "GB";
+		ss << std::setprecision((int)decimal) << ((float)bytes / (float)gigaBytes) << "GB";
 	}
 
 	return ss.str();

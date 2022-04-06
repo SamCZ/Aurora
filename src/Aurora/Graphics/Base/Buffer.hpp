@@ -78,18 +78,18 @@ namespace Aurora
 		bool IsDMA : 1; // IMPORTANT! If you set this you need to make barrier after writing to the buffer !
 
 		BufferDesc()
-				: ByteSize(0),
-				  Name("Undefined"),
+				: Name("Undefined"),
+				  ByteSize(0),
 				  Type(EBufferType::Unknown),
 				  Usage(EBufferUsage::Unknown),
 				  Flags(BF_MAP_WRITE), IsDMA(false) {}
 
 		BufferDesc(std::string name, uint32_t size, EBufferType type, EBufferUsage usage = EBufferUsage::DynamicDraw, bool dma = false)
-				: ByteSize(size),
-				  Name(std::move(name)),
+				: Name(std::move(name)),
+				  ByteSize(size),
 				  Type(type),
-				  Flags(0),
-				  Usage(usage), IsDMA(dma) {}
+				  Usage(usage),
+				  Flags(0), IsDMA(dma) {}
 	};
 
 	class IBuffer : public TypeBase<IBuffer>

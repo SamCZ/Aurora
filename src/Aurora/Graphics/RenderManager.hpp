@@ -143,7 +143,7 @@ namespace Aurora
 		TemporalRenderTarget CreateTemporalRenderTarget(const String &name, const Vector2i &size, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1,
 														uint depthOrArraySize = 0, TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
 		{
-			return std::move(CreateTemporalRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav));
+			return CreateTemporalRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav);
 		}
 
 		Texture_ptr
@@ -154,7 +154,7 @@ namespace Aurora
 		CreateRenderTarget(const String &name, const Vector2i &size, GraphicsFormat format, EDimensionType dimensionType = EDimensionType::TYPE_2D, uint mipLevels = 1, uint depthOrArraySize = 0,
 						   TextureDesc::EUsage usage = TextureDesc::EUsage::Default, bool uav = false)
 		{
-			return std::move(CreateRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav));
+			return CreateRenderTarget(name, size.x, size.y, format, dimensionType, mipLevels, depthOrArraySize, usage, uav);
 		}
 
 		Texture_ptr CreateTextureArray(const std::vector<Path>& textures, bool srgba);

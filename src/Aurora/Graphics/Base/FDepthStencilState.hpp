@@ -56,13 +56,13 @@ namespace Aurora
 		StencilOpDesc   BackFace{};
 
 		FDepthStencilState() :
-				StencilRefValue(0),
 				DepthEnable(true),
 				DepthWriteMask(EDepthWriteMask::All),
 				DepthFunc(EComparisonFunc::Less),
 				StencilEnable(false),
 				StencilReadMask(0xff),
 				StencilWriteMask(0xff),
+				StencilRefValue(0),
 				Padding(0)
 		{
 			StencilOpDesc stencilOpDesc = {};

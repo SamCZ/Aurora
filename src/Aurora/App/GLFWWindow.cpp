@@ -154,8 +154,8 @@ namespace Aurora
 	};
 #endif
 	GLFWWindow::GLFWWindow() : ISystemWindow(), m_WindowHandle(nullptr), m_Focused(false),
-							   m_CursorMode(ECursorMode::Normal), m_InputManager(Input::Manager_ptr(new Input::Manager(this))),
-							   m_SwapChain(nullptr), m_Vsync(true)
+							   m_CursorMode(ECursorMode::Normal), m_Vsync(true),
+							   m_InputManager(Input::Manager_ptr(new Input::Manager(this))), m_SwapChain(nullptr)
 	{
 
 	}
