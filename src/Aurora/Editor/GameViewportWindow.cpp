@@ -170,7 +170,7 @@ namespace Aurora
 			{
 				const float ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_EYE).x;
 
-				char tmps[512];
+				char tmps[10];
 				Vector2 screenPos;
 
 				for (Actor* actor : *AppContext::GetScene())
@@ -178,11 +178,11 @@ namespace Aurora
 					if (actor == m_EditorCameraActor)
 						continue;
 
-					Vector3 location = actor->GetRootComponent()->GetTransform().Location;
+					const Vector3& location = actor->GetRootComponent()->GetTransform().Location;
 					if (!m_EditorCamera->GetScreenCoordinatesFromWorld(location, screenPos))
 						continue;
 
-					ImFormatString(tmps, sizeof(tmps), GetIconForActor(actor));
+					ImFormatString(tmps, sizeof(tmps), "%s", GetIconForActor(actor));
 					ImGui::GetWindowDrawList()->AddText(ImVec2(pos.x + screenPos.x - ICON_BASE_WIDTH / 2.0f, pos.y + screenPos.y - ICON_BASE_WIDTH / 2.0f), IM_COL32_WHITE, tmps);
 				}
 			}
