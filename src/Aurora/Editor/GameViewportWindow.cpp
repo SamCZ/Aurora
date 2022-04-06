@@ -83,7 +83,7 @@ namespace Aurora
 			return ICON_FA_LIGHTBULB;
 
 		if (actor->HasType(SpotLight::TypeID()))
-			return ICON_FA_TRAFFIC_LIGHT;
+			return ICON_FA_LIGHTBULB;
 
 		if (actor->GetRootComponent()->HasType(CameraComponent::TypeID()))
 			return ICON_FA_CAMERA;
