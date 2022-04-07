@@ -37,6 +37,7 @@ vec3 ApplyPointLight(PointLightGPU light, vec3 color, vec3 normal, vec3 worldPos
 	float L = light.ColorRadius.w / D;
 
 	float nDotL = dot(N, normal);
+	nDotL = max(nDotL, 0.0f);
 
 	return color * nDotL * L * light.ColorRadius.rgb * light.PositionIntensity.w;
 }
