@@ -66,7 +66,7 @@ namespace Aurora
 
 		m_CurrentScene = scene;
 
-		m_EditorCameraActor = scene->SpawnActor<Actor, CameraComponent>("EditorCameraActor", Vector3(), Vector3());
+		m_EditorCameraActor = scene->SpawnActor<Actor, CameraComponent>("EditorCameraActor", Vector3(-0.8f, 4.3f, 7.4f), Vector3(-31.0f, -4.0f, 0.0f));
 		m_EditorCameraActor->SetActive(false);
 		m_EditorCamera = CameraComponent::SafeCast(m_EditorCameraActor->GetRootComponent());
 		m_EditorCamera->SetName("EditorCamera");
