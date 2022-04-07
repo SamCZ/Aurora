@@ -16,6 +16,7 @@
 #include <Aurora/Framework/SceneComponent.hpp>
 #include <Aurora/Framework/CameraComponent.hpp>
 #include <Aurora/Framework/StaticMeshComponent.hpp>
+#include <Aurora/Framework/Lights.hpp>
 
 #include <Aurora/Resource/AssimpModelLoader.hpp>
 #include <Aurora/Resource/ResourceName.hpp>
@@ -215,6 +216,8 @@ class BaseAppContext : public AppContext
 		}
 
 		GetScene()->SpawnActor<CameraActor>("Camera", {0, 0, 5});
+
+		AppContext::GetScene()->SpawnActor<PointLight>("PointLight", {-1, 3, 1});
 	}
 
 	void Update(double delta) override

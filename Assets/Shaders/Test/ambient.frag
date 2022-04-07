@@ -1,4 +1,5 @@
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec3 NormalColor;
 
 uniform Color
 {
@@ -12,11 +13,10 @@ uniform sampler2D Texture;
 
 void main()
 {
-	vec3 N = normalize(Normal);
 	FragColor = texture(Texture, TexCoord) * u_Tint;
 
 	if(FragColor.a < 0.5)
 		discard;
 
-	FragColor.rgb *= max(dot(N, vec3(0.5, 0.5, 0.5)), 0.2);
+	NormalColor = normalize(Normal) * 0.5f + 0.5f;
 }

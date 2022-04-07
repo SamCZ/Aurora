@@ -700,6 +700,11 @@ namespace Aurora
 
 		auto* glBuffer = static_cast<GLBuffer*>(buffer.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
+		if (!(glBuffer->GetDesc().Usage == EBufferUsage::DynamicDraw || glBuffer->GetDesc().Usage == EBufferUsage::DynamicRead || glBuffer->GetDesc().Usage == EBufferUsage::DynamicCopy))
+		{
+			AU_LOG_ERROR("Cannot write to static buffer !");
+		}
+
 		au_assert(glBuffer->GetDesc().ByteSize >= offset + dataSize);
 
 		if (glBuffer->GetDesc().IsDMA)

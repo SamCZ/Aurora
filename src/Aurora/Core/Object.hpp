@@ -39,7 +39,7 @@ namespace Aurora
 	};
 
 #define CLASS_OBJ(className, parentClass) \
-    typedef parentClass super;\
+    typedef parentClass Super;\
 	static constexpr const char* TypeName() { return #className; } \
 	static TTypeID TypeID() { return TypeIDCache<className>::value; } \
 	[[nodiscard]] TTypeID GetTypeID() const override { return TypeID(); } \

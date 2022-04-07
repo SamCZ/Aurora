@@ -6,32 +6,41 @@
 
 namespace Aurora
 {
-	class LightComponentBase : public SceneComponent
+	class LightComponent : public SceneComponent
 	{
 	private:
 		float m_Intensity;
 		bool m_CastShadows;
-		Color m_Color;
+		Color m_LightColor;
 	public:
-		CLASS_OBJ(LightComponentBase, SceneComponent);
+		CLASS_OBJ(LightComponent, SceneComponent);
+
+		LightComponent() : m_Intensity(1.0f), m_CastShadows(true), m_LightColor(Color::white()) {}
+
+		[[nodiscard]] float GetIntensity() const { return m_Intensity; }
+		[[nodiscard]] Color GetColor() const { return m_LightColor; }
 	};
 
-	class DirectionalLightComponent : public LightComponentBase
+	class DirectionalLightComponent : public LightComponent
 	{
 	public:
-		CLASS_OBJ(DirectionalLightComponent, LightComponentBase);
+		CLASS_OBJ(DirectionalLightComponent, LightComponent);
 	};
 
-	class PointLightComponent : public LightComponentBase
+	class PointLightComponent : public LightComponent
 	{
+	private:
+		float m_Radius = 1.0f;
 	public:
-		CLASS_OBJ(PointLightComponent, LightComponentBase);
+		CLASS_OBJ(PointLightComponent, LightComponent);
+
+		[[nodiscard]] float GetRadius() const { return m_Radius; }
 	};
 
-	class SpotLightComponent : public LightComponentBase
+	class SpotLightComponent : public LightComponent
 	{
 	public:
-		CLASS_OBJ(SpotLightComponent, LightComponentBase);
+		CLASS_OBJ(SpotLightComponent, LightComponent);
 	};
 
 	///////////////////////////////////////////////////////////////////////////////////

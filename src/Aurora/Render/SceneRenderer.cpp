@@ -12,7 +12,10 @@
 #include "Aurora/Graphics/RenderManager.hpp"
 #include "Aurora/Graphics/OpenGL/GLBufferLock.hpp"
 
+#include "Aurora/Resource/ResourceManager.hpp"
+
 #include "Shaders/vs_common.h"
+#include "Shaders/PBR/Composite.h"
 
 namespace Aurora
 {
@@ -20,6 +23,15 @@ namespace Aurora
 	{
 		m_BaseVsDataBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
 		m_InstancesBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Instances", sizeof(Matrix4) * MaxInstances, EBufferType::UniformBuffer, EBufferUsage::DynamicDraw, false));
+
+		m_CompositeDefaultsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("CompositeDefaults", sizeof(CompositeDefaults), EBufferType::UniformBuffer));
+		m_DirLightsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("DirLights", sizeof(DirectionalLightStorage), EBufferType::UniformBuffer));
+		m_PointLightsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("PointLights", sizeof(PointLightStorage), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw, true));
+
+		m_CompositeShader = GEngine->GetResourceManager()->LoadShader("Composite", {
+			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/PBR/Composite.frag"}
+		});
 	}
 
 	void SceneRenderer::PrepareVisibleEntities(Scene* scene, CameraComponent* camera)
@@ -175,6 +187,8 @@ namespace Aurora
 				continue;
 			}
 
+			auto albedoBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Albedo", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA16_FLOAT);
+			auto normalsBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Normals", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGB8_UNORM);
 			auto depthBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Depth", (Vector2i)viewPort->ViewPort, GraphicsFormat::D32);
 
 			const FFrustum& frustum = camera->GetFrustum();
@@ -190,7 +204,8 @@ namespace Aurora
 			drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 			drawCallState.ViewPort = viewPort->ViewPort;
-			drawCallState.BindTarget(0, viewPort->Target);
+			drawCallState.BindTarget(0, albedoBuffer);
+			drawCallState.BindTarget(1, normalsBuffer);
 			drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 
 			drawCallState.ClearColor = camera->GetClearColor();
@@ -206,12 +221,81 @@ namespace Aurora
 
 			RenderPass(Pass::Ambient, drawCallState, camera, modelContexts);
 
+			/////////////////////////////////////////////////////////////////////////////////////////////////
+
+			// Collect and update directional light buffers
+			DirectionalLightStorage dirLights = {};
+			dirLights.DirLightCount = 0;
+
 			for (DirectionalLightComponent* lightComponent : scene->GetComponents<DirectionalLightComponent>())
 			{
-				
+				if (!lightComponent->GetOwner()->IsActive() || !lightComponent->IsActive())
+					continue;
+
+				auto& light = dirLights.DirLights[dirLights.DirLightCount];
+				light.DirectionIntensity = Vector4(lightComponent->GetForwardVector(), lightComponent->GetIntensity());
+				light.Color = lightComponent->GetColor();
+				dirLights.DirLightCount++;
+
+				if(dirLights.DirLightCount == MAX_DIRECTIONAL_LIGHTS)
+					break;
+			}
+
+			GEngine->GetRenderDevice()->WriteBuffer(m_DirLightsBuffer, &dirLights);
+
+			// Collect and update point light buffers
+			PointLightStorage pointLights = {};
+			pointLights.PointLightCount = 0;
+
+			for (PointLightComponent* lightComponent : scene->GetComponents<PointLightComponent>())
+			{
+				if (!lightComponent->GetOwner()->IsActive() || !lightComponent->IsActive())
+					continue;
+
+				auto& light = pointLights.PointLights[pointLights.PointLightCount];
+				light.PositionIntensity = Vector4(lightComponent->GetWorldPosition(), lightComponent->GetIntensity());
+				light.ColorRadius = Vector4((Vector3)lightComponent->GetColor(), lightComponent->GetRadius());
+				pointLights.PointLightCount++;
+
+				if(pointLights.PointLightCount == MAX_POINT_LIGHTS)
+					break;
+			}
+
+			GEngine->GetRenderDevice()->WriteBuffer(m_PointLightsBuffer, &pointLights);
+
+			// Write defaults
+			CompositeDefaults defaults = {};
+			defaults.InvProjectionView = glm::inverse(camera->GetProjectionViewMatrix());
+			defaults.ViewMatrix = camera->GetViewMatrix();
+			defaults.CameraPos = Vector4(camera->GetWorldPosition(), 0);
+
+			GEngine->GetRenderDevice()->WriteBuffer(m_CompositeDefaultsBuffer, &defaults);
+
+			{
+				DrawCallState state;
+				state.Shader = m_CompositeShader;
+				state.ViewPort = viewPort->ViewPort;
+				state.BindTarget(0, viewPort->Target);
+				state.BindTexture("AlbedoRT", albedoBuffer);
+				state.BindTexture("NormalsRT", normalsBuffer);
+				state.BindTexture("DepthRT", depthBuffer);
+
+				state.BindUniformBuffer("DirectionalLightStorage", m_DirLightsBuffer);
+				state.BindUniformBuffer("PointLightStorage", m_PointLightsBuffer);
+				state.BindUniformBuffer("CompositeDefaults", m_CompositeDefaultsBuffer);
+
+				state.PrimitiveType = EPrimitiveType::TriangleStrip;
+				state.RasterState.CullMode = ECullMode::Front;
+				state.DepthStencilState.DepthEnable = false;
+
+				state.ClearColorTarget = false;
+				state.ClearDepthTarget = false;
+				GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
 			}
 
 			depthBuffer.Free();
+			normalsBuffer.Free();
+			albedoBuffer.Free();
 		}
 	}
 

@@ -27,6 +27,10 @@ namespace Aurora
 		[[nodiscard]] const Vector3& GetScale() const { return m_Transform.Scale; }
 
 		[[nodiscard]] Matrix4 GetTransformationMatrix() const;
+		[[nodiscard]] Vector3D GetWorldPosition() const { return GetTransformationMatrix()[3]; }
+		[[nodiscard]] Vector3D GetForwardVector() const { return GetTransformationMatrix()[2]; }
+		[[nodiscard]] Vector3D GetUpVector() const { return GetTransformationMatrix()[1]; }
+		[[nodiscard]] Vector3D GetLeftVector() const { return GetTransformationMatrix()[0]; }
 
 		bool AttachToComponent(SceneComponent* InParent);
 		void DetachFromComponent();

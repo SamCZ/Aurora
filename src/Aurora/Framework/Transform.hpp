@@ -43,5 +43,9 @@ namespace Aurora
 			glm::DecomposeTransform(mat, Location, Rotation, Scale);
 			Rotation = glm::degrees(Rotation);
 		}
+
+		[[nodiscard]] Vector3D GetForwardVector() const { return GetTransform()[2]; }
+		[[nodiscard]] Vector3D GetUpVector() const { return GetTransform()[1]; }
+		[[nodiscard]] Vector3D GetLeftVector() const { return GetTransform()[0]; }
 	};
 }

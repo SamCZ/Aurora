@@ -54,6 +54,11 @@ namespace Aurora
 		Buffer_ptr m_BaseVsDataBuffer;
 		Buffer_ptr m_InstancesBuffer;
 
+		Buffer_ptr m_DirLightsBuffer;
+		Buffer_ptr m_PointLightsBuffer;
+		Buffer_ptr m_CompositeDefaultsBuffer;
+		Shader_ptr m_CompositeShader;
+
 		robin_hood::unordered_map<TTypeID, InputLayout_ptr> m_MeshInputLayouts;
 
 		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
