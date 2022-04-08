@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/String.hpp"
 #include "Aurora/Tools/ImGuiHelper.hpp"
+#include "Aurora/Tools/IconsFontAwesome5.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
 
 #include <imgui_internal.h>
@@ -49,4 +51,67 @@ namespace Aurora::EUI
 	}
 
 	const char* GetIconForComponent(ActorComponent* component);
+
+	static bool Slot(const String& name, const char* icon, bool* clearClicked = nullptr)
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+		ImGui::BeginGroup();
+		bool clicked = ImGui::Button(icon, ImVec2(63, 63));
+		ImGui::SameLine();
+		ImGui::Text("%s", name.c_str());
+		ImGui::EndGroup();
+		ImGui::PopStyleColor();
+
+		if (!clearClicked)
+			return clicked;
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+		{
+			ImGui::OpenPopup("SlotPopup");
+		}
+
+		if (ImGui::BeginPopup("SlotPopup"))
+		{
+			*clearClicked = ImGui::Button("Clear");
+			ImGui::EndPopup();
+		}
+
+		return clicked;
+	}
+
+	static bool Slot(const String& name, ITexture* texture, bool* clearClicked = nullptr)
+	{
+		if (!texture)
+			return Slot(name, "None", clearClicked);
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+		ImGui::BeginGroup();
+		bool clicked = ImageButton(texture, 55);
+
+		ImGui::SameLine();
+		ImGui::Text("%s", name.c_str());
+
+		//ImGui::SameLine(-10);
+		//ImGui::Button("x");
+		ImGui::EndGroup();
+		ImGui::PopStyleColor();
+
+		if (!clearClicked)
+			return clicked;
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+		{
+			ImGui::OpenPopup("SlotPopup");
+		}
+
+		if (ImGui::BeginPopup("SlotPopup"))
+		{
+			*clearClicked = ImGui::Button("Clear");
+			ImGui::EndPopup();
+		}
+
+		return clicked;
+	}
 }

@@ -6,6 +6,7 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Tools/ImGuiHelper.hpp"
+#include "Aurora/Tools/IconsFontAwesome5.hpp"
 
 namespace Aurora
 {

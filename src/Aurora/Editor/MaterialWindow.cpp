@@ -33,29 +33,35 @@ namespace Aurora
 		{
 			for (const auto& it : textures)
 			{
+				ImGui::PushID(it.first);
 				MTextureVar* var = m_CurrentMaterial->GetTextureVar(it.first);
+
+				bool clearClicked = false;
 
 				if (!var->Texture)
 				{
-					ImGui::Text("%s: No Image", var->Name.c_str());
+					EUI::Slot(var->Name, (ITexture*)nullptr);
 				}
 				else
 				{
 					if(var->Texture->GetDesc().DimensionType != EDimensionType::TYPE_2D)
 					{
+						String name = "Unknown type";
+
 						if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_2DArray)
-							ImGui::Text("%s: [TextureArray(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+							name = Format("%s: [TextureArray(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
 
 						if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_3D)
-							ImGui::Text("%s: [Texture3D(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+							name = Format("%s: [Texture3D(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
 
 						if(var->Texture->GetDesc().DimensionType == EDimensionType::TYPE_CubeMap)
-							ImGui::Text("%s: [CubeMap(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+							name = Format("%s: [CubeMap(%d)]", var->Name.c_str(), var->Texture->GetDesc().DepthOrArraySize);
+
+						EUI::Slot(name, ICON_FA_IMAGE, &clearClicked);
 					}
 					else
 					{
-						ImGui::Text("%s", var->Name.c_str());
-						EUI::Image(var->Texture, Vector2(55, 55), false);
+						EUI::Slot(var->Name, var->Texture.get(), &clearClicked);
 					}
 				}
 
@@ -73,6 +79,13 @@ namespace Aurora
 
 					ImGui::EndDragDropTarget();
 				}
+
+				if (clearClicked)
+				{
+					m_CurrentMaterial->SetTexture(it.first, nullptr);
+				}
+
+				ImGui::PopID();
 			}
 		}
 

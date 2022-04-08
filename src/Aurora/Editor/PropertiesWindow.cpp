@@ -8,6 +8,7 @@
 
 #include "MainEditorPanel.hpp"
 #include "MaterialWindow.hpp"
+#include "Utils.hpp"
 
 namespace Aurora
 {
@@ -17,23 +18,32 @@ namespace Aurora
 
 		for (auto& [slotID, slot] : component->GetMaterialSet())
 		{
+			ImGui::PushID(slotID);
 			String name = "#" + std::to_string(slotID) + ": " + slot.MaterialSlotName;
 
 			if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				const matref& mat = slot.Material;
 
+				bool clearClicked = false;
+
 				if (mat)
 				{
-					ImGui::Text("Material instance");
-					if (ImGui::Button(mat->GetMaterialDef()->GetName().c_str()))
+					if (EUI::Slot(slot.MaterialSlotName, mat->GetMaterialDef()->GetName().c_str(), &clearClicked))
 					{
 						m_MainPanel->GetMaterialWindow()->Open(mat);
+					}
+
+					if (clearClicked)
+					{
+						slot.Material = nullptr;
+						ImGui::PopID();
+						continue;
 					}
 				}
 				else
 				{
-					ImGui::Text("Not material set");
+					EUI::Slot(slot.MaterialSlotName, ICON_FA_TIMES_CIRCLE);
 				}
 
 				if (ImGui::BeginDragDropTarget())
@@ -55,6 +65,7 @@ namespace Aurora
 					ImGui::EndDragDropTarget();
 				}
 			}
+			ImGui::PopID();
 		}
 	}
 

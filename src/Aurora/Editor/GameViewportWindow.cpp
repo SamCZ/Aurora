@@ -11,7 +11,6 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
-#include "Aurora/Tools/IconsFontAwesome5.hpp"
 
 #include "MainEditorPanel.hpp"
 
