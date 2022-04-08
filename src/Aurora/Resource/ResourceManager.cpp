@@ -461,13 +461,18 @@ namespace Aurora
 			data = resizedData;
 		}
 
+		String filename = path.filename().stem().string();
+		std::transform(filename.begin(), filename.end(), filename.begin(), [](unsigned char c){ return std::tolower(c); });
+		bool isNormalMap = filename.find("normal") != std::string::npos;
+
 		if (loadDesc.GenerateMetaFile)
 		{
 			Path realPath;
 			if (!fromAssetPackage && GetRealPath(path, realPath))
 			{
 				nlohmann::json metaFile = GetOrCreateMetaForPath(realPath, {
-					{"srgb", true}
+					{"srgb", !isNormalMap},
+					{"normalMap", isNormalMap},
 				});
 
 				if (metaFile.contains("properties") && metaFile["properties"].contains("srgb"))

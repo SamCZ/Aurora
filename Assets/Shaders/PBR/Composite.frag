@@ -37,13 +37,19 @@ vec3 ApplyPointLight(PointLightGPU light, vec3 color, vec3 normal, vec3 worldPos
 	float L = light.ColorRadius.w / D;
 
 	float nDotL = dot(N, normal);
-	nDotL = max(nDotL, 0.0f);
+	nDotL = max(nDotL, 0.2f);
 
 	return color * nDotL * L * light.ColorRadius.rgb * light.PositionIntensity.w;
 }
 
 void main()
 {
+	if (true)
+	{
+		//FragColor = texture(NormalsRT, TexCoord);
+		//return;
+	}
+
 	vec4 albedo = texture(AlbedoRT, TexCoord);
 	vec3 normals = texture(NormalsRT, TexCoord).rgb * 2.0f - 1.0f;
 	vec3 worldPos = GetSceneWorldPos();

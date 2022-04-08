@@ -18,7 +18,7 @@ namespace Aurora
 	{
 	private:
 		ShaderProgramDesc m_ShaderBaseDescription;
-		robin_hood::unordered_map<PassType_t, Shader_ptr> m_ShaderPermutations;
+		std::unordered_map<PassType_t, Shader_ptr> m_ShaderPermutations;
 
 		MaterialPassState m_PassStates;
 	public:

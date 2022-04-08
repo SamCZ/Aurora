@@ -59,6 +59,13 @@ namespace Aurora
 
 		m_TextureVars = desc.Textures;
 
+		ShaderMacros macros; // TODO: Fix this, looks like hack to me to enable all textures macros at startup, idk
+		for (const auto& [TypeID, var] : m_TextureVars)
+		{
+			if (var.HasEnableMacro)
+				macros[var.MacroName] = "1";
+		}
+
 		std::vector<std::tuple<size_t, size_t, std::vector<float>>> defaultsToWrite;
 
 		for(const auto& passIt : desc.ShaderPasses)
@@ -70,7 +77,6 @@ namespace Aurora
 			m_PassUniformBlockMapping[passIt.first] = {};
 			m_PassTextureMapping[passIt.first] = {};
 
-			ShaderMacros macros; // TODO: Finish macros
 			Shader_ptr shader = m_PassDefs[passIt.first].GetShader(macros);
 
 			for(const ShaderResourceDesc& sampler : shader->GetResources(ShaderResourceType::Sampler))
@@ -83,8 +89,10 @@ namespace Aurora
 				{
 					MTextureVar textureVar;
 					textureVar.Name = samplerName;
+					textureVar.HasEnableMacro = false;
+					textureVar.MacroName = "";
 					textureVar.InShaderName = samplerName;
-					textureVar.Texture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png");
+					textureVar.Texture = nullptr;
 					textureVar.Sampler = Samplers::WrapWrapLinearLinear;
 					m_TextureVars[samplerId] = textureVar;
 				}
@@ -182,6 +190,12 @@ namespace Aurora
 			const std::vector<float>& values = std::get<2>(pair);
 
 			std::memcpy(m_UniformData.data() + offset, values.data(), size);
+		}
+
+		for (const auto& [TypeID, var] : m_TextureVars)
+		{
+			if (var.HasEnableMacro)
+			 m_Macros[var.MacroName] = var.Texture != nullptr ? "1" : "0";
 		}
 	}
 

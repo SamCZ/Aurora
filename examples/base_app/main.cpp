@@ -180,6 +180,8 @@ class BaseAppContext : public AppContext
 		testActor = GetScene()->SpawnActor<Actor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.01f));
 		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
+		auto normalMap = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/dry-rocky-ground-unity/dry-rocky-ground_normal-ogl.png");
+
 		if (importedData)
 		{
 			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
@@ -191,12 +193,16 @@ class BaseAppContext : public AppContext
 			{
 				auto matInstance = matDef->CreateInstance();
 				matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
+				matInstance->SetTexture("NormalMap"_HASH, nullptr);
 				item.second.Material = matInstance;
 			}
 		}
 
-		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"));
-		auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box_cubeUV.fbx"));
+		auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
+		auto matInstance = matDef->CreateInstance();
+		matInstance->SetTexture("Texture"_HASH, GEngine->GetResourceManager()->LoadTexture("Assets/Textures/dry-rocky-ground-unity/dry-rocky-ground_albedo.png"));
+		matInstance->SetTexture("NormalMap"_HASH, normalMap);
 
 		for (int i = 0; i < 10; ++i)
 		{
@@ -209,8 +215,7 @@ class BaseAppContext : public AppContext
 
 				for (auto &item : meshComponent->GetMaterialSet())
 				{
-					//matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
-					item.second.Material = matDef;
+					item.second.Material = matInstance;
 				}
 			}
 		}

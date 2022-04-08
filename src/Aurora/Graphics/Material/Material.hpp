@@ -41,17 +41,22 @@ namespace Aurora
 		}
 	};
 
-	struct MTextureVar
+	struct MVarBase
 	{
 		String Name;
+		bool HasEnableMacro;
+		String MacroName;
+	};
+
+	struct MTextureVar : MVarBase
+	{
 		String InShaderName;
 		Texture_ptr Texture;
 		Sampler_ptr Sampler;
 	};
 
-	struct MUniformVar
+	struct MUniformVar : MVarBase
 	{
-		String Name;
 		size_t Size;
 		size_t Offset;
 

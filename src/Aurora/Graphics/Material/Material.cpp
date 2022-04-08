@@ -35,7 +35,7 @@ namespace Aurora
 	}
 
 	Material::Material(MaterialDefinition* matDef, bool instance)
-		:  m_MatDef(matDef), m_UniformData(matDef->m_UniformData)
+		:  m_MatDef(matDef), m_UniformData(matDef->m_UniformData), m_Macros(matDef->m_Macros), m_PassStates(matDef->m_PassStates), m_TextureVars(matDef->m_TextureVars)
 	{
 		for(const auto& it : m_MatDef->m_PassDefs)
 		{
@@ -132,6 +132,7 @@ namespace Aurora
 		cloned->m_UniformData = m_UniformData;
 		cloned->m_PassStates = m_PassStates;
 		cloned->m_TextureVars = m_TextureVars;
+		cloned->m_Macros = m_Macros;
 
 		m_MatDef->AddRef(cloned);
 
@@ -252,6 +253,10 @@ namespace Aurora
 			return false;
 
 		var->Texture = texture;
+
+		if (var->HasEnableMacro)
+			m_Macros[var->MacroName] = var->Texture != nullptr ? "1" : "0";
+
 		return true;
 	}
 

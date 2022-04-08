@@ -16,6 +16,14 @@
 			"widget": "Color",
 			"in_shader_name": "u_Tint",
 			"value": [1, 1, 1, 1]
+		},
+		{
+			"name": "NormalMap",
+			"type": "Texture2D",
+			"widget": "Texture",
+			"in_shader_name": "NormalMap",
+			"value": "",
+			"macro": "USE_NORMAL_MAP"
 		}
 	],
 	"macros": {}
