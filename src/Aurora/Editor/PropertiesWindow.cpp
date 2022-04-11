@@ -4,6 +4,7 @@
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
+#include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
 #include "MainEditorPanel.hpp"
@@ -14,14 +15,15 @@ namespace Aurora
 {
 	void PropertiesWindow::DrawComponentGui(MeshComponent* component)
 	{
-		ImGui::Separator();
+		if(!ImGui::CollapsingHeader("MeshComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
 
 		for (auto& [slotID, slot] : component->GetMaterialSet())
 		{
 			ImGui::PushID(slotID);
 			String name = "#" + std::to_string(slotID) + ": " + slot.MaterialSlotName;
 
-			if (ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+			if (ImGui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				const matref& mat = slot.Material;
 
@@ -64,9 +66,27 @@ namespace Aurora
 
 					ImGui::EndDragDropTarget();
 				}
+				ImGui::TreePop();
 			}
 			ImGui::PopID();
 		}
+	}
+
+	void PropertiesWindow::DrawComponentGui(LightComponent* component)
+	{
+		if(!ImGui::CollapsingHeader("LightComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		ImGui::DragFloat("Intensity", &component->GetIntensity());
+		ImGui::ColorEdit3("Color", reinterpret_cast<float*>(&component->GetColor()), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
+	}
+
+	void PropertiesWindow::DrawComponentGui(PointLightComponent* component)
+	{
+		if(!ImGui::CollapsingHeader("PointLightComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		ImGui::DragFloat("Radius", &component->GetRadius());
 	}
 
 	void PropertiesWindow::OnGui()
@@ -76,11 +96,11 @@ namespace Aurora
 		SceneComponent* root;
 
 		Actor* selectedActor = m_MainPanel->GetSelectedActor();
-		if(selectedActor)
+		if (selectedActor)
 		{
 			root = selectedActor->GetRootComponent();
 			std::string name = selectedActor->GetName();
-			if(ImGui::InputTextLabel("Name", name))
+			if (ImGui::InputTextLabel("Name", name))
 			{
 				selectedActor->SetName(name);
 			}
@@ -90,10 +110,36 @@ namespace Aurora
 			root = m_MainPanel->GetSelectedComponent();
 		}
 
-		if(root)
+		if (root)
 		{
 			ImGui::Separator();
-			if(ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+			bool transformOpened = ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen);
+			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+			{
+				ImGui::OpenPopup("ComponentContextPopup");
+			}
+
+			if (ImGui::BeginPopup("ComponentContextPopup"))
+			{
+				if (ImGui::Button("Copy"))
+				{
+					m_TransformToCopy = root->GetTransform();
+					m_IsTransformBeingCopied = true;
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::BeginDisabled(!m_IsTransformBeingCopied);
+				if (ImGui::Button("Paste"))
+				{
+					m_IsTransformBeingCopied = false;
+					root->GetTransform() = m_TransformToCopy;
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndDisabled();
+				ImGui::EndPopup();
+			}
+
+			if (transformOpened)
 			{
 				ImGui::DrawVec3Control("Location", root->GetTransform().Location);
 				ImGui::DrawVec3Control("Rotation", root->GetTransform().Rotation);
@@ -103,6 +149,16 @@ namespace Aurora
 			if (MeshComponent* meshComponent = MeshComponent::SafeCast(root))
 			{
 				DrawComponentGui(meshComponent);
+			}
+
+			if (LightComponent* component = LightComponent::SafeCast(root))
+			{
+				DrawComponentGui(component);
+			}
+
+			if (PointLightComponent* component = PointLightComponent::SafeCast(root))
+			{
+				DrawComponentGui(component);
 			}
 		}
 	}

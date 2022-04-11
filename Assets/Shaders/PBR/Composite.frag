@@ -32,14 +32,16 @@ vec3 ApplyDirectionalLight(DirectionalLightGPU light, vec3 color, vec3 normal)
 vec3 ApplyPointLight(PointLightGPU light, vec3 color, vec3 normal, vec3 worldPos)
 {
 	vec3 diff = light.PositionIntensity.xyz - worldPos;
-	float D = length(diff);
+	float dist = length(diff);
 	vec3 N = normalize(diff);
-	float L = light.ColorRadius.w / D;
+	float radius = light.ColorRadius.w;
+	float att = clamp(1.0 - dist*dist/(radius*radius), 0.0, 1.0);
+	att *= att;
 
 	float nDotL = dot(N, normal);
 	nDotL = max(nDotL, 0.2f);
 
-	return color * nDotL * L * light.ColorRadius.rgb * light.PositionIntensity.w;
+	return color * nDotL * att * light.ColorRadius.rgb * light.PositionIntensity.w;
 }
 
 void main()

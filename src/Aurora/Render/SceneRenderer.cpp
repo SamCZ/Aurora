@@ -234,7 +234,7 @@ namespace Aurora
 
 				auto& light = dirLights.DirLights[dirLights.DirLightCount];
 				light.DirectionIntensity = Vector4(lightComponent->GetForwardVector(), lightComponent->GetIntensity());
-				light.Color = lightComponent->GetColor();
+				light.Color = Vector4(lightComponent->GetColor(), 1.0f);
 				dirLights.DirLightCount++;
 
 				if(dirLights.DirLightCount == MAX_DIRECTIONAL_LIGHTS)
@@ -254,7 +254,7 @@ namespace Aurora
 
 				auto& light = pointLights.PointLights[pointLights.PointLightCount];
 				light.PositionIntensity = Vector4(lightComponent->GetWorldPosition(), lightComponent->GetIntensity());
-				light.ColorRadius = Vector4((Vector3)lightComponent->GetColor(), lightComponent->GetRadius());
+				light.ColorRadius = Vector4(lightComponent->GetColor(), lightComponent->GetRadius());
 				pointLights.PointLightCount++;
 
 				if(pointLights.PointLightCount == MAX_POINT_LIGHTS)
