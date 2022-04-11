@@ -4,6 +4,8 @@
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
+#include "Aurora/Framework/StaticMeshComponent.hpp"
+#include "Aurora/Framework/SkeletalMeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
@@ -12,11 +14,22 @@
 #include "Utils.hpp"
 
 namespace Aurora
-{
-	void PropertiesWindow::DrawComponentGui(MeshComponent* component)
+	{
+
+	PropertiesWindow::PropertiesWindow(MainEditorPanel *mainEditorPanel)
+		: EditorWindowBase("Properties", true, true), m_MainPanel(mainEditorPanel), m_IsTransformBeingCopied(false)
+	{
+		AddComponentGuiMethod<StaticMeshComponent>(&PropertiesWindow::DrawMeshComponentGui);
+		AddComponentGuiMethod<DirectionalLightComponent>(&PropertiesWindow::DrawDirectionalLightComponentGui);
+		AddComponentGuiMethod<PointLightComponent>(&PropertiesWindow::DrawPointLightComponentGui);
+	}
+
+	void PropertiesWindow::DrawMeshComponentGui(ActorComponent* baseComponent)
 	{
 		if(!ImGui::CollapsingHeader("MeshComponent", ImGuiTreeNodeFlags_DefaultOpen))
 			return;
+
+		MeshComponent* component = MeshComponent::Cast(baseComponent);
 
 		for (auto& [slotID, slot] : component->GetMaterialSet())
 		{
@@ -72,21 +85,32 @@ namespace Aurora
 		}
 	}
 
-	void PropertiesWindow::DrawComponentGui(LightComponent* component)
+	void PropertiesWindow::DrawLightComponentBaseGui(LightComponent* component)
 	{
-		if(!ImGui::CollapsingHeader("LightComponent", ImGuiTreeNodeFlags_DefaultOpen))
-			return;
-
-		ImGui::DragFloat("Intensity", &component->GetIntensity());
+		ImGui::DragFloat("Intensity", &component->GetIntensity(), 0.1f);
 		ImGui::ColorEdit3("Color", reinterpret_cast<float*>(&component->GetColor()), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
 	}
 
-	void PropertiesWindow::DrawComponentGui(PointLightComponent* component)
+	void PropertiesWindow::DrawDirectionalLightComponentGui(ActorComponent* baseComponent)
+	{
+		if(!ImGui::CollapsingHeader("DirectionalLightComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		DirectionalLightComponent* component = DirectionalLightComponent::Cast(baseComponent);
+
+		DrawLightComponentBaseGui(component);
+	}
+
+	void PropertiesWindow::DrawPointLightComponentGui(ActorComponent* baseComponent)
 	{
 		if(!ImGui::CollapsingHeader("PointLightComponent", ImGuiTreeNodeFlags_DefaultOpen))
 			return;
 
-		ImGui::DragFloat("Radius", &component->GetRadius());
+		PointLightComponent* component = PointLightComponent::Cast(baseComponent);
+
+		DrawLightComponentBaseGui(component);
+
+		ImGui::DragFloat("Radius", &component->GetRadius(), 0.1f);
 	}
 
 	void PropertiesWindow::OnGui()
@@ -146,20 +170,7 @@ namespace Aurora
 				ImGui::DrawVec3Control("Scale", root->GetTransform().Scale);
 			}
 
-			if (MeshComponent* meshComponent = MeshComponent::SafeCast(root))
-			{
-				DrawComponentGui(meshComponent);
-			}
-
-			if (LightComponent* component = LightComponent::SafeCast(root))
-			{
-				DrawComponentGui(component);
-			}
-
-			if (PointLightComponent* component = PointLightComponent::SafeCast(root))
-			{
-				DrawComponentGui(component);
-			}
+			InvokeComponentGui(root);
 		}
 	}
 }

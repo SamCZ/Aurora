@@ -177,7 +177,7 @@ class BaseAppContext : public AppContext
 		AssimpModelLoader modelLoader;
 		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/socuwan.fbx"));
 
-		testActor = GetScene()->SpawnActor<Actor>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.01f));
+		testActor = GetScene()->SpawnActor<Actor, StaticMeshComponent>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.01f));
 		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
 		auto normalMap = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/dry-rocky-ground-unity/dry-rocky-ground_normal-ogl.png");
@@ -186,7 +186,7 @@ class BaseAppContext : public AppContext
 		{
 			auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
 
-			auto* meshComponent = testActor->AddComponent<StaticMeshComponent>("Mesh");
+			auto* meshComponent = StaticMeshComponent::Cast(testActor->GetRootComponent());
 			meshComponent->SetMesh(importedData.Mesh);
 
 			for (auto &item : meshComponent->GetMaterialSet())
@@ -206,11 +206,11 @@ class BaseAppContext : public AppContext
 
 		for (int i = 0; i < 10; ++i)
 		{
-			Actor* testActor2 = GetScene()->SpawnActor<TestActor>("Box", Vector3(i * 2.2f, 0, -20), {}, Vector3(0.01f));
+			Actor* testActor2 = GetScene()->SpawnActor<TestActor, StaticMeshComponent>("Box", Vector3(i * 2.2f, 0, -20), {}, Vector3(0.01f));
 
 			if(importedData2)
 			{
-				auto* meshComponent = testActor2->AddComponent<StaticMeshComponent>("Mesh");
+				auto* meshComponent = StaticMeshComponent::Cast(testActor2->GetRootComponent());
 				meshComponent->SetMesh(importedData2.Mesh);
 
 				for (auto &item : meshComponent->GetMaterialSet())

@@ -35,7 +35,8 @@ namespace Aurora
 		UserClass* m_Instance;
 		MethodPtr m_Method;
 	public:
-		inline MethodDelegate(UserClass* instance, MethodPtr method) : m_Instance(instance), m_Method(method) {}
+		MethodDelegate() : m_Instance(nullptr), m_Method(nullptr) {}
+		MethodDelegate(UserClass* instance, MethodPtr method) : m_Instance(instance), m_Method(method) {}
 
 		ReturnType Invoke(ArgsTypes&& ...args) override
 		{

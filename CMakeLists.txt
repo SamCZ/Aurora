@@ -31,6 +31,11 @@ endif()
 #SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for binaries")
 #SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls")
 
+# We do not support shared libs on linux system
+if(UNIX)
+    set(BUILD_SHARED_LIBS OFF)
+endif()
+
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(lib)
 
