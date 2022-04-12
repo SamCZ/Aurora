@@ -14,8 +14,7 @@
 #include "Utils.hpp"
 
 namespace Aurora
-	{
-
+{
 	PropertiesWindow::PropertiesWindow(MainEditorPanel *mainEditorPanel)
 		: EditorWindowBase("Properties", true, true), m_MainPanel(mainEditorPanel), m_IsTransformBeingCopied(false)
 	{
