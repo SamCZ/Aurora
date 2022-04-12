@@ -10,12 +10,7 @@ set(SOURCE_FILES
         imgui/backends/imgui_impl_opengl3.cpp
         )
 
-if(BUILD_SHARED_LIBS)
-    add_library(ImGui SHARED ${SOURCE_FILES})
-else()
-    add_library(ImGui STATIC ${SOURCE_FILES})
-endif()
-
+add_library(ImGui STATIC ${SOURCE_FILES})
 
 target_include_directories(ImGui PUBLIC imgui)
 target_link_libraries(ImGui glfw glad)

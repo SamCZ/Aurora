@@ -77,7 +77,8 @@ namespace Aurora
         ,m_PhysicsWorld(nullptr)
 #endif
 	{
-
+		Logger::AddSink<std_sink>();
+		Logger::AddSink<file_sink>("latest-log.txt");
 	}
 
 	AuroraEngine::~AuroraEngine()
@@ -110,9 +111,6 @@ namespace Aurora
 		au_assert(appContext != nullptr);
 
 		AppContext::m_EditorMode = editor;
-
-		Logger::AddSink<std_sink>();
-		Logger::AddSink<file_sink>("latest-log.txt");
 
 		LocalProfileScope::Reset("GameInit");
 

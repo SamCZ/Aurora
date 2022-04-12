@@ -14,35 +14,35 @@ namespace Aurora
 
 	struct GLResourceAttribs
 	{
-		const std::string Name;
-		const ShaderResourceType ResourceType;
-		const uint32_t Binding;
-		uint32_t ArraySize;
+		std::string Name = "Unknown";
+		ShaderResourceType ResourceType = ShaderResourceType::Unknown;
+		uint32_t Binding = 0;
+		uint32_t ArraySize = 0;
 	};
 
 	struct UniformBufferInfo final : GLResourceAttribs
 	{
-		const GLuint UBIndex = 0;
-		const EShaderType ShadersIn = EShaderType::Unknown;
-		const size_t Size = 0;
-		const std::vector<ShaderVariable> Variables = {};
+		GLuint UBIndex = 0;
+		EShaderType ShadersIn = EShaderType::Unknown;
+		size_t Size = 0;
+		std::vector<ShaderVariable> Variables = {};
 	};
 
 	struct SamplerInfo final : GLResourceAttribs
 	{
-		const GLint  Location = 0;
-		const GLenum SamplerType = GL_NONE;
+		GLint  Location = 0;
+		GLenum SamplerType = GL_NONE;
 	};
 
 	struct ImageInfo final : GLResourceAttribs
 	{
-		const GLint  Location = 0;
-		const GLenum ImageType = GL_NONE;
+		GLint  Location = 0;
+		GLenum ImageType = GL_NONE;
 	};
 
 	struct StorageBlockInfo final : GLResourceAttribs
 	{
-		const GLuint SBIndex = 0;
+		GLuint SBIndex = 0;
 	};
 
 	class AU_API GLShaderResources

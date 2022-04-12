@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdint>
 #include <atomic>
+#include <array>
 #include <string>
 #include <cstring>
 #include <functional>

@@ -101,12 +101,17 @@ if(NOT TARGET tracy)
     else()
         set(TRACY_ENABLE OFF)
     endif()
+
+    set(BUILD_SHARED_LIBS_CACHE ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+
     add_subdirectory(tracy)
     set_property(TARGET TracyClient PROPERTY FOLDER "GameLib")
     if(WIN32)
         target_link_libraries(TracyClient PUBLIC Ws2_32 dbghelp)
         target_compile_definitions(TracyClient PUBLIC NOMINMAX)
     endif()
+    set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_CACHE})
 endif()
 
 #------------------------------
