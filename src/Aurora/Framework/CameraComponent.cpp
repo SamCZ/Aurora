@@ -48,7 +48,7 @@ namespace Aurora
 
 	void CameraComponent::UpdateFrustum()
 	{
-		m_Frustum = FFrustum(GetProjectionViewMatrix());
+		m_Frustum = FFrustum(GetProjectionMatrix() * GetViewMatrix());
 	}
 
 	void CameraComponent::SetViewPort(RenderViewPort* wp)

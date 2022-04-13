@@ -203,7 +203,7 @@ namespace Aurora
 
 			if (!vertexBuffer)
 			{
-				AU_LOG_WARNING("Count not calculate mesh bounds because LOD0 does not exists !");
+				AU_LOG_WARNING("Could not calculate mesh bounds because LOD0 does not exists !");
 				return;
 			}
 

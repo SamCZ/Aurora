@@ -14,7 +14,9 @@
 #include "MaterialWindow.hpp"
 #include "Utils.hpp"
 
-#define ENUM_COMBO(name, current, enum_name) ImGui::Combo(name, current, enum_name##_Strings, ARRAYSIZE(enum_name##_Strings))
+#define ARSIZE(arr) (sizeof(arr)/sizeof((arr)[0]))
+
+#define ENUM_COMBO(name, current, enum_name) ImGui::Combo(name, current, enum_name##_Strings, ARSIZE(enum_name##_Strings))
 
 namespace Aurora
 {

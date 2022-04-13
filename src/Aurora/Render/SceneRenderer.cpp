@@ -46,6 +46,14 @@ namespace Aurora
 			Matrix4 transform = meshComponent->GetTransformationMatrix();
 			Mesh_ptr mesh = meshComponent->GetMesh();
 
+			AABB worldBounds = mesh->m_Bounds;
+			worldBounds.Transform(transform);
+
+			if (!camera->GetFrustum().IsBoxVisible(worldBounds))
+			{
+				continue;
+			}
+
 			// TODO: Complete lod switching
 			LOD lod = 0;
 			const MeshLodResource& lodResource = mesh->LODResources[lod];
@@ -69,7 +77,6 @@ namespace Aurora
 
 				RenderSortType renderSortType = material->GetSortType();
 
-				// TODO: if (in frustum)
 				{
 					VisibleEntity visibleEntity;
 					visibleEntity.Material = material.get();
@@ -186,6 +193,8 @@ namespace Aurora
 				AU_LOG_ERROR("Cannot render camera ", camera->GetName(), " because it has no projection !");
 				continue;
 			}
+
+			camera->UpdateFrustum();
 
 			auto albedoBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Albedo", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA16_FLOAT);
 			auto normalsBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Normals", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGB8_UNORM);

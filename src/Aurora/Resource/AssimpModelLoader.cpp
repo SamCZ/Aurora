@@ -338,10 +338,10 @@ namespace Aurora
 
 		for (auto& mesh : importedData.Meshes)
 		{
+			mesh->ComputeAABB();
+
 			if(importOptions.UploadToGPU)
 				mesh->UploadToGPU(importOptions.KeepCPUData);
-
-			mesh->ComputeAABB();
 		}
 
 		importedData.Imported = true;

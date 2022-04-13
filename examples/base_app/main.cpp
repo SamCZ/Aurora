@@ -75,7 +75,9 @@ public:
 	{
 		float m_FlySpeed = 10.0f;
 
-		GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
+		//GetTransform().Rotation.x += delta;
+
+		/*GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
 		GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
 
 		GetTransform().Rotation.x = glm::clamp(GetTransform().Rotation.x, -90.0f, 90.0f);
@@ -101,7 +103,7 @@ public:
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
 		{
 			GetTransform().Location += Vector3(transform[0]) * (float)delta * m_FlySpeed;
-		}
+		}*/
 	}
 
 	CameraComponent* GetCamera()
