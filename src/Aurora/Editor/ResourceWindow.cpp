@@ -191,7 +191,7 @@ namespace Aurora
 				{
 					if (ImGui::Selectable("Open in explorer"))
 					{
-						ShellExecuteA(NULL, "open", m_CurrentPath.string().c_str(), NULL, NULL, SW_SHOWDEFAULT);
+						ShellExecuteA(nullptr, "open", m_CurrentPath.string().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
 					}
 					ImGui::EndPopup();
 				}
@@ -465,6 +465,12 @@ namespace Aurora
 		{
 			textureOut = m_MaterialIcon;
 			return ICON_FA_FILE;
+		}
+
+		if (ResourceManager::IsFileType(path, FT_AMESH))
+		{
+			textureOut = nullptr;
+			return ICON_FA_CUBE;
 		}
 
 		return ICON_FA_FILE;

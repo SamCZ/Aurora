@@ -9,6 +9,7 @@
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
+#include "Aurora/Framework/SkyLight.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 
@@ -28,6 +29,9 @@ namespace Aurora
 
 			if(component->HasType(SceneComponent::TypeID()))
 				return ICON_FA_LAYER_GROUP;
+
+			if(component->HasType(SkyLightComponent::TypeID()))
+				return ICON_FA_SUN;
 
 			return ICON_FA_QUESTION;
 		}
@@ -171,6 +175,7 @@ namespace Aurora
 				{
 					static const char* types[] = {
 						"Empty Actor",
+						"SkyLight",
 						"Directional light",
 						"Point light",
 						"Spot light",
@@ -198,14 +203,21 @@ namespace Aurora
 										AppContext::GetScene()->SpawnActor<Actor>("EmptyActor", {0, 0, 0}) );
 									break;
 								case 1:
-									m_MainEditorPanel->SetSelectedActor(
-										AppContext::GetScene()->SpawnActor<DirectionalLight>("DirectionalLight", {0, 0, 0}) );
+									if (!AppContext::GetScene()->FindFirstComponent<SkyLightComponent>())
+									{
+										m_MainEditorPanel->SetSelectedActor(
+											AppContext::GetScene()->SpawnActor<SkyLight>("SkyLight", {0, 10, 0}) );
+									}
 									break;
 								case 2:
 									m_MainEditorPanel->SetSelectedActor(
-										AppContext::GetScene()->SpawnActor<PointLight>("PointLight", {0, 0, 0}) );
+										AppContext::GetScene()->SpawnActor<DirectionalLight>("DirectionalLight", {0, 0, 0}) );
 									break;
 								case 3:
+									m_MainEditorPanel->SetSelectedActor(
+										AppContext::GetScene()->SpawnActor<PointLight>("PointLight", {0, 0, 0}) );
+									break;
+								case 4:
 									m_MainEditorPanel->SetSelectedActor(
 										AppContext::GetScene()->SpawnActor<SpotLight>("SpotLight", {0, 0, 0}) );
 									break;

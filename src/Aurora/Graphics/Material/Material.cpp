@@ -1,6 +1,7 @@
 #include "Material.hpp"
 #include "Aurora/Engine.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
+#include "Aurora/Resource/ResourceManager.hpp"
 
 #include "MaterialDefinition.hpp"
 
@@ -102,7 +103,11 @@ namespace Aurora
 			MTextureVar* textureVar = GetTextureVar(texId);
 
 			if(textureVar->Texture == nullptr)
+			{
+				// TODO: Look at this and maybe fix this
+				drawState.BindTexture(textureVar->InShaderName, GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png"));
 				continue;
+			}
 
 			drawState.BindTexture(textureVar->InShaderName, textureVar->Texture);
 			drawState.BindSampler(textureVar->InShaderName, textureVar->Sampler);

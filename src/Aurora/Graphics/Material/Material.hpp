@@ -98,10 +98,10 @@ namespace Aurora
 
 	enum class RenderSortType : uint8
 	{
-		Opaque = 0,
+		Sky = 0,
+		Opaque,
 		Translucent,
 		Transparent,
-		Sky,
 		Count
 	};
 

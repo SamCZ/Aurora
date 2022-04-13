@@ -29,8 +29,10 @@ namespace Aurora
 	inline Matrix4 mat4_cast(const aiMatrix4x4 &m) { return glm::transpose(glm::make_mat4(&m.a1)); }
 	inline Matrix4 mat4_cast(const aiMatrix3x3 &m) { return glm::transpose(glm::make_mat3(&m.a1)); }
 
-	void ProcessStaticMesh(const StaticMesh_ptr& mesh, const aiMesh* sourceMesh, const Matrix4& transform, LOD lod, const MeshImportOptions& importOptions, int32_t materialIndex)
+	void ProcessStaticMesh(const Mesh_ptr& meshBase, const aiMesh* sourceMesh, const Matrix4& transform, LOD lod, const MeshImportOptions& importOptions, int32_t materialIndex)
 	{
+		StaticMesh_ptr mesh = StaticMesh::Cast(meshBase);
+
 		auto& indices = mesh->LODResources[lod].Indices;
 		auto* buffer = mesh->GetVertexBuffer<StaticMesh::Vertex>(lod);
 
@@ -218,8 +220,8 @@ namespace Aurora
 		}
 	}
 
-	template<typename Mesh, typename MeshProcessor>
-	void ProcessNode(const Mesh& mesh, MeshProcessor& meshProcessor, const aiScene* scene, aiNode* node, const aiMatrix4x4& parentTransform, const MeshImportOptions& importOptions)
+	template<typename MeshProcessor>
+	void ProcessNode(std::vector<Mesh_ptr>& meshes, int32_t& currentMeshIndex, int32_t& currentMaterialIndex, MeshProcessor& meshProcessor, const aiScene* scene, aiNode* node, const aiMatrix4x4& parentTransform, const MeshImportOptions& importOptions)
 	{
 		//std::cout << node->mName.C_Str() << std::endl;
 
@@ -243,21 +245,67 @@ namespace Aurora
 			if ((sourceMesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE) == 0)
 				continue;
 
+			if (importOptions.SplitMeshes)
+			{
+				if (meshes.size() <= currentMeshIndex)
+				{
+					if (scene->HasAnimations())
+					{
+						// TODO: Implement skeletal meshes
+						/*SkeletalMesh_ptr skeletalMesh= std::make_shared<SkeletalMesh>();
+						skeletalMesh->CreateVertexBuffer<StaticMesh::Vertex>(0);
+						meshes.push_back(staticMesh);*/
+					}
+					else
+					{
+						StaticMesh_ptr staticMesh = std::make_shared<StaticMesh>();
+						staticMesh->Name = node->mName.C_Str();
+						staticMesh->CreateVertexBuffer<StaticMesh::Vertex>(0);
+						meshes.push_back(staticMesh);
+					}
+				}
+			}
+			else if (meshes.empty())
+			{
+				if (scene->HasAnimations())
+				{
+					// TODO: Implement skeletal meshes
+					/*SkeletalMesh_ptr skeletalMesh= std::make_shared<SkeletalMesh>();
+					skeletalMesh->CreateVertexBuffer<StaticMesh::Vertex>(0);
+					meshes.push_back(staticMesh);*/
+				}
+				else
+				{
+					StaticMesh_ptr staticMesh = std::make_shared<StaticMesh>();
+					staticMesh->Name = node->mName.C_Str();
+					staticMesh->CreateVertexBuffer<StaticMesh::Vertex>(0);
+					meshes.push_back(staticMesh);
+				}
+			}
+
+			Mesh_ptr mesh = meshes[currentMeshIndex];
+
 			aiMaterial* sourceMaterial = scene->mMaterials[sourceMesh->mMaterialIndex];
+			LoadMaterial(scene, mesh, currentMaterialIndex, sourceMaterial);
+			meshProcessor(mesh, sourceMesh, mat4_cast(transform), (LOD)0, importOptions, currentMaterialIndex);
 
-			LoadMaterial(scene, mesh, sourceMesh->mMaterialIndex, sourceMaterial);
+			currentMaterialIndex++;
 
-			meshProcessor(mesh, sourceMesh, mat4_cast(transform), (LOD)0, importOptions, sourceMesh->mMaterialIndex);
+			if (importOptions.SplitMeshes)
+			{
+				currentMeshIndex++;
+				currentMaterialIndex = 0;
+			}
 		}
 
 		// Iterate over children
 		for (uint i = 0; i < node->mNumChildren; i++)
 		{
-			ProcessNode(mesh, meshProcessor, scene, node->mChildren[i], node->mTransformation, importOptions);
+			ProcessNode(meshes, currentMeshIndex, currentMaterialIndex, meshProcessor, scene, node->mChildren[i], node->mTransformation, importOptions);
 		}
 	}
 
-	MeshImportedData AssimpModelLoader::ImportModel(const String &name, const DataBlob &data, const MeshImportOptions& importOptions)
+	MeshImportedData AssimpModelLoader::ImportModel(const String &name, const DataBlob &data, MeshImportOptions importOptions)
 	{
 		MeshImportedData importedData;
 
@@ -272,24 +320,32 @@ namespace Aurora
 
 		AU_LOG_INFO("Has animations = ", scene->HasAnimations() ? "Yes" : "no");
 
-		StaticMesh_ptr mesh = std::make_shared<StaticMesh>();
-		mesh->CreateVertexBuffer<StaticMesh::Vertex>(0);
-
-		ProcessNode(mesh, ProcessStaticMesh, scene, scene->mRootNode, aiMatrix4x4(), importOptions);
-
-		AU_LOG_INFO("Mesh section count: ", mesh->LODResources[0].Sections.size());
-
-		/*{ // TODO: just for testing purposes
-			mesh->MaterialSlots.emplace_back(nullptr, "Material");
-		}*/
+		int32_t currentMesh = 0;
+		int32_t currentMaterial = 0;
+		if (scene->HasAnimations())
+		{
+			importOptions.SplitMeshes = false;
+			//ProcessNode<SkeletalMesh>(importedData.Meshes, currentMesh, ProcessStaticMesh, scene, scene->mRootNode, aiMatrix4x4(), importOptions);
+			AU_LOG_ERROR("Loading animated meshes is not supported yet !");
+			return importedData;
+		}
+		else
+		{
+			ProcessNode(importedData.Meshes, currentMesh, currentMaterial, ProcessStaticMesh, scene, scene->mRootNode, aiMatrix4x4(), importOptions);
+		}
 
 		m_Importer.FreeScene();
 
-		if(importOptions.UploadToGPU)
-			mesh->UploadToGPU(importOptions.KeepCPUData);
+		for (auto& mesh : importedData.Meshes)
+		{
+			if(importOptions.UploadToGPU)
+				mesh->UploadToGPU(importOptions.KeepCPUData);
+
+			mesh->ComputeAABB();
+		}
 
 		importedData.Imported = true;
-		importedData.Mesh = mesh;
+		importedData.Mesh = importedData.Meshes[0];
 
 		return importedData;
 	}

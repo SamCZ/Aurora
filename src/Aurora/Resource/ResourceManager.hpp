@@ -7,6 +7,7 @@
 #include "Aurora/Core/FileWatcher.hpp"
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/Material/MaterialDefinition.hpp"
+#include "Aurora/Framework/Mesh/Mesh.hpp"
 #include "AssetBank.hpp"
 #include "FileTree.hpp"
 
@@ -28,6 +29,9 @@ namespace Aurora
 		FT_MATERIAL_INS = BITF(2),
 
 		FT_SHADER = BITF(3),
+
+		FT_UNPROCESSED_MESH = BITF(4),
+		FT_AMESH = BITF(5)
 	};
 
 	struct TextureLoadDesc
@@ -58,6 +62,8 @@ namespace Aurora
 	class AU_API ResourceManager
 	{
 	private:
+		static const int MESH_VERSION = 1;
+
 		IRenderDevice* m_RenderDevice;
 		std::vector<Path> m_FileSearchPaths;
 		std::unordered_map<Path, FileTreeContainer*, path_hash> m_FileTrees;
@@ -104,6 +110,8 @@ namespace Aurora
 		Texture_ptr LoadTexture(const Path& path, const TextureLoadDesc& loadDesc = TextureLoadDesc());
 		Texture_ptr LoadResourceIcon(const Path& path, int size = 0);
 		Texture_ptr LoadLutTexture(const Path& path);
+
+		Mesh_ptr LoadMesh(const Path& path);
 
 		const MaterialDefinition_ptr& GetOrLoadMaterialDefinition(const Path& path);
 		std::shared_ptr<Material> LoadMaterial(const Path& path);

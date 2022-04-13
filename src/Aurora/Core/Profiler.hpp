@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <stack>
-#include "Aurora/Core/Library.hpp"
+#include "Aurora/Core/Types.hpp"
 #include "Aurora/Graphics/OpenGL/GL.hpp"
 #include "../Logger/Logger.hpp"
 
@@ -12,12 +12,11 @@
 #include <TracyOpenGL.hpp>
 #endif
 
-#define CAT_(a, b) a ## b
-#define CAT(a, b) CAT_(a, b)
+#define CATT(a, b) CAT(a, b)
 
 #if defined(AURORA_OPENGL) && AU_GPU_PROFILE == 1
 #include "Aurora/Graphics/OpenGL/GLRenderGroupScope.hpp"
-#define GPU_DEBUG_SCOPE(name) ::Aurora::GLRenderGroupScope CAT(_GPU_Debug_Scope_, __LINE__)(name)
+#define GPU_DEBUG_SCOPE(name) ::Aurora::GLRenderGroupScope CATT(_GPU_Debug_Scope_, __LINE__)(name)
 #else
 #define GPU_DEBUG_SCOPE(name)
 #endif
@@ -124,11 +123,11 @@ namespace Aurora
 	};
 }
 
-#define AU_CPU_DEBUG_SCOPE(name) ::Aurora::LocalProfileScope CAT(AU_GPU_Debug_Scope_, __LINE__)(name)
-#define AU_SCOPE_TIME(name) ::Aurora::DebugScopeTime CAT(AU_GPU_Debug_Scope_, __LINE__)(name)
+#define AU_CPU_DEBUG_SCOPE(name) ::Aurora::LocalProfileScope CATT(AU_GPU_Debug_Scope_, __LINE__)(name)
+#define AU_SCOPE_TIME(name) ::Aurora::DebugScopeTime CATT(AU_GPU_Debug_Scope_, __LINE__)(name)
 
 #if AU_TRACY_ENABLED
-#define CPU_DEBUG_SCOPE(name) ZoneNamedN(CAT(_GPU_Debug_Scope_, __LINE__), name, true)
+#define CPU_DEBUG_SCOPE(name) ZoneNamedN(CATT(_GPU_Debug_Scope_, __LINE__), name, true)
 #else
 #define CPU_DEBUG_SCOPE(name) AU_CPU_DEBUG_SCOPE(name)
 #endif

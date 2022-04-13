@@ -36,6 +36,6 @@ namespace Aurora
 	private:
 		Assimp::Importer m_Importer;
 	public:
-		MeshImportedData ImportModel(const String& name, const DataBlob& data, const MeshImportOptions& importOptions = {});
+		MeshImportedData ImportModel(const String& name, const DataBlob& data, MeshImportOptions importOptions = {});
 	};
 }

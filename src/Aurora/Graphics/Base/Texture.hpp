@@ -8,6 +8,7 @@
 #include "TypeBase.hpp"
 #include "Aurora/Graphics/Color.hpp"
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Resource/ResourceName.hpp"
 
 namespace Aurora
 {
@@ -99,12 +100,16 @@ namespace Aurora
 	class ITexture : public TypeBase<ITexture>
 	{
 	public:
+		ResourceName m_ResourceName;
 		bool EnabledBindSRGB = true;
 	public:
 		virtual ~ITexture() = default;
 		[[nodiscard]] virtual const TextureDesc& GetDesc() const = 0;
 
 		virtual void* GetRawHandle() = 0;
+
+		const ResourceName& GetResourceName() const { return m_ResourceName; }
+		void SetResourceName(const ResourceName& resourceName) { m_ResourceName = resourceName; }
 	};
 
 	typedef std::shared_ptr<ITexture> Texture_ptr;

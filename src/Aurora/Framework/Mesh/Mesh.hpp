@@ -4,15 +4,17 @@
 #include "Aurora/Core/Vector.hpp"
 #include "Aurora/Core/Object.hpp"
 #include "Aurora/Core/Library.hpp"
+#include "Aurora/Core/Archive.hpp"
 #include "Aurora/Graphics/Base/Buffer.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
+#include "Aurora/Physics/AABB.hpp"
 #include "Aurora/Tools/robin_hood.h"
 #include "VertexBuffer.hpp"
 
 namespace Aurora
 {
 	typedef uint32_t Index_t;
-	typedef uint32_t LOD;
+	typedef uint8_t LOD;
 
 	struct MaterialSlot
 	{
@@ -71,12 +73,30 @@ namespace Aurora
 	{
 	public:
 		CLASS_OBJ(Mesh, ObjectBase);
+		String Name;
 		robin_hood::unordered_map<LOD, MeshLodResource> LODResources;
 		MaterialSet MaterialSlots;
+		AABB m_Bounds;
 
 		virtual VertexLayout GetVertexLayoutDesc() const = 0;
 
 		void UploadToGPU(bool keepCPUData, bool dynamic = false);
+
+		virtual void ComputeAABB() = 0;
+
+		static TTypeID ReadMeshType(Archive& archive)
+		{
+			TTypeID type;
+			archive >> type;
+			return type;
+		}
+
+		void WriteMeshType(Archive& archive) const
+		{
+			archive << GetTypeID();
+		}
+
+		virtual void Serialize(Archive& archive) = 0;
 	};
 
 	template<typename Self>
@@ -117,7 +137,7 @@ namespace Aurora
 #endif
 		}
 
-		std::vector<Index_t> GetIndexBuffer(int lod = 0)
+		std::vector<Index_t> GetIndexBuffer(LOD lod = 0)
 		{
 			if(!static_cast<Self*>(this)->LODResources.contains(lod)) {
 				return {};
@@ -127,7 +147,7 @@ namespace Aurora
 		}
 
 		template<typename BufferTypename>
-		VertexBuffer<BufferTypename>* CreateVertexBuffer(int lod = 0, MeshLodResource** out_resource = nullptr)
+		VertexBuffer<BufferTypename>* CreateVertexBuffer(LOD lod = 0, MeshLodResource** out_resource = nullptr)
 		{
 			MeshLodResource* lodResource;
 
@@ -174,6 +194,114 @@ namespace Aurora
 				{"BITANGENT", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, BiTangent), 4, sizeof(StaticMesh::Vertex), false, false}
 			};
 		}
+
+		void ComputeAABB() override
+		{
+			m_Bounds.Set(Vector3(FLT_MAX), Vector3(FLT_MIN));
+
+			VertexBuffer<Vertex>* vertexBuffer = GetVertexBuffer<Vertex>(0);
+
+			if (!vertexBuffer)
+			{
+				AU_LOG_WARNING("Count not calculate mesh bounds because LOD0 does not exists !");
+				return;
+			}
+
+			for (int i = 0; i < vertexBuffer->GetCount(); ++i)
+			{
+				const Vertex& vertex = vertexBuffer->Get(i);
+				m_Bounds.Extend(vertex.Position);
+			}
+		}
+
+		void Serialize(Archive& archive) override
+		{
+			archive << Name;
+			archive << (uint32_t)LODResources.size();
+
+			for (const auto& [lod, res] : LODResources)
+			{
+				archive << lod;
+				VertexBuffer<Vertex>* vertexBuffer = GetVertexBuffer<Vertex>(lod);
+				archive << (uint32_t)vertexBuffer->GetCount();
+				for (int i = 0; i < vertexBuffer->GetCount(); ++i)
+				{
+					const Vertex& vertex = vertexBuffer->Get(i);
+					archive.Write(vertex);
+				}
+
+				archive << (uint8_t)res.IndexFormat;
+				archive << res.Indices;
+				archive << res.Sections;
+			}
+
+			archive << (uint32_t)MaterialSlots.size();
+			for (const auto& [SlotID, slot] : MaterialSlots)
+			{
+				archive << SlotID;
+				archive << slot.MaterialSlotName;
+				//archive << slot.Material->GetResourceName(); // TODO Finish resource names
+				String resourceName = "none";
+				archive << resourceName;
+			}
+
+			archive << m_Bounds.GetMin();
+			archive << m_Bounds.GetMax();
+		}
+
+		void Deserialize(Archive& archive)
+		{
+			archive >> Name;
+			uint32_t numLods;
+			archive >> numLods;
+
+			for (int i = 0; i < numLods; ++i)
+			{
+				LOD lod;
+				archive >> lod;
+
+				uint32_t vertexCount;
+				archive >> vertexCount;
+
+				MeshLodResource* lodResource;
+				VertexBuffer<Vertex>* vertexBuffer = CreateVertexBuffer<Vertex>(lod, &lodResource);
+
+				for (int vi = 0; vi < vertexCount; ++vi)
+				{
+					Vertex vertex = archive.Read<Vertex>();
+					vertexBuffer->Emplace(vertex);
+				}
+
+				uint8_t indexFormat;
+				archive >> indexFormat;
+				lodResource->IndexFormat = (EIndexBufferFormat)indexFormat;
+
+				archive >> lodResource->Indices;
+				archive >> lodResource->Sections;
+			}
+
+			uint32_t materialSlots;
+			archive >> materialSlots;
+
+			for (int i = 0; i < materialSlots; ++i)
+			{
+				MaterialSlot slot;
+
+				int32_t SlotID;
+				archive >> SlotID;
+
+				archive >> slot.MaterialSlotName;
+				String resourceName;
+				archive >> resourceName;
+
+				MaterialSlots[SlotID] = slot;
+			}
+
+			Vector3 min;
+			Vector3 max;
+			archive >> min;
+			archive >> max;
+		}
 	};
 
 	AU_CLASS(SkeletalMesh) : public Mesh, public MeshBufferHelper<SkeletalMesh>
@@ -205,6 +333,11 @@ namespace Aurora
 				{"BONEINDICES", GraphicsFormat::RGBA32_UINT, 0, offsetof(SkeletalMesh::Vertex, BoneIndices), 5, sizeof(SkeletalMesh::Vertex), false, false},
 				{"BONEWEIGHTS", GraphicsFormat::RGBA32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, BoneWeights), 6, sizeof(SkeletalMesh::Vertex), false, false}
 			};
+		}
+
+		void Serialize(Archive& archive) override
+		{
+
 		}
 	};
 }

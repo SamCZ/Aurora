@@ -193,7 +193,14 @@ class BaseAppContext : public AppContext
 			{
 				auto matInstance = matDef->CreateInstance();
 				matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
-				matInstance->SetTexture("NormalMap"_HASH, nullptr);
+				if (item.second.Textures.contains("Normal"))
+				{
+					matInstance->SetTexture("NormalMap"_HASH, item.second.Textures["Normal"]);
+				}
+				else
+				{
+					matInstance->SetTexture("NormalMap"_HASH, nullptr);
+				}
 				item.second.Material = matInstance;
 			}
 		}

@@ -7,11 +7,14 @@
 #include "Aurora/Framework/StaticMeshComponent.hpp"
 #include "Aurora/Framework/SkeletalMeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
+#include "Aurora/Framework/SkyLight.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
 #include "MainEditorPanel.hpp"
 #include "MaterialWindow.hpp"
 #include "Utils.hpp"
+
+#define ENUM_COMBO(name, current, enum_name) ImGui::Combo(name, current, enum_name##_Strings, ARRAYSIZE(enum_name##_Strings))
 
 namespace Aurora
 {
@@ -21,6 +24,7 @@ namespace Aurora
 		AddComponentGuiMethod<StaticMeshComponent>(&PropertiesWindow::DrawMeshComponentGui);
 		AddComponentGuiMethod<DirectionalLightComponent>(&PropertiesWindow::DrawDirectionalLightComponentGui);
 		AddComponentGuiMethod<PointLightComponent>(&PropertiesWindow::DrawPointLightComponentGui);
+		AddComponentGuiMethod<SkyLightComponent>(&PropertiesWindow::DrawSkyLightComponent);
 	}
 
 	void PropertiesWindow::DrawMeshComponentGui(ActorComponent* baseComponent)
@@ -110,6 +114,34 @@ namespace Aurora
 		DrawLightComponentBaseGui(component);
 
 		ImGui::DragFloat("Radius", &component->GetRadius(), 0.1f);
+	}
+
+	void PropertiesWindow::DrawSkyLightComponent(ActorComponent* baseComponent)
+	{
+		if(!ImGui::CollapsingHeader("SkyLightComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		SkyLightComponent* component = SkyLightComponent::Cast(baseComponent);
+
+		SkyLightMode mode = component->GetMode();
+		int currentModeInt = (int) mode;
+
+		if (ENUM_COMBO("Mode", &currentModeInt, SkyLightMode))
+		{
+			component->SetMode((SkyLightMode)currentModeInt);
+		}
+
+		if (mode == SkyLightMode::Custom)
+		{
+			ImGui::Indent();
+			DrawMeshComponentGui(component);
+			return;
+		}
+
+		if (mode == SkyLightMode::Color)
+		{
+
+		}
 	}
 
 	void PropertiesWindow::OnGui()

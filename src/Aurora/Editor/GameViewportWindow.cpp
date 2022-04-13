@@ -9,6 +9,7 @@
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
+#include "Aurora/Framework/StaticMeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
@@ -158,6 +159,29 @@ namespace Aurora
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE_PATH"))
 				{
 					AU_LOG_INFO("Dropped into viewport: ", (char*)payload->Data);
+
+					Path filePath = (char*)payload->Data;
+
+					if(ResourceManager::IsFileType(filePath, FT_AMESH))
+					{
+						Mesh_ptr newMesh = GEngine->GetResourceManager()->LoadMesh(filePath);
+
+						if (newMesh && newMesh->GetTypeID() == StaticMesh::TypeID())
+						{
+							Material_ptr material = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd")->CreateInstance();
+
+							auto* actor = AppContext::GetScene()->SpawnActor<Actor, StaticMeshComponent>(newMesh->Name, Vector3(0, 0, 0), {}, Vector3(1.0f));
+							auto* meshComponent = StaticMeshComponent::Cast(actor->GetRootComponent());
+							meshComponent->SetMesh(newMesh);
+
+							for (auto &item : meshComponent->GetMaterialSet())
+							{
+								item.second.Material = material;
+							}
+
+							m_MainPanel->SetSelectedActor(actor);
+						}
+					}
 				}
 
 				ImGui::EndDragDropTarget();

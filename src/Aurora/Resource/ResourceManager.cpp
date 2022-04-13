@@ -14,6 +14,7 @@
 #include <stb_image_write.h>
 
 #include "MaterialLoader.hpp"
+#include "AssimpModelLoader.hpp"
 
 #include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Core/UUID.hpp"
@@ -465,6 +466,8 @@ namespace Aurora
 		std::transform(filename.begin(), filename.end(), filename.begin(), [](unsigned char c){ return std::tolower(c); });
 		bool isNormalMap = filename.find("normal") != std::string::npos;
 
+		ResourceName resourceName;
+
 		if (loadDesc.GenerateMetaFile)
 		{
 			Path realPath;
@@ -482,6 +485,17 @@ namespace Aurora
 						format = GraphicsFormat::SRGBA8_UNORM;
 					}
 				}
+
+				if(metaFile.contains("uuid"))
+				{
+					String uuid = metaFile["uuid"].get<String>();
+					resourceName.ID = UUID::FromString<String>(uuid).value();
+					resourceName.Name = path.string();
+				}
+				else
+				{
+					AU_LOG_WARNING("Texture ", path, " does not contain UUID");
+				}
 			}
 		}
 
@@ -498,6 +512,7 @@ namespace Aurora
 		textureDesc.Name = path.string();
 		textureDesc.UseAsBindless = false;
 		texture = m_RenderDevice->CreateTexture(textureDesc, nullptr);
+		texture->SetResourceName(resourceName);
 
 		for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
 		{
@@ -607,6 +622,42 @@ namespace Aurora
 		return texture;
 	}
 
+	Mesh_ptr ResourceManager::LoadMesh(const Path& path)
+	{
+		auto fileData = LoadFile(path);
+
+		if(fileData.empty()) {
+			return nullptr;
+		}
+
+		Archive archive(fileData);
+		int meshVersion;
+		archive >> meshVersion;
+
+		if (meshVersion != MESH_VERSION)
+		{
+			AU_LOG_ERROR("Incorrect amesh version !");
+			return nullptr;
+		}
+
+		TTypeID meshType = Mesh::ReadMeshType(archive);
+
+		if (meshType == StaticMesh::TypeID())
+		{
+			StaticMesh_ptr newMesh = std::make_shared<StaticMesh>();
+			newMesh->Deserialize(archive);
+			newMesh->UploadToGPU(false);
+			return newMesh;
+		}
+
+		if (meshType == SkeletalMesh::TypeID())
+		{
+			// TODO: Implement skeletal mesh
+		}
+
+		return nullptr;
+	}
+
 	const MaterialDefinition_ptr& ResourceManager::GetOrLoadMaterialDefinition(const Path &path)
 	{
 		const auto& it = m_MaterialDefinitions.find(path);
@@ -674,7 +725,8 @@ namespace Aurora
 
 		if (FileExists(metaPath))
 		{
-			return LoadJson(metaPath, json);
+			LoadJson(metaPath, json);
+			return json;
 		}
 		else
 		{
@@ -714,6 +766,54 @@ namespace Aurora
 			return;
 		}
 
+		if(IsFileType(from, FT_UNPROCESSED_MESH))
+		{
+			auto data = FS::LoadFile(from);
+
+			MeshImportOptions meshImportOptions;
+			meshImportOptions.UploadToGPU = false;
+			meshImportOptions.KeepCPUData = true;
+			meshImportOptions.PreTransform = true;
+			meshImportOptions.SplitMeshes = false;
+
+			AssimpModelLoader modelLoader;
+			MeshImportedData importedData = modelLoader.ImportModel("Test", data, meshImportOptions);
+
+			if(!importedData)
+			{
+				AU_LOG_ERROR("Could not import model: ", from);
+				return;
+			}
+
+			bool hasMoreMeshes = !importedData.Meshes.empty();
+			for (const auto& mesh : importedData.Meshes)
+			{
+				Archive archive;
+				archive << MESH_VERSION;
+
+				mesh->WriteMeshType(archive);
+				mesh->Serialize(archive);
+
+				if (!archive.GetSize())
+				{
+					AU_LOG_ERROR("Could not serialize mesh: ", from);
+					return;
+				}
+
+				if (hasMoreMeshes)
+					destPath = toFolder / (from.stem().string() + "_" + mesh->Name + ".amesh");
+				else
+					destPath = toFolder / (from.stem().string() + ".amesh");
+
+				std::ofstream outStream;
+				outStream.open(destPath, std::ios::out | std::ios::binary);
+				outStream << archive;
+				outStream.close();
+			}
+
+			return;
+		}
+
 		AU_LOG_WARNING("Import no implemented ! From: ", from.string(), ", To: ", toFolder.string());
 	}
 
@@ -738,6 +838,10 @@ namespace Aurora
 		".frag",
 		".geom",
 		".compute"
+	};
+
+	static const char* UnprocessedMeshExtensions[] = {
+		".fbx"
 	};
 
 	bool ResourceManager::IsFileType(const Path &path, FileType types)
@@ -773,6 +877,20 @@ namespace Aurora
 				}
 			}
 		}
+
+		if ((types & FT_UNPROCESSED_MESH) == FT_UNPROCESSED_MESH)
+		{
+			for (const auto &item : UnprocessedMeshExtensions)
+			{
+				if (item == extension)
+				{
+					return true;
+				}
+			}
+		}
+
+		if ((types & FT_AMESH) == FT_AMESH  && extension == ".amesh")
+			return true;
 
 		return false;
 	}

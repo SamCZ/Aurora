@@ -7,6 +7,7 @@
 
 namespace Aurora
 {
+
 	struct ResourceName
 	{
 		UUID ID;
@@ -14,7 +15,13 @@ namespace Aurora
 
 		ResourceName() = default;
 		ResourceName(const UUID& uuid, std::string name) : ID(uuid), Name(std::move(name)) {}
-		explicit ResourceName(const std::string& name)
+
+		operator std::string() const
+		{
+			return "{" + (std::string)ID + "}" + Name;
+		}
+
+		explicit ResourceName(const std::string& name) : ID(0, 0)
 		{
 			std::string_view view = name;
 			size_t uuidEnd = 0;
