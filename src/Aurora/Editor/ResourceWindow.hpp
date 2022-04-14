@@ -12,6 +12,8 @@
 #include "Aurora/Tools/ImGuiHelper.hpp"
 #include "Aurora/Tools/ImGuizmo.h"
 
+#include "WindowBase.hpp"
+
 namespace Aurora
 {
 	class MainEditorPanel;
@@ -36,6 +38,9 @@ namespace Aurora
 		// Icons
 		Texture_ptr m_ShaderIcon;
 		Texture_ptr m_MaterialIcon;
+
+		// CubeMapWindow
+		bool m_CubeMapWindowOpened = false;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 
@@ -51,6 +56,11 @@ namespace Aurora
 		void SelectAsset(const Path& path);
 		void OpenAsset(const Path& path);
 
+		void OpenCubeMapCreateWindow();
+		void DrawCubeMapCreateWindow();
+
 		const char* GetFileTypeIconOrTexture(const Path& path, Texture_ptr& textureOut);
 	};
+
+
 }

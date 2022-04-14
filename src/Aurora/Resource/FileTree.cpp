@@ -107,4 +107,21 @@ namespace Aurora
 			Childrens.emplace_back(node).Traverse();
 		}
 	}
+
+	void PathNode::SearchFor(const std::string& searchString, std::vector<PathNode> &foundFiles, bool includeDirectories) const
+	{
+		for (const auto& child: Childrens)
+		{
+			std::string childName = child.Path.stem().string();
+
+			if (child.IsDirectory)
+				child.SearchFor(searchString, foundFiles, includeDirectories);
+
+			if (childName.find(searchString) == std::string::npos)
+				continue;
+
+			if (!child.IsDirectory || includeDirectories)
+				foundFiles.push_back(child);
+		}
+	}
 }

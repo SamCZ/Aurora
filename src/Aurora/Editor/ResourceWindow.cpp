@@ -72,6 +72,8 @@ namespace Aurora
 	{
 		(void) delta;
 
+		DrawCubeMapCreateWindow();
+
 		CPU_DEBUG_SCOPE("ResourceWindow");
 
 		LoadTexturePreviews();
@@ -186,16 +188,25 @@ namespace Aurora
 
 				ImGui::BeginChild("resource-file-folder-view");
 
-#ifdef _WIN32
 				if (ImGui::BeginPopupContextWindow())
 				{
-					if (ImGui::Selectable("Open in explorer"))
+					if (ImGui::BeginMenu("Create"))
+					{
+						if (ImGui::MenuItem("CubeMap"))
+						{
+							OpenCubeMapCreateWindow();
+						}
+
+						ImGui::EndMenu();
+					}
+#ifdef _WIN32
+					if (ImGui::MenuItem("Open in explorer"))
 					{
 						ShellExecuteA(nullptr, "open", m_CurrentPath.string().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
 					}
+#endif
 					ImGui::EndPopup();
 				}
-#endif
 
 				bool foundPath = false;
 
@@ -213,16 +224,29 @@ namespace Aurora
 							CPU_DEBUG_SCOPE("ResourceIcons");
 							ImGui::TableNextColumn();
 
-							for (const auto& directoryIt : *subNode)
+							if (searchText.empty())
 							{
-								if(directoryIt.IsDirectory)
-									DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
-							}
+								for (const auto& directoryIt : *subNode)
+								{
+									if(directoryIt.IsDirectory)
+										DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+								}
 
-							for (const auto& directoryIt : *subNode)
+								for (const auto& directoryIt : *subNode)
+								{
+									if(!directoryIt.IsDirectory)
+										DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+								}
+							}
+							else
 							{
-								if(!directoryIt.IsDirectory)
+								std::vector<PathNode> foundFiles;
+								tree->SearchFor(searchText, foundFiles, false);
+
+								for (const auto& directoryIt : foundFiles)
+								{
 									DrawFile(directoryIt, BIG_ICON_BASE_WIDTH);
+								}
 							}
 
 							ImGui::EndTable();
@@ -474,5 +498,27 @@ namespace Aurora
 		}
 
 		return ICON_FA_FILE;
+	}
+
+	void ResourceWindow::OpenCubeMapCreateWindow()
+	{
+		m_CubeMapWindowOpened = true;
+	}
+
+	void ResourceWindow::DrawCubeMapCreateWindow()
+	{
+		if (!m_CubeMapWindowOpened)
+			return;
+
+		if (!ImGui::Begin("Create CubeMap", &m_CubeMapWindowOpened))
+		{
+			ImGui::End();
+			return;
+		}
+
+		EUI::Slot("Top", (ITexture*)nullptr, nullptr);
+		EUI::Slot("Left", (ITexture*)nullptr, nullptr);
+
+		ImGui::End();
 	}
 }

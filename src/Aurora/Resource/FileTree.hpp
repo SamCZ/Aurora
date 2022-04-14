@@ -36,6 +36,8 @@ namespace Aurora
 		bool RemoveFile(const std::filesystem::path& path);
 		bool RenameFile(const std::filesystem::path& newPath, const std::filesystem::path& oldNamePath);
 
+		void SearchFor(const std::string& searchString, std::vector<PathNode>& foundFiles, bool includeDirectories) const;
+
 		void Traverse();
 	};
 
