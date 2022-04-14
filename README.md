@@ -3,6 +3,8 @@
 
 **STILL WORK IN PROGRESS!**
 
+![Engine screenshot](https://raw.githubusercontent.com/SamCZ/Aurora/main/screenshots/Screenshot-1.png)
+
 ## Supported Platforms
 **Desktop**
 
