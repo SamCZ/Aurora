@@ -147,7 +147,7 @@ namespace Aurora
 
 		UniqueEvent BindUnique(typename FunctionAction<void, ArgsTypes...>::Type function)
 		{
-			return Bind(new FunctionDelegate<void, ArgsTypes...>(function));
+			return BindUnique(new FunctionDelegate<void, ArgsTypes...>(function));
 		}
 
 		template<class UserClass>
