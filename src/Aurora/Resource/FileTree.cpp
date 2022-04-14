@@ -83,6 +83,7 @@ namespace Aurora
 
 		node->Childrens.clear();
 		node->Path = newPath;
+		node->IsDirectory = std::filesystem::is_directory(newPath);
 		node->Traverse();
 		return true;
 	}
@@ -94,7 +95,7 @@ namespace Aurora
 
 		for (auto& dirIt : std::filesystem::directory_iterator(Path))
 		{
-			std::filesystem::path path = dirIt.path();
+			const std::filesystem::path& path = dirIt.path();
 
 			PathNode node(
 				path,
