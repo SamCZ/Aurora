@@ -41,3 +41,5 @@ static std::string Format(const std::string fmt_str, ...) {
 	}
 	return std::string(formatted.get());
 }
+
+std::string ToLower(std::string str);

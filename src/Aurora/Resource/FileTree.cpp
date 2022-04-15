@@ -108,14 +108,21 @@ namespace Aurora
 		}
 	}
 
-	void PathNode::SearchFor(const std::string& searchString, std::vector<PathNode> &foundFiles, bool includeDirectories) const
+	void PathNode::SearchFor(std::string searchString, std::vector<PathNode> &foundFiles, bool includeDirectories) const
+	{
+		std::transform(searchString.begin(), searchString.end(), searchString.begin(), [](unsigned char c){ return std::tolower(c); });
+		SearchForInternal(searchString, foundFiles, includeDirectories);
+	}
+
+	void PathNode::SearchForInternal(const std::string &searchString, std::vector<PathNode> &foundFiles, bool includeDirectories) const
 	{
 		for (const auto& child: Childrens)
 		{
 			std::string childName = child.Path.stem().string();
+			std::transform(childName.begin(), childName.end(), childName.begin(), [](unsigned char c){ return std::tolower(c); });
 
 			if (child.IsDirectory)
-				child.SearchFor(searchString, foundFiles, includeDirectories);
+				child.SearchForInternal(searchString, foundFiles, includeDirectories);
 
 			if (childName.find(searchString) == std::string::npos)
 				continue;
