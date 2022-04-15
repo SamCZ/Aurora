@@ -20,6 +20,7 @@ namespace Aurora
 
 		[[nodiscard]] inline GLuint Handle() const noexcept { return m_Handle; }
 		[[nodiscard]] inline GLenum BindTarget() const noexcept { return m_BindTarget; }
+		[[nodiscard]] inline GLenum Usage() const noexcept { return m_Usage; }
 		[[nodiscard]] const BufferDesc& GetDesc() const noexcept override { return m_Desc; }
 	};
 }

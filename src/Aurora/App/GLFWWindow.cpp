@@ -232,11 +232,6 @@ namespace Aurora
 	{
 		m_Title = windowDefinition.Title;
 
-		if(/* is vulkan */true) {
-			//glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-			//glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
-		}
-#if GLFW_ENABLED
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
@@ -269,7 +264,7 @@ namespace Aurora
 
 		GLFWmonitor* primary = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vidMode = glfwGetVideoMode(primary);
-#endif
+
 		SetSize(windowDefinition.Width, windowDefinition.Height);
 		m_WindowHandle = glfwCreateWindow(GetSize().x, GetSize().y, windowDefinition.Title.c_str(), nullptr, nullptr);
 
@@ -305,10 +300,8 @@ namespace Aurora
 		glfwMakeContextCurrent(m_WindowHandle);
 
 		// This is gonna break after second window is created !
-		int glVersion;
-		if(!(glVersion = gladLoadGL())) {
-			printf("Something went wrong!\n");
-			exit(-1);
+		if(!gladLoadGL()) {
+			AU_LOG_FATAL("Count not initialize OpenGL");
 		}
 		// During init, enable debug output
 #if OPENGL_ERROR_CHECKING

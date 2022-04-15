@@ -13,13 +13,7 @@ namespace Aurora
 	{
 		if(m_Desc.IsDMA)
 		{
-			GLint lastBuffer = 0;
-			glGetIntegerv(GL_BUFFER_BINDING, &lastBuffer);
-
-			glBindBuffer(m_BindTarget, m_Handle);
-			glUnmapBuffer(m_BindTarget);
-
-			glBindBuffer(m_BindTarget, lastBuffer);
+			glUnmapNamedBuffer(m_Handle);
 		}
 		glDeleteBuffers(1, &m_Handle);
 	}
