@@ -1,4 +1,5 @@
 #include "FileTree.hpp"
+#include <algorithm>
 
 namespace Aurora
 {
