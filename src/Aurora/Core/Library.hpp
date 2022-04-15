@@ -1,6 +1,6 @@
 #pragma once
 
-#if AU_SHARED
+#if defined(AU_SHARED) && AU_SHARED==1 && defined(_WIN32)
 	#ifdef AU_EXPORT
 		#define AU_API __declspec(dllexport)
 	#else
