@@ -491,7 +491,7 @@ namespace Aurora::Input
 	{
 		bool changed = IManager::ActiveCategory(category);
 
-		// TODO: Change this is future, because this cancles continuous button held in cotegory transition
+		// TODO: Change this is future, because this cancels continuous button held in category transition
 		// This fixed instant button call after category change
 		// If you listening on same button in two different categories and then you
 		// cahange category to the other, the callback will call the button in the set
