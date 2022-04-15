@@ -10,28 +10,6 @@ namespace Aurora::Input
 {
     static std::regex regex_binding_name = std::regex("^[a-z0-9_]+$"); // NOLINT(cert-err58-cpp)
 
-    Binding_ptr IManager::Binding(std::set<std::string> categories, const std::string& action)
-    {
-        if(action.empty())
-            throw std::runtime_error("No input name specified");
-        bool anyButton = action == "*";
-        if(!anyButton && !std::regex_match(action, regex_binding_name))
-            throw std::runtime_error("Binding name is not valid");
-
-
-        if(categories.empty())
-            throw std::runtime_error("No category specified");
-        bool anyCategory = categories.contains("*");
-        if(anyCategory)
-            categories.clear();
-
-        bool active = anyCategory || categories.contains(m_ActiveCategory);
-
-        Binding_ptr binding = Binding_ptr(new class Binding(categories, action, active));
-        m_KnownBindings.emplace(binding);
-        return binding;
-    }
-
     bool IManager::ActiveCategory(const std::string& category) // Setter
     {
     	if(m_ActiveCategory == category) {
@@ -39,22 +17,6 @@ namespace Aurora::Input
     	}
 
         m_ActiveCategory = category;
-
-        // Update `Active` of all bindings
-        for(auto& binding : m_KnownBindings)
-        {
-            if(binding->m_Categories.empty())
-                binding->m_Active = true;
-            else
-                binding->m_Active = binding->m_Categories.contains(m_ActiveCategory);
-
-            if(!binding->m_Active)
-            {
-                binding->m_ValueCurrent = 0;
-                binding->m_HeldTime = 0;
-            }
-        }
-
         return true;
     }
 
@@ -134,52 +96,5 @@ namespace Aurora::Input
         in >> j;
 
         LoadConfig_JSON(j);
-    }
-
-    void IManager::CurrentInputType(InputType value) noexcept
-    {
-#ifdef AU_INPUT_GAMEPAD_VISUAL_FORCE
-        if(!InputType_IsGamepad(value))
-            value = ControllerType::Gamepad_ABXY;
-#endif
-#ifdef AU_INPUT_GAMEPAD_ABXY_FORCE
-        if(value != ControllerType::KeyboardAndMouse && value != ControllerType::Gamepad_ABXY)
-            value = ControllerType::Gamepad_ABXY;
-#endif
-#ifdef AU_INPUT_GAMEPAD_PICTOGRAM_FORCE
-        if(value != ControllerType::KeyboardAndMouse && value != ControllerType::Gamepad_Pictogram)
-            value = ControllerType::Gamepad_Pictogram;
-#endif
-        m_InputType = value;
-		AU_LOG_INFO("Changed Current Input Type to ", to_string(value));
-    }
-
-    void IManager::LockedInputType(std::optional<InputType> value) noexcept
-    {
-        if(value.has_value())
-        {
-#ifdef AU_INPUT_GAMEPAD_VISUAL_FORCE
-            if(value.value() == ControllerType::KeyboardAndMouse)
-                value = ControllerType::Gamepad_ABXY;
-#endif
-#ifdef AU_INPUT_GAMEPAD_ABXY_FORCE
-            if(value.value() != ControllerType::KeyboardAndMouse && value.value() != ControllerType::Gamepad_ABXY)
-                value = ControllerType::Gamepad_ABXY;
-#endif
-#ifdef AU_INPUT_GAMEPAD_PICTOGRAM_FORCE
-            if(value.value() != ControllerType::KeyboardAndMouse && value.value() != ControllerType::Gamepad_Pictogram)
-                value = ControllerType::Gamepad_Pictogram;
-#endif
-        }
-
-        m_LockedInputType = value;
-
-#ifdef DEBUG
-        if(value.has_value()) {
-            AU_LOG_INFO("Changed Locked Input Type to ", to_string(value.value()));
-        } else {
-            AU_LOG_INFO("Cleared Locked Input Type");
-        }
-#endif
     }
 }

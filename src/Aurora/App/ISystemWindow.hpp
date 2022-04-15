@@ -11,10 +11,14 @@
 
 #include "CursorMode.hpp"
 
-#include "Input/IManager.hpp"
-
 namespace Aurora
 {
+    namespace Input
+    {
+        class IManager;
+        typedef std::shared_ptr<IManager> IManager_ptr;
+    }
+
 	struct WindowDefinition
 	{
 		int Width;
