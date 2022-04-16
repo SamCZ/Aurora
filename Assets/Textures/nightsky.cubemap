@@ -1,0 +1,10 @@
+{
+    "textures": [
+        "{0ce101ad-0569-1e1b-b9c8-148bd1c6b4a5}Assets\\Textures\\ColdNight\\Cold Night__Cam_3_Right-X.png",
+        "{a6e53d27-10d9-86e4-ce4e-24d4a253e89a}Assets\\Textures\\ColdNight\\Cold Night__Cam_2_Left+X.png",
+        "{ade14541-5a4a-a389-ac54-012207efad0a}Assets\\Textures\\ColdNight\\Cold Night__Cam_4_Up+Y.png",
+        "{5f377605-401d-f3dd-b5f7-aaec0a741d78}Assets\\Textures\\ColdNight\\Cold Night__Cam_5_Down-Y.png",
+        "{d9277338-fdef-2f0e-0a25-741ab9d8d604}Assets\\Textures\\ColdNight\\Cold Night__Cam_1_Back-Z.png",
+        "{63e83a61-3182-5025-377a-0b7307ba5af5}Assets\\Textures\\ColdNight\\Cold Night__Cam_0_Front+Z.png"
+    ]
+}

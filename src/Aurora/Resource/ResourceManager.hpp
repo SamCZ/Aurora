@@ -10,6 +10,7 @@
 #include "Aurora/Framework/Mesh/Mesh.hpp"
 #include "AssetBank.hpp"
 #include "FileTree.hpp"
+#include "ResourceName.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -31,7 +32,8 @@ namespace Aurora
 		FT_SHADER = BITF(3),
 
 		FT_UNPROCESSED_MESH = BITF(4),
-		FT_AMESH = BITF(5)
+		FT_AMESH = BITF(5),
+		FT_CUBEMAP = BITF(6)
 	};
 
 	struct TextureLoadDesc
@@ -108,6 +110,7 @@ namespace Aurora
 		bool LoadJson(const Path &path, nlohmann::json &json);
 
 		Texture_ptr LoadTexture(const Path& path, const TextureLoadDesc& loadDesc = TextureLoadDesc());
+		Texture_ptr LoadTexture(const ResourceName& resourceName, const TextureLoadDesc& loadDesc = TextureLoadDesc());
 		Texture_ptr LoadResourceIcon(const Path& path, int size = 0);
 		Texture_ptr LoadLutTexture(const Path& path);
 
@@ -120,6 +123,9 @@ namespace Aurora
 
 		void ImportAsset(const Path& from, const Path& to);
 		void UnloadAsset(const Path& path);
+
+		bool SaveCubeMapDef(const Path& path, const std::array<Texture_ptr, 6>& textures);
+		Texture_ptr LoadCubeMapDef(const Path& path);
 
 		[[nodiscard]] inline const std::vector<Path>& GetFileSearchPaths() const { return m_FileSearchPaths; }
 		[[nodiscard]] inline const std::unordered_map<Path, MaterialDefinition_ptr, path_hash>& GetMaterialDefs() const { return m_MaterialDefinitions; }

@@ -40,7 +40,12 @@ namespace Aurora
 		Texture_ptr m_MaterialIcon;
 
 		// CubeMapWindow
-		bool m_CubeMapWindowOpened = false;
+		struct CubeMapCreateData
+		{
+			bool CubeMapWindowOpened = false;
+			String Filename;
+			std::array<Texture_ptr, 6> CubeMapTextures;
+		} m_CubeMapCreateData;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 

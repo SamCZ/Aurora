@@ -145,6 +145,10 @@ namespace Aurora
 		FDepthStencilState& DepthStencilState(PassType_t pass = 0);
 		FBlendState& BlendState(PassType_t pass = 0);
 
+		ShaderMacros& GetMacros() { return m_Macros; }
+		[[nodiscard]] const ShaderMacros& GetMacros() const { return m_Macros; }
+		void SetMacro(const String& key, const String& value) { m_Macros[key] = value; }
+
 		void BeginPass(PassType_t pass, DrawCallState& state);
 		void EndPass(PassType_t pass, DrawCallState& state);
 

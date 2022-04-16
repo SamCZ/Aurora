@@ -11,6 +11,7 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Framework/StaticMeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
+#include "Aurora/Framework/SkyLight.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
 #include "MainEditorPanel.hpp"
@@ -84,6 +85,9 @@ namespace Aurora
 
 		if (actor->HasType(SpotLight::TypeID()))
 			return ICON_FA_LIGHTBULB;
+
+		if (actor->HasType(SkyLight::TypeID()))
+			return ICON_FA_SUN;
 
 		if (actor->GetRootComponent()->HasType(CameraComponent::TypeID()))
 			return ICON_FA_CAMERA;

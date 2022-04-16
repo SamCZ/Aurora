@@ -479,6 +479,11 @@ namespace Aurora
 			return ICON_FA_IMAGE;
 		}
 
+		if (ResourceManager::IsFileType(path, FT_CUBEMAP))
+		{
+			return ICON_FA_IMAGE;
+		}
+
 		if (ResourceManager::IsFileType(path, FT_SHADER))
 		{
 			textureOut = m_ShaderIcon;
@@ -502,22 +507,118 @@ namespace Aurora
 
 	void ResourceWindow::OpenCubeMapCreateWindow()
 	{
-		m_CubeMapWindowOpened = true;
+		m_CubeMapCreateData.CubeMapWindowOpened = true;
+
+		for (int i = 0; i < 6; ++i)
+		{
+			m_CubeMapCreateData.CubeMapTextures[i] = nullptr;
+		}
+
+		m_CubeMapCreateData.Filename = "";
+	}
+
+	static constexpr float CubeMapTileSize = 136;
+
+	bool TextureSlot(const char* name, Texture_ptr* texture = nullptr)
+	{
+		if (!texture)
+		{
+			return false;
+		}
+
+		ImGui::PushID(name);
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+		bool pressed;
+
+		if (*texture)
+		{
+			pressed = EUI::ImageButton(*texture, CubeMapTileSize);
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("%s", name);
+			}
+		}
+		else
+		{
+			pressed = ImGui::Button(name, ImVec2(CubeMapTileSize, CubeMapTileSize));
+		}
+
+		ImGui::PopStyleVar(1);
+		ImGui::PopStyleColor();
+
+		if (Texture_ptr droppedTexture = EUI::AcceptTextureFileDrop())
+		{
+			*texture = droppedTexture;
+		}
+
+		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+		{
+			ImGui::OpenPopup("TextureSlot_Popup");
+		}
+
+		if (ImGui::BeginPopup("TextureSlot_Popup"))
+		{
+			if (ImGui::Button("Remove"))
+			{
+				*texture = nullptr;
+			}
+
+			ImGui::EndPopup();
+		}
+
+		ImGui::PopID();
+
+		return pressed;
 	}
 
 	void ResourceWindow::DrawCubeMapCreateWindow()
 	{
-		if (!m_CubeMapWindowOpened)
+		if (!m_CubeMapCreateData.CubeMapWindowOpened)
 			return;
 
-		if (!ImGui::Begin("Create CubeMap", &m_CubeMapWindowOpened))
+		if (!ImGui::Begin("Create CubeMap", &m_CubeMapCreateData.CubeMapWindowOpened))
 		{
 			ImGui::End();
 			return;
 		}
 
-		EUI::Slot("Top", (ITexture*)nullptr, nullptr);
-		EUI::Slot("Left", (ITexture*)nullptr, nullptr);
+		ImGui::InputTextLabel("File name: ", m_CubeMapCreateData.Filename);
+
+		ImGui::Indent(CubeMapTileSize);
+		TextureSlot("Top", &m_CubeMapCreateData.CubeMapTextures[2]);
+		ImGui::Unindent(CubeMapTileSize);
+
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 5);
+
+		TextureSlot("Back", &m_CubeMapCreateData.CubeMapTextures[4]); ImGui::SameLine(0, 0);
+		TextureSlot("Right", &m_CubeMapCreateData.CubeMapTextures[0]); ImGui::SameLine(0, 0);
+		TextureSlot("Front", &m_CubeMapCreateData.CubeMapTextures[5]); ImGui::SameLine(0, 0);
+		TextureSlot("Left", &m_CubeMapCreateData.CubeMapTextures[1]);
+
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 5);
+
+		ImGui::Indent(CubeMapTileSize);
+		TextureSlot("Bottom", &m_CubeMapCreateData.CubeMapTextures[3]);
+		ImGui::Unindent(CubeMapTileSize);
+
+		ImGui::Separator();
+
+		ImGui::BeginDisabled(m_CubeMapCreateData.Filename.empty());
+
+		if (ImGui::Button("Create"))
+		{
+			Path cubeMapPath = m_CurrentPath / (m_CubeMapCreateData.Filename + ".cubemap");
+
+			GEngine->GetResourceManager()->SaveCubeMapDef(cubeMapPath, m_CubeMapCreateData.CubeMapTextures);
+
+			m_CubeMapCreateData.CubeMapWindowOpened = false;
+		}
+
+		ImGui::EndDisabled();
 
 		ImGui::End();
 	}

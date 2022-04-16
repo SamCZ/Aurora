@@ -1,0 +1,16 @@
+{
+	"name": "SkyBox",
+	"passes": [
+		{
+			"name": "Ambient",
+			"shaders": {
+				"vertex": "Assets/Shaders/SkyBox/SkyBox.vert",
+				"pixel": "Assets/Shaders/SkyBox/SkyBox.frag"
+			}
+		}
+	],
+	"variables": [
+
+	],
+	"macros": {}
+}

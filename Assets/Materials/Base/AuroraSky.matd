@@ -1,0 +1,16 @@
+{
+	"name": "AuroraSky",
+	"passes": [
+		{
+			"name": "Ambient",
+			"shaders": {
+				"vertex": "Assets/Shaders/Sky/AuroraSky.vert",
+				"pixel": "Assets/Shaders/Sky/AuroraSky.frag"
+			}
+		}
+	],
+	"variables": [
+
+	],
+	"macros": {}
+}

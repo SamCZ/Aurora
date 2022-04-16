@@ -144,6 +144,11 @@ namespace Aurora
 		{
 
 		}
+
+		if (mode == SkyLightMode::SkyBox)
+		{
+			
+		}
 	}
 
 	void PropertiesWindow::OnGui()

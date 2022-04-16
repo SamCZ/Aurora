@@ -301,6 +301,7 @@ namespace Aurora
 			Vector3 max;
 			archive >> min;
 			archive >> max;
+			m_Bounds.Set(min, max);
 		}
 	};
 

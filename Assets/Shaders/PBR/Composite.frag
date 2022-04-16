@@ -53,7 +53,15 @@ void main()
 	}
 
 	vec4 albedo = texture(AlbedoRT, TexCoord);
-	vec3 normals = texture(NormalsRT, TexCoord).rgb * 2.0f - 1.0f;
+	vec3 normalColor = texture(NormalsRT, TexCoord).rgb;
+	vec3 normals = normalColor * 2.0f - 1.0f;
+
+	if (length(normalColor) == 0.0)
+	{
+		FragColor = albedo;
+		return;
+	}
+
 	vec3 worldPos = GetSceneWorldPos();
 
 	vec3 color = vec3(0.0f);

@@ -21,7 +21,7 @@ namespace Aurora
 	public:
 		CLASS_OBJ(SkyLightComponent, StaticMeshComponent);
 
-		SkyLightComponent() : m_Mode(SkyLightMode::AuroraSky), m_Color(0.7f) {}
+		SkyLightComponent() : m_Mode(SkyLightMode::SkyBox), m_Color(0.7f) {}
 
 		[[nodiscard]] inline SkyLightMode GetMode() const { return m_Mode; }
 		inline void SetMode(SkyLightMode mode) { m_Mode = mode; }

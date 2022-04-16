@@ -65,19 +65,14 @@ namespace Aurora
 					}
 				}
 
-				if (ImGui::BeginDragDropTarget())
+				if (Texture_ptr textureDropped = EUI::AcceptTextureFileDrop())
 				{
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("RESOURCE_PATH"))
-					{
-						Path filePath = (char*)payload->Data;
+					m_CurrentMaterial->SetTexture(it.first, textureDropped);
+				}
 
-						if (ResourceManager::IsFileType(filePath, FT_IMAGE))
-						{
-							m_CurrentMaterial->SetTexture(it.first, GEngine->GetResourceManager()->LoadTexture(filePath));
-						}
-					}
-
-					ImGui::EndDragDropTarget();
+				if (Texture_ptr textureDropped = EUI::AcceptCubeMapTextureFileDrop())
+				{
+					m_CurrentMaterial->SetTexture(it.first, textureDropped);
 				}
 
 				if (clearClicked)

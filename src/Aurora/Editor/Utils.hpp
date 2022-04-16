@@ -114,4 +114,7 @@ namespace Aurora::EUI
 
 		return clicked;
 	}
+
+	Texture_ptr AcceptTextureFileDrop();
+	Texture_ptr AcceptCubeMapTextureFileDrop();
 }

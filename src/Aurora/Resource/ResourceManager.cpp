@@ -19,6 +19,7 @@
 #include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Core/UUID.hpp"
 #include "Aurora/App/AppContext.hpp"
+#include "Aurora/Graphics/RenderManager.hpp"
 
 namespace Aurora
 {
@@ -467,6 +468,7 @@ namespace Aurora
 		bool isNormalMap = filename.find("normal") != std::string::npos;
 
 		ResourceName resourceName;
+		resourceName.Name = path.string();
 
 		if (loadDesc.GenerateMetaFile)
 		{
@@ -490,7 +492,6 @@ namespace Aurora
 				{
 					String uuid = metaFile["uuid"].get<String>();
 					resourceName.ID = UUID::FromString<String>(uuid).value();
-					resourceName.Name = path.string();
 				}
 				else
 				{
@@ -539,6 +540,13 @@ namespace Aurora
 			m_LoadedTextures[path] = texture;
 
 		return texture;
+	}
+
+	Texture_ptr ResourceManager::LoadTexture(const ResourceName& resourceName, const TextureLoadDesc& loadDesc)
+	{
+		// TODO: Finish resource name UUID's
+		Path path = resourceName.Name;
+		return LoadTexture(path, loadDesc);
 	}
 
 	Texture_ptr ResourceManager::LoadResourceIcon(const Path &path, int size)
@@ -822,6 +830,52 @@ namespace Aurora
 		// TODO: Unload asset
 	}
 
+	bool ResourceManager::SaveCubeMapDef(const Path& path, const std::array<Texture_ptr, 6>& textures)
+	{
+		nlohmann::json json;
+		nlohmann::json array = nlohmann::json::array();
+
+		for (int i = 0; i < 6; ++i)
+		{
+			array[i] = textures[i]->GetResourceName();
+		}
+
+		json["textures"] = array;
+
+		std::ofstream stream;
+		stream.open(path);
+		if(stream.is_open())
+		{
+			stream << std::setw(4) << json << std::endl;
+			stream.close();
+			return true;
+		}
+
+		return false;
+	}
+
+	Texture_ptr ResourceManager::LoadCubeMapDef(const Path& path)
+	{
+		nlohmann::json json;
+
+		if(!LoadJson(path, json))
+		{
+			return nullptr;
+		}
+
+		std::array<Path, 6> textures;
+
+		for (int i = 0; i < 6; ++i)
+		{
+			ResourceName resourceName(json["textures"][i].get<String>());
+
+			// TODO: Implement resource name UUID
+			textures[i] = resourceName.Name;
+		}
+
+		return GEngine->GetRenderManager()->CreateCubeMap(textures, false);
+	}
+
 	static const char* ImageExtensions[] = {
 		".png",
 		".jpg",
@@ -846,8 +900,6 @@ namespace Aurora
 
 	bool ResourceManager::IsFileType(const Path &path, FileType types)
 	{
-		CPU_DEBUG_SCOPE("IsFileType");
-
 		Path extension = path.extension();
 
 		if ((types & FT_IMAGE) == FT_IMAGE)
@@ -890,6 +942,9 @@ namespace Aurora
 		}
 
 		if ((types & FT_AMESH) == FT_AMESH  && extension == ".amesh")
+			return true;
+
+		if ((types & FT_CUBEMAP) == FT_CUBEMAP  && extension == ".cubemap")
 			return true;
 
 		return false;
