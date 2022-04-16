@@ -18,7 +18,7 @@ namespace Aurora
 			"Assets/Textures/CloudyCrown_01_Midday/CloudyCrown_Midday_Down.png",
 			"Assets/Textures/CloudyCrown_01_Midday/CloudyCrown_Midday_Back.png",
 			"Assets/Textures/CloudyCrown_01_Midday/CloudyCrown_Midday_Front.png"
-		}, false);
+		}, true);
 
 		Material_ptr material = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/SkyBox.matd")->CreateInstance();
 		//material->RasterState().CullMode = ECullMode::None;

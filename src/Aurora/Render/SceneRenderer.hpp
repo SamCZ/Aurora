@@ -58,6 +58,20 @@ namespace Aurora
 		Buffer_ptr m_PointLightsBuffer;
 		Buffer_ptr m_CompositeDefaultsBuffer;
 		Shader_ptr m_CompositeShader;
+		Shader_ptr m_HDRCompositeShader;
+
+		Shader_ptr m_BloomShader;
+		Buffer_ptr m_BloomDescBuffer;
+		struct BloomSettings
+		{
+			bool Enabled = true;
+			float Threshold = 1.1f;
+			float Knee = 0.1f;
+			float UpsampleScale = 1.0f;
+			float Intensity = 1.0f;
+			float DirtIntensity = 1.0f;
+		} m_BloomSettings;
+		const int m_BloomComputeWorkgroupSize = 16;
 
 		robin_hood::unordered_map<TTypeID, InputLayout_ptr> m_MeshInputLayouts;
 

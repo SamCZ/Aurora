@@ -873,7 +873,7 @@ namespace Aurora
 			textures[i] = resourceName.Name;
 		}
 
-		return GEngine->GetRenderManager()->CreateCubeMap(textures, false);
+		return GEngine->GetRenderManager()->CreateCubeMap(textures, true);
 	}
 
 	static const char* ImageExtensions[] = {
