@@ -332,7 +332,7 @@ namespace Aurora
 				Vector2ui bloomTexSize = (Vector2i)viewPort->ViewPort / 2;
 				bloomTexSize += Vector2ui(m_BloomComputeWorkgroupSize - (bloomTexSize.x % m_BloomComputeWorkgroupSize), m_BloomComputeWorkgroupSize - (bloomTexSize.y % m_BloomComputeWorkgroupSize));
 
-				uint32_t mips = TextureDesc::GetMipLevelCount(bloomTexSize.x, bloomTexSize.y) - 2 - 2;
+				uint32_t mips = TextureDesc::GetMipLevelCount(bloomTexSize.x, bloomTexSize.y) - 2;
 				//mips -= mips / 3;
 
 				for (int i = 0; i < 3; ++i)
