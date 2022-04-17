@@ -13,7 +13,7 @@ namespace Aurora
 
 	static const char* SkyLightMode_Strings[] = { "Color", "Gradient", "AuroraSky", "SkyBox", "Custom" };
 
-	class SkyLightComponent : public StaticMeshComponent
+	class AU_API SkyLightComponent : public StaticMeshComponent
 	{
 	private:
 		SkyLightMode m_Mode;
@@ -27,7 +27,7 @@ namespace Aurora
 		inline void SetMode(SkyLightMode mode) { m_Mode = mode; }
 	};
 
-	class SkyLight : public Actor
+	class AU_API SkyLight : public Actor
 	{
 	public:
 		CLASS_OBJ(SkyLight, Actor);
