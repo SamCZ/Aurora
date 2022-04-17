@@ -1,6 +1,6 @@
 #include <Aurora/Aurora.hpp>
 
-#include <Aurora/Core/UUID.hpp>
+#include <Aurora/Core/AUID.hpp>
 #include <Aurora/Resource/ResourceManager.hpp>
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>

@@ -5,6 +5,7 @@
 #include "Aurora/Graphics/PassType.hpp"
 #include "Aurora/Graphics/Color.hpp"
 #include "Aurora/Physics/Frustum.hpp"
+#include "Aurora/Physics/Ray.hpp"
 
 namespace Aurora
 {
@@ -79,6 +80,11 @@ namespace Aurora
 
 		[[nodiscard]] Vector3 GetWorldPositionFromScreen(float x, float y, float projectionZPos) const;
 		bool GetScreenCoordinatesFromWorld(const Vector3& position, Vector2& out_ScreenPos) const;
+
+		[[nodiscard]] Ray GetRayFromScreen(float x, float y) const;
+		[[nodiscard]] Ray GetRayFromScreen(int x, int y) const;
+		[[nodiscard]] Ray GetRayFromScreen(const Vector2i& screenPos) const;
+		[[nodiscard]] Ray GetRay() const;
 
 		[[nodiscard]] const PerspectiveSettings& GetPerspectiveSettings() const;
 		[[nodiscard]] const OrthogonalSettings& GetOrthogonalSettings() const;

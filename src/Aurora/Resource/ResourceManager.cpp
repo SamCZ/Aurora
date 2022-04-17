@@ -17,7 +17,7 @@
 #include "AssimpModelLoader.hpp"
 
 #include "Aurora/Core/Profiler.hpp"
-#include "Aurora/Core/UUID.hpp"
+#include "Aurora/Core/AUID.hpp"
 #include "Aurora/App/AppContext.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
 
@@ -491,11 +491,11 @@ namespace Aurora
 				if(metaFile.contains("uuid"))
 				{
 					String uuid = metaFile["uuid"].get<String>();
-					resourceName.ID = UUID::FromString<String>(uuid).value();
+					resourceName.ID = AUID::FromString<String>(uuid).value();
 				}
 				else
 				{
-					AU_LOG_WARNING("Texture ", path, " does not contain UUID");
+					AU_LOG_WARNING("Texture ", path, " does not contain AUID");
 				}
 			}
 		}
@@ -544,7 +544,7 @@ namespace Aurora
 
 	Texture_ptr ResourceManager::LoadTexture(const ResourceName& resourceName, const TextureLoadDesc& loadDesc)
 	{
-		// TODO: Finish resource name UUID's
+		// TODO: Finish resource name AUID's
 		Path path = resourceName.Name;
 		return LoadTexture(path, loadDesc);
 	}
@@ -738,7 +738,7 @@ namespace Aurora
 		}
 		else
 		{
-			json["uuid"] = (String)UUID::Generate();
+			json["uuid"] = (String)AUID::AUID();
 			json["properties"] = defaults;
 
 			AU_LOG_INFO("Creating meta ", metaPath.string());
@@ -869,7 +869,7 @@ namespace Aurora
 		{
 			ResourceName resourceName(json["textures"][i].get<String>());
 
-			// TODO: Implement resource name UUID
+			// TODO: Implement resource name AUID
 			textures[i] = resourceName.Name;
 		}
 

@@ -60,17 +60,17 @@ namespace Aurora
 		}
 	}
 
-	class AU_API UUID
+	class AU_API AUID
 	{
 	private:
 		uint64_t m_Low;
 		uint64_t m_High;
 	public:
-		UUID() : m_Low(0), m_High(0) {}
-		constexpr UUID(uint64_t low, uint64_t high) : m_Low(low), m_High(high) {}
-		UUID(const UUID& other)  = default;
+		AUID() : m_Low(0), m_High(0) {}
+		constexpr AUID(uint64_t low, uint64_t high) : m_Low(low), m_High(high) {}
+		AUID(const AUID& other)  = default;
 
-		static UUID Generate();
+		static AUID Generate();
 
 		[[nodiscard]] uint64_t Low() const { return m_Low; }
 		[[nodiscard]] uint64_t High() const { return m_High; }
@@ -80,7 +80,7 @@ namespace Aurora
 			return m_Low == 0 && m_High == 0;
 		}
 
-		[[nodiscard]] constexpr int Compare(const UUID& other) const
+		[[nodiscard]] constexpr int Compare(const AUID& other) const
 		{
 			if (m_Low < other.m_Low)
 				return -1;
@@ -95,22 +95,22 @@ namespace Aurora
 			return 0;
 		}
 
-		constexpr bool operator>(const UUID& other) const
+		constexpr bool operator>(const AUID& other) const
 		{
 			return Compare(other) > 0;
 		}
 
-		constexpr bool operator<(const UUID& other) const
+		constexpr bool operator<(const AUID& other) const
 		{
 			return Compare(other) < 0;
 		}
 
-		constexpr bool operator==(const UUID& other) const
+		constexpr bool operator==(const AUID& other) const
 		{
 			return m_Low == other.m_Low && m_High == other.m_High;
 		}
 
-		constexpr bool operator!=(const UUID& other) const
+		constexpr bool operator!=(const AUID& other) const
 		{
 			return !operator==(other);
 		}
@@ -163,7 +163,7 @@ namespace Aurora
 		}
 
 		template<typename StringType>
-		constexpr static std::optional<UUID> FromString(const StringType& in_str) noexcept
+		constexpr static std::optional<AUID> FromString(const StringType& in_str) noexcept
 		{
 			auto str = uuid::detail::ToStringView(in_str);
 
@@ -210,7 +210,7 @@ namespace Aurora
 			std::memcpy(&low, data.data(), 8);
 			std::memcpy(&high, data.data() + 8, 8);
 
-			return UUID(low, high);
+			return AUID(low, high);
 		}
 
 		template<typename CharT>

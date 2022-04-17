@@ -353,15 +353,18 @@ namespace Aurora
 
 
 			// Disabled vg render for now
-			if(false)
+			if(true)
 			{
 				CPU_DEBUG_SCOPE("NanoVG");
 				GPU_DEBUG_SCOPE("NanoVG");
 
+				// This fixed fonts not rendering
+				glBindSampler(0, 0);
+
 				m_VgRender->Begin(m_Window->GetSize(), 1.0f); // TODO: Fix hdpi devices
 				m_AppContext->RenderVg();
 
-				{
+				/*{
 					std::stringstream ss;
 					ss << "FPS: " << FPS;
 					m_VgRender->DrawString(ss.str(), {5, 55}, Color::black(), 12);
@@ -401,7 +404,7 @@ namespace Aurora
 						ss << "Memory usage: " << FormatBytes(renderStatistics.GPUMemoryUsage);
 						m_VgRender->DrawString(ss.str(), {5, 115}, Color::black(), 12);
 					}
-				}
+				}*/
 
 				m_VgRender->End();
 			}

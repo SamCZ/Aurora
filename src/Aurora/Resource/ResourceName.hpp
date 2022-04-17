@@ -3,18 +3,18 @@
 #include <utility>
 
 #include "Aurora/Core/Types.hpp"
-#include "Aurora/Core/UUID.hpp"
+#include "Aurora/Core/AUID.hpp"
 
 namespace Aurora
 {
 
 	struct ResourceName
 	{
-		UUID ID;
+		AUID ID;
 		std::string Name;
 
 		ResourceName() = default;
-		ResourceName(const UUID& uuid, std::string name) : ID(uuid), Name(std::move(name)) {}
+		ResourceName(const AUID& uuid, std::string name) : ID(uuid), Name(std::move(name)) {}
 
 		operator std::string() const
 		{
@@ -50,7 +50,7 @@ namespace Aurora
 				}
 				else
 				{
-					auto opt = UUID::FromString<std::string>(uuidStr);
+					auto opt = AUID::FromString<std::string>(uuidStr);
 					if(opt.has_value())
 					{
 						ID = opt.value();

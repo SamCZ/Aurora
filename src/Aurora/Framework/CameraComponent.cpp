@@ -134,6 +134,28 @@ namespace Aurora
 		return false;
 	}
 
+	Ray CameraComponent::GetRayFromScreen(float x, float y) const
+	{
+		Vector3 click3d = GetWorldPositionFromScreen(x, y, 0);
+		Vector3 dir = glm::normalize(GetWorldPositionFromScreen(x, y, 1) - click3d);
+		return Ray(click3d, dir);
+	}
+
+	Ray CameraComponent::GetRayFromScreen(int x, int y) const
+	{
+		return GetRayFromScreen(static_cast<float>(x), static_cast<float>(y));
+	}
+
+	Ray CameraComponent::GetRayFromScreen(const Vector2i& screenPos) const
+	{
+		return GetRayFromScreen(screenPos.x, screenPos.y);
+	}
+
+	Ray CameraComponent::GetRay() const
+	{
+		return Ray(GetWorldPosition(), GetForwardVector());
+	}
+
 	void CameraComponent::Tick(double delta)
 	{
 		// TODO: think about updating only when transform changes too

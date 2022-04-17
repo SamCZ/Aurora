@@ -22,6 +22,7 @@ namespace Aurora
 		virtual void BeginPlay() = 0;
 		virtual void BeginDestroy() = 0;
 		virtual void Tick(double delta) {}
+		virtual void RenderVg() {}
 
 		template<class T, typename... Args, typename std::enable_if<std::is_base_of<UserInterface, T>::value>::type* = nullptr>
 		UserInterface* AddUserInterface(UIID_t id, Args... args)

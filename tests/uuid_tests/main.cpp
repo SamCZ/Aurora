@@ -1,5 +1,5 @@
 #include <Aurora/Core/String.hpp>
-#include <Aurora/Core/UUID.hpp>
+#include <Aurora/Core/AUID.hpp>
 #include <Aurora/Logger/std_sink.hpp>
 #include <Aurora/Resource/ResourceName.hpp>
 
@@ -11,11 +11,11 @@ int main()
 {
 	Logger::AddSink<std_sink>();
 
-	AU_LOG_INFO("Random: ", (String)Aurora::UUID::Generate());
-	if(Aurora::UUID::IsValid<String>("0de49ab9-2c9d-b155-70e6-0c9067010000"))
+	AU_LOG_INFO("Random: ", (String)Aurora::AUID::AUID());
+	if(Aurora::AUID::IsValid<String>("0de49ab9-2c9d-b155-70e6-0c9067010000"))
 	{
-		Aurora::UUID uuid = Aurora::UUID::FromString<String>("0de49ab9-2c9d-b155-70e6-0c9067010000").value();
-		Aurora::UUID uuid2 = Aurora::UUID::FromString<String>((String)uuid).value();
+		Aurora::AUID uuid = Aurora::AUID::FromString<String>("0de49ab9-2c9d-b155-70e6-0c9067010000").value();
+		Aurora::AUID uuid2 = Aurora::AUID::FromString<String>((String)uuid).value();
 
 		if(uuid == uuid2)
 		{
