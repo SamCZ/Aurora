@@ -55,6 +55,12 @@ namespace Aurora
 		inline SceneComponent* GetRootComponent() { return m_RootComponent; }
 
 		template<class T, typename std::enable_if<std::is_base_of<SceneComponent, T>::value>::type* = nullptr>
+		inline T* GetRootComponent()
+		{
+			return T::SafeCast(GetRootComponent());
+		}
+
+		template<class T, typename std::enable_if<std::is_base_of<SceneComponent, T>::value>::type* = nullptr>
 		inline std::vector<T*> FindComponentsOfType()
 		{
 			std::vector<T*> components;

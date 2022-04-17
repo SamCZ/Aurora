@@ -17,7 +17,10 @@ namespace Aurora::EUI
 {
 	static bool ImageButton(ITexture* texture, float size)
 	{
-		return ImGui::ImageButton((ImTextureID)texture->GetRawHandle(), { size , size }, { 0, 0 }, { 1, 1 });
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		bool pressed = ImGui::ImageButton((ImTextureID)texture->GetRawHandle(), { size , size }, { 0, 0 }, { 1, 1 }, 0, ImVec4(0, 0, 0, 0), ImVec4(1, 1, 1, 1));
+		ImGui::PopStyleColor();
+		return pressed;
 	}
 
 	static bool ImageButton(const Texture_ptr& texture, float size)

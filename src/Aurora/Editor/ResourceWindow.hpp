@@ -17,6 +17,7 @@
 namespace Aurora
 {
 	class MainEditorPanel;
+	class AssetPreviewRenderer;
 
 	class ResourceWindow
 	{
@@ -34,6 +35,7 @@ namespace Aurora
 		std::map<Path, Texture_ptr> m_TextureIcons;
 		std::vector<Path> m_TextureIconsToLoad;
 		std::queue<Path> m_FilesToDelete;
+		AssetPreviewRenderer* m_PreviewRenderer;
 
 		// Icons
 		Texture_ptr m_ShaderIcon;
@@ -48,6 +50,7 @@ namespace Aurora
 		} m_CubeMapCreateData;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
+		~ResourceWindow();
 
 		void Update(double delta);
 
@@ -63,7 +66,7 @@ namespace Aurora
 
 		void OpenCubeMapCreateWindow();
 		void DrawCubeMapCreateWindow();
-
+	public:
 		const char* GetFileTypeIconOrTexture(const Path& path, Texture_ptr& textureOut);
 	};
 

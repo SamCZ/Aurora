@@ -192,10 +192,13 @@ namespace Aurora
 			std::memcpy(m_UniformData.data() + offset, values.data(), size);
 		}
 
-		for (const auto& [TypeID, var] : m_TextureVars)
+		for (auto& [TypeID, var] : m_TextureVars)
 		{
 			if (var.HasEnableMacro)
 			 m_Macros[var.MacroName] = var.Texture != nullptr ? "1" : "0";
+
+			if (!var.Texture)
+				var.Texture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png");
 		}
 	}
 

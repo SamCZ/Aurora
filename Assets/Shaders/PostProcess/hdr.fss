@@ -15,11 +15,12 @@ void main()
 	const float gamma = 2.2;
 
 	FragColor = sceneColor;
-	FragColor += bloomColor;
+	FragColor.rgb += bloomColor.rgb;
 	//FragColor.rgb = Reinhard(FragColor.rgb);
-	FragColor.a = 1.0f;
+	//FragColor.a = sceneColor.a;
 
 	//FragColor.rgb = pow(FragColor.rgb, vec3(1.0 / gamma));
 
 	FragColor = fromLinear(FragColor);
+	FragColor.a = sceneColor.a;
 }

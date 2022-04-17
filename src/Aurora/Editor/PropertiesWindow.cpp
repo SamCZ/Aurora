@@ -12,6 +12,7 @@
 
 #include "MainEditorPanel.hpp"
 #include "MaterialWindow.hpp"
+#include "ResourceWindow.hpp"
 #include "Utils.hpp"
 
 #define ARSIZE(arr) (sizeof(arr)/sizeof((arr)[0]))
@@ -147,7 +148,7 @@ namespace Aurora
 
 		if (mode == SkyLightMode::SkyBox)
 		{
-			
+
 		}
 	}
 

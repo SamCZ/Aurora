@@ -77,5 +77,5 @@ void main()
 	}
 
 	FragColor.rgb = color;
-	FragColor.a = 1.0f;
+	FragColor.a = albedo.a;
 }

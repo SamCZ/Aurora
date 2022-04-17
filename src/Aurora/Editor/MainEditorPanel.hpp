@@ -77,5 +77,6 @@ namespace Aurora
 
 		inline GameViewportWindow* GetGameViewPortWindow() { return m_GameViewportWindow.get(); }
 		inline MaterialWindow* GetMaterialWindow() { return &m_MaterialWindow; }
+		inline ResourceWindow* GetResourceWindow() { return &m_ResourceWindow; }
 	};
 }

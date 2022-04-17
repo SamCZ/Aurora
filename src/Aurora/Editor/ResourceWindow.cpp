@@ -14,6 +14,8 @@
 
 #include "MainEditorPanel.hpp"
 
+#include "AssetPreviewRenderer.hpp"
+
 namespace Aurora
 {
 	ResourceWindow::ResourceWindow(MainEditorPanel* mainEditorPanel)
@@ -30,6 +32,13 @@ namespace Aurora
 
 		m_ShaderIcon = GEngine->GetResourceManager()->LoadResourceIcon("Assets/Textures/Editor/shader.png", 56);
 		m_MaterialIcon = GEngine->GetResourceManager()->LoadResourceIcon("Assets/Textures/Editor/MaterialTexture.png", 56);
+
+		m_PreviewRenderer = new AssetPreviewRenderer();
+	}
+
+	ResourceWindow::~ResourceWindow()
+	{
+		delete m_PreviewRenderer;
 	}
 
 	void ResourceWindow::DrawPathDirectoryNodes(const PathNode& rootPath, const Path& basePath)
@@ -92,7 +101,7 @@ namespace Aurora
 					continue;
 				}
 
-				if (ResourceManager::IsFileType(path, FT_IMAGE))
+				if (ResourceManager::IsFileType(path, static_cast<FileType>(FT_IMAGE | FT_CUBEMAP)))
 				{
 					m_TextureIcons.erase(path);
 					VectorRemove(m_TextureIconsToLoad, path);
@@ -421,6 +430,27 @@ namespace Aurora
 		Path path = m_TextureIconsToLoad[0];
 		m_TextureIconsToLoad.erase(m_TextureIconsToLoad.begin());
 
+		if (ResourceManager::IsFileType(path, FT_CUBEMAP))
+		{
+			Texture_ptr cubeMap = GEngine->GetResourceManager()->LoadCubeMapDef(path);
+			m_TextureIcons[path] = m_PreviewRenderer->RenderCubeMap(Vector2i(BIG_ICON_BASE_WIDTH), cubeMap);
+			return;
+		}
+
+		if (ResourceManager::IsFileType(path, FT_MATERIAL_DEF))
+		{
+			auto mat = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition(path);
+			m_TextureIcons[path] = m_PreviewRenderer->RenderMaterial(Vector2i(BIG_ICON_BASE_WIDTH), mat);
+			return;
+		}
+
+		if (ResourceManager::IsFileType(path, FT_MATERIAL_INS))
+		{
+			auto mat = GEngine->GetResourceManager()->LoadMaterial(path);
+			m_TextureIcons[path] = m_PreviewRenderer->RenderMaterial(Vector2i(BIG_ICON_BASE_WIDTH), mat);
+			return;
+		}
+
 		TextureLoadDesc loadDesc = {
 			.Width = static_cast<int>(BIG_ICON_BASE_WIDTH),
 			.Height = static_cast<int>(BIG_ICON_BASE_WIDTH),
@@ -461,7 +491,7 @@ namespace Aurora
 
 	const char *ResourceWindow::GetFileTypeIconOrTexture(const Path &path, Texture_ptr &textureOut)
 	{
-		if (ResourceManager::IsFileType(path, FT_IMAGE))
+		if (ResourceManager::IsFileType(path, static_cast<FileType>(FT_IMAGE | FT_CUBEMAP | FT_MATERIAL_DEF | FT_MATERIAL_INS)))
 		{
 			auto it = m_TextureIcons.find(path);
 
@@ -490,11 +520,11 @@ namespace Aurora
 			return ICON_FA_FILE;
 		}
 
-		if (ResourceManager::IsFileType(path, static_cast<FileType>(FT_MATERIAL_DEF | FT_MATERIAL_INS)))
+		/*if (ResourceManager::IsFileType(path, static_cast<FileType>(FT_MATERIAL_DEF | FT_MATERIAL_INS)))
 		{
 			textureOut = m_MaterialIcon;
 			return ICON_FA_FILE;
-		}
+		}*/
 
 		if (ResourceManager::IsFileType(path, FT_AMESH))
 		{

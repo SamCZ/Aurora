@@ -1013,7 +1013,7 @@ namespace Aurora
 
 			if (!state.InputLayoutHandle->GetDescriptorByName(inputVariable.Name, layoutAttribute))
 			{
-				AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader (" , inputVariable.Name, ") !");
+				//AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader (" , inputVariable.Name, ") !");
 				continue;
 			}
 
@@ -1545,7 +1545,7 @@ namespace Aurora
 		if (renderState.ClearColorTarget)
 		{
 			nClearBitField = GL_COLOR_BUFFER_BIT;
-			glClearColor(renderState.ClearColor.r, renderState.ClearColor.g, renderState.ClearColor.b, renderState.ClearColor.a);
+			glClearColor(renderState.ClearColor.r / 255.0f, renderState.ClearColor.g / 255.0f, renderState.ClearColor.b / 255.0f, renderState.ClearColor.a / 255.0f);
 		}
 
 		if (renderState.ClearDepthTarget)

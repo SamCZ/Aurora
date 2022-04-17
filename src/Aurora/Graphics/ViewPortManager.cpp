@@ -5,18 +5,18 @@
 namespace Aurora
 {
 
-	void RenderViewPort::Resize(const Vector2i &size)
+	void RenderViewPort::Resize(const Vector2i &size, bool forceRecreation)
 	{
 		if(size.x == 0 || size.y == 0)
 			return;
 
-		if(ViewPort.Width != size.x || ViewPort.Height != size.y)
+		if(ViewPort.Width != size.x || ViewPort.Height != size.y || forceRecreation)
 		{
 			int diffX = (int)glm::abs((int)size.x - (int)ViewPort.Width);
 			int diffY = (int)glm::abs((int)size.y - (int)ViewPort.Height);
 
 			// This prevents OpenGL from crashing when creating many textures in every tick
-			if(diffX < 10 && diffY < 10)
+			if(diffX < 10 && diffY < 10 && !forceRecreation)
 			{
 				return;
 			}

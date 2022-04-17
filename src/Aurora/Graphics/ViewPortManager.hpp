@@ -19,7 +19,7 @@ namespace Aurora
 		Texture_ptr Target;
 		EventEmitter<const Vector2i&> ResizeEmitter;
 
-		void Resize(const Vector2i &size);
+		void Resize(const Vector2i &size, bool forceRecreation = false);
 
 		[[nodiscard]] bool Changed(const Vector2i &size) const
 		{

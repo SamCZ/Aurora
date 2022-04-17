@@ -231,6 +231,7 @@ namespace Aurora
 
 			drawCallState.ClearColor = camera->GetClearColor();
 			drawCallState.ClearColorTarget = true;
+			drawCallState.ClearDepthTarget = true;
 
 			GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 			GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);

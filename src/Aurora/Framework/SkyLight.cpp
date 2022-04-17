@@ -23,6 +23,7 @@ namespace Aurora
 		Material_ptr material = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/SkyBox.matd")->CreateInstance();
 		//material->RasterState().CullMode = ECullMode::None;
 		material->SetSortType(RenderSortType::Sky);
+		material->SetMacro("SKY_MAPPING", "1");
 
 		material->SetTexture("CubeMap"_HASH, cubemap);
 

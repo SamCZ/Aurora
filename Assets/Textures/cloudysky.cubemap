@@ -1,0 +1,10 @@
+{
+    "textures": [
+        "{b19b4e21-8a7f-2a2d-7d0c-c6a6e17b102a}Assets\\Textures\\CloudyCrown_01_Midday\\CloudyCrown_Midday_Right.png",
+        "{541e1f6b-3315-278d-f735-d65eb3a33360}Assets\\Textures\\CloudyCrown_01_Midday\\CloudyCrown_Midday_Left.png",
+        "{73e67350-9188-328c-0615-d4a782e91e6d}Assets\\Textures\\CloudyCrown_01_Midday\\CloudyCrown_Midday_Up.png",
+        "{427a11f0-f6c4-b29b-3b1c-0c052e44c841}Assets\\Textures\\CloudyCrown_01_Midday\\CloudyCrown_Midday_Down.png",
+        "{af9077a5-7e8b-69a4-0f22-4eaddd599f14}Assets\\Textures\\CloudyCrown_01_Midday\\CloudyCrown_Midday_Back.png",
+        "{2d86b34e-63f1-fedd-91a3-89f0cab2fa4c}Assets\\Textures\\CloudyCrown_01_Midday\\CloudyCrown_Midday_Front.png"
+    ]
+}
