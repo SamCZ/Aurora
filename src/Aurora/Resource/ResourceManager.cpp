@@ -738,7 +738,7 @@ namespace Aurora
 		}
 		else
 		{
-			json["uuid"] = (String)AUID::AUID();
+			json["uuid"] = (String)AUID::Generate();
 			json["properties"] = defaults;
 
 			AU_LOG_INFO("Creating meta ", metaPath.string());
