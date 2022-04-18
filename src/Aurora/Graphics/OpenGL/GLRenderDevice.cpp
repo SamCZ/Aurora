@@ -1114,7 +1114,7 @@ namespace Aurora
 
 	void GLRenderDevice::InvalidateState()
 	{
-		m_ContextState.Invalidate();
+		//m_ContextState.Invalidate();
 
 		m_LastRasterState = FRasterState();
 		m_LastDepthState = FDepthStencilState();
@@ -1326,8 +1326,7 @@ namespace Aurora
 		glGenFramebuffers(1, &framebuffer->Handle);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->Handle);
 
-		std::string fbName = "Cached framebuffer";
-		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
+		std::string fbName = "FB(A=";
 
 		for (uint32_t rt = 0; rt < DrawCallState::MaxRenderTargets; rt++)
 		{
@@ -1341,6 +1340,8 @@ namespace Aurora
 
 			framebuffer->RenderTargets[rt] = state.RenderTargets[rt].Texture;
 			glTex->m_UsedInFrameBuffers = true;
+
+			fbName.append(glTex->GetDesc().Name + ",");
 
 			if (targetBinding.Index == ~0u || glTex->GetDesc().DepthOrArraySize == 0)
 			{
@@ -1367,6 +1368,8 @@ namespace Aurora
 		{
 			auto glDepthTex = GetTexture(state.DepthTarget);
 
+			fbName.append("D=" + glDepthTex->GetDesc().Name);
+
 			framebuffer->DepthTarget = glDepthTex;
 			glDepthTex->m_UsedInFrameBuffers = true;
 
@@ -1386,8 +1389,16 @@ namespace Aurora
 				glFramebufferTextureLayer(GL_FRAMEBUFFER, attachment, glDepthTex->Handle(), GLint(state.DepthMipSlice), GLint(state.DepthIndex));
 			}
 		}
+		else
+		{
+			fbName = fbName.substr(0, fbName.length() - 1);
+		}
+
+		fbName.append(")");
 
 		CHECK_GL_ERROR();
+
+		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
 
 		uint32_t status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE)

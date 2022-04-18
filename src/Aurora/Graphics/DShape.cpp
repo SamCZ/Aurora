@@ -26,7 +26,7 @@ namespace Aurora
 
 	void DShapes::Init()
 	{
-		uint32_t maxLines = 20000;
+		uint32_t maxLines = 200000;
 		uint32_t lineVertexBufferSize = (sizeof(Vector3) * 2) * maxLines;
 		AU_LOG_INFO("Allocated ", FormatBytes(lineVertexBufferSize), " for debug line render.");
 

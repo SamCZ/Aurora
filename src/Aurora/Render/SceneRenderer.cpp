@@ -14,6 +14,7 @@
 #include "Aurora/Graphics/ViewPortManager.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
 #include "Aurora/Graphics/OpenGL/GLBufferLock.hpp"
+#include "Aurora/Graphics/DShape.hpp"
 
 #include "Aurora/Resource/ResourceManager.hpp"
 
@@ -321,6 +322,7 @@ namespace Aurora
 				GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
 			}
 
+
 			/////////////////////////////////////////////////////////////////////////////////////////////////
 
 			TemporalRenderTarget bloomRTs[3];
@@ -441,7 +443,33 @@ namespace Aurora
 
 			/////////////////////////////////////////////////////////////////////////////////////////////////
 
+			{ // Debug shapes
+				CPU_DEBUG_SCOPE("DebugShapes");
+				GPU_DEBUG_SCOPE("Debug Shapes");
+				DrawCallState drawState;
+				drawState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+
+				drawState.ClearDepthTarget = false;
+				drawState.ClearColorTarget = false;
+				drawState.DepthStencilState.DepthEnable = true;
+				drawState.RasterState.CullMode = ECullMode::Back;
+
+				drawState.ViewPort = viewPort->ViewPort;
+
+				drawState.BindTarget(0, compositeRT);
+				drawState.BindDepthTarget(depthBuffer, 0, 0);
+
+				GEngine->GetRenderDevice()->BindRenderTargets(drawState);
+				// Render debug shapes
+				DShapes::Render(drawState);
+			}
+
+			GEngine->GetRenderDevice()->InvalidateState();
+
 			{
+				CPU_DEBUG_SCOPE("Composite");
+				GPU_DEBUG_SCOPE("Composite");
+
 				DrawCallState state;
 				state.Shader = m_HDRCompositeShader;
 				state.ViewPort = viewPort->ViewPort;
@@ -462,6 +490,7 @@ namespace Aurora
 
 				state.ClearColorTarget = false;
 				state.ClearDepthTarget = false;
+
 				GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
 			}
 

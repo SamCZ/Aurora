@@ -18,7 +18,9 @@
 #include "Graphics/OpenGL/GLRenderDevice.hpp"
 #include "Graphics/RenderManager.hpp"
 #include "Graphics/ViewPortManager.hpp"
+#include "Graphics/DShape.hpp"
 #include "Resource/ResourceManager.hpp"
+#include "Framework/CameraComponent.hpp"
 
 #include "RmlUI/RmlUI.hpp"
 
@@ -83,6 +85,7 @@ namespace Aurora
 
 	AuroraEngine::~AuroraEngine()
 	{
+		DShapes::Destroy();
 		delete Aurora::AppContext::m_GameMode; // Needs to be deleted here because of destroy order
 		delete m_AppContext;
 		delete m_EditorPanel;
@@ -236,6 +239,8 @@ namespace Aurora
 		// Init App context
 		m_AppContext = appContext;
 		m_AppContext->Init();
+
+		DShapes::Init();
 	}
 
 	void AuroraEngine::Run()
@@ -364,6 +369,15 @@ namespace Aurora
 				m_VgRender->Begin(m_Window->GetSize(), 1.0f); // TODO: Fix hdpi devices
 				m_AppContext->RenderVg();
 
+				for(auto* camera : AppContext::GetScene()->GetComponents<CameraComponent>())
+				{
+					if(camera->IsActive())
+					{
+						DShapes::RenderText(camera);
+						break;
+					}
+				}
+
 				/*{
 					std::stringstream ss;
 					ss << "FPS: " << FPS;
@@ -456,6 +470,7 @@ namespace Aurora
 			}
 
 			GEngine->m_RenderDevice->InvalidateState();
+			DShapes::Reset();
 
 			{
 				m_RenderManager->EndFrame();
