@@ -366,7 +366,14 @@ namespace Aurora
 				// This fixed fonts not rendering
 				glBindSampler(0, 0);
 
-				m_VgRender->Begin(m_Window->GetSize(), 1.0f); // TODO: Fix hdpi devices
+				RenderViewPort* rwp = m_ViewPortManager->Get();
+
+				DrawCallState drawCallState;
+				drawCallState.BindTarget(0, rwp->Target);
+				drawCallState.ViewPort = rwp->ViewPort;
+				m_RenderDevice->BindRenderTargets(drawCallState);
+
+				m_VgRender->Begin((Vector2i)rwp->ViewPort, 1.0f); // TODO: Fix hdpi devices
 				m_AppContext->RenderVg();
 
 				for(auto* camera : AppContext::GetScene()->GetComponents<CameraComponent>())
