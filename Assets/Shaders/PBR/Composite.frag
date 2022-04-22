@@ -24,7 +24,7 @@ vec3 GetSceneWorldPos()
 vec3 ApplyDirectionalLight(DirectionalLightGPU light, vec3 color, vec3 normal)
 {
 	float nDotL = dot(light.DirectionIntensity.xyz, normal);
-	nDotL = max(nDotL, 0.2f);
+	nDotL = max(nDotL, 0.0f);
 
 	return color * nDotL * light.Color.rgb * light.DirectionIntensity.w;
 }
@@ -53,10 +53,10 @@ void main()
 	}
 
 	vec4 albedo = texture(AlbedoRT, TexCoord);
-	vec3 normalColor = texture(NormalsRT, TexCoord).rgb;
-	vec3 normals = normalColor * 2.0f - 1.0f;
+	vec4 normalColor = texture(NormalsRT, TexCoord);
+	vec3 normals = normalColor.rgb * 2.0f - 1.0f;
 
-	if (length(normalColor) == 0.0)
+	if (length(normalColor.rgb) == 0.0)
 	{
 		FragColor = albedo;
 		return;
@@ -64,18 +64,23 @@ void main()
 
 	vec3 worldPos = GetSceneWorldPos();
 
-	vec3 color = vec3(0.0f);
+	vec3 color = albedo.rgb * 0.01f;
 
+	// Apply ambient color
+	color += albedo.rgb * AmbientColorAndIntensity.rgb * AmbientColorAndIntensity.a;
+
+	// Directiona lights
 	for (uint i = 0; i < DirLightCount; ++i)
 	{
 		color += ApplyDirectionalLight(DirLights[i], albedo.rgb, normals);
 	}
 
+	// Point lights
 	for (uint i = 0; i < PointLightCount; ++i)
 	{
 		color += ApplyPointLight(PointLights[i], albedo.rgb, normals, worldPos);
 	}
 
 	FragColor.rgb = color;
-	FragColor.a = albedo.a;
+	FragColor.a = 1.0f;
 }

@@ -131,6 +131,8 @@ namespace Aurora
 		GEngine->GetRenderManager()->GetUniformBufferCache().Reset();
 	}
 
+#pragma endregion RenderPass
+
 	std::shared_ptr<Material> Material::Clone()
 	{
 		auto cloned = std::make_shared<Material>(m_MatDef, true);
@@ -144,7 +146,10 @@ namespace Aurora
 		return cloned;
 	}
 
-#pragma endregion RenderPass
+	void Material::ReloadShader()
+	{
+		m_MatDef->ReloadShader();
+	}
 
 	uint8* Material::GetBlockMemory(TTypeID id, size_t size)
 	{

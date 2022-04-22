@@ -223,6 +223,21 @@ namespace Aurora
 				{
 					m_MaterialInstancesWindowOpened = true;
 				}
+
+				if (ImGui::MenuItem("Reload all material shaders"))
+				{
+					for (auto& [path, def]: GEngine->GetResourceManager()->GetMaterialDefs())
+					{
+						def->ReloadShader();
+					}
+
+					GEngine->GetAppContext()->GetSceneRenderer()->LoadShaders();
+				}
+
+				if (ImGui::MenuItem("Reload renderer shaders"))
+				{
+					GEngine->GetAppContext()->GetSceneRenderer()->LoadShaders();
+				}
 				ImGui::EndMenu();
 			}
 

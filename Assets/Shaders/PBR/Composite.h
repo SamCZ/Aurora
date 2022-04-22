@@ -23,6 +23,11 @@ struct PointLightGPU
 	vec4 ColorRadius;
 };
 
+uniformbuffer SkyLightStorage
+{
+	vec4 AmbientColorAndIntensity;
+};
+
 uniformbuffer DirectionalLightStorage
 {
 	DirectionalLightGPU DirLights[MAX_DIRECTIONAL_LIGHTS];

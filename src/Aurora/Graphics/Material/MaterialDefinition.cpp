@@ -37,6 +37,12 @@ namespace Aurora
 		return it->second;
 	}
 
+	void MaterialPassDef::ReloadShader()
+	{
+		GEngine->GetResourceManager()->LoadShaderProgramSources(m_ShaderBaseDescription);
+		m_ShaderPermutations.clear();
+	}
+
 	///////////////////////////////////// MaterialDefinition /////////////////////////////////////
 
 	bool CanLoadBlock(const ShaderResourceDesc& block)
@@ -68,16 +74,16 @@ namespace Aurora
 
 		std::vector<std::tuple<size_t, size_t, std::vector<float>>> defaultsToWrite;
 
-		for(const auto& passIt : desc.ShaderPasses)
+		for(auto& [passType, passDesc] : desc.ShaderPasses)
 		{
 			MaterialPassState passState;
 			//TODO: read pass state from desc
-			m_PassDefs[passIt.first] = MaterialPassDef(passIt.second, passState);
+			m_PassDefs[passType] = MaterialPassDef(passDesc, passState);
 
-			m_PassUniformBlockMapping[passIt.first] = {};
-			m_PassTextureMapping[passIt.first] = {};
+			m_PassUniformBlockMapping[passType] = {};
+			m_PassTextureMapping[passType] = {};
 
-			Shader_ptr shader = m_PassDefs[passIt.first].GetShader(macros);
+			Shader_ptr shader = m_PassDefs[passType].GetShader(macros);
 
 			for(const ShaderResourceDesc& sampler : shader->GetResources(ShaderResourceType::Sampler))
 			{
@@ -97,7 +103,7 @@ namespace Aurora
 					m_TextureVars[samplerId] = textureVar;
 				}
 
-				m_PassTextureMapping[passIt.first].push_back(samplerId);
+				m_PassTextureMapping[passType].push_back(samplerId);
 			}
 
 			for(const ShaderResourceDesc& block : shader->GetResources(ShaderResourceType::ConstantBuffer))
@@ -120,7 +126,7 @@ namespace Aurora
 
 						if (mappedBlock.Name == block.Name && mappedBlock.Size == block.Size && mappedBlock.Vars.size() == block.Variables.size())
 						{
-							m_PassUniformBlockMapping[passIt.first].emplace_back(mappedBlockIndex);
+							m_PassUniformBlockMapping[passType].emplace_back(mappedBlockIndex);
 							skip = true;
 							AU_LOG_INFO("Found already cached block in material!");
 							break;
@@ -169,7 +175,7 @@ namespace Aurora
 					uniformBlock.Vars[varId] = uniformVar;
 				}
 
-				m_PassUniformBlockMapping[passIt.first].emplace_back(currentBlockIndex);
+				m_PassUniformBlockMapping[passType].push_back((uint8)currentBlockIndex);
 				m_UniformBlocksDef.emplace_back(uniformBlock);
 
 				memorySize += block.Size;
@@ -260,5 +266,13 @@ namespace Aurora
 		}
 
 		return it->second.GetShader(macroSet);
+	}
+
+	void MaterialDefinition::ReloadShader()
+	{
+		for (auto& [type, def]: m_PassDefs)
+		{
+			def.ReloadShader();
+		}
 	}
 }

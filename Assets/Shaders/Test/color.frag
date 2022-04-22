@@ -1,5 +1,5 @@
 layout(location = 0) out vec4 FragColor;
-layout(location = 1) out vec3 NormalColor;
+layout(location = 1) out vec4 NormalColor;
 
 uniform Color
 {
@@ -13,6 +13,6 @@ uniform sampler2D Texture;
 
 void main()
 {
-	NormalColor = normalize(Normal) * 0.5f + 0.5f;
+	NormalColor = vec4(normalize(Normal) * 0.5f + 0.5f, 0.0f);
 	FragColor = u_Color;
 }

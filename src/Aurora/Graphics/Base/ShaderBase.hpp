@@ -9,6 +9,7 @@
 
 #include "InputLayout.hpp"
 #include "TypeBase.hpp"
+#include "Aurora/Core/Types.hpp"
 #include "Aurora/Logger/Logger.hpp"
 
 namespace Aurora
@@ -140,16 +141,17 @@ namespace Aurora
 	{
 		EShaderType Type;
 		std::string Source;
+		Path FilePath;
 		ShaderMacros Macros;
 		bool EnableBindless;
 
-		ShaderDesc() : Type(EShaderType::Unknown), Source(), Macros(), EnableBindless(false)
+		ShaderDesc() : Type(EShaderType::Unknown), Source(), FilePath(), Macros(), EnableBindless(false)
 		{
 
 		}
 
-		ShaderDesc(EShaderType type, std::string source, ShaderMacros macros, bool enableBindless)
-				: Type(type), Source(std::move(source)), Macros(std::move(macros)), EnableBindless(enableBindless) { }
+		ShaderDesc(EShaderType type, std::string source, Path filepath, ShaderMacros macros, bool enableBindless)
+				: Type(type), Source(std::move(source)), FilePath(std::move(filepath)), Macros(std::move(macros)), EnableBindless(enableBindless) { }
 	};
 
 	class ShaderProgramDesc
@@ -189,9 +191,9 @@ namespace Aurora
 			ShaderDescriptions[shaderDesc.Type] = shaderDesc;
 		}
 
-		inline void AddShader(const EShaderType& shaderType, const std::string& source, const ShaderMacros& macros = {}, bool enableBindless = false)
+		inline void AddShader(const EShaderType& shaderType, const std::string& source, const Path& filepath = "", const ShaderMacros& macros = {}, bool enableBindless = false)
 		{
-			AddShader(ShaderDesc(shaderType, source, macros, enableBindless));
+			AddShader(ShaderDesc(shaderType, source, filepath, macros, enableBindless));
 		}
 
 		inline bool SetShaderMacros(const EShaderType& shaderType, const ShaderMacros& shaderMacros)
@@ -225,6 +227,7 @@ namespace Aurora
 
 		[[nodiscard]] inline bool HasShader(const EShaderType& shaderType) const noexcept { return ShaderDescriptions.contains(shaderType); }
 		[[nodiscard]] inline const std::string& GetName() const noexcept { return Name; }
+		[[nodiscard]] inline std::map<EShaderType, ShaderDesc>& GetShaderDescriptions() noexcept { return ShaderDescriptions; }
 		[[nodiscard]] inline const std::map<EShaderType, ShaderDesc>& GetShaderDescriptions() const noexcept { return ShaderDescriptions; }
 	};
 

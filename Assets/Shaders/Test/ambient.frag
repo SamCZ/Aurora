@@ -1,5 +1,5 @@
 layout(location = 0) out vec4 FragColor;
-layout(location = 1) out vec3 NormalColor;
+layout(location = 1) out vec4 NormalColor;
 
 uniform Color
 {
@@ -25,8 +25,9 @@ void main()
 #if USE_NORMAL_MAP
 	vec4 normalColor = texture(NormalMap, TexCoord);
 	vec3 normalFromTex = normalize(TBN * (normalColor.xyz * 2.0f - 1.0f));
-	NormalColor = normalFromTex * 0.5f + 0.5f;
+	NormalColor.rgb = normalFromTex * 0.5f + 0.5f;
 #else
-	NormalColor = normalize(Normal) * 0.5f + 0.5f;
+	NormalColor.rgb = normalize(Normal) * 0.5f + 0.5f;
 #endif
+	NormalColor.a = 0.0f;
 }

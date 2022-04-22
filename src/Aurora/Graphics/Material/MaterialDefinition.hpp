@@ -25,6 +25,7 @@ namespace Aurora
 		MaterialPassDef() = default;
 		MaterialPassDef(ShaderProgramDesc shaderProgramDesc, MaterialPassState passState);
 		Shader_ptr GetShader(const ShaderMacros& macroSet);
+		void ReloadShader();
 
 		inline MaterialPassState& GetMaterialPassState() { return m_PassStates; }
 		[[nodiscard]] inline const MaterialPassState& GetMaterialPassState() const { return m_PassStates; }
@@ -68,6 +69,7 @@ namespace Aurora
 
 		MaterialPassDef* GetPassDefinition(uint8 pass);
 		Shader_ptr GetShader(uint8 pass, const ShaderMacros& macroSet);
+		void ReloadShader() override;
 
 		std::shared_ptr<Material> CreateInstance(const MaterialOverrides& overrides = {});
 

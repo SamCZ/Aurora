@@ -134,6 +134,18 @@ namespace Aurora
 			component->SetMode((SkyLightMode)currentModeInt);
 		}
 
+		Vector3 ambientColor = component->GetAmbientColor();
+		if (ImGui::ColorEdit3("Ambient Color", glm::value_ptr(ambientColor), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR))
+		{
+			component->SetAmbientColor(ambientColor);
+		}
+
+		float ambientIntensity = component->GetAmbientIntensity();
+		if (ImGui::DragFloat("Ambient Intensity", &ambientIntensity, 0.01f))
+		{
+			component->SetAmbientIntensity(ambientIntensity);
+		}
+
 		if (mode == SkyLightMode::Custom)
 		{
 			ImGui::Indent();

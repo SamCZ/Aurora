@@ -87,18 +87,19 @@ namespace Aurora
 
 		void LoadPackageFile(const Path& path);
 
-		DataBlob LoadFile(const Path& path, bool* isFromAssetPackage = nullptr);
+		DataBlob LoadFile(const Path& path, bool* isFromAssetPackage = nullptr) const;
 		[[nodiscard]] bool FileExists(const Path& path, bool* isFromAssetPackage = nullptr) const;
 		[[nodiscard]] bool GetRealPath(const Path& path, Path& path_out) const;
-		String LoadFileToString(const Path& path, bool* isFromAssetPackage = nullptr);
+		String LoadFileToString(const Path& path, bool* isFromAssetPackage = nullptr) const;
 
-		String ReadShaderSource(const Path& path, std::vector<Path>& alreadyIncluded);
-		String ReadShaderSource(const Path& path)
+		String ReadShaderSource(const Path& path, std::vector<Path>& alreadyIncluded) const;
+		String ReadShaderSource(const Path& path) const
 		{
 			std::vector<Path> empty;
 			return ReadShaderSource(path, empty);
 		}
 
+		bool LoadShaderProgramSources(ShaderProgramDesc& shaderProgramDesc);
 		ShaderProgramDesc CreateShaderProgramDesc(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros &macros = {});
 		Shader_ptr LoadShader(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros& macros = {});
 		inline Shader_ptr LoadShader(const String& name, const Path& vertexShader, const Path& fragmentShader, const ShaderMacros& macros = {})

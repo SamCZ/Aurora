@@ -135,21 +135,21 @@ namespace Aurora
 		}
 	}
 
-	String ResourceManager::LoadFileToString(const Path& path, bool* isFromAssetPackage)
+	String ResourceManager::LoadFileToString(const Path& path, bool* isFromAssetPackage) const
 	{
 		auto blob = LoadFile(path, isFromAssetPackage);
 		const char* str = reinterpret_cast<const char*>(blob.data());
 		return std::string(str, str + blob.size());
 	}
 
-	DataBlob ResourceManager::LoadFile(const Path& path, bool* isFromAssetPackage)
+	DataBlob ResourceManager::LoadFile(const Path& path, bool* isFromAssetPackage) const
 	{
 		if(m_AssetPackageFiles.find(path) != m_AssetPackageFiles.end()) {
 			if(isFromAssetPackage != nullptr) {
 				*isFromAssetPackage = true;
 			}
 
-			auto& packageDesc = m_AssetPackageFiles[path];
+			auto& packageDesc = m_AssetPackageFiles.at(path);
 			return AssetBank::ReadFileFromPackage(packageDesc.first, packageDesc.second);
 		}
 
@@ -218,7 +218,7 @@ namespace Aurora
 		return false;
 	}
 
-	String ResourceManager::ReadShaderSource(const Path &path, std::vector<Path>& alreadyIncluded)
+	String ResourceManager::ReadShaderSource(const Path &path, std::vector<Path>& alreadyIncluded) const
 	{
 		String shaderSource = LoadFileToString(path);
 		{
@@ -282,9 +282,12 @@ namespace Aurora
 			return m_ShaderPrograms[path];
 		}
 
-		String shaderSource = ReadShaderSource(path);
 		ShaderProgramDesc shaderProgramDesc(path.string());
-		shaderProgramDesc.AddShader(EShaderType::Compute, shaderSource, macros);
+		shaderProgramDesc.AddShader(EShaderType::Compute, "", path.string(), macros);
+		if (!LoadShaderProgramSources(shaderProgramDesc))
+		{
+			return nullptr;
+		}
 
 		auto shaderProgram = m_RenderDevice->CreateShaderProgram(shaderProgramDesc);
 
@@ -297,13 +300,33 @@ namespace Aurora
 		return shaderProgram;
 	}
 
+	bool ResourceManager::LoadShaderProgramSources(ShaderProgramDesc& shaderProgramDesc)
+	{
+		for (auto& [type, desc]: shaderProgramDesc.GetShaderDescriptions())
+		{
+			if (desc.FilePath.empty())
+				continue;
+
+			if (!FileExists(desc.FilePath))
+			{
+				AU_LOG_WARNING("Could not find shader file ", desc.FilePath);
+				return false;
+			}
+
+			desc.Source = ReadShaderSource(desc.FilePath);
+		}
+
+		return true;
+	}
+
 	ShaderProgramDesc ResourceManager::CreateShaderProgramDesc(const String& name, const std::map<EShaderType, Path>& shaderTypesPaths, const ShaderMacros &macros)
 	{
 		ShaderProgramDesc shaderProgramDesc(name);
 
 		if(shaderTypesPaths.size() == 1 && shaderTypesPaths.begin()->first == EShaderType::Compute)
 		{
-			shaderProgramDesc.AddShader(EShaderType::Compute, ReadShaderSource(shaderTypesPaths.begin()->second), macros);
+			shaderProgramDesc.AddShader(EShaderType::Compute, "", shaderTypesPaths.begin()->second.string(), macros);
+			LoadShaderProgramSources(shaderProgramDesc);
 			return shaderProgramDesc;
 		}
 
@@ -315,15 +338,10 @@ namespace Aurora
 			}
 
 			Path filePath = item.second;
-
-			if(!FileExists(filePath))
-			{
-				AU_LOG_FATAL("File " , filePath.string(), " not found !");
-			}
-
-			String shaderSource = ReadShaderSource(filePath);
-			shaderProgramDesc.AddShader(item.first, shaderSource, macros);
+			shaderProgramDesc.AddShader(item.first, "", filePath.string(), macros);
 		}
+
+		LoadShaderProgramSources(shaderProgramDesc);
 
 		return shaderProgramDesc;
 	}
@@ -364,7 +382,7 @@ namespace Aurora
 			}
 
 			String shaderSource = ReadShaderSource(filePath);
-			shaderProgramDesc.AddShader(item.first, shaderSource, macros);
+			shaderProgramDesc.AddShader(item.first, shaderSource, filePath.string(), macros);
 		}
 
 		auto shaderProgram = m_RenderDevice->CreateShaderProgram(shaderProgramDesc);

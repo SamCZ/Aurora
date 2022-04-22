@@ -153,6 +153,7 @@ namespace Aurora
 		void EndPass(PassType_t pass, DrawCallState& state);
 
 		std::shared_ptr<Material> Clone();
+		virtual void ReloadShader();
 
 		uint8* GetBlockMemory(TTypeID id, size_t size);
 

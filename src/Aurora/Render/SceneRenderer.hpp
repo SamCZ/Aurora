@@ -71,6 +71,7 @@ namespace Aurora
 		Buffer_ptr m_BaseVsDataBuffer;
 		Buffer_ptr m_InstancesBuffer;
 
+		Buffer_ptr m_SkyLightBuffer;
 		Buffer_ptr m_DirLightsBuffer;
 		Buffer_ptr m_PointLightsBuffer;
 		Buffer_ptr m_CompositeDefaultsBuffer;
@@ -119,6 +120,7 @@ namespace Aurora
 		Texture_ptr m_OutlineStripeTexture;
 	public:
 		SceneRenderer();
+		void LoadShaders();
 
 		inline void ClearVisibleEntities()
 		{
@@ -134,7 +136,7 @@ namespace Aurora
 		void FillRenderSet(RenderSet& renderSet);
 
 		void Render(Scene* scene);
-		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet);
+		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected = true);
 
 		const InputLayout_ptr& GetInputLayoutForMesh(Mesh* mesh);
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }

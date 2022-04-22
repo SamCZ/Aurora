@@ -31,9 +31,21 @@ namespace Aurora
 		m_InstancesBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Instances", sizeof(Matrix4) * MaxInstances, EBufferType::UniformBuffer, EBufferUsage::DynamicDraw, false));
 
 		m_CompositeDefaultsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("CompositeDefaults", sizeof(CompositeDefaults), EBufferType::UniformBuffer));
+		m_SkyLightBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("SkyLight", sizeof(SkyLightStorage), EBufferType::UniformBuffer));
 		m_DirLightsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("DirLights", sizeof(DirectionalLightStorage), EBufferType::UniformBuffer));
 		m_PointLightsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("PointLights", sizeof(PointLightStorage), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw, true));
 
+
+		m_BloomDescBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BloomDesc", sizeof(BloomDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+
+		m_OutlineDescBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("OutlineDesc", sizeof(OutlineGPUDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+		m_OutlineStripeTexture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/stripe.png");
+
+		LoadShaders();
+	}
+
+	void SceneRenderer::LoadShaders()
+	{
 		m_CompositeShader = GEngine->GetResourceManager()->LoadShader("Composite", {
 			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/PBR/Composite.frag"}
@@ -52,14 +64,11 @@ namespace Aurora
 		});
 
 		m_BloomShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/PostProcess/bloom.glsl");
-		m_BloomDescBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BloomDesc", sizeof(BloomDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
 
 		m_OutlineShader = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
 			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Outline.frag"}
 		});
-		m_OutlineDescBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("OutlineDesc", sizeof(OutlineGPUDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
-		m_OutlineStripeTexture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/stripe.png");
 	}
 
 	void SceneRenderer::PrepareMeshComponent(MeshComponent* meshComponent, CameraComponent* camera)
@@ -233,7 +242,7 @@ namespace Aurora
 			camera->UpdateFrustum();
 
 			auto albedoBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Albedo", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA16_FLOAT);
-			auto normalsBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Normals", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGB8_UNORM);
+			auto normalsBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Normals", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA8_UNORM);
 			auto depthBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Depth", (Vector2i)viewPort->ViewPort, GraphicsFormat::D32);
 
 			const FFrustum& frustum = camera->GetFrustum();
@@ -276,6 +285,16 @@ namespace Aurora
 
 
 			/////////////////////////////////////////////////////////////////////////////////////////////////
+
+			// Sky light update
+			SkyLightStorage skyLightStorage = {};
+
+			if (SkyLightComponent* skylightComponent = scene->FindFirstComponent<SkyLightComponent>())
+			{
+				skyLightStorage.AmbientColorAndIntensity = Vector4(skylightComponent->GetAmbientColor(), skylightComponent->GetAmbientIntensity());
+			}
+
+			GEngine->GetRenderDevice()->WriteBuffer(m_SkyLightBuffer, &skyLightStorage);
 
 			// Collect and update directional light buffers
 			DirectionalLightStorage dirLights = {};
@@ -338,6 +357,7 @@ namespace Aurora
 				state.BindTexture("NormalsRT", normalsBuffer);
 				state.BindTexture("DepthRT", depthBuffer);
 
+				state.BindUniformBuffer("SkyLightStorage", m_SkyLightBuffer);
 				state.BindUniformBuffer("DirectionalLightStorage", m_DirLightsBuffer);
 				state.BindUniformBuffer("PointLightStorage", m_PointLightsBuffer);
 				state.BindUniformBuffer("CompositeDefaults", m_CompositeDefaultsBuffer);
@@ -548,7 +568,7 @@ namespace Aurora
 						GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 						GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
 
-						RenderPass(Pass::Depth, drawCallState, camera, outlineModelContexts);
+						RenderPass(Pass::Depth, drawCallState, camera, outlineModelContexts, false);
 					}
 
 					// Render outline post process
@@ -646,7 +666,7 @@ namespace Aurora
 		}
 	}
 
-	void SceneRenderer::RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet)
+	void SceneRenderer::RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected)
 	{
 		// Render model contexts
 
@@ -660,7 +680,7 @@ namespace Aurora
 		{
 			if (currentMaterial != modelContext.Material)
 			{
-				if(currentMaterial)
+				if (currentMaterial)
 				{
 					currentMaterial->EndPass(pass, drawCallState);
 				}
@@ -709,12 +729,13 @@ namespace Aurora
 			drawCallState.ClearStencilTarget = false;
 		}
 
-		if(currentMaterial)
+		if (currentMaterial)
 		{
 			currentMaterial->EndPass(pass, drawCallState);
 		}
 
-		m_InjectedPasses[pass].Invoke(std::forward<PassType_t>(pass), drawCallState, std::forward<CameraComponent*>(camera));
+		if (drawInjected)
+			m_InjectedPasses[pass].Invoke(std::forward<PassType_t>(pass), drawCallState, std::forward<CameraComponent*>(camera));
 	}
 
 	const InputLayout_ptr &SceneRenderer::GetInputLayoutForMesh(Mesh* mesh)

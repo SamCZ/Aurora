@@ -23,6 +23,11 @@ namespace Aurora
 		MaterialDefinition* matdef = m_CurrentMaterial->GetMaterialDef();
 
 		ImGui::Text(matdef->GetName());
+		ImGui::SameLine();
+		if (ImGui::Button("Reload shader"))
+		{
+			matdef->ReloadShader();
+		}
 
 		static int ID = 0;
 		ID = 0;
