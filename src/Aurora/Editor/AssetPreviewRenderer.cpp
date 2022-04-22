@@ -9,22 +9,22 @@
 namespace Aurora
 {
 
-	AssetPreviewRenderer::AssetPreviewRenderer() : m_ViewPortManager(new ViewPortManager())
+	AssetPreviewRenderer::AssetPreviewRenderer() : m_ViewPortManager(new ViewPortManager()), m_Scene(new Scene())
 	{
-		m_Camera = m_Scene.SpawnActor<Actor, CameraComponent>("Camera", {})->GetRootComponent<CameraComponent>();
+		m_Camera = m_Scene->SpawnActor<Actor, CameraComponent>("Camera", {})->GetRootComponent<CameraComponent>();
 		m_Camera->SetClearColor(FColor(0, 0, 0, 0));
 
-		auto* dirLight = m_Scene.SpawnActor<DirectionalLight>("DirLight", {})->GetRootComponent<DirectionalLightComponent>();
+		auto* dirLight = m_Scene->SpawnActor<DirectionalLight>("DirLight", {})->GetRootComponent<DirectionalLightComponent>();
 		dirLight->GetTransform().Rotation = Vector3(-45, -45, 0);
 
-		m_StaticMeshComponentBox = m_Scene.SpawnActor<Actor, StaticMeshComponent>("Mesh", {})->GetRootComponent<StaticMeshComponent>();
+		m_StaticMeshComponentBox = m_Scene->SpawnActor<Actor, StaticMeshComponent>("Mesh", {})->GetRootComponent<StaticMeshComponent>();
 		m_StaticMeshComponentBox->GetTransform().Scale = Vector3(0.01f);
 		m_StaticMeshComponentBox->GetTransform().Rotation = Vector3(-45, 45, 0);
 		m_StaticMeshComponentBox->SetMesh(GEngine->GetResourceManager()->LoadMesh("Assets/Shapes/Box.amesh"));
 		m_SkyBoxMaterial = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/SkyBox.matd")->CreateInstance();
 		m_StaticMeshComponentBox->SetMaterial(0, m_SkyBoxMaterial);
 
-		m_StaticMeshComponentSphere = m_Scene.SpawnActor<Actor, StaticMeshComponent>("Sphere", {})->GetRootComponent<StaticMeshComponent>();
+		m_StaticMeshComponentSphere = m_Scene->SpawnActor<Actor, StaticMeshComponent>("Sphere", {})->GetRootComponent<StaticMeshComponent>();
 		m_StaticMeshComponentSphere->GetTransform().Scale = Vector3(0.01f);
 		m_StaticMeshComponentSphere->GetTransform().Rotation = Vector3(-45, 45, 0);
 		m_StaticMeshComponentSphere->SetMesh(GEngine->GetResourceManager()->LoadMesh("Assets/Shapes/Sphere.amesh"));
@@ -33,6 +33,7 @@ namespace Aurora
 
 	AssetPreviewRenderer::~AssetPreviewRenderer()
 	{
+		delete m_Scene;
 		delete m_ViewPortManager;
 	}
 
@@ -53,7 +54,7 @@ namespace Aurora
 		//m_Camera->SetOrthographic(-half, half, half, -half, -half, half);
 		m_Camera->SetPerspective(1.0f, 0.1f, 1000.0f);
 
-		m_Scene.Update(0);
+		m_Scene->Update(0);
 
 		return rwp->Target;
 	}
@@ -68,7 +69,7 @@ namespace Aurora
 
 		m_SkyBoxMaterial->SetTexture("CubeMap"_HASH, cubeMap);
 
-		m_SceneRenderer.Render(&m_Scene);
+		m_SceneRenderer.Render(m_Scene);
 		return target;
 	}
 
@@ -82,7 +83,7 @@ namespace Aurora
 		m_StaticMeshComponentSphere->SetActive(true);
 		m_StaticMeshComponentSphere->SetMaterial(0, material);
 
-		m_SceneRenderer.Render(&m_Scene);
+		m_SceneRenderer.Render(m_Scene);
 		return target;
 	}
 }

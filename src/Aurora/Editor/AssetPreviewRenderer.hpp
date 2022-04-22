@@ -13,7 +13,7 @@ namespace Aurora
 	class AssetPreviewRenderer
 	{
 	private:
-		Scene m_Scene;
+		Scene* m_Scene;
 		SceneRenderer m_SceneRenderer;
 
 		ViewPortManager* m_ViewPortManager;
