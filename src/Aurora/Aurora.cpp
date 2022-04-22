@@ -19,12 +19,11 @@
 #include "Graphics/RenderManager.hpp"
 #include "Graphics/ViewPortManager.hpp"
 #include "Graphics/DShape.hpp"
+#include "Graphics/VgRender.hpp"
 #include "Resource/ResourceManager.hpp"
 #include "Framework/CameraComponent.hpp"
 
 #include "RmlUI/RmlUI.hpp"
-
-#include "Render/VgRender.hpp"
 
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -147,7 +146,7 @@ namespace Aurora
 			DrawCallState drawCallState;
 			drawCallState.ClearColorTarget = true;
 			drawCallState.ClearDepthTarget = true;
-			drawCallState.ClearColor = Color::black();
+			drawCallState.ClearColor = FColor(0, 0, 0, 1);
 			m_RenderDevice->ClearRenderTargets(drawCallState);
 			m_SwapChain->Present(1);
 		}

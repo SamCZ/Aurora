@@ -11,7 +11,7 @@ namespace Aurora
 		m_ProjectionType(ProjectionType::None),
 		m_PerspectiveSettings(),
 		m_OrthogonalSettings(),
-		m_ClearColor(0, 0, 0, 255)
+		m_ClearColor(0, 0, 0, 1.0f)
 	{
 
 	}

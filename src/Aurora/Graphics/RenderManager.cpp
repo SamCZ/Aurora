@@ -118,7 +118,9 @@ namespace Aurora
 
 	void TemporalRenderTarget::Free()
 	{
-		assert(m_Index >= 0);
+		if (m_Index == -1)
+			return;
+
 		assert(m_Manager != nullptr);
 
 		m_Manager->m_TemporalRenderTargets[m_Index].Cache.Handle = 0;

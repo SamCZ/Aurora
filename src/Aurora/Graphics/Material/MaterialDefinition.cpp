@@ -112,13 +112,13 @@ namespace Aurora
 				// Check if same block already exists
 				for(const auto& mappingIt : m_PassUniformBlockMapping)
 				{
-					if(skip) break;
+					if (skip) break;
 
-					for(uint8 mappedBlockIndex : mappingIt.second)
+					for (uint8 mappedBlockIndex : mappingIt.second)
 					{
 						MUniformBlock& mappedBlock = m_UniformBlocksDef[mappedBlockIndex];
 
-						if(mappedBlock.Name == block.Name && mappedBlock.Size == block.Size && mappedBlock.Vars.size() == block.Variables.size())
+						if (mappedBlock.Name == block.Name && mappedBlock.Size == block.Size && mappedBlock.Vars.size() == block.Variables.size())
 						{
 							m_PassUniformBlockMapping[passIt.first].emplace_back(mappedBlockIndex);
 							skip = true;
@@ -138,9 +138,7 @@ namespace Aurora
 
 				size_t currentBlockIndex = m_UniformBlocksDef.size();
 
-				std::cout << uniformBlock.Name << " - " << uniformBlock.NameID << std::endl;
-
-				for(const auto& var : block.Variables)
+				for (const auto& var : block.Variables)
 				{
 					TTypeID varId = Hash_djb2(var.Name.data());
 
@@ -151,7 +149,7 @@ namespace Aurora
 					uniformVar.Connected = false;
 
 					const auto& descVarIt = desc.Variables.find(varId);
-					if(descVarIt != desc.Variables.end())
+					if (descVarIt != desc.Variables.end())
 					{
 						const MNumericValDesc& valDesc = descVarIt->second;
 
@@ -169,8 +167,6 @@ namespace Aurora
 					}
 
 					uniformBlock.Vars[varId] = uniformVar;
-
-					std::cout << " - " << var.Name << " " << var.Size << std::endl;
 				}
 
 				m_PassUniformBlockMapping[passIt.first].emplace_back(currentBlockIndex);

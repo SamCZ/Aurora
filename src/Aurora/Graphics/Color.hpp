@@ -54,4 +54,7 @@ namespace Aurora
 		os << (int)color.r << "," << (int)color.g << "," << (int)color.b << "," << (int)color.a;
 		return os;
 	}
+
+	typedef glm::vec4 FColor;
+	typedef glm::vec3 FColor3;
 }

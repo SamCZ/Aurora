@@ -5,7 +5,7 @@ namespace Aurora
 
 	StaticMeshComponent::StaticMeshComponent() = default;
 
-	void StaticMeshComponent::SetMesh(const Mesh_ptr &mesh)
+	void StaticMeshComponent::SetMesh(const Mesh_ptr& mesh)
 	{
 		if(!mesh)
 			return;

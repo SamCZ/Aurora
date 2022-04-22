@@ -96,8 +96,8 @@ namespace Aurora
 		friend class RenderManager;
 
 	private:
-		Texture_ptr m_Texture;
-		RenderManager *m_Manager;
+		Texture_ptr m_Texture = nullptr;
+		RenderManager* m_Manager = nullptr;
 		int m_Index = -1;
 	public:
 		operator const Texture_ptr &()
@@ -108,6 +108,11 @@ namespace Aurora
 		const Texture_ptr &operator->() const
 		{
 			return m_Texture;
+		}
+
+		bool Empty() const
+		{
+			return m_Texture == nullptr;
 		}
 
 		void Free();

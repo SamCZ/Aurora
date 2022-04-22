@@ -140,7 +140,7 @@ namespace Aurora
 		bool ClearColorTarget;
 		bool ClearDepthTarget;
 		bool ClearStencilTarget;
-		Color ClearColor;
+		FColor ClearColor;
 		float ClearDepth;
 		int ClearStencil;
 

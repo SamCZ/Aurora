@@ -21,6 +21,7 @@
 #include "Shaders/vs_common.h"
 #include "Shaders/PBR/Composite.h"
 #include "Shaders/PostProcess/ub_bloom.h"
+#include "Shaders/PostProcess/ub_outline.h"
 
 namespace Aurora
 {
@@ -40,67 +41,94 @@ namespace Aurora
 
 		m_HDRCompositeShader = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
 			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
-			{EShaderType::Pixel, "Assets/Shaders/PostProcess/hdr.fss"}
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/HDR.frag"}
+		}, ShaderMacros{
+			{"USE_OUTLINE", "1"}
+		});
+
+		m_HDRCompositeShaderNoOutline = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
+			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/HDR.frag"}
 		});
 
 		m_BloomShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/PostProcess/bloom.glsl");
 		m_BloomDescBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BloomDesc", sizeof(BloomDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+
+		m_OutlineShader = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
+			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Outline.frag"}
+		});
+		m_OutlineDescBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("OutlineDesc", sizeof(OutlineGPUDesc), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+		m_OutlineStripeTexture = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/stripe.png");
+	}
+
+	void SceneRenderer::PrepareMeshComponent(MeshComponent* meshComponent, CameraComponent* camera)
+	{
+		if(!meshComponent->HasMesh() || !meshComponent->IsActive() || !meshComponent->IsParentActive())
+		{
+			return;
+		}
+
+		Matrix4 transform = meshComponent->GetTransformationMatrix();
+		Mesh_ptr mesh = meshComponent->GetMesh();
+
+		AABB worldBounds = mesh->m_Bounds;
+		worldBounds.Transform(transform);
+
+		if (!camera->GetFrustum().IsBoxVisible(worldBounds))
+		{
+			return;
+		}
+
+		// TODO: Complete lod switching
+		LOD lod = 0;
+		const MeshLodResource& lodResource = mesh->LODResources[lod];
+
+		for (int sectionID = 0; sectionID < lodResource.Sections.size(); ++sectionID)
+		{
+			const FMeshSection& meshSection = lodResource.Sections[sectionID];
+			int32_t materialIndex = meshSection.MaterialIndex;
+
+			Material_ptr material = meshComponent->GetMaterialSlot(materialIndex).Material;
+
+			if(!material)
+			{
+				material = mesh->MaterialSlots[materialIndex].Material;
+			}
+
+			if(!material)
+			{
+				continue;
+			}
+
+			RenderSortType renderSortType = material->GetSortType();
+
+			{
+				VisibleEntity visibleEntity;
+				visibleEntity.Material = material.get();
+				visibleEntity.Mesh = mesh.get();
+				visibleEntity.MeshSection = sectionID;
+				visibleEntity.Lod = lod;
+				visibleEntity.Transform = transform;
+
+				m_VisibleEntities[(uint8)renderSortType].emplace_back(visibleEntity);
+			}
+		}
 	}
 
 	void SceneRenderer::PrepareVisibleEntities(Scene* scene, CameraComponent* camera)
 	{
 		for (MeshComponent* meshComponent : scene->GetComponents<MeshComponent>())
 		{
-			if(!meshComponent->HasMesh() || !meshComponent->IsActive() || !meshComponent->IsParentActive())
-			{
-				continue;
-			}
+			PrepareMeshComponent(meshComponent, camera);
+		}
+	}
 
-			Matrix4 transform = meshComponent->GetTransformationMatrix();
-			Mesh_ptr mesh = meshComponent->GetMesh();
-
-			AABB worldBounds = mesh->m_Bounds;
-			worldBounds.Transform(transform);
-
-			if (!camera->GetFrustum().IsBoxVisible(worldBounds))
-			{
-				continue;
-			}
-
-			// TODO: Complete lod switching
-			LOD lod = 0;
-			const MeshLodResource& lodResource = mesh->LODResources[lod];
-
-			for (int sectionID = 0; sectionID < lodResource.Sections.size(); ++sectionID)
-			{
-				const FMeshSection& meshSection = lodResource.Sections[sectionID];
-				int32_t materialIndex = meshSection.MaterialIndex;
-
-				Material_ptr material = meshComponent->GetMaterialSlot(materialIndex).Material;
-
-				if(!material)
-				{
-					material = mesh->MaterialSlots[materialIndex].Material;
-				}
-
-				if(!material)
-				{
-					continue;
-				}
-
-				RenderSortType renderSortType = material->GetSortType();
-
-				{
-					VisibleEntity visibleEntity;
-					visibleEntity.Material = material.get();
-					visibleEntity.Mesh = mesh.get();
-					visibleEntity.MeshSection = sectionID;
-					visibleEntity.Lod = lod;
-					visibleEntity.Transform = transform;
-
-					m_VisibleEntities[(uint8)renderSortType].emplace_back(visibleEntity);
-				}
-			}
+	void SceneRenderer::PrepareVisibleEntities(Actor* actor, CameraComponent* camera)
+	{
+		for (MeshComponent* meshComponent : actor->FindComponentsOfType<MeshComponent>())
+		{
+			PrepareMeshComponent(meshComponent, camera);
 		}
 	}
 
@@ -181,15 +209,10 @@ namespace Aurora
 
 	void SceneRenderer::Render(Scene* scene)
 	{
-		for (int i = 0; i < SortTypeCount; ++i)
-		{
-			m_VisibleEntities[i].clear();
-		}
-
-		DrawCallState drawCallState;
-
 		for (CameraComponent* camera : scene->GetComponents<CameraComponent>())
 		{
+			ClearVisibleEntities();
+
 			if (!camera->GetOwner()->IsActive() || !camera->IsActive())
 				continue;
 
@@ -222,27 +245,31 @@ namespace Aurora
 			baseVsData.ViewMatrix = viewMatrix;
 			GEngine->GetRenderDevice()->WriteBuffer(m_BaseVsDataBuffer, &baseVsData);
 
-			drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
-			drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
+			{ // Base Ambient pass
+				GPU_DEBUG_SCOPE("AmbientPass");
+				DrawCallState drawCallState;
+				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
-			drawCallState.ViewPort = viewPort->ViewPort;
-			drawCallState.BindTarget(0, albedoBuffer);
-			drawCallState.BindTarget(1, normalsBuffer);
-			drawCallState.BindDepthTarget(depthBuffer, 0, 0);
+				drawCallState.ViewPort = viewPort->ViewPort;
+				drawCallState.BindTarget(0, albedoBuffer);
+				drawCallState.BindTarget(1, normalsBuffer);
+				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 
-			drawCallState.ClearColor = camera->GetClearColor();
-			drawCallState.ClearColorTarget = true;
-			drawCallState.ClearDepthTarget = true;
+				drawCallState.ClearColor = camera->GetClearColor();
+				drawCallState.ClearColorTarget = true;
+				drawCallState.ClearDepthTarget = true;
 
-			GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
-			GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
+				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+				GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
 
-			PrepareVisibleEntities(scene, camera);
+				PrepareVisibleEntities(scene, camera);
 
-			RenderSet modelContexts;
-			FillRenderSet(modelContexts);
+				RenderSet modelContexts;
+				FillRenderSet(modelContexts);
 
-			RenderPass(Pass::Ambient, drawCallState, camera, modelContexts);
+				RenderPass(Pass::Ambient, drawCallState, camera, modelContexts);
+			}
 
 			/////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -301,6 +328,8 @@ namespace Aurora
 			auto compositeRT = GEngine->GetRenderManager()->CreateTemporalRenderTarget("CompositeRT", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA16_FLOAT);
 
 			{
+				CPU_DEBUG_SCOPE("CompositeLighting");
+				GPU_DEBUG_SCOPE("CompositeLighting");
 				DrawCallState state;
 				state.Shader = m_CompositeShader;
 				state.ViewPort = viewPort->ViewPort;
@@ -466,16 +495,127 @@ namespace Aurora
 
 			GEngine->GetRenderDevice()->InvalidateState();
 
+			TemporalRenderTarget outlineRT;
+			TemporalRenderTarget outlineDepthRT;
+			{ // Outline
+				CPU_DEBUG_SCOPE("Outline");
+				GPU_DEBUG_SCOPE("Outline");
+
+				bool firstOutlineIteration = true;
+
+				for (const OutlineActorSet& outlineSet: m_OutlineContext.Sets)
+				{
+					ClearVisibleEntities();
+					for (Actor* actor : outlineSet.Actors)
+					{
+						PrepareVisibleEntities(actor, camera);
+					}
+
+					for (SceneComponent* sceneComponent : outlineSet.Components)
+					{
+						std::vector<MeshComponent*> meshComponents;
+						sceneComponent->GetComponentsOfType<MeshComponent>(meshComponents);
+						for (MeshComponent* meshComponent : meshComponents)
+						{
+							PrepareMeshComponent(meshComponent, camera);
+						}
+					}
+
+					RenderSet outlineModelContexts;
+					FillRenderSet(outlineModelContexts);
+
+					if (outlineModelContexts.empty())
+						continue;
+
+					if (outlineRT.Empty())
+					{
+						outlineRT = GEngine->GetRenderManager()->CreateTemporalRenderTarget("OutlineRT", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA8_UNORM);
+						outlineDepthRT = GEngine->GetRenderManager()->CreateTemporalRenderTarget("OutlineDepthRT", (Vector2i)viewPort->ViewPort, GraphicsFormat::D32);
+					}
+
+					// Render outline set actors to depth target
+					{
+						GPU_DEBUG_SCOPE("DepthPass");
+						DrawCallState drawCallState;
+						drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+						drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
+
+						drawCallState.ViewPort = viewPort->ViewPort;
+						drawCallState.ClearColorTarget = false;
+						drawCallState.ClearDepthTarget = true;
+						drawCallState.BindDepthTarget(outlineDepthRT, 0, 0);
+
+						GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+						GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
+
+						RenderPass(Pass::Depth, drawCallState, camera, outlineModelContexts);
+					}
+
+					// Render outline post process
+					{
+						GPU_DEBUG_SCOPE("PostPass");
+
+						glEnable(GL_BLEND);
+						glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+						OutlineGPUDesc outlineGpuDesc = {};
+						outlineGpuDesc.MainRTSize = (Vector2)viewPort->ViewPort;
+						outlineGpuDesc.InvMainRTSize = 1.0f / (Vector2)viewPort->ViewPort;
+						outlineGpuDesc.CrossTextureTexelSize = Vector2((float)viewPort->ViewPort.Width / (float)m_OutlineStripeTexture->GetDesc().Width, (float)viewPort->ViewPort.Height / (float)m_OutlineStripeTexture->GetDesc().Height);
+						outlineGpuDesc.CrossTextureMaskOpacityAndOutlineThickness = Vector2(outlineSet.CrossMaskOpacity * (outlineSet.CrossMaskEnabled ? 1.0f : 0.0f), outlineSet.Thickness + 1.0f);
+						outlineGpuDesc.OutlineColorAndCrossEnabled = Vector4(outlineSet.BaseColor, outlineSet.CrossEnabled);
+						outlineGpuDesc.CrossColorAndAlpha = Vector4(outlineSet.CrossColor, outlineSet.IntersectionMaskOpacity);
+						GEngine->GetRenderDevice()->WriteBuffer(m_OutlineDescBuffer, &outlineGpuDesc);
+
+						DrawCallState state;
+						state.Shader = m_OutlineShader;
+						state.ViewPort = viewPort->ViewPort;
+						state.BindTarget(0, outlineRT);
+
+						state.BindTexture("SceneDepthRT", depthBuffer);
+						state.BindTexture("OutlineMaskDepthRT", outlineDepthRT);
+						state.BindTexture("StripeTexture", m_OutlineStripeTexture);
+
+						state.BindSampler("SceneDepthRT", Samplers::ClampClampNearestNearest);
+						state.BindSampler("OutlineMaskDepthRT", Samplers::ClampClampNearestNearest);
+						state.BindSampler("StripeTexture", Samplers::WrapWrapNearestNearest);
+
+						state.BindUniformBuffer("OutlineGPUDesc", m_OutlineDescBuffer);
+
+						state.PrimitiveType = EPrimitiveType::TriangleStrip;
+						state.RasterState.CullMode = ECullMode::Front;
+						state.DepthStencilState.DepthEnable = false;
+
+						state.ClearColorTarget = firstOutlineIteration;
+						state.ClearDepthTarget = false;
+
+						GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
+
+						glDisable(GL_BLEND);
+
+						firstOutlineIteration = false;
+					}
+				}
+
+				if (m_OutlineContext.ClearAfterFrame)
+					m_OutlineContext.Clear();
+			}
+
 			{
 				CPU_DEBUG_SCOPE("Composite");
 				GPU_DEBUG_SCOPE("Composite");
 
 				DrawCallState state;
-				state.Shader = m_HDRCompositeShader;
+				state.Shader = outlineRT.Empty() ? m_HDRCompositeShaderNoOutline : m_HDRCompositeShader;
 				state.ViewPort = viewPort->ViewPort;
 				state.BindTarget(0, viewPort->Target);
 				state.BindTexture("SceneHRDTexture", compositeRT);
 				state.BindTexture("BloomTexture", bloomRTs[2]);
+
+				if (!outlineRT.Empty())
+				{
+					state.BindTexture("OutlineTexture", outlineRT);
+				}
 
 				state.BindSampler("SceneHRDTexture", Samplers::ClampClampNearestNearest);
 				state.BindSampler("BloomTexture", Samplers::ClampClampLinearLinear);
@@ -493,6 +633,9 @@ namespace Aurora
 
 				GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
 			}
+
+			outlineRT.Free();
+			outlineDepthRT.Free();
 
 			if(m_BloomSettings.Enabled) for (auto & bloomRT : bloomRTs) bloomRT.Free();
 

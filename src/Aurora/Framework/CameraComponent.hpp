@@ -51,7 +51,7 @@ namespace Aurora
 		Matrix4 m_View = glm::identity<Matrix4>();
 		FFrustum m_Frustum;
 
-		Color m_ClearColor;
+		FColor m_ClearColor;
 	public:
 		CLASS_OBJ(CameraComponent, SceneComponent);
 
@@ -97,7 +97,7 @@ namespace Aurora
 
 		const FFrustum& GetFrustum() const { return m_Frustum; }
 
-		inline void SetClearColor(const Color& color) { m_ClearColor = color; }
-		[[nodiscard]] inline const Color& GetClearColor() const { return m_ClearColor; }
+		inline void SetClearColor(const FColor& color) { m_ClearColor = color; }
+		[[nodiscard]] inline const FColor& GetClearColor() const { return m_ClearColor; }
 	};
 }

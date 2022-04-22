@@ -11,6 +11,7 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
+#include "Aurora/Render/SceneRenderer.hpp"
 
 
 #include "Aurora/Core/Profiler.hpp"
@@ -109,6 +110,12 @@ namespace Aurora
 			m_SelectedActor->Destroy();
 			m_SelectedActor = nullptr;
 		}
+
+		if (m_SelectedActor)
+			GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({m_SelectedActor});
+
+		if(m_SelectedComponent)
+			GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({}, {m_SelectedComponent});
 	}
 
 	void MainEditorPanel::BeginDockSpace()

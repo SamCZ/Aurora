@@ -6,6 +6,7 @@
 #include "Aurora/Tools/robin_hood.h"
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Graphics/PassType.hpp"
+#include "Aurora/Graphics/Color.hpp"
 #include "Aurora/Framework/Mesh/Mesh.hpp"
 
 namespace Aurora
@@ -13,6 +14,9 @@ namespace Aurora
 	class Scene;
 	class FFrustum;
 	class CameraComponent;
+	class Actor;
+	class SceneComponent;
+	class MeshComponent;
 
 	constexpr uint32_t MaxInstances = 1024;
 
@@ -48,6 +52,19 @@ namespace Aurora
 
 	typedef EventEmitter<PassType_t, DrawCallState&, CameraComponent*> PassRenderEventEmitter;
 
+	struct OutlineActorSet
+	{
+		float Thickness = 2.0f;
+		float CrossMaskOpacity = 0.9f;
+		float IntersectionMaskOpacity = 0.5f;
+		bool CrossMaskEnabled = false;
+		bool CrossEnabled = false;
+		FColor3 BaseColor = FColor3(0, 1, 0);
+		FColor3 CrossColor = FColor3(0, 0.25f, 0);
+		std::vector<Actor*> Actors;
+		std::vector<SceneComponent*> Components;
+	};
+
 	class AU_API SceneRenderer
 	{
 	private:
@@ -59,6 +76,7 @@ namespace Aurora
 		Buffer_ptr m_CompositeDefaultsBuffer;
 		Shader_ptr m_CompositeShader;
 		Shader_ptr m_HDRCompositeShader;
+		Shader_ptr m_HDRCompositeShaderNoOutline;
 
 		Shader_ptr m_BloomShader;
 		Buffer_ptr m_BloomDescBuffer;
@@ -77,17 +95,51 @@ namespace Aurora
 
 		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
 		std::array<PassRenderEventEmitter, Pass::Count> m_InjectedPasses;
+
+		struct OutlineContext
+		{
+			std::vector<OutlineActorSet> Sets;
+			bool ClearAfterFrame = true;
+
+			inline OutlineActorSet& AddDefaultSet(const std::vector<Actor*>& actors, const std::vector<SceneComponent*>& components = {})
+			{
+				OutlineActorSet set;
+				set.Actors = actors;
+				set.Components = components;
+				AddSet(set);
+				return Sets.back();
+			}
+			inline void AddSet(const OutlineActorSet& set) { Sets.push_back(set); }
+			inline void AddSet(OutlineActorSet&& set) { Sets.emplace_back(std::forward<OutlineActorSet>(set)); }
+			inline void Clear() { Sets.clear(); }
+		} m_OutlineContext;
+
+		Shader_ptr m_OutlineShader;
+		Buffer_ptr m_OutlineDescBuffer;
+		Texture_ptr m_OutlineStripeTexture;
 	public:
 		SceneRenderer();
 
+		inline void ClearVisibleEntities()
+		{
+			for (int i = 0; i < SortTypeCount; ++i)
+			{
+				m_VisibleEntities[i].clear();
+			}
+		}
+
+		void PrepareMeshComponent(MeshComponent* scene, CameraComponent* camera);
 		void PrepareVisibleEntities(Scene* scene, CameraComponent* camera);
+		void PrepareVisibleEntities(Actor* actor, CameraComponent* camera);
 		void FillRenderSet(RenderSet& renderSet);
 
 		void Render(Scene* scene);
 		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet);
 
 		const InputLayout_ptr& GetInputLayoutForMesh(Mesh* mesh);
-
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }
+
+		OutlineContext& GetOutlineContext() { return m_OutlineContext; }
+		[[nodiscard]] const OutlineContext& GetOutlineContext() const { return m_OutlineContext; }
 	};
 }

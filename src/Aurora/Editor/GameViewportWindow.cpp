@@ -217,8 +217,8 @@ namespace Aurora
 			//Manipulator
 			ImGuizmo::SetDrawlist();
 			ImGuizmo::SetRect(
-				ImGui::GetWindowPos().x,
-				ImGui::GetWindowPos().y,
+				ImGui::GetWindowPos().x + offset.x,
+				ImGui::GetWindowPos().y + offset.y,
 				ImGui::GetWindowWidth(),
 				ImGui::GetWindowHeight()
 			);

@@ -23,7 +23,7 @@
 
 #include "Aurora/Editor/MainEditorPanel.hpp"
 
-#include <Aurora/Render/VgRender.hpp>
+#include <Aurora/Graphics/VgRender.hpp>
 
 #include <Aurora/Render/SceneRenderer.hpp>
 
@@ -168,6 +168,9 @@ class BaseAppContext : public AppContext
 	{
 		delete sceneRenderer;
 	}
+
+	// FIXME: this is just an hack!
+	SceneRenderer* GetSceneRenderer() override { return sceneRenderer; }
 
 	void Init() override
 	{

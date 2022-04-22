@@ -3,8 +3,7 @@
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
-
-#include "Aurora/Render/VgRender.hpp"
+#include "Aurora/Graphics/VgRender.hpp"
 
 namespace Aurora
 {

@@ -37,6 +37,20 @@ namespace Aurora
 
 		[[nodiscard]] const std::vector<SceneComponent*>& GetComponents() const { return m_Components; }
 
+		template<typename T>
+		void GetComponentsOfType(std::vector<T*>& components)
+		{
+			if(HasType(T::TypeID()))
+			{
+				components.push_back(T::Cast(this));
+			}
+
+			for(SceneComponent* component : m_Components)
+			{
+				component->GetComponentsOfType<T>(components);
+			}
+		}
+
 		SceneComponent* GetParent() { return m_Parent; }
 		[[nodiscard]] bool HasParent() const { return m_Parent != nullptr;}
 		[[nodiscard]] bool IsParentActive() const;

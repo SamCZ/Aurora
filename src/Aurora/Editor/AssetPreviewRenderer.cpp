@@ -12,7 +12,7 @@ namespace Aurora
 	AssetPreviewRenderer::AssetPreviewRenderer() : m_ViewPortManager(new ViewPortManager())
 	{
 		m_Camera = m_Scene.SpawnActor<Actor, CameraComponent>("Camera", {})->GetRootComponent<CameraComponent>();
-		m_Camera->SetClearColor(Color::zero());
+		m_Camera->SetClearColor(FColor(0, 0, 0, 0));
 
 		auto* dirLight = m_Scene.SpawnActor<DirectionalLight>("DirLight", {})->GetRootComponent<DirectionalLightComponent>();
 		dirLight->GetTransform().Rotation = Vector3(-45, -45, 0);

@@ -6,7 +6,9 @@ in vec2 TexCoord;
 
 uniform sampler2D SceneHRDTexture;
 uniform sampler2D BloomTexture;
-
+#ifdef USE_OUTLINE
+uniform sampler2D OutlineTexture;
+#endif
 void main()
 {
 	vec4 sceneColor = texelFetch(SceneHRDTexture, ivec2(gl_FragCoord.xy), 0);
@@ -20,7 +22,10 @@ void main()
 	//FragColor.a = sceneColor.a;
 
 	//FragColor.rgb = pow(FragColor.rgb, vec3(1.0 / gamma));
-
+#ifdef USE_OUTLINE
+	vec4 outlineColor = texelFetch(OutlineTexture, ivec2(gl_FragCoord.xy), 0);
+	FragColor.rgb = mix(FragColor.rgb, outlineColor.rgb, outlineColor.a);
+#endif
 	FragColor = fromLinear(FragColor);
 	FragColor.a = sceneColor.a;
 }
