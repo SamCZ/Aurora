@@ -4,7 +4,8 @@ uniformbuffer BloomDesc
 {
 	vec4 Params; // (x) threshold, (y) threshold - knee, (z) knee * 2, (w) 0.25 / knee
 	vec2 LodAndMode;
-#ifdef SHADER_COMPUTE
+	vec2 HalfTexel;
+#if defined(SHADER_COMPUTE) || defined(SHADER_PIXEL)
 } u_Uniforms;
 #else
 };

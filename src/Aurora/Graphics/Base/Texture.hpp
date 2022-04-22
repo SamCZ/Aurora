@@ -82,7 +82,7 @@ namespace Aurora
 			return (uint32_t)std::floor(std::log2(glm::min(w, h))) + 1;
 		}
 
-		[[nodiscard]] std::pair<uint32_t, uint32_t> GetMipSize(uint32_t mip) const
+		[[nodiscard]] Vector2i GetMipSize(uint32_t mip) const
 		{
 			uint32_t width = Width;
 			uint32_t height = Height;

@@ -65,6 +65,11 @@ namespace Aurora
 
 		m_BloomShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/PostProcess/bloom.glsl");
 
+		m_BloomShaderSS = GEngine->GetResourceManager()->LoadShader("BloomScreenSpace", {
+			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/bloom.frag"}
+		});
+
 		m_OutlineShader = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
 			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Outline.frag"}
@@ -383,7 +388,7 @@ namespace Aurora
 				Vector2ui bloomTexSize = (Vector2i)viewPort->ViewPort / 2;
 				bloomTexSize += Vector2ui(m_BloomComputeWorkgroupSize - (bloomTexSize.x % m_BloomComputeWorkgroupSize), m_BloomComputeWorkgroupSize - (bloomTexSize.y % m_BloomComputeWorkgroupSize));
 
-				uint32_t mips = TextureDesc::GetMipLevelCount(bloomTexSize.x, bloomTexSize.y) - 2;
+				uint32_t mips = TextureDesc::GetMipLevelCount(bloomTexSize.x, bloomTexSize.y) - 4;
 				//mips -= mips / 3;
 
 				for (int i = 0; i < 3; ++i)
@@ -393,100 +398,203 @@ namespace Aurora
 					bloomRTs[i] = GEngine->GetRenderManager()->CreateTemporalRenderTarget(texName, bloomTexSize, GraphicsFormat::RGBA16_FLOAT, EDimensionType::TYPE_2D, mips, 0, TextureDesc::EUsage::Default, true);
 				}
 
-				uint32_t workGroupsX = bloomTexSize.x / m_BloomComputeWorkgroupSize;
-				uint32_t workGroupsY = bloomTexSize.y / m_BloomComputeWorkgroupSize;
-
 				BloomDesc bloomDesc;
 				bloomDesc.Params = { m_BloomSettings.Threshold, m_BloomSettings.Threshold - m_BloomSettings.Knee, m_BloomSettings.Knee * 2.0f, 0.25f / m_BloomSettings.Knee };
 				bloomDesc.LodAndMode.x = 0;
 				bloomDesc.LodAndMode.y = BLOOM_MODE_PREFILTER;
 
-				DispatchState dispatchState;
-				dispatchState.Shader = m_BloomShader;
-				dispatchState.BindUniformBuffer("BloomDesc", m_BloomDescBuffer);
-				dispatchState.BindSampler("u_Texture", Samplers::ClampClampLinearLinear);
-				dispatchState.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
-
-				GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
-
-				dispatchState.BindTexture("u_Texture", compositeRT);
-				dispatchState.BindTexture("u_BloomTexture", compositeRT);
-				dispatchState.BindTexture("o_Image", bloomRTs[0], true);
-
-				// Prefilter
-				GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
-
-				// Downsample
-				bloomDesc.LodAndMode.y = BLOOM_MODE_DOWNSAMPLE;
-
-				for (uint32_t i = 1; i < mips; i++)
+				if (!m_BloomSettings.UseComputeShader)
 				{
-					auto[mipWidth, mipHeight] = bloomRTs[0]->GetDesc().GetMipSize(i);
+					DrawCallState state;
+					state.Shader = m_BloomShaderSS;
+					state.ViewPort = bloomRTs[0]->GetDesc().GetSize();
 
-					workGroupsX = (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize);
-					workGroupsY = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
+					state.PrimitiveType = EPrimitiveType::TriangleStrip;
+					state.RasterState.CullMode = ECullMode::Front;
+					state.DepthStencilState.DepthEnable = false;
+					state.ClearColorTarget = false;
+					state.ClearDepthTarget = false;
 
-					{ // Ping
-						// Output
-						dispatchState.BindTexture("o_Image", bloomRTs[1], true, Aurora::TextureBinding::EAccess::Write, i);
-						// Input
-						bloomDesc.LodAndMode.x = (float)i - 1.0f;
-						GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+					state.BindUniformBuffer("BloomDesc", m_BloomDescBuffer);
+					state.BindSampler("u_Texture", Samplers::ClampClampLinearLinear);
+					state.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
 
-						dispatchState.BindTexture("u_Texture", bloomRTs[0]);
-						GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+					state.BindTexture("u_Texture", compositeRT);
+					state.BindTexture("u_BloomTexture", compositeRT);
+					state.BindTexture("o_Image", bloomRTs[0], true);
+
+					state.BindTarget(0, bloomRTs[0], 0, 0);
+					bloomDesc.HalfTexel = (1.0f / (Vector2)bloomRTs[0]->GetDesc().GetSize()) * 0.5f;
+					GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+
+					// Prefilter
+					GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
+
+					// // Downsample
+					bloomDesc.LodAndMode.y = BLOOM_MODE_DOWNSAMPLE;
+
+					for (uint32_t i = 1; i < mips; i++)
+					{
+						auto mipSize = bloomRTs[0]->GetDesc().GetMipSize(i);
+
+						{ // Ping
+							// Output
+							state.BindTarget(0, bloomRTs[1], 0, i);
+							state.ViewPort = mipSize;
+							bloomDesc.HalfTexel = (1.0f / (Vector2)mipSize) * 0.5f;
+							// Input
+							bloomDesc.LodAndMode.x = (float)i - 1.0f;
+							GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+
+							state.BindTexture("u_Texture", bloomRTs[0]);
+							GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
+						}
+
+						{ // Pong
+							//Output
+							state.BindTarget(0, bloomRTs[0], 0, i);
+							state.ViewPort = mipSize;
+							bloomDesc.HalfTexel = (1.0f / (Vector2)mipSize) * 0.5f;
+							// Input
+							bloomDesc.LodAndMode.x = (float)i;
+							GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+							state.BindTexture("u_Texture", bloomRTs[1]);
+							GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
+						}
 					}
 
-					{ // Pong
+					// Upsample first
+					bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE_FIRST;
+
+					{ // Upsample First
 						//Output
-						dispatchState.BindTexture("o_Image", bloomRTs[0], true, Aurora::TextureBinding::EAccess::Write, i);
+						auto mipSize = bloomRTs[2]->GetDesc().GetMipSize(mips - 1);
+
+						state.BindTarget(0, bloomRTs[2], 0, mips - 1);
+						state.ViewPort = mipSize;
+						bloomDesc.HalfTexel = (1.0f / (Vector2)mipSize) * 0.5f;
 
 						// Input
-						bloomDesc.LodAndMode.x = (float)i;
+						bloomDesc.LodAndMode.x = (float)mips - 2.0f;
 						GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
-						dispatchState.BindTexture("u_Texture", bloomRTs[1]);
-						GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+						state.BindTexture("u_Texture", bloomRTs[0]);
+
+						GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
+					}
+
+					// Upsample
+					bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE;
+
+					for (int32_t mip = mips - 2; mip >= 0; mip--)
+					{
+						auto mipSize = bloomRTs[2]->GetDesc().GetMipSize(mip);
+
+						//Output
+						state.BindTarget(0, bloomRTs[2], 0, mip);
+						state.ViewPort = mipSize;
+						bloomDesc.HalfTexel = (1.0f / (Vector2)mipSize) * 0.5f;
+
+						// Input
+						bloomDesc.LodAndMode.x = mip;
+						GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+						state.BindTexture("u_Texture", bloomRTs[0]);
+						state.BindTexture("u_BloomTexture", bloomRTs[2]);
+
+						GEngine->GetRenderDevice()->Draw(state, {DrawArguments(4)}, true);
 					}
 				}
-
-				// Upsample first
-				bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE_FIRST;
-
-				{ // Upsample First
-					//Output
-					dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mips - 1);
-
-					// Input
-					bloomDesc.LodAndMode.x = (float)mips - 2.0f;
-					GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
-					dispatchState.BindTexture("u_Texture", bloomRTs[0]);
-
-					auto [mipWidth, mipHeight] = bloomRTs[2]->GetDesc().GetMipSize(mips - 1);
-					workGroupsX = (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize);
-					workGroupsY = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
-
-					GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
-				}
-
-				// Upsample
-				bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE;
-
-				for (int32_t mip = mips - 2; mip >= 0; mip--)
+				else
 				{
-					auto [mipWidth, mipHeight] = bloomRTs[2]->GetDesc().GetMipSize(mip);
-					workGroupsX = (uint32_t)glm::ceil((float)mipWidth / (float)m_BloomComputeWorkgroupSize);
-					workGroupsY = (uint32_t)glm::ceil((float)mipHeight / (float)m_BloomComputeWorkgroupSize);
+					uint32_t workGroupsX = bloomTexSize.x / m_BloomComputeWorkgroupSize;
+					uint32_t workGroupsY = bloomTexSize.y / m_BloomComputeWorkgroupSize;
 
-					//Output
-					dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mip);
+					DispatchState dispatchState;
+					dispatchState.Shader = m_BloomShader;
+					dispatchState.BindUniformBuffer("BloomDesc", m_BloomDescBuffer);
+					dispatchState.BindSampler("u_Texture", Samplers::ClampClampLinearLinear);
+					dispatchState.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
 
-					// Input
-					bloomDesc.LodAndMode.x = mip;
 					GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
-					dispatchState.BindTexture("u_Texture", bloomRTs[0]);
-					dispatchState.BindTexture("u_BloomTexture", bloomRTs[2]);
 
+					dispatchState.BindTexture("u_Texture", compositeRT);
+					dispatchState.BindTexture("u_BloomTexture", compositeRT);
+					dispatchState.BindTexture("o_Image", bloomRTs[0], true);
+
+					// Prefilter
 					GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+
+					// Downsample
+					bloomDesc.LodAndMode.y = BLOOM_MODE_DOWNSAMPLE;
+
+					for (uint32_t i = 1; i < mips; i++)
+					{
+						auto mipSize = bloomRTs[0]->GetDesc().GetMipSize(i);
+
+						workGroupsX = (uint32_t)glm::ceil((float)mipSize.x / (float)m_BloomComputeWorkgroupSize);
+						workGroupsY = (uint32_t)glm::ceil((float)mipSize.y / (float)m_BloomComputeWorkgroupSize);
+
+						{ // Ping
+							// Output
+							dispatchState.BindTexture("o_Image", bloomRTs[1], true, Aurora::TextureBinding::EAccess::Write, i);
+							// Input
+							bloomDesc.LodAndMode.x = (float)i - 1.0f;
+							GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+
+							dispatchState.BindTexture("u_Texture", bloomRTs[0]);
+							GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+						}
+
+						{ // Pong
+							//Output
+							dispatchState.BindTexture("o_Image", bloomRTs[0], true, Aurora::TextureBinding::EAccess::Write, i);
+
+							// Input
+							bloomDesc.LodAndMode.x = (float)i;
+							GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+							dispatchState.BindTexture("u_Texture", bloomRTs[1]);
+							GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+						}
+					}
+
+					// Upsample first
+					bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE_FIRST;
+
+					{ // Upsample First
+						//Output
+						dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mips - 1);
+
+						// Input
+						bloomDesc.LodAndMode.x = (float)mips - 2.0f;
+						GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+						dispatchState.BindTexture("u_Texture", bloomRTs[0]);
+
+						auto mipSize = bloomRTs[2]->GetDesc().GetMipSize(mips - 1);
+						workGroupsX = (uint32_t)glm::ceil((float)mipSize.x / (float)m_BloomComputeWorkgroupSize);
+						workGroupsY = (uint32_t)glm::ceil((float)mipSize.y / (float)m_BloomComputeWorkgroupSize);
+
+						GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+					}
+
+					// Upsample
+					bloomDesc.LodAndMode.y = BLOOM_MODE_UPSAMPLE;
+
+					for (int32_t mip = mips - 2; mip >= 0; mip--)
+					{
+						auto mipSize = bloomRTs[2]->GetDesc().GetMipSize(mip);
+						workGroupsX = (uint32_t)glm::ceil((float)mipSize.x / (float)m_BloomComputeWorkgroupSize);
+						workGroupsY = (uint32_t)glm::ceil((float)mipSize.y / (float)m_BloomComputeWorkgroupSize);
+
+						//Output
+						dispatchState.BindTexture("o_Image", bloomRTs[2], true, Aurora::TextureBinding::EAccess::Write, mip);
+
+						// Input
+						bloomDesc.LodAndMode.x = mip;
+						GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
+						dispatchState.BindTexture("u_Texture", bloomRTs[0]);
+						dispatchState.BindTexture("u_BloomTexture", bloomRTs[2]);
+
+						GEngine->GetRenderDevice()->Dispatch(dispatchState, workGroupsX, workGroupsY, 1);
+					}
 				}
 			}
 

@@ -80,10 +80,12 @@ namespace Aurora
 		Shader_ptr m_HDRCompositeShaderNoOutline;
 
 		Shader_ptr m_BloomShader;
+		Shader_ptr m_BloomShaderSS;
 		Buffer_ptr m_BloomDescBuffer;
 		struct BloomSettings
 		{
 			bool Enabled = true;
+			bool UseComputeShader = false;
 			float Threshold = 1.1f;
 			float Knee = 0.1f;
 			float UpsampleScale = 1.0f;
@@ -141,6 +143,7 @@ namespace Aurora
 		const InputLayout_ptr& GetInputLayoutForMesh(Mesh* mesh);
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }
 
+		BloomSettings& GetBloomSettings() { return m_BloomSettings; }
 		OutlineContext& GetOutlineContext() { return m_OutlineContext; }
 		[[nodiscard]] const OutlineContext& GetOutlineContext() const { return m_OutlineContext; }
 	};

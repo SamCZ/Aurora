@@ -217,6 +217,8 @@ namespace Aurora
 				ImGui::EndMenu();
 			}
 
+			SceneRenderer* sceneRenderer = GEngine->GetAppContext()->GetSceneRenderer();
+
 			if (ImGui::BeginMenu("Material"))
 			{
 				if (ImGui::MenuItem("Show material instances"))
@@ -231,13 +233,22 @@ namespace Aurora
 						def->ReloadShader();
 					}
 
-					GEngine->GetAppContext()->GetSceneRenderer()->LoadShaders();
+					if (sceneRenderer)
+						GEngine->GetAppContext()->GetSceneRenderer()->LoadShaders();
 				}
 
-				if (ImGui::MenuItem("Reload renderer shaders"))
+				if (sceneRenderer && ImGui::MenuItem("Reload renderer shaders"))
 				{
 					GEngine->GetAppContext()->GetSceneRenderer()->LoadShaders();
 				}
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Graphics"))
+			{
+				if (sceneRenderer)
+					ImGui::Checkbox("Enable bloom", &sceneRenderer->GetBloomSettings().Enabled);
+					ImGui::Checkbox("Enable bloom compute", &sceneRenderer->GetBloomSettings().UseComputeShader);
 				ImGui::EndMenu();
 			}
 
