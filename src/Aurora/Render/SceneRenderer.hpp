@@ -7,6 +7,7 @@
 #include "Aurora/Graphics/Material/Material.hpp"
 #include "Aurora/Graphics/PassType.hpp"
 #include "Aurora/Graphics/Color.hpp"
+#include "Aurora/Graphics/RenderManager.hpp"
 #include "Aurora/Framework/Mesh/Mesh.hpp"
 
 namespace Aurora
@@ -85,7 +86,7 @@ namespace Aurora
 		struct BloomSettings
 		{
 			bool Enabled = true;
-			bool UseComputeShader = false;
+			bool UseComputeShader = true;
 			float Threshold = 1.1f;
 			float Knee = 0.1f;
 			float UpsampleScale = 1.0f;
@@ -139,6 +140,8 @@ namespace Aurora
 
 		void Render(Scene* scene);
 		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected = true);
+
+		TemporalRenderTarget RenderBloom(const FViewPort& wp, const Texture_ptr& inputHDRRT);
 
 		const InputLayout_ptr& GetInputLayoutForMesh(Mesh* mesh);
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }

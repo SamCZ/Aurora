@@ -33,7 +33,8 @@ namespace Aurora
 
 		FT_UNPROCESSED_MESH = BITF(4),
 		FT_AMESH = BITF(5),
-		FT_CUBEMAP = BITF(6)
+		FT_CUBEMAP = BITF(6),
+		FT_FONT = BITF(7)
 	};
 
 	struct TextureLoadDesc

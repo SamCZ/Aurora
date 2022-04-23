@@ -532,6 +532,12 @@ namespace Aurora
 			return ICON_FA_CUBE;
 		}
 
+		if (ResourceManager::IsFileType(path, FT_FONT))
+		{
+			textureOut = nullptr;
+			return ICON_FA_FONT;
+		}
+
 		return ICON_FA_FILE;
 	}
 

@@ -167,8 +167,8 @@ namespace Aurora
 
 			static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
 
-			auto fontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/LatoLatin-Bold.ttf"));
-			io.Fonts->AddFontFromMemoryTTF(fontData->data(), fontData->size(), 15);
+			auto fontData = new std::vector<uint8>(m_ResourceManager->LoadFile("Assets/Fonts/SEGOEUI.ttf"));
+			io.Fonts->AddFontFromMemoryTTF(fontData->data(), fontData->size(), 17);
 
 			ImFontConfig config;
 			config.MergeMode = true;

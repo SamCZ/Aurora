@@ -73,14 +73,14 @@ namespace Aurora
 					// TODO: Loading sampler definition
 				}
 
-				String texturePath = value.get<String>();
+				auto texturePath = value.get<String>();
 
 				TTypeID nameId = Hash_djb2(name.c_str());
 
 				MTextureVar textureVar;
 				textureVar.Name = name;
 				textureVar.InShaderName = in_shader_name;
-				textureVar.Texture = texturePath.length() ? GEngine->GetResourceManager()->LoadTexture(path) : nullptr;
+				textureVar.Texture = texturePath.length() ? GEngine->GetResourceManager()->LoadTexture(texturePath) : nullptr;
 				textureVar.Sampler = sampler;
 				textureVar.HasEnableMacro = it.contains("macro");
 				if(textureVar.HasEnableMacro)

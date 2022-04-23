@@ -916,6 +916,13 @@ namespace Aurora
 		".fbx"
 	};
 
+	static const char* FontExtensions[] = {
+		".ttf",
+		".woff",
+		".fnt",
+		".otf"
+	};
+
 	bool ResourceManager::IsFileType(const Path &path, FileType types)
 	{
 		Path extension = path.extension();
@@ -964,6 +971,17 @@ namespace Aurora
 
 		if ((types & FT_CUBEMAP) == FT_CUBEMAP  && extension == ".cubemap")
 			return true;
+
+		if ((types & FT_FONT) == FT_FONT)
+		{
+			for (const auto &item : FontExtensions)
+			{
+				if (item == extension)
+				{
+					return true;
+				}
+			}
+		}
 
 		return false;
 	}
