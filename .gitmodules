@@ -12,7 +12,7 @@
 	branch = master
 [submodule "imgui"]
 	path = lib/imgui/imgui
-	url = git@github.com:ocornut/imgui.git
+	url = git@github.com:SamCZ/imgui.git
 	branch = docking
 [submodule "RmlUI"]
 	path = lib/RmlUI
