@@ -17,6 +17,7 @@
 #include "FDepthStencilState.hpp"
 
 #include "../ViewPort.hpp"
+#include "Aurora/Tools/robin_hood.h"
 
 namespace Aurora
 {
@@ -74,10 +75,10 @@ namespace Aurora
 	{
 		static constexpr uint8_t MaxBoundTextures = 8;
 
-		std::map<std::string, TextureBinding> BoundTextures{};
-		std::map<std::string, Sampler_ptr> BoundSamplers{};
-		std::map<std::string, UniformBufferBinding> BoundUniformBuffers{};
-		std::map<std::string, Buffer_ptr> SSBOBuffers{};
+		robin_hood::unordered_map<std::string, TextureBinding> BoundTextures{};
+		robin_hood::unordered_map<std::string, Sampler_ptr> BoundSamplers{};
+		robin_hood::unordered_map<std::string, UniformBufferBinding> BoundUniformBuffers{};
+		robin_hood::unordered_map<std::string, Buffer_ptr> SSBOBuffers{};
 
 		virtual void ResetResources()
 		{
@@ -133,7 +134,7 @@ namespace Aurora
 
 		InputLayout_ptr InputLayoutHandle;
 
-		std::map<uint32_t, Buffer_ptr> VertexBuffers;
+		robin_hood::unordered_map<uint32_t, Buffer_ptr> VertexBuffers;
 		bool HasAnyRenderTarget;
 		FDepthStencilState DepthStencilState;
 

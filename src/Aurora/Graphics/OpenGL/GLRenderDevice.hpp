@@ -64,6 +64,49 @@ namespace Aurora
 		{ return compare(other) == 0; }
 	};
 
+	struct VaoKey
+	{
+		Shader_ptr Shader;
+		robin_hood::unordered_map<uint32_t, Buffer_ptr> Buffers;
+
+		[[nodiscard]] int compare(const VaoKey &other) const
+		{
+			if (Shader < other.Shader) return -1;
+			if (Shader > other.Shader) return 1;
+
+			size_t bufferSize = Buffers.size();
+
+			if(bufferSize < other.Buffers.size()) return -1;
+			if(bufferSize > other.Buffers.size()) return 1;
+
+			for (const auto& [location, buffer]: Buffers)
+			{
+				auto it = other.Buffers.find(location);
+
+				if (it == other.Buffers.end())
+				{
+					return -1;
+				}
+
+				const Buffer_ptr bufferOther = it->second;
+
+				if (buffer < bufferOther) return -1;
+				if (buffer > bufferOther) return 1;
+			}
+
+			return 0;
+		}
+
+		bool operator<(const VaoKey &other) const
+		{ return compare(other) < 0; }
+
+		bool operator>(const VaoKey &other) const
+		{ return compare(other) > 0; }
+
+		bool operator==(const VaoKey &other) const
+		{ return compare(other) == 0; }
+	};
+
 	class FrameBuffer
 	{
 	public:
@@ -98,6 +141,7 @@ namespace Aurora
 		GLuint m_LastVao;
 		FrameBuffer_ptr m_CurrentFrameBuffer = nullptr;
 		std::vector<std::pair<FrameBufferKey, FrameBuffer_ptr>> m_CachedFrameBuffers;
+		std::map<VaoKey, GLuint> m_CachedVaos;
 
 		GLContextState m_ContextState;
 
@@ -105,6 +149,7 @@ namespace Aurora
 		FRasterState m_LastRasterState;
 		FDepthStencilState m_LastDepthState;
 		InputLayout_ptr m_LastInputLayout;
+		std::vector<uint8_t> m_LastVertexAttribs;
 
 		// Embedded shaders
 		Shader_ptr m_BlitShader;
@@ -160,6 +205,7 @@ namespace Aurora
 		void BindShaderResources(const BaseState& state) override;
 		void ApplyDispatchState(const DispatchState& state) override;
 		void ApplyDrawCallState(const DrawCallState& state) override;
+		void BindShaderInputsCached(const DrawCallState &state);
 		void BindShaderInputs(const DrawCallState &state, bool force) override;
 		void BindRenderTargets(const DrawCallState &state) override;
 		void SetBlendState(const DrawCallState &state) override;
@@ -168,6 +214,7 @@ namespace Aurora
 		void SetDepthStencilState(FDepthStencilState state) override;
 
 		void NotifyTextureDestroy(class GLTexture* texture);
+		void NotifyBufferDestroy(class GLBuffer* buffer);
 		FrameBuffer_ptr GetCachedFrameBuffer(const DrawCallState &state);
 	};
 }

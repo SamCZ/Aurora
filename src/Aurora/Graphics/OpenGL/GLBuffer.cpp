@@ -1,4 +1,6 @@
 #include "GLBuffer.hpp"
+#include "Aurora/Engine.hpp"
+#include "GLRenderDevice.hpp"
 
 namespace Aurora
 {
@@ -11,7 +13,12 @@ namespace Aurora
 
 	GLBuffer::~GLBuffer()
 	{
-		if(m_Desc.IsDMA)
+		if (GEngine->GetRenderDevice())
+		{
+			static_cast<GLRenderDevice*>(GEngine->GetRenderDevice())->NotifyBufferDestroy(this); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+		}
+
+		if (m_Desc.IsDMA)
 		{
 			glUnmapNamedBuffer(m_Handle);
 		}

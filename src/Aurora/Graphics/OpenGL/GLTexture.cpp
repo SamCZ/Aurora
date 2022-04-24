@@ -21,15 +21,16 @@ namespace Aurora
 
 	GLTexture::~GLTexture()
 	{
-		if(m_UsedInFrameBuffers && GEngine->GetRenderDevice()) {
+		if (m_UsedInFrameBuffers && GEngine->GetRenderDevice())
+		{
 			static_cast<GLRenderDevice*>(GEngine->GetRenderDevice())->NotifyTextureDestroy(this); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 		}
 
-		if(m_Handle) {
+		if (m_Handle) {
 			glDeleteTextures(1, &m_Handle);
 		}
 
-		if(m_SRGBHandle) {
+		if (m_SRGBHandle) {
 			glDeleteTextures(1, &m_SRGBHandle);
 		}
 	}

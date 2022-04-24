@@ -22,6 +22,7 @@
 #include "Graphics/VgRender.hpp"
 #include "Resource/ResourceManager.hpp"
 #include "Framework/CameraComponent.hpp"
+#include "Render/SceneRenderer.hpp"
 
 #include "RmlUI/RmlUI.hpp"
 
@@ -96,6 +97,7 @@ namespace Aurora
 		delete m_ResourceManager;
 		delete m_RenderManager;
 		delete m_ViewPortManager;
+		GEngine->m_RenderDevice = nullptr; // Important here! It's for destroying left buffers in caches
 		delete m_RenderDevice;
 		delete m_SwapChain;
 		delete m_Window;
@@ -310,6 +312,16 @@ namespace Aurora
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui_ImplGlfw_NewFrame();
 				ImGui::NewFrame();
+			}
+
+			if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_F11)])
+			{
+				if (GEngine->GetAppContext()->GetSceneRenderer())
+					GEngine->GetAppContext()->GetSceneRenderer()->LoadShaders();
+				for (const auto &item: GEngine->GetResourceManager()->GetMaterialDefs())
+				{
+					item.second->ReloadShader();
+				}
 			}
 
 #ifdef NEWTON

@@ -974,8 +974,111 @@ namespace Aurora
 		ClearRenderTargets(state);
 	}
 
+	void GLRenderDevice::BindShaderInputsCached(const DrawCallState &state)
+	{
+		auto glShader = GetShader(state.Shader);
+
+		if (
+				(glShader == nullptr && m_LastVao != m_nVAOEmpty) ||
+				(glShader != nullptr && glShader->GetInputVariables().empty()) ||
+				(state.InputLayoutHandle == nullptr))
+		{
+			m_LastVao = m_nVAOEmpty;
+			glBindVertexArray(m_nVAOEmpty);
+			return;
+		}
+
+		VaoKey key = {
+			.Shader = state.Shader,
+			.Buffers = state.VertexBuffers
+		};
+
+		auto it = m_CachedVaos.find(key);
+
+		// Find existing
+		if (it != m_CachedVaos.end())
+		{
+			GLuint vao = it->second;
+
+			if (vao != m_LastVao)
+			{
+				m_LastVao = vao;
+				glBindVertexArray(vao);
+			}
+			return;
+		}
+
+		const auto& inputVars = glShader->GetInputVariables();
+
+		GLuint vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+
+		for (const auto& [location, inputVariable] : inputVars)
+		{
+			VertexAttributeDesc layoutAttribute;
+
+			/*if (!state.InputLayoutHandle->GetDescriptorBySemanticID(location, layoutAttribute))
+			{
+				AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader !");
+				continue;
+			}*/
+
+			if (!state.InputLayoutHandle->GetDescriptorByName(inputVariable.Name, layoutAttribute))
+			{
+				//AU_LOG_FATAL("Input layout from DrawState is not supported by that in the shader (" , inputVariable.Name, ") !");
+				continue;
+			}
+
+			if (inputVariable.Format != layoutAttribute.Format)
+			{
+				AU_LOG_FATAL("Input descriptor format is not the same !");
+			};
+
+			const FormatMapping& formatMapping = GetFormatMapping(layoutAttribute.Format);
+
+			auto vertexBufferIt = state.VertexBuffers.find(layoutAttribute.BufferIndex);
+			auto glBuffer = GetBuffer(vertexBufferIt->second);
+			glBindBuffer(GL_ARRAY_BUFFER, glBuffer->Handle());
+
+			glEnableVertexAttribArray(location);
+
+			if (formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT || formatMapping.Type == GL_UNSIGNED_SHORT || formatMapping.Type == GL_SHORT)
+			{
+				glVertexAttribIPointer(
+					location,
+					GLint(formatMapping.Components),
+					formatMapping.Type,
+					GLsizei(layoutAttribute.Stride),
+					(const void*)size_t(layoutAttribute.Offset));
+			}
+			else
+			{
+				glVertexAttribPointer(
+					location,
+					GLint(formatMapping.Components),
+					formatMapping.Type,
+					layoutAttribute.Normalized ? GL_TRUE : GL_FALSE,
+					GLsizei(layoutAttribute.Stride),
+					(const void*)size_t(layoutAttribute.Offset));
+			}
+
+			m_FrameRenderStatistics.GPUMemoryUsage += formatMapping.Components * sizeof(float);
+
+			glVertexAttribDivisor(location, layoutAttribute.IsInstanced ? 1 : 0);
+		}
+
+		m_CachedVaos[key] = vao;
+	}
+
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state, bool force)
 	{
+		if (true)
+		{
+			BindShaderInputsCached(state);
+			return;
+		}
+
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
 
@@ -999,10 +1102,8 @@ namespace Aurora
 			return;
 		m_LastInputLayout = state.InputLayoutHandle;
 
-		for (const auto& var : inputVars)
+		for (const auto& [location, inputVariable] : inputVars)
 		{
-			uint8_t location = var.first;
-			const ShaderInputVariable& inputVariable = var.second;
 			VertexAttributeDesc layoutAttribute;
 
 			/*if (!state.InputLayoutHandle->GetDescriptorBySemanticID(location, layoutAttribute))
@@ -1020,7 +1121,6 @@ namespace Aurora
 			if (inputVariable.Format != layoutAttribute.Format)
 			{
 				AU_LOG_FATAL("Input descriptor format is not the same !");
-				throw;
 			};
 
 			const FormatMapping& formatMapping = GetFormatMapping(layoutAttribute.Format);
@@ -1029,12 +1129,12 @@ namespace Aurora
 			auto glBuffer = GetBuffer(vertexBufferIt->second);
 			glBindBuffer(GL_ARRAY_BUFFER, glBuffer->Handle());
 
-			glEnableVertexAttribArray(GLuint(location));
+			glEnableVertexAttribArray(location);
 
 			if (formatMapping.Type == GL_INT || formatMapping.Type == GL_UNSIGNED_INT || formatMapping.Type == GL_UNSIGNED_SHORT || formatMapping.Type == GL_SHORT)
 			{
 				glVertexAttribIPointer(
-						GLuint(location),
+						location,
 						GLint(formatMapping.Components),
 						formatMapping.Type,
 						GLsizei(layoutAttribute.Stride),
@@ -1043,7 +1143,7 @@ namespace Aurora
 			else
 			{
 				glVertexAttribPointer(
-						GLuint(location),
+						location,
 						GLint(formatMapping.Components),
 						formatMapping.Type,
 						layoutAttribute.Normalized ? GL_TRUE : GL_FALSE,
@@ -1051,14 +1151,14 @@ namespace Aurora
 						(const void*)size_t(layoutAttribute.Offset));
 			}
 
-			m_FrameRenderStatistics.GPUMemoryUsage += glBuffer->GetDesc().ByteSize - layoutAttribute.Offset;
+			m_FrameRenderStatistics.GPUMemoryUsage += formatMapping.Components * sizeof(float);
 
-			//glVertexAttribDivisor(GLuint(location), layoutAttribute.IsInstanced ? 1 : 0);
+			glVertexAttribDivisor(location, layoutAttribute.IsInstanced ? 1 : 0);
 		}
 
 		//glBindBuffer(GL_ARRAY_BUFFER, GL_NONE); Do not do this, android render will fail !
 
-		if (m_LastInputLayout != nullptr)
+		/*if (m_LastInputLayout != nullptr)
 		{
 			if (inputVars.size() == m_LastInputLayout->GetDescriptors().size())
 			{
@@ -1085,7 +1185,7 @@ namespace Aurora
 			{
 				glDisableVertexAttribArray(GLuint(semanticIndex));
 			}
-		}
+		}*/
 	}
 
 	void GLRenderDevice::Dispatch(const DispatchState &state, uint32_t groupsX, uint32_t groupsY, uint32_t groupsZ)
@@ -1419,6 +1519,12 @@ namespace Aurora
 		{
 			const FrameBuffer_ptr& fb = m_CachedFrameBuffers[i].second;
 
+			if (fb->DepthTarget == texture)
+			{
+				m_CachedFrameBuffers.erase(std::find(m_CachedFrameBuffers.begin(), m_CachedFrameBuffers.end(), m_CachedFrameBuffers[i]));
+				break;
+			}
+
 			for (const auto& rt : fb->RenderTargets)
 			{
 				if (texture != rt) {
@@ -1432,6 +1538,28 @@ namespace Aurora
 				m_CachedFrameBuffers.erase(std::find(m_CachedFrameBuffers.begin(), m_CachedFrameBuffers.end(), m_CachedFrameBuffers[i]));
 				break;
 			}
+		}
+	}
+
+	void GLRenderDevice::NotifyBufferDestroy(class GLBuffer* buffer)
+	{
+		std::vector<VaoKey> vaosToRemove;
+
+		for (const auto& [key, vao]: m_CachedVaos)
+		{
+			for (const auto& [location, cachedBuffer]: key.Buffers)
+			{
+				if (buffer == cachedBuffer.get())
+				{
+					vaosToRemove.push_back(key);
+					continue;
+				}
+			}
+		}
+
+		for (const auto& item: vaosToRemove)
+		{
+			m_CachedVaos.erase(item);
 		}
 	}
 
