@@ -16,8 +16,8 @@ namespace Aurora
 		Quaternion Rotation = glm::identity<Quaternion>();
 		Vector3 EulerRotation = { 0.0f, 0.0f, 0.0f };
 		Vector3 Scale = { 1.0f, 1.0f, 1.0f };
-		Matrix4 TransformMatrix = glm::identity<Matrix4>();
-		bool NeedsUpdateMatrix = true;
+		mutable Matrix4 TransformMatrix = glm::identity<Matrix4>();
+		mutable bool NeedsUpdateMatrix = true;
 	public:
 		Transform() = default;
 		Transform(const Transform& other) = default;

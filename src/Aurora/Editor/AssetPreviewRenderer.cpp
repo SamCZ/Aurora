@@ -15,18 +15,18 @@ namespace Aurora
 		m_Camera->SetClearColor(FColor(0, 0, 0, 0));
 
 		auto* dirLight = m_Scene->SpawnActor<DirectionalLight>("DirLight", {})->GetRootComponent<DirectionalLightComponent>();
-		dirLight->GetTransform().Rotation = Vector3(-45, -45, 0);
+		dirLight->GetTransform().SetRotation(-45, -45, 0);
 
 		m_StaticMeshComponentBox = m_Scene->SpawnActor<Actor, StaticMeshComponent>("Mesh", {})->GetRootComponent<StaticMeshComponent>();
-		m_StaticMeshComponentBox->GetTransform().Scale = Vector3(0.01f);
-		m_StaticMeshComponentBox->GetTransform().Rotation = Vector3(-45, 45, 0);
+		m_StaticMeshComponentBox->GetTransform().SetScale(0.01f);
+		m_StaticMeshComponentBox->GetTransform().SetRotation(-45, 45, 0);
 		m_StaticMeshComponentBox->SetMesh(GEngine->GetResourceManager()->LoadMesh("Assets/Shapes/Box.amesh"));
 		m_SkyBoxMaterial = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/SkyBox.matd")->CreateInstance();
 		m_StaticMeshComponentBox->SetMaterial(0, m_SkyBoxMaterial);
 
 		m_StaticMeshComponentSphere = m_Scene->SpawnActor<Actor, StaticMeshComponent>("Sphere", {})->GetRootComponent<StaticMeshComponent>();
-		m_StaticMeshComponentSphere->GetTransform().Scale = Vector3(0.01f);
-		m_StaticMeshComponentSphere->GetTransform().Rotation = Vector3(-45, 45, 0);
+		m_StaticMeshComponentSphere->GetTransform().SetScale(0.01f);
+		m_StaticMeshComponentSphere->GetTransform().SetRotation(-45, 45, 0);
 		m_StaticMeshComponentSphere->SetMesh(GEngine->GetResourceManager()->LoadMesh("Assets/Shapes/Sphere.amesh"));
 		m_StaticMeshComponentSphere->SetMaterial(0, m_SkyBoxMaterial);
 	}
@@ -62,7 +62,7 @@ namespace Aurora
 	Texture_ptr AssetPreviewRenderer::RenderCubeMap(const Vector2i &size, const Texture_ptr& cubeMap)
 	{
 		Texture_ptr target = SetupRender(size);
-		m_Camera->GetTransform().Location = Vector3(0, 0, 200);
+		m_Camera->GetTransform().SetLocation(0, 0, 200);
 
 		m_StaticMeshComponentBox->SetActive(true);
 		m_StaticMeshComponentSphere->SetActive(false);
@@ -77,7 +77,7 @@ namespace Aurora
 	{
 		Texture_ptr target = SetupRender(size);
 		m_Camera->SetOrthographic(-1, 1, 1, -1, -1, 1);
-		m_Camera->GetTransform().Location = Vector3(0, 0, 0);
+		m_Camera->GetTransform().SetLocation(0, 0, 0);
 
 		m_StaticMeshComponentBox->SetActive(false);
 		m_StaticMeshComponentSphere->SetActive(true);

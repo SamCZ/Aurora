@@ -44,11 +44,9 @@ namespace Aurora
 			return TransformMatrix;
 		}
 
-		// This is not very nice, but I cannot see any other solution rn...
-		auto* thisTransform = const_cast<Transform*>(this);
-		thisTransform->NeedsUpdateMatrix = false;
+		NeedsUpdateMatrix = false;
 
-		return (thisTransform->TransformMatrix = glm::translate(glm::mat4(1.0f), Location) * glm::toMat4(Rotation) * glm::scale(glm::mat4(1.0f), Scale));
+		return (TransformMatrix = glm::translate(glm::mat4(1.0f), Location) * glm::toMat4(Rotation) * glm::scale(glm::mat4(1.0f), Scale));
 	}
 
 	Matrix4 Transform::GetTransformNoScale() const
