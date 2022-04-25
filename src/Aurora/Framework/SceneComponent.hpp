@@ -22,9 +22,9 @@ namespace Aurora
 		[[nodiscard]] const Transform& GetTransform() const { return m_Transform; }
 		Transform& GetTransform() { return m_Transform; }
 
-		[[nodiscard]] const Vector3& GetLocation() const { return m_Transform.Location; }
-		[[nodiscard]] const Vector3& GetRotation() const { return m_Transform.Rotation; }
-		[[nodiscard]] const Vector3& GetScale() const { return m_Transform.Scale; }
+		[[nodiscard]] const Vector3& GetLocation() const { return m_Transform.GetLocation(); }
+		[[nodiscard]] const Vector3& GetRotation() const { return m_Transform.GetRotation(); }
+		[[nodiscard]] const Vector3& GetScale() const { return m_Transform.GetScale(); }
 
 		[[nodiscard]] Matrix4 GetTransformationMatrix() const;
 		[[nodiscard]] Vector3 GetWorldPosition() const { return GetTransformationMatrix()[3]; }
@@ -51,7 +51,7 @@ namespace Aurora
 			}
 		}
 
-		SceneComponent* GetParent() { return m_Parent; }
+		SceneComponent* GetParent() const { return m_Parent; }
 		[[nodiscard]] bool HasParent() const { return m_Parent != nullptr;}
 		[[nodiscard]] bool IsParentActive() const;
 	};

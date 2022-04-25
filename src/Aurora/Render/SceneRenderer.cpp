@@ -512,8 +512,8 @@ namespace Aurora
 			}
 
 			{
-				CPU_DEBUG_SCOPE("Composite");
-				GPU_DEBUG_SCOPE("Composite");
+				CPU_DEBUG_SCOPE("HDR");
+				GPU_DEBUG_SCOPE("HDR");
 
 				DrawCallState state;
 				state.Shader = outlineRT.Empty() ? m_HDRCompositeShaderNoOutline : m_HDRCompositeShader;
@@ -529,10 +529,6 @@ namespace Aurora
 
 				state.BindSampler("SceneHRDTexture", Samplers::ClampClampNearestNearest);
 				state.BindSampler("BloomTexture", Samplers::ClampClampLinearLinear);
-
-				state.BindUniformBuffer("DirectionalLightStorage", m_DirLightsBuffer);
-				state.BindUniformBuffer("PointLightStorage", m_PointLightsBuffer);
-				state.BindUniformBuffer("CompositeDefaults", m_CompositeDefaultsBuffer);
 
 				state.PrimitiveType = EPrimitiveType::TriangleStrip;
 				state.RasterState.CullMode = ECullMode::Front;

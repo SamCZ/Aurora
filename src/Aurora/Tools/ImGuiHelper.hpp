@@ -49,8 +49,10 @@ namespace ImGui
 		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.15f, 0.1505f, 0.151f, 1.0f };
 	}
 
-	inline void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 70.0f)
+	inline bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 70.0f)
 	{
+		bool updated = false;
+
 		ImGuiIO& io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
 
@@ -72,12 +74,15 @@ namespace ImGui
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 0.0f });
 		//ImGui::PushFont(boldFont);
 		if (ImGui::Button("X", buttonSize))
+		{
 			values.x = resetValue;
+			updated = true;
+		}
 		//ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.6f");
+		updated |= ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.6f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -86,12 +91,15 @@ namespace ImGui
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 0.0f });
 		//ImGui::PushFont(boldFont);
 		if (ImGui::Button("Y", buttonSize))
+		{
 			values.y = resetValue;
+			updated = true;
+		}
 		//ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.6f");
+		updated |= ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.6f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -100,12 +108,15 @@ namespace ImGui
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 0.0f });
 		//ImGui::PushFont(boldFont);
 		if (ImGui::Button("Z", buttonSize))
+		{
 			values.z = resetValue;
+			updated = true;
+		}
 		//ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.6f");
+		updated |= ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.6f");
 		ImGui::PopItemWidth();
 
 		ImGui::PopStyleVar();
@@ -113,6 +124,8 @@ namespace ImGui
 		ImGui::Columns(1);
 
 		ImGui::PopID();
+
+		return updated;
 	}
 
 	inline bool Button(const std::string& label, const ImVec2& size_arg = ImVec2(0, 0))

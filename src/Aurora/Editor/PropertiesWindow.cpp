@@ -216,9 +216,23 @@ namespace Aurora
 
 			if (transformOpened)
 			{
-				ImGui::DrawVec3Control("Location", root->GetTransform().Location);
-				ImGui::DrawVec3Control("Rotation", root->GetTransform().Rotation);
-				ImGui::DrawVec3Control("Scale", root->GetTransform().Scale);
+				Vector3 location = root->GetTransform().GetLocation();
+				if (ImGui::DrawVec3Control("Location", location))
+				{
+					root->GetTransform().SetLocation(location);
+				}
+
+				Vector3 eulerAngles = root->GetTransform().GetRotation();
+				if (ImGui::DrawVec3Control("Rotation", eulerAngles))
+				{
+					root->GetTransform().SetRotation(eulerAngles);
+				}
+
+				Vector3 scale = root->GetTransform().GetScale();
+				if (ImGui::DrawVec3Control("Scale", scale))
+				{
+					root->GetTransform().SetScale(scale);
+				}
 			}
 
 			InvokeComponentGui(root);

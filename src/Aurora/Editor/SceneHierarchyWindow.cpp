@@ -50,14 +50,14 @@ namespace Aurora
 		if(editorCamera->GetOwner() == actor)
 			return;
 
-		Vector3 actorWorldLocation = actor->GetRootComponent()->GetTransform().Location;
+		Vector3 actorWorldLocation = actor->GetRootComponent()->GetTransform().GetLocation();
 
 		float cameraDistance = 3.0f; // TODO:: Compute this by the actor mesh size (if present)
 
 		Vector3 newCameraLocation = actorWorldLocation + cameraDistance;
 
-		editorCamera->GetTransform().Location = newCameraLocation;
-		editorCamera->GetTransform().Rotation = Vector3(-35, 45, 0);
+		editorCamera->GetTransform().SetLocation(newCameraLocation);
+		editorCamera->GetTransform().SetRotation(-35, 45, 0);
 	}
 
 	void SceneHierarchyWindow::Update(double delta)

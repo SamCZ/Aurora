@@ -205,7 +205,7 @@ namespace Aurora
 					if (actor == m_EditorCameraActor)
 						continue;
 
-					const Vector3& location = actor->GetRootComponent()->GetTransform().Location;
+					const Vector3& location = actor->GetRootComponent()->GetTransform().GetLocation();
 					if (!m_EditorCamera->GetScreenCoordinatesFromWorld(location, screenPos))
 						continue;
 
@@ -289,32 +289,30 @@ namespace Aurora
 
 			if(auto* camera= m_EditorCameraActor->GetRootComponent())
 			{
-				camera->GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
-				camera->GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
-
-				camera->GetTransform().Rotation.x = glm::clamp(camera->GetTransform().Rotation.x, -90.0f, 90.0f);
-				camera->GetTransform().Rotation.y = fmod(camera->GetTransform().Rotation.y, 360.0f);
+				float yaw = ImGui::GetIO().MouseDelta.y * -0.1f;
+				float pitch = ImGui::GetIO().MouseDelta.x * -0.1f;
+				camera->GetTransform().AddRotation(yaw, pitch, 0.0f);
 
 				Matrix4 transform = camera->GetTransformationMatrix();
 
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
 				{
-					camera->GetTransform().Location -= Vector3(transform[2]) * (float)delta * m_FlySpeed;
+					camera->GetTransform().AddLocation(-Vector3(transform[2]) * (float)delta * m_FlySpeed);
 				}
 
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
 				{
-					camera->GetTransform().Location += Vector3(transform[2]) * (float)delta * m_FlySpeed;
+					camera->GetTransform().AddLocation(Vector3(transform[2]) * (float)delta * m_FlySpeed);
 				}
 
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
 				{
-					camera->GetTransform().Location -= Vector3(transform[0]) * (float)delta * m_FlySpeed;
+					camera->GetTransform().AddLocation(-Vector3(transform[0]) * (float)delta * m_FlySpeed);
 				}
 
 				if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
 				{
-					camera->GetTransform().Location += Vector3(transform[0]) * (float)delta * m_FlySpeed;
+					camera->GetTransform().AddLocation(Vector3(transform[0]) * (float)delta * m_FlySpeed);
 				}
 			}
 		}
