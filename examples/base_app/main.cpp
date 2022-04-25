@@ -46,7 +46,7 @@ public:
 
 	void Tick(double delta) override
 	{
-		GetRootComponent()->GetTransform().Rotation.y += delta * 10.0f;
+		GetRootComponent()->GetTransform().AddRotation(0, delta * 10.0f, 0);
 	}
 
 	~TestActor() override
