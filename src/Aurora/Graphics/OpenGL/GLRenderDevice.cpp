@@ -1707,7 +1707,18 @@ namespace Aurora
 
 	void GLRenderDevice::SetDepthStencilState(FDepthStencilState depthState)
 	{
-		if (m_LastDepthState.DepthEnable != depthState.DepthEnable || m_LastDepthState.DepthWriteMask != depthState.DepthWriteMask || m_LastDepthState.DepthFunc != depthState.DepthFunc)
+		if (depthState.DepthEnable)
+		{
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask((depthState.DepthWriteMask == EDepthWriteMask::All) ? GL_TRUE : GL_FALSE);
+			glDepthFunc(ConvertComparisonFunc(depthState.DepthFunc));
+		}
+		else
+		{
+			glDisable(GL_DEPTH_TEST);
+		}
+
+		/*if (m_LastDepthState.DepthEnable != depthState.DepthEnable || m_LastDepthState.DepthWriteMask != depthState.DepthWriteMask || m_LastDepthState.DepthFunc != depthState.DepthFunc)
 		{
 			if (depthState.DepthEnable)
 			{
@@ -1723,7 +1734,7 @@ namespace Aurora
 			m_LastDepthState.DepthEnable = depthState.DepthEnable;
 			m_LastDepthState.DepthWriteMask = depthState.DepthWriteMask;
 			m_LastDepthState.DepthFunc = depthState.DepthFunc;
-		}
+		}*/
 
 		if (m_LastDepthState.StencilEnable != depthState.StencilEnable)
 		{

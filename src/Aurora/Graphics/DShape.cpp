@@ -16,7 +16,7 @@ namespace Aurora
 	struct BaseShapeVertex
 	{
 		Vector3 Position;
-		uint32_t Color;
+		Vector3 Color;
 	};
 
 	Buffer_ptr g_LineBuffer = nullptr;
@@ -29,10 +29,10 @@ namespace Aurora
 		uint32_t lineVertexBufferSize = (sizeof(Vector3) * 2) * maxLines;
 		AU_LOG_INFO("Allocated ", FormatBytes(lineVertexBufferSize), " for debug line render.");
 
-		g_LineBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("DebugLinesVBuffer", lineVertexBufferSize, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw, true));
+		g_LineBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("DebugLinesVBuffer", lineVertexBufferSize, EBufferType::VertexBuffer, EBufferUsage::DynamicDraw));
 		g_LineInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
-			{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(BaseShapeVertex, Position), 0, sizeof(BaseShapeVertex), false, true },
-			{"COLOR", GraphicsFormat::R32_UINT, 0, offsetof(BaseShapeVertex, Color), 1, sizeof(BaseShapeVertex), false, true }
+			{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(BaseShapeVertex, Position), 0, sizeof(BaseShapeVertex), false, false },
+			{"COLOR", GraphicsFormat::RGB32_FLOAT, 0, offsetof(BaseShapeVertex, Color), 1, sizeof(BaseShapeVertex), false, false }
 		});
 
 		g_LineShader = GEngine->GetResourceManager()->LoadShader("DebugShaderBase", {
@@ -65,10 +65,10 @@ namespace Aurora
 			BaseShapeVertex* vertices = GEngine->GetRenderDevice()->MapBuffer<BaseShapeVertex>(g_LineBuffer, EBufferAccess::WriteOnly);
 
 			vertices->Position = currentShape.P0;
-			vertices->Color = currentShape.Color.rgba;
+			vertices->Color = currentShape.Color;
 			vertices++;
 			vertices->Position = currentShape.P1;
-			vertices->Color = currentShape.Color.rgba;
+			vertices->Color = currentShape.Color;
 			vertices++;
 
 			uint32_t renderLineCount = 1;
@@ -84,10 +84,10 @@ namespace Aurora
 						break;
 
 					vertices->Position = nextShape.P0;
-					vertices->Color = nextShape.Color.rgba;
+					vertices->Color = nextShape.Color;
 					vertices++;
 					vertices->Position = nextShape.P1;
-					vertices->Color = nextShape.Color.rgba;
+					vertices->Color = nextShape.Color;
 					vertices++;
 
 					renderLineCount++;
@@ -103,6 +103,7 @@ namespace Aurora
 
 			DrawArguments drawArguments;
 			drawArguments.VertexCount = renderLineCount * 2;
+
 			GEngine->GetRenderDevice()->Draw(drawState, {drawArguments});
 
 			lineDrawCount++;
