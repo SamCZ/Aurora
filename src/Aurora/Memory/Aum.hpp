@@ -45,7 +45,11 @@ namespace Aurora
 	private:
 		MemSize m_BlockSize;
 		std::vector<MemoryBlock> m_Memory;
+#ifdef DEBUG
+		std::unordered_map<uintptr_t, MemSize> m_MemorySizes;
+#else
 		robin_hood::unordered_map<uintptr_t, MemSize> m_MemorySizes;
+#endif
 	public:
 		explicit Aum(MemSize blockSize = 8388608); // 8MB Default block
 		Aum(MemSize objectSize, MemSize objectCount); // 8MB Default block
@@ -85,6 +89,8 @@ namespace Aurora
 			DeAlloc(mem);
 		}
 
+		bool CheckMemory(void* ptr) const;
+
 		[[nodiscard]] MemSize GetMemoryBlockCount() const
 		{
 			return m_Memory.size();
@@ -101,6 +107,6 @@ namespace Aurora
 	private:
 		MemoryBlock& AllocateMemoryBlock();
 		void DestroyMemory();
-		MemPtr AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator framentIt, MemSize size);
+		MemPtr AllocFromFragment(MemoryBlock& memoryBlock, const std::vector<MemoryFragment>::iterator& framentIt, MemSize size);
 	};
 }

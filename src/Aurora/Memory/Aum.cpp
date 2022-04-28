@@ -46,7 +46,7 @@ namespace Aurora
 		return m_Memory.emplace_back(memoryBlock);
 	}
 
-	MemPtr Aum::AllocFromFragment(MemoryBlock& memoryBlock, std::vector<MemoryFragment>::iterator fragmentIt, MemSize size)
+	MemPtr Aum::AllocFromFragment(MemoryBlock& memoryBlock, const std::vector<MemoryFragment>::iterator& fragmentIt, MemSize size)
 	{
 		MemoryFragment& fragment = *fragmentIt;
 
@@ -112,11 +112,10 @@ namespace Aurora
 			AU_LOG_FATAL("Cound not find size for pointer ", PointerToString(mem), " !");
 		}
 
-		m_MemorySizes.erase(it);
-
 		MemSize size = it->second;
 		MemPtr memPtrEnd = memPtrBegin + size;
 
+		m_MemorySizes.erase(it);
 		std::memset(memPtrBegin, 0, size);
 
 		for (MemoryBlock& memoryBlock : m_Memory)
@@ -135,5 +134,22 @@ namespace Aurora
 		}
 
 		AU_LOG_FATAL("Memory ", PointerToString(mem), " is not part of this allocator !");
+	}
+
+	bool Aum::CheckMemory(void* ptr) const
+	{
+		if(!ptr)
+			return false;
+
+		MemPtr memPtrBegin = reinterpret_cast<MemPtr>(ptr);
+
+		auto it = m_MemorySizes.find((uintptr_t)memPtrBegin);
+
+		if(it == m_MemorySizes.end())
+		{
+			return false;
+		}
+
+		return true;
 	}
 }

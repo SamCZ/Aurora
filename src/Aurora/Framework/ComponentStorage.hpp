@@ -132,6 +132,13 @@ namespace Aurora
 			}
 
 			VectorRemove<std::uintptr_t>(m_ComponentPointers[componentID], (std::uintptr_t)component);
+
+			if (not m_ComponentMemory[componentID]->CheckMemory(component))
+			{
+				//__debugbreak();
+				AU_LOG_FATAL("Memory corrupted!");
+			}
+
 			m_ComponentMemory[componentID]->DeAllocAndUnload<T>(component);
 		}
 

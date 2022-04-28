@@ -14,6 +14,12 @@ namespace Aurora
 		std::vector<Actor*> actors = m_Actors;
 		for(Actor* actor : actors)
 		{
+			if (not m_ActorMemory.CheckMemory(actor))
+			{
+				//__debugbreak();
+				AU_LOG_FATAL("Memory corrupted!");
+			}
+
 			DestroyActor(actor);
 		}
 	}

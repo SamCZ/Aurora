@@ -33,7 +33,7 @@ namespace Aurora
 			//m_Scene->UnregisterComponent(component);
 		}
 
-		VectorRemove<SceneComponent*>(m_Components, std::forward<SceneComponent*>(component));
+		VectorRemove<SceneComponent*>(m_Components, component);
 		GetComponentStorage().DestroyComponent(component);
 		component = nullptr;
 	}
