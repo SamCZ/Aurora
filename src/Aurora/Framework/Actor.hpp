@@ -65,7 +65,13 @@ namespace Aurora
 		{
 			std::vector<T*> components;
 
-			m_RootComponent->GetComponentsOfType<T>(components);
+			for (SceneComponent* component : m_Components)
+			{
+				if(component->HasType(T::TypeID()))
+				{
+					components.push_back(T::Cast(component));
+				}
+			}
 
 			return components;
 		}
@@ -73,14 +79,15 @@ namespace Aurora
 		template<class T, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
 		inline T* FindComponentOfType()
 		{
-			std::vector<T*> components = FindComponentsOfType<T>();
-
-			if (components.empty())
+			for (SceneComponent* component : m_Components)
 			{
-				return nullptr;
+				if(component->HasType(T::TypeID()))
+				{
+					return T::Cast(component);
+				}
 			}
 
-			return components[0];
+			return nullptr;
 		}
 
 		std::vector<SceneComponent*>::iterator begin() { return m_Components.begin(); }

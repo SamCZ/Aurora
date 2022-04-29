@@ -95,9 +95,9 @@ namespace Aurora
 		delete m_VgRender;
 		delete m_RmlUI;
 		delete m_ResourceManager;
-		delete m_RenderManager;
 		delete m_ViewPortManager;
 		GEngine->m_RenderDevice = nullptr; // Important here! It's for destroying left buffers in caches
+		delete m_RenderManager;
 		delete m_RenderDevice;
 		delete m_SwapChain;
 		delete m_Window;

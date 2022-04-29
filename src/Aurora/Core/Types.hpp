@@ -13,6 +13,11 @@ typedef int8_t int8;
 using Path = std::filesystem::path;
 using DataBlob = std::vector<uint8_t>;
 
+template <typename T, typename ... Args>
+constexpr std::shared_ptr<T> MakeShared(Args&& ...args)
+{
+	return std::make_shared<T>(std::forward<Args>(args)...);
+}
 
 #define BASE_OF(TypeName, BaseClass) typename std::enable_if<std::is_base_of<BaseClass, TypeName>::value>::type* = nullptr
 

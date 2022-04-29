@@ -48,7 +48,7 @@ namespace Aurora
 			aiVector3D vert = sourceMesh->mVertices[vertIdx];
 			aiVector3D norm = sourceMesh->mNormals[vertIdx];
 
-			vertex.Position = vec3_cast(vert);
+			vertex.Position = vec3_cast(vert) * importOptions.DefaultScale;
 			vertex.Normal = vec3_cast(norm);
 
 			if(sourceMesh->HasTextureCoords(0))

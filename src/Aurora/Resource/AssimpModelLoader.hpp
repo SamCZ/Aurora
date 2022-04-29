@@ -17,6 +17,7 @@ namespace Aurora
 		bool PreTransform = true;
 		bool KeepCPUData = false;
 		bool UploadToGPU = true;
+		float DefaultScale = 1.0f;
 	};
 
 	struct MeshImportedData

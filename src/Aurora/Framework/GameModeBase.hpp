@@ -19,8 +19,8 @@ namespace Aurora
 			}
 		}
 
-		virtual void BeginPlay() = 0;
-		virtual void BeginDestroy() = 0;
+		virtual void BeginPlay() {};
+		virtual void BeginDestroy() {};
 		virtual void Tick(double delta) {}
 		virtual void RenderVg() {}
 

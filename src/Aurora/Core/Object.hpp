@@ -27,6 +27,12 @@ namespace Aurora
 		[[nodiscard]] virtual const char* GetTypeName() const { return TypeName(); }
 		[[nodiscard]] virtual bool HasType(TTypeID type) const { return false; }
 
+		template<typename T>
+		bool IsA() const
+		{
+			return HasType(T::TypeID());
+		}
+
 		static ObjectBase* SafeCast(ObjectBase* ptr) { return ptr; }
 		static const ObjectBase* SafeCast(const ObjectBase* ptr) { return ptr; }
 		static ObjectBase* Cast(ObjectBase* ptr) { return ptr; }
