@@ -60,5 +60,6 @@ namespace Aurora
 		void DrawDirectionalLightComponentGui(ActorComponent* baseComponent);
 		void DrawPointLightComponentGui(ActorComponent* baseComponent);
 		void DrawSkyLightComponent(ActorComponent* baseComponent);
+		void DrawRigidBodyComponent(ActorComponent* baseComponent);
 	};
 }

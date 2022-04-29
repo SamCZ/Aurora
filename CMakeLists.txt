@@ -93,6 +93,9 @@ endif()
 target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui TracyClient assimp stb_utils)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
+target_link_libraries(Aurora PUBLIC BulletDynamics BulletCollision Bullet3Common LinearMath)
+target_include_directories(Aurora PUBLIC ${BULLET_PHYSICS_SOURCE_DIR}/src)
+
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

@@ -33,7 +33,6 @@
 
 #include <TracyOpenGL.hpp>
 
-#include "Physics/PhysicsWorld.hpp"
 #include "Editor/MainEditorPanel.hpp"
 #include "Aurora/Core/Timer.hpp"
 

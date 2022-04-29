@@ -8,19 +8,34 @@
 #include "SceneComponent.hpp"
 #include "Actor.hpp"
 
+#include <btBulletDynamicsCommon.h>
+
 namespace Aurora
 {
+	class BulletDebugDraw;
+	class btLayerOverlapFilterCallback;
+
 	class AU_API Scene
 	{
 	private:
 		Aum m_ActorMemory;
 		std::vector<Actor*> m_Actors;
 		ComponentStorage m_ComponentStorage;
+
+		btDefaultCollisionConfiguration* m_CollisionConfiguration;
+		btCollisionDispatcher* m_Dispatcher;
+		btDbvtBroadphase* m_Broadphase;
+		btSequentialImpulseConstraintSolver* m_Solver;
+		btDiscreteDynamicsWorld* m_DynamicsWorld;
+		BulletDebugDraw* m_DebugDraw;
+		btLayerOverlapFilterCallback* m_OverlapCallback;
 	public:
 		friend class Actor;
 
 		Scene();
 		~Scene();
+
+		btDynamicsWorld* GetDynamicsWorld() const { return m_DynamicsWorld; }
 
 		template<class T, class RootCmp = typename T::DefaultComponent_t, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
 		T* SpawnActor(const String& name, const Vector3& position, const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
@@ -79,5 +94,8 @@ namespace Aurora
 	public:
 		void FinishSpawningActor(Actor* actor);
 		void DestroyActor(Actor* actor);
+
+		void RegisterComponent(SceneComponent* component);
+		void UnRegisterComponent(SceneComponent* component);
 	};
 }

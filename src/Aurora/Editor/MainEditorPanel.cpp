@@ -9,6 +9,7 @@
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
+#include "Aurora/Framework/Physics/RigidBodyComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 #include "Aurora/Render/SceneRenderer.hpp"
@@ -115,7 +116,18 @@ namespace Aurora
 			GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({m_SelectedActor});
 
 		if(m_SelectedComponent)
-			GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({}, {m_SelectedComponent});
+		{
+			std::vector<MeshComponent*> meshComponents;
+			m_SelectedComponent->GetComponentsOfType(meshComponents);
+			if (meshComponents.empty())
+			{
+				GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({m_SelectedComponent->GetOwner()}, {});
+			}
+			else
+			{
+				GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({}, {m_SelectedComponent});
+			}
+		}
 	}
 
 	void MainEditorPanel::BeginDockSpace()
@@ -247,8 +259,10 @@ namespace Aurora
 			if (ImGui::BeginMenu("Graphics"))
 			{
 				if (sceneRenderer)
+				{
 					ImGui::Checkbox("Enable bloom", &sceneRenderer->GetBloomSettings().Enabled);
 					ImGui::Checkbox("Enable bloom compute", &sceneRenderer->GetBloomSettings().UseComputeShader);
+				}
 				ImGui::EndMenu();
 			}
 
@@ -277,6 +291,13 @@ namespace Aurora
 
 		if(m_SelectedActor)
 			m_SelectedActor->GetTransform().SetFromMatrix(matrix);
+
+		if (RigidBodyComponent* component = m_SelectedActor->FindComponentOfType<RigidBodyComponent>())
+		{
+			component->getWorldTransform(component->GetBody()->getWorldTransform());
+			component->GetBody()->setWorldTransform(component->GetBody()->getWorldTransform());
+			component->GetBody()->activate(true);
+		}
 
 		if(m_SelectedComponent)
 			m_SelectedComponent->GetTransform().SetFromMatrix(matrix);

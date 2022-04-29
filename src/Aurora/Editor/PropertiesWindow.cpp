@@ -8,6 +8,7 @@
 #include "Aurora/Framework/SkeletalMeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
+#include "Aurora/Framework/Physics/RigidBodyComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
 #include "MainEditorPanel.hpp"
@@ -28,6 +29,7 @@ namespace Aurora
 		AddComponentGuiMethod<DirectionalLightComponent>(&PropertiesWindow::DrawDirectionalLightComponentGui);
 		AddComponentGuiMethod<PointLightComponent>(&PropertiesWindow::DrawPointLightComponentGui);
 		AddComponentGuiMethod<SkyLightComponent>(&PropertiesWindow::DrawSkyLightComponent);
+		AddComponentGuiMethod<RigidBodyComponent>(&PropertiesWindow::DrawRigidBodyComponent);
 	}
 
 	void PropertiesWindow::DrawMeshComponentGui(ActorComponent* baseComponent)
@@ -162,6 +164,23 @@ namespace Aurora
 		{
 
 		}
+	}
+
+	void PropertiesWindow::DrawRigidBodyComponent(ActorComponent* baseComponent)
+	{
+		if(!ImGui::CollapsingHeader("RigidBodyComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		RigidBodyComponent* component = RigidBodyComponent::Cast(baseComponent);
+
+		float mass = component->GetMass();
+		if (ImGui::DragFloat("Mass", &mass, 0.01f))
+		{
+			component->SetMass(mass);
+		}
+
+		Vector3 localInertia = component->GetLocalInertia();
+		ImGui::Text("Local Inertia: %f %f %f", localInertia.x, localInertia.y, localInertia.z);
 	}
 
 	void PropertiesWindow::OnGui()

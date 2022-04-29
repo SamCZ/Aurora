@@ -28,3 +28,6 @@
 [submodule "stb"]
 	path = lib/stb/stb
 	url = git@github.com:nothings/stb.git
+[submodule "bullet3"]
+	path = lib/bullet3
+	url = git@github.com:SamCZ/bullet3.git

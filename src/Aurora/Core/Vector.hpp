@@ -10,6 +10,8 @@
 #pragma GCC diagnostic ignored "-Wvolatile"
 #endif
 
+#define GLM_FORCE_AVX2 1
+
 #include <glm/gtx/hash.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
@@ -20,6 +22,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/norm.hpp>
+
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btTransform.h>
 
 #ifndef _MSC_VER
 #pragma GCC diagnostic pop
@@ -49,6 +54,27 @@ typedef glm::mat4 Matrix4;
 typedef glm::mat3 Matrix3;
 
 typedef glm::quat Quaternion;
+
+Vector3 btToVec(const btVector3& btVec);
+
+inline btVector3 btFromVec3(const Vector3& vec)
+{
+	return { vec.x, vec.y, vec.z };
+}
+
+inline btTransform btFromMatrix(const Matrix4& matrix)
+{
+	btTransform transform;
+	transform.setFromOpenGLMatrix(glm::value_ptr(matrix));
+	return transform;
+}
+
+inline Matrix4 btToMatrix(const btTransform& transform)
+{
+	Matrix4 matrix;
+	transform.getOpenGLMatrix(glm::value_ptr(matrix));
+	return matrix;
+}
 
 namespace glm
 {

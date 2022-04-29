@@ -28,9 +28,9 @@ namespace Aurora
 
 		component->BeginDestroy();
 
-		if(m_RootComponent != component && m_Scene)
+		if(m_Scene)
 		{
-			//m_Scene->UnregisterComponent(component);
+			m_Scene->UnRegisterComponent(component);
 		}
 
 		VectorRemove<SceneComponent*>(m_Components, component);
@@ -45,7 +45,7 @@ namespace Aurora
 
 		if(m_Scene)
 		{
-			//m_Scene->RegisterComponent(component);
+			m_Scene->RegisterComponent(component);
 		}
 
 		m_Components.push_back(component);

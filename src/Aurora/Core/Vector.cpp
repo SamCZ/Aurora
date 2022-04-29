@@ -1,5 +1,10 @@
 #include "Vector.hpp"
 
+Vector3 btToVec(const btVector3& btVec)
+{
+	return { btVec.getX(), btVec.getY(), btVec.getZ() };
+}
+
 namespace glm
 {
 	glm::dvec3 SmoothDamp(const glm::dvec3& current, glm::dvec3 target, glm::dvec3& currentVelocity, double smoothTime, double maxSpeed, double deltaTime)

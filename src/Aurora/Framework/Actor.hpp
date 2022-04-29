@@ -3,8 +3,13 @@
 #include <Aurora/Core/Library.hpp>
 #include <Aurora/Core/String.hpp>
 #include <Aurora/Core/Object.hpp>
+#include <Aurora/Physics/CollisionMatrix.hpp>
 #include "SceneComponent.hpp"
 #include "ComponentStorage.hpp"
+#include "Scene.hpp"
+
+
+#include <btBulletDynamicsCommon.h>
 
 #define DEFAULT_COMPONENT(name) typedef name DefaultComponent_t
 
@@ -24,6 +29,8 @@ namespace Aurora
 	public:
 		CLASS_OBJ(Actor, ObjectBase);
 		DEFAULT_COMPONENT(SceneComponent);
+
+		Layer CollisionLayer;
 	public:
 		Actor();
 		~Actor() override;
