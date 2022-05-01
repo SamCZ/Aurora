@@ -22,6 +22,7 @@ namespace Aurora
 
 		bool HasOSWindowBorder;
 		bool Maximized;
+		bool FullScreen = false;
 
 		String Title;
 	};
