@@ -104,7 +104,7 @@ namespace Aurora
 	void GLContextState::SetShader(GLShaderProgram* shader)
 	{
 		GLuint GLProgHandle = 0;
-		if (UpdateBoundObject(m_LastShaderHandle, shader, GLProgHandle))
+		if (UpdateBoundObject(m_LastShaderHandle, shader, GLProgHandle) || true)
 		{
 			glUseProgram(GLProgHandle);
 			CHECK_GL_ERROR("Failed to set GL program");

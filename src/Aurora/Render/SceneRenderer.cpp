@@ -46,31 +46,31 @@ namespace Aurora
 	void SceneRenderer::LoadShaders()
 	{
 		m_CompositeShader = GEngine->GetResourceManager()->LoadShader("Composite", {
-			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/PBR/Composite.frag"}
 		});
 
 		m_HDRCompositeShader = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
-			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/HDR.frag"}
 		}, ShaderMacros{
 			{"USE_OUTLINE", "1"}
 		});
 
 		m_HDRCompositeShaderNoOutline = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
-			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/HDR.frag"}
 		});
 
 		m_BloomShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/PostProcess/bloom.glsl");
 
 		m_BloomShaderSS = GEngine->GetResourceManager()->LoadShader("BloomScreenSpace", {
-			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/bloom.frag"}
 		});
 
 		m_OutlineShader = GEngine->GetResourceManager()->LoadShader("HDRComposite", {
-			{EShaderType::Vertex, "Assets/Shaders/fs_quad.vss"},
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Outline.frag"}
 		});
 	}
@@ -367,7 +367,7 @@ namespace Aurora
 				state.BindUniformBuffer("CompositeDefaults", m_CompositeDefaultsBuffer);
 
 				state.PrimitiveType = EPrimitiveType::TriangleStrip;
-				state.RasterState.CullMode = ECullMode::Front;
+				state.RasterState.CullMode = ECullMode::Back;
 				state.DepthStencilState.DepthEnable = false;
 
 				state.ClearColorTarget = false;
@@ -493,7 +493,7 @@ namespace Aurora
 						state.BindUniformBuffer("OutlineGPUDesc", m_OutlineDescBuffer);
 
 						state.PrimitiveType = EPrimitiveType::TriangleStrip;
-						state.RasterState.CullMode = ECullMode::Front;
+						state.RasterState.CullMode = ECullMode::Back;
 						state.DepthStencilState.DepthEnable = false;
 
 						state.ClearColorTarget = firstOutlineIteration;
@@ -531,7 +531,7 @@ namespace Aurora
 				state.BindSampler("BloomTexture", Samplers::ClampClampLinearLinear);
 
 				state.PrimitiveType = EPrimitiveType::TriangleStrip;
-				state.RasterState.CullMode = ECullMode::Front;
+				state.RasterState.CullMode = ECullMode::Back;
 				state.DepthStencilState.DepthEnable = false;
 
 				state.ClearColorTarget = false;
@@ -596,10 +596,6 @@ namespace Aurora
 				GEngine->GetRenderDevice()->BindShaderInputs(drawCallState, true);
 				updateInputLayout = false;
 			}
-
-
-			drawCallState.RasterState.CullMode = ECullMode::Front;
-			GEngine->GetRenderDevice()->SetRasterState(drawCallState.RasterState);
 
 			// Write instances
 			GEngine->GetRenderDevice()->WriteBuffer(m_InstancesBuffer, modelContext.Instances.data(), modelContext.Instances.size() * sizeof(Matrix4), 0);

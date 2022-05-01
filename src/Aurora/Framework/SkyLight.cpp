@@ -21,7 +21,8 @@ namespace Aurora
 		}, true);
 
 		Material_ptr material = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/SkyBox.matd")->CreateInstance();
-		//material->RasterState().CullMode = ECullMode::None;
+		material->RasterState(Pass::Ambient).CullMode = ECullMode::Back;
+		material->RasterState(Pass::Depth).CullMode = ECullMode::Back;
 		material->SetSortType(RenderSortType::Sky);
 		material->SetMacro("SKY_MAPPING", "1");
 

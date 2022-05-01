@@ -24,9 +24,9 @@ namespace Aurora
 		std::string Name;
 		GraphicsFormat Format;
 		uint32_t BufferIndex;
-		uint32_t Offset;
+		size_t Offset;
 		uint32_t SemanticIndex;
-		uint32_t Stride;
+		size_t Stride;
 		bool IsInstanced;
 		bool Normalized;
 	};

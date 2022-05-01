@@ -1572,7 +1572,7 @@ namespace Aurora
 	{
 		// FIXME: This do not works if some gl call from ImGui set some state, find a fix here!
 
-		if (m_LastRasterState.FillMode != rasterState.FillMode)
+		if (m_LastRasterState.FillMode != rasterState.FillMode || true)
 		{
 			switch (rasterState.FillMode)
 			{
@@ -1611,7 +1611,7 @@ namespace Aurora
 			m_LastRasterState.CullMode = rasterState.CullMode;
 		}
 
-		if (m_LastRasterState.FrontCounterClockwise != rasterState.FrontCounterClockwise)
+		if (m_LastRasterState.FrontCounterClockwise != rasterState.FrontCounterClockwise || true)
 		{
 			glFrontFace(rasterState.FrontCounterClockwise ? GL_CCW : GL_CW);
 			m_LastRasterState.FrontCounterClockwise = rasterState.FrontCounterClockwise;

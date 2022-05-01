@@ -118,7 +118,7 @@ namespace Aurora
 			auto nanoTime = (endTime - m_StartTime).count();
 			auto microTime = nanoTime / 1000;
 			auto miliTime = microTime / 1000;
-			AU_LOG_INFO("Scope ", m_Name, " took ", miliTime, "ms ", microTime, "mc");
+			AU_LOG_INFO("Scope ", m_Name, " took ", miliTime, "ms ", microTime, "us");
 		}
 	};
 }

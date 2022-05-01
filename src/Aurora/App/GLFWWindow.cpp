@@ -251,7 +251,7 @@ namespace Aurora
 			glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 		}
 
-		if(windowDefinition.Maximized) {
+		if(windowDefinition.Maximized && !windowDefinition.FullScreen) {
 			glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 		}
 
@@ -265,8 +265,16 @@ namespace Aurora
 		GLFWmonitor* primary = glfwGetPrimaryMonitor();
 		const GLFWvidmode* vidMode = glfwGetVideoMode(primary);
 
-		SetSize(windowDefinition.Width, windowDefinition.Height);
-		m_WindowHandle = glfwCreateWindow(GetSize().x, GetSize().y, windowDefinition.Title.c_str(), nullptr, nullptr);
+		if (windowDefinition.FullScreen)
+		{
+			SetSize(vidMode->width, vidMode->height);
+		}
+		else
+		{
+			SetSize(windowDefinition.Width, windowDefinition.Height);
+		}
+
+		m_WindowHandle = glfwCreateWindow(GetSize().x, GetSize().y, windowDefinition.Title.c_str(), windowDefinition.FullScreen ? primary : nullptr, nullptr);
 
 		int width, height;
 		glfwGetWindowSize(m_WindowHandle, &width, &height);
@@ -281,9 +289,9 @@ namespace Aurora
 
 		if(parentWindow != nullptr && !windowDefinition.Maximized) {
 			// TODO: Center relative to parent
-		} else if(!windowDefinition.Maximized) {
-			int x = vidMode->width / 2 - windowDefinition.Width / 2;
-			int y = vidMode->height / 2 - windowDefinition.Height / 2;
+		} else if(!windowDefinition.Maximized && !windowDefinition.FullScreen) {
+			int x = vidMode->width / 2 - GetWidth() / 2;
+			int y = vidMode->height / 2 - GetHeight() / 2;
 			glfwSetWindowPos(m_WindowHandle, x, y);
 		}
 
@@ -344,6 +352,8 @@ namespace Aurora
 		glfwSetDropCallback(m_WindowHandle, GLFWWindow::OnFileDropListener);
 
 		glDisable(GL_FRAMEBUFFER_SRGB);
+
+		Focus();
 	}
 
 	void GLFWWindow::Show()

@@ -360,6 +360,19 @@ namespace Aurora
 			}
 
 			{
+				CPU_DEBUG_SCOPE("Viewport Clear");
+				GPU_DEBUG_SCOPE("Viewport Clear");
+
+				RenderViewPort* rwp = m_ViewPortManager->Get();
+
+				DrawCallState drawCallState;
+				drawCallState.BindTarget(0, rwp->Target);
+				drawCallState.ViewPort = rwp->ViewPort;
+				m_RenderDevice->BindRenderTargets(drawCallState);
+				m_RenderDevice->ClearRenderTargets(drawCallState);
+			}
+
+			{
 				CPU_DEBUG_SCOPE("Game render");
 				GPU_DEBUG_SCOPE("Game render");
 				//m_RenderDevice->ClearTextureUInt(m_RenderViewPort->Target, 0);
@@ -376,13 +389,19 @@ namespace Aurora
 
 				// This fixed fonts not rendering
 				glBindSampler(0, 0);
+				glBindSampler(1, 0);
 
 				RenderViewPort* rwp = m_ViewPortManager->Get();
 
 				DrawCallState drawCallState;
 				drawCallState.BindTarget(0, rwp->Target);
 				drawCallState.ViewPort = rwp->ViewPort;
+				drawCallState.ClearColorTarget = true;
+				drawCallState.RasterState.CullMode = ECullMode::None;
+				drawCallState.DepthStencilState.DepthEnable = false;
 				m_RenderDevice->BindRenderTargets(drawCallState);
+				m_RenderDevice->SetRasterState(drawCallState.RasterState);
+				m_RenderDevice->SetDepthStencilState(drawCallState.DepthStencilState);
 
 				m_VgRender->Begin((Vector2i)rwp->ViewPort, 1.0f); // TODO: Fix hdpi devices
 				m_AppContext->RenderVg();
@@ -396,13 +415,16 @@ namespace Aurora
 					}
 				}
 
-				/*{
+				{
 					std::stringstream ss;
 					ss << "FPS: " << FPS;
-					m_VgRender->DrawString(ss.str(), {5, 55}, Color::black(), 12);
+
+					String text = ss.str();
+					float textWidth = m_VgRender->GetTextSize(text, 12, "default", nullptr);
+					m_VgRender->DrawString(text, {rwp->ViewPort.Width - textWidth - 5, 5}, Color::black(), 12);
 				}
 
-				{
+				/*{
 
 
 					const FrameRenderStatistics& renderStatistics = m_RenderDevice->GetFrameRenderStatistics();
