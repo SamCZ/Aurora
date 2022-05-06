@@ -140,7 +140,7 @@ namespace Aurora
 		GLuint m_nVAOEmpty;
 		GLuint m_LastVao;
 		FrameBuffer_ptr m_CurrentFrameBuffer = nullptr;
-		std::vector<std::pair<FrameBufferKey, FrameBuffer_ptr>> m_CachedFrameBuffers;
+		std::map<FrameBufferKey, FrameBuffer_ptr> m_CachedFrameBuffers;
 		std::map<VaoKey, GLuint> m_CachedVaos;
 
 		GLContextState m_ContextState;

@@ -1413,12 +1413,11 @@ namespace Aurora
 			state.RenderTargets, state.DepthTarget, state.DepthIndex, state.DepthMipSlice
 		};
 
-		for (auto& fbo : m_CachedFrameBuffers)
+		auto it = m_CachedFrameBuffers.find(key);
+
+		if (it != m_CachedFrameBuffers.end())
 		{
-			if (fbo.first.compare(key) == 0)
-			{
-				return fbo.second;
-			}
+			return it->second;
 		}
 
 		auto framebuffer = std::make_shared<FrameBuffer>();
@@ -1498,6 +1497,7 @@ namespace Aurora
 
 		CHECK_GL_ERROR();
 
+		AU_LOG_INFO("New FB(", framebuffer->Handle, "): ", fbName);
 		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
 
 		uint32_t status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -1506,23 +1506,27 @@ namespace Aurora
 			AU_LOG_ERROR("Incomplete framebuffer!");
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		m_CachedFrameBuffers.push_back(std::make_pair(key, framebuffer));
+		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFrameBuffer != nullptr ? m_CurrentFrameBuffer->Handle : 0);
+
+		m_CachedFrameBuffers[key] = framebuffer;
 
 		return framebuffer;
 	}
 
 	void GLRenderDevice::NotifyTextureDestroy(GLTexture* texture)
 	{
-		for (size_t i = m_CachedFrameBuffers.size(); i --> 0;)
+		std::erase_if(m_CachedFrameBuffers, [this, texture](auto& kv) -> bool
 		{
-			const FrameBuffer_ptr& fb = m_CachedFrameBuffers[i].second;
+			const FrameBuffer_ptr& fb = kv.second;
 
 			if (fb->DepthTarget == texture)
 			{
-				m_CachedFrameBuffers.erase(std::find(m_CachedFrameBuffers.begin(), m_CachedFrameBuffers.end(), m_CachedFrameBuffers[i]));
-				break;
+				if (m_CurrentFrameBuffer == fb) {
+					m_CurrentFrameBuffer = nullptr;
+				}
+
+				return true;
 			}
 
 			for (const auto& rt : fb->RenderTargets)
@@ -1535,10 +1539,11 @@ namespace Aurora
 					m_CurrentFrameBuffer = nullptr;
 				}
 
-				m_CachedFrameBuffers.erase(std::find(m_CachedFrameBuffers.begin(), m_CachedFrameBuffers.end(), m_CachedFrameBuffers[i]));
-				break;
+				return true;
 			}
-		}
+
+			return false;
+		});
 	}
 
 	void GLRenderDevice::NotifyBufferDestroy(class GLBuffer* buffer)
