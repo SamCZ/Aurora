@@ -10,7 +10,6 @@ namespace Aurora
 	class ISystemWindow;
 	class RmlUI;
 	class VgRender;
-	class PhysicsWorld;
 	class ViewPortManager;
 	class AppContext;
 
@@ -30,7 +29,6 @@ namespace Aurora
 		Input::IManager* m_InputManager = nullptr;
 		RmlUI* m_RmlUI = nullptr;
 		VgRender* m_VgRender = nullptr;
-		PhysicsWorld* m_PhysicsWorld = nullptr;
 		ViewPortManager* m_ViewPortManager = nullptr;
 		AppContext* m_AppContext = nullptr;
 	public:
@@ -41,7 +39,6 @@ namespace Aurora
 		[[nodiscard]] inline Input::IManager* GetInputManager() const { return m_InputManager; }
 		[[nodiscard]] inline RmlUI* GetRmlUI() const { return m_RmlUI; }
 		[[nodiscard]] inline VgRender* GetVgRender() const { return m_VgRender; }
-		[[nodiscard]] inline PhysicsWorld* GetPhysicsWorld() const { return m_PhysicsWorld; }
 		[[nodiscard]] inline ViewPortManager* GetViewPortManager() const { return m_ViewPortManager; }
 		[[nodiscard]] inline AppContext* GetAppContext() const { return m_AppContext; }
 	};

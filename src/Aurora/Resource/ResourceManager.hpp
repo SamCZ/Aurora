@@ -93,8 +93,8 @@ namespace Aurora
 		[[nodiscard]] bool GetRealPath(const Path& path, Path& path_out) const;
 		String LoadFileToString(const Path& path, bool* isFromAssetPackage = nullptr) const;
 
-		String ReadShaderSource(const Path& path, std::vector<Path>& alreadyIncluded) const;
-		String ReadShaderSource(const Path& path) const
+		[[nodiscard]] String ReadShaderSource(const Path& path, std::vector<Path>& alreadyIncluded) const;
+		[[nodiscard]] String ReadShaderSource(const Path& path) const
 		{
 			std::vector<Path> empty;
 			return ReadShaderSource(path, empty);

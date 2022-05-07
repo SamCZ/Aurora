@@ -33,7 +33,6 @@
 
 #include <TracyOpenGL.hpp>
 
-#include "Physics/PhysicsWorld.hpp"
 #include "Editor/MainEditorPanel.hpp"
 #include "Aurora/Core/Timer.hpp"
 
@@ -75,9 +74,6 @@ namespace Aurora
 		m_VgRender(nullptr),
 		m_EditorPanel(nullptr),
 		m_RenderViewPort(nullptr)
-#ifdef NEWTON
-        ,m_PhysicsWorld(nullptr)
-#endif
 	{
 		Logger::AddSink<std_sink>();
 		Logger::AddSink<file_sink>("latest-log.txt");
@@ -89,9 +85,6 @@ namespace Aurora
 		delete Aurora::AppContext::m_GameMode; // Needs to be deleted here because of destroy order
 		delete m_AppContext;
 		delete m_EditorPanel;
-#ifdef NEWTON
-		delete m_PhysicsWorld;
-#endif
 		delete m_VgRender;
 		delete m_RmlUI;
 		delete m_ResourceManager;
@@ -207,11 +200,6 @@ namespace Aurora
 		GEngine->m_VgRender = m_VgRender;
 		m_VgRender->LoadFont("default", "Assets/Fonts/LatoLatin-Bold.ttf");
 
-#ifdef NEWTON
-		// Init Physics world
-		m_PhysicsWorld = new PhysicsWorld();
-		g_Context->m_PhysicsWorld = m_PhysicsWorld;
-#endif
 
 		m_ViewPortManager = new ViewPortManager();
 		GEngine->m_ViewPortManager = m_ViewPortManager;
@@ -323,13 +311,6 @@ namespace Aurora
 					item.second->ReloadShader();
 				}
 			}
-
-#ifdef NEWTON
-			{
-				CPU_DEBUG_SCOPE("Physics update");
-				m_PhysicsWorld->Update(delta);
-			}
-#endif
 
 			{
 				bool updateScene = true;

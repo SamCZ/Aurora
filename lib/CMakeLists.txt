@@ -95,7 +95,7 @@ endif()
 # RmlUI
 # UI render library
 #------------------------------
-if(NOT TARGET tracy)
+if(NOT TARGET TracyClient)
     if(AU_CPU_PROFILE)
         set(TRACY_ENABLE ON)
     else()

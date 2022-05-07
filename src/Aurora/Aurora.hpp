@@ -29,9 +29,6 @@ namespace Aurora
 		Input::IManager* m_InputManager;
 		RmlUI* m_RmlUI;
 		VgRender* m_VgRender;
-#ifdef NEWTON
-		PhysicsWorld* m_PhysicsWorld;
-#endif
 		ViewPortManager* m_ViewPortManager;
 
 		AppContext* m_AppContext;

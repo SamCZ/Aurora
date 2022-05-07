@@ -1,1 +1,2 @@
 add_subdirectory(base_app)
+add_subdirectory(physics)
