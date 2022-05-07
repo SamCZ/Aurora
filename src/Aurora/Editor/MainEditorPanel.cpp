@@ -114,8 +114,10 @@ namespace Aurora
 		if (m_SelectedActor)
 			GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({m_SelectedActor});
 
-		if(m_SelectedComponent)
-			GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({}, {m_SelectedComponent});
+		if (SceneComponent* selectedSceneComponent = SceneComponent::SafeCast(m_SelectedComponent))
+		{
+			GEngine->GetAppContext()->GetSceneRenderer()->GetOutlineContext().AddDefaultSet({}, {selectedSceneComponent});
+		}
 	}
 
 	void MainEditorPanel::BeginDockSpace()
@@ -269,10 +271,17 @@ namespace Aurora
 			return false;
 
 		if(m_SelectedActor)
+		{
 			matrix = m_SelectedActor->GetTransform().GetTransform();
-
-		if(m_SelectedComponent)
-			matrix = m_SelectedComponent->GetTransform().GetTransform();
+		}
+		else if(SceneComponent* sceneComponent = SceneComponent::SafeCast(m_SelectedComponent))
+		{
+			matrix = sceneComponent->GetTransform().GetTransform();
+		}
+		else
+		{
+			return false;
+		}
 
 		return true;
 	}
@@ -283,10 +292,17 @@ namespace Aurora
 			return false;
 
 		if(m_SelectedActor)
+		{
 			m_SelectedActor->GetTransform().SetFromMatrix(matrix);
-
-		if(m_SelectedComponent)
-			m_SelectedComponent->GetTransform().SetFromMatrix(matrix);
+		}
+		else if(SceneComponent* sceneComponent = SceneComponent::SafeCast(m_SelectedComponent))
+		{
+			sceneComponent->GetTransform().SetFromMatrix(matrix);
+		}
+		else
+		{
+			return false;
+		}
 
 		return true;
 	}

@@ -9,10 +9,10 @@ namespace Aurora
 	{
 	private:
 		Transform m_Transform;
-		SceneComponent* m_Parent;
-		std::vector<SceneComponent*> m_Components;
+		std::vector<ActorComponent*> m_Components;
 	public:
 		friend class Actor;
+		friend class ActorComponent;
 
 		CLASS_OBJ(SceneComponent, ActorComponent);
 
@@ -32,10 +32,7 @@ namespace Aurora
 		[[nodiscard]] Vector3 GetUpVector() const { return GetTransformationMatrix()[1]; }
 		[[nodiscard]] Vector3 GetLeftVector() const { return GetTransformationMatrix()[0]; }
 
-		bool AttachToComponent(SceneComponent* InParent);
-		void DetachFromComponent();
-
-		[[nodiscard]] const std::vector<SceneComponent*>& GetComponents() const { return m_Components; }
+		[[nodiscard]] const std::vector<ActorComponent*>& GetComponents() const { return m_Components; }
 
 		template<typename T>
 		void GetComponentsOfType(std::vector<T*>& components)
@@ -45,14 +42,13 @@ namespace Aurora
 				components.push_back(T::Cast(this));
 			}
 
-			for(SceneComponent* component : m_Components)
+			for(ActorComponent* component : m_Components)
 			{
-				component->GetComponentsOfType<T>(components);
+				if (SceneComponent* sceneComponent = SceneComponent::SafeCast(component))
+				{
+					sceneComponent->GetComponentsOfType<T>(components);
+				}
 			}
 		}
-
-		SceneComponent* GetParent() const { return m_Parent; }
-		[[nodiscard]] bool HasParent() const { return m_Parent != nullptr;}
-		[[nodiscard]] bool IsParentActive() const;
 	};
 }

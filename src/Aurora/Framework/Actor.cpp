@@ -19,7 +19,7 @@ namespace Aurora
 		}
 	}
 
-	void Actor::DestroyComponent(SceneComponent*& component)
+	void Actor::DestroyComponent(ActorComponent*& component)
 	{
 		if(!component)
 		{
@@ -33,12 +33,12 @@ namespace Aurora
 			//m_Scene->UnregisterComponent(component);
 		}
 
-		VectorRemove<SceneComponent*>(m_Components, component);
+		VectorRemove<ActorComponent*>(m_Components, component);
 		GetComponentStorage().DestroyComponent(component);
 		component = nullptr;
 	}
 
-	void Actor::InitializeComponent(SceneComponent* component)
+	void Actor::InitializeComponent(ActorComponent* component)
 	{
 		component->m_Scene = this->m_Scene;
 		component->m_Owner = this;

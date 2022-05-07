@@ -8,6 +8,8 @@
 #include "Aurora/Framework/SkeletalMeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
+#include "Aurora/Framework/Physics/RigidBodyComponent.hpp"
+#include "Aurora/Framework/Physics/ColliderComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
 #include "MainEditorPanel.hpp"
@@ -28,6 +30,9 @@ namespace Aurora
 		AddComponentGuiMethod<DirectionalLightComponent>(&PropertiesWindow::DrawDirectionalLightComponentGui);
 		AddComponentGuiMethod<PointLightComponent>(&PropertiesWindow::DrawPointLightComponentGui);
 		AddComponentGuiMethod<SkyLightComponent>(&PropertiesWindow::DrawSkyLightComponent);
+		AddComponentGuiMethod<CameraComponent>(&PropertiesWindow::DrawCameraComponent);
+		AddComponentGuiMethod<RigidBodyComponent>(&PropertiesWindow::DrawRigidBodyComponent);
+		AddComponentGuiMethod<ColliderComponent>(&PropertiesWindow::DrawColliderComponent);
 	}
 
 	void PropertiesWindow::DrawMeshComponentGui(ActorComponent* baseComponent)
@@ -164,21 +169,51 @@ namespace Aurora
 		}
 	}
 
+	void PropertiesWindow::DrawCameraComponent(ActorComponent* baseComponent)
+	{
+		if(!ImGui::CollapsingHeader("CameraComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		CameraComponent* component = CameraComponent::Cast(baseComponent);
+	}
+
+	void PropertiesWindow::DrawRigidBodyComponent(ActorComponent* baseComponent)
+	{
+		if(!ImGui::CollapsingHeader("RigidBodyComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		RigidBodyComponent* component = RigidBodyComponent::Cast(baseComponent);
+
+
+	}
+
+	void PropertiesWindow::DrawColliderComponent(ActorComponent* baseComponent)
+	{
+		if(!ImGui::CollapsingHeader("ColliderComponent", ImGuiTreeNodeFlags_DefaultOpen))
+			return;
+
+		ColliderComponent* component = ColliderComponent::Cast(baseComponent);
+
+
+	}
+
 	void PropertiesWindow::OnGui()
 	{
 		CPU_DEBUG_SCOPE("PropertiesWindow");
 
-		SceneComponent* root;
+		ActorComponent* root;
 
 		Actor* selectedActor = m_MainPanel->GetSelectedActor();
 		if (selectedActor)
 		{
 			root = selectedActor->GetRootComponent();
 			std::string name = selectedActor->GetName();
+			ImGui::Indent();
 			if (ImGui::InputTextLabel("Name", name))
 			{
 				selectedActor->SetName(name);
 			}
+			ImGui::Unindent();
 		}
 		else
 		{
@@ -188,54 +223,70 @@ namespace Aurora
 		if (root)
 		{
 			ImGui::Separator();
-			bool transformOpened = ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen);
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+
+			if (SceneComponent* sceneComponent = SceneComponent::SafeCast(root))
 			{
-				ImGui::OpenPopup("ComponentContextPopup");
+				bool transformOpened = ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen);
+				if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+				{
+					ImGui::OpenPopup("ComponentContextPopup");
+				}
+
+				if (ImGui::BeginPopup("ComponentContextPopup"))
+				{
+					if (ImGui::Button("Copy"))
+					{
+						m_TransformToCopy = sceneComponent->GetTransform();
+						m_IsTransformBeingCopied = true;
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::BeginDisabled(!m_IsTransformBeingCopied);
+					if (ImGui::Button("Paste"))
+					{
+						m_IsTransformBeingCopied = false;
+						sceneComponent->GetTransform() = m_TransformToCopy;
+						ImGui::CloseCurrentPopup();
+					}
+					ImGui::EndDisabled();
+					ImGui::EndPopup();
+				}
+
+				if (transformOpened)
+				{
+					ImGui::Indent();
+
+					Vector3 location = sceneComponent->GetTransform().GetLocation();
+					if (ImGui::DrawVec3Control("Location", location))
+					{
+						sceneComponent->GetTransform().SetLocation(location);
+					}
+
+					Vector3 eulerAngles = sceneComponent->GetTransform().GetRotation();
+					if (ImGui::DrawVec3Control("Rotation", eulerAngles))
+					{
+						sceneComponent->GetTransform().SetRotation(eulerAngles);
+					}
+
+					Vector3 scale = sceneComponent->GetTransform().GetScale();
+					if (ImGui::DrawVec3Control("Scale", scale))
+					{
+						sceneComponent->GetTransform().SetScale(scale);
+					}
+
+					ImGui::Unindent();
+				}
 			}
 
-			if (ImGui::BeginPopup("ComponentContextPopup"))
+			InvokeComponentGui(std::forward<ActorComponent*>(root));
+
+			if (SceneComponent* sceneComponent = SceneComponent::SafeCast(root))
 			{
-				if (ImGui::Button("Copy"))
+				for (ActorComponent* childActor : sceneComponent->GetComponents())
 				{
-					m_TransformToCopy = root->GetTransform();
-					m_IsTransformBeingCopied = true;
-					ImGui::CloseCurrentPopup();
-				}
-
-				ImGui::BeginDisabled(!m_IsTransformBeingCopied);
-				if (ImGui::Button("Paste"))
-				{
-					m_IsTransformBeingCopied = false;
-					root->GetTransform() = m_TransformToCopy;
-					ImGui::CloseCurrentPopup();
-				}
-				ImGui::EndDisabled();
-				ImGui::EndPopup();
-			}
-
-			if (transformOpened)
-			{
-				Vector3 location = root->GetTransform().GetLocation();
-				if (ImGui::DrawVec3Control("Location", location))
-				{
-					root->GetTransform().SetLocation(location);
-				}
-
-				Vector3 eulerAngles = root->GetTransform().GetRotation();
-				if (ImGui::DrawVec3Control("Rotation", eulerAngles))
-				{
-					root->GetTransform().SetRotation(eulerAngles);
-				}
-
-				Vector3 scale = root->GetTransform().GetScale();
-				if (ImGui::DrawVec3Control("Scale", scale))
-				{
-					root->GetTransform().SetScale(scale);
+					InvokeComponentGui(std::forward<ActorComponent*>(childActor));
 				}
 			}
-
-			InvokeComponentGui(root);
 		}
 	}
 }

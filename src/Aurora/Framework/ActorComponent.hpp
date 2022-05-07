@@ -5,8 +5,10 @@
 
 namespace Aurora
 {
-	class AU_API Actor;
-	class AU_API Scene;
+	class Actor;
+	class Scene;
+
+	class SceneComponent;
 
 	class AU_API ActorComponent : public ObjectBase
 	{
@@ -15,11 +17,13 @@ namespace Aurora
 		bool m_IsActive;
 		Actor* m_Owner;
 		Scene* m_Scene;
+	protected:
+		SceneComponent* m_Parent;
 	public:
 		friend class Actor;
 		CLASS_OBJ(ActorComponent, ObjectBase);
 	public:
-		ActorComponent() : ObjectBase(), m_IsActive(false), m_Owner(nullptr), m_Scene(nullptr) { }
+		ActorComponent() : ObjectBase(), m_IsActive(false), m_Owner(nullptr), m_Scene(nullptr), m_Parent(nullptr) { }
 		~ActorComponent() override = default;
 
 		virtual inline void SetActive(bool newActive) { m_IsActive = newActive; }
@@ -32,5 +36,12 @@ namespace Aurora
 
 		void SetName(const String& name) { m_Name = name; }
 		[[nodiscard]] const String& GetName() const { return m_Name; }
+
+		SceneComponent* GetParent() const { return m_Parent; }
+		[[nodiscard]] bool HasParent() const { return m_Parent != nullptr;}
+		[[nodiscard]] bool IsParentActive() const;
+
+		bool AttachToComponent(SceneComponent* InParent);
+		void DetachFromComponent();
 	};
 }

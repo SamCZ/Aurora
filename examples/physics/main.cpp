@@ -28,6 +28,8 @@
 #include <Aurora/Render/SceneRenderer.hpp>
 
 #include <Aurora/Physics/PhysicsWorld.hpp>
+#include <Aurora/Framework/Physics/RigidBodyComponent.hpp>
+#include <Aurora/Framework/Physics/ColliderComponent.hpp>
 
 using namespace Aurora;
 
@@ -170,9 +172,10 @@ class BaseAppContext : public AppContext
 
 		for (int i = 0; i < 10; ++i)
 		{
-			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box", Vector3(i * 2.2f, 0, -20), {}, Vector3(0.01f));
+			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box", Vector3(i * 2.2f - 5, 10, 0), {}, Vector3(0.01f));
 
-			
+			RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
+			ColliderComponent* collider = testActor2->AddComponent<ColliderComponent>();
 
 			if(importedData2)
 			{
@@ -193,7 +196,7 @@ class BaseAppContext : public AppContext
 
 	void Update(double delta) override
 	{
-
+		m_PhysicsWorld->Update(delta);
 	}
 
 	void Render() override

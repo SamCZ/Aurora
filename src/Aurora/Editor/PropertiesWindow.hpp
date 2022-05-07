@@ -52,7 +52,7 @@ namespace Aurora
 				return;
 			}
 
-			m_ComponentGUIMethods[typeId].Invoke(component);
+			m_ComponentGUIMethods[typeId].Invoke(std::forward<ComponentType*>(component));
 		}
 
 		void DrawMeshComponentGui(ActorComponent* baseComponent);
@@ -60,5 +60,8 @@ namespace Aurora
 		void DrawDirectionalLightComponentGui(ActorComponent* baseComponent);
 		void DrawPointLightComponentGui(ActorComponent* baseComponent);
 		void DrawSkyLightComponent(ActorComponent* baseComponent);
+		void DrawRigidBodyComponent(ActorComponent* baseComponent);
+		void DrawColliderComponent(ActorComponent* baseComponent);
+		void DrawCameraComponent(ActorComponent* baseComponent);
 	};
 }

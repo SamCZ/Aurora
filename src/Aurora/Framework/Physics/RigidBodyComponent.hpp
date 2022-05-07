@@ -1,14 +1,15 @@
 #pragma once
 
-#include "../SceneComponent.hpp"
+#include "../ActorComponent.hpp"
 
 namespace Aurora
 {
-	class RigidBodyComponent : public SceneComponent
+	class RigidBodyComponent : public ActorComponent
 	{
 	private:
-
+		bool m_IsInSleep;
+		bool m_CanSleep;
 	public:
-		CLASS_OBJ(RigidBodyComponent, SceneComponent);
+		CLASS_OBJ(RigidBodyComponent, ActorComponent);
 	};
 }

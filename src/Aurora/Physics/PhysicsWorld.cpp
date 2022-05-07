@@ -27,9 +27,21 @@ namespace Aurora
 
 	void PhysicsWorld::RunPhysics(double time, double timeStep)
 	{
-		ComponentView<RigidBodyComponent> components = m_Scene->GetComponents<RigidBodyComponent>();
+		ComponentView<RigidBodyComponent> bodyComponents = m_Scene->GetComponents<RigidBodyComponent>();
 
+		for (RigidBodyComponent* rigidBodyComponent : bodyComponents)
+		{
+			SceneComponent* parent = rigidBodyComponent->GetParent() != nullptr ? rigidBodyComponent->GetParent() : rigidBodyComponent->GetOwner()->GetRootComponent();
 
+			Transform& transform = rigidBodyComponent->GetOwner()->GetRootComponent()->GetTransform();
+
+			transform.AddLocation(0, -timeStep * 10.0f, 0);
+
+			if (transform.GetLocation().y < 0.0)
+			{
+				transform.SetLocation(transform.GetLocation() * Vector3(1, 0.0, 1));
+			}
+		}
 	}
 
 	PhysicsWorld::~PhysicsWorld() = default;

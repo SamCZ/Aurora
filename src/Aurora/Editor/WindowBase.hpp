@@ -33,7 +33,13 @@ namespace Aurora
 				m_WindowNeedsFocus = false;
 			}
 
-			if (ImGui::Begin(m_WindowName, &m_WindowOpened))
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 5));
+
+			bool state = ImGui::Begin(m_WindowName, &m_WindowOpened);
+
+			ImGui::PopStyleVar();
+
+			if (state)
 			{
 				OnGui();
 			}

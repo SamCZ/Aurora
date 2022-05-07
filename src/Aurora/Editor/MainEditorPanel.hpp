@@ -14,6 +14,7 @@ namespace Aurora
 {
 	class Actor;
 	class SceneComponent;
+	class ActorComponent;
 	struct RenderViewPort;
 
 	class MainEditorPanel
@@ -27,7 +28,7 @@ namespace Aurora
 		PropertiesWindow m_PropertiesWindow;
 
 		Actor* m_SelectedActor;
-		SceneComponent* m_SelectedComponent;
+		ActorComponent* m_SelectedComponent;
 
 		bool m_IsPlayMode;
 		bool m_MaterialInstancesWindowOpened;
@@ -54,9 +55,9 @@ namespace Aurora
 				m_PropertiesWindow.OpenWindow(true);
 		}
 
-		inline SceneComponent* GetSelectedComponent() { return m_SelectedComponent; }
+		inline ActorComponent* GetSelectedComponent() { return m_SelectedComponent; }
 
-		inline void SetSelectedComponent(SceneComponent* component)
+		inline void SetSelectedComponent(ActorComponent* component)
 		{
 			m_SelectedComponent = component;
 			m_SelectedActor = nullptr;

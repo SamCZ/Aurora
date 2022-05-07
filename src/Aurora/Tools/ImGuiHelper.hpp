@@ -155,8 +155,11 @@ namespace ImGui
 	inline bool InputTextLabel(const std::string& label, std::string& text, bool enableLabel = true)
 	{
 		if(enableLabel) {
+			float cp = ImGui::GetCursorPosY();
+			ImGui::SetCursorPosY(cp + 5);
 			ImGui::Text("%s", label.c_str());
 			ImGui::SameLine();
+			ImGui::SetCursorPosY(cp + 2);
 		}
 
 		static char name[64];

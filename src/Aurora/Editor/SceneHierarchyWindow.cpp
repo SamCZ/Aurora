@@ -10,6 +10,8 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
+#include "Aurora/Framework/Physics/RigidBodyComponent.hpp"
+#include "Aurora/Framework/Physics/ColliderComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 
@@ -27,11 +29,17 @@ namespace Aurora
 			if(component->HasType(MeshComponent::TypeID()))
 				return ICON_FA_CUBE;
 
-			if(component->HasType(SceneComponent::TypeID()))
-				return ICON_FA_LAYER_GROUP;
-
 			if(component->HasType(SkyLightComponent::TypeID()))
 				return ICON_FA_SUN;
+
+			if(component->HasType(RigidBodyComponent::TypeID()))
+				return ICON_FA_BOWLING_BALL;
+
+			if(component->HasType(ColliderComponent::TypeID()))
+				return ICON_FA_BOWLING_BALL;
+
+			if(component->HasType(SceneComponent::TypeID()))
+				return ICON_FA_LAYER_GROUP;
 
 			return ICON_FA_QUESTION;
 		}
@@ -60,92 +68,144 @@ namespace Aurora
 		editorCamera->GetTransform().SetRotation(-35, 45, 0);
 	}
 
+	void SceneHierarchyWindow::DrawSceneComponent(int& ID, SceneComponent* component, bool opened)
+	{
+		ImGui::PushID(ID++);
+
+		const std::vector<ActorComponent*>& childComponents = component->GetComponents();
+
+		if(!opened)
+		{
+			for(ActorComponent* child : childComponents)
+			{
+				if (SceneComponent* childScene = SceneComponent::SafeCast(child))
+				{
+					DrawSceneComponent(ID, childScene, false);
+				}
+				else
+				{
+					DrawActorComponent(ID, child, false);
+				}
+			}
+			ImGui::PopID();
+			return;
+		}
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+
+		int flags = m_MainEditorPanel->GetSelectedComponent() == component ? ImGuiTreeNodeFlags_Selected : 0;
+
+		if(childComponents.empty())
+		{
+			ImGui::AlignTextToFramePadding();
+			ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | flags);
+
+			if(ImGui::IsItemClicked())
+			{
+				m_MainEditorPanel->SetSelectedComponent(component);
+			}
+
+			/*ImGui::TableNextColumn();
+			ImGui::TextDisabled("%s", GetIconForComponent(component));*/
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s %s", EUI::GetIconForComponent(component), component->GetTypeName());
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			bool active = component->IsActive() && component->IsParentActive();
+			if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
+			{
+				component->SetActive(active);
+			}
+		}
+		else
+		{
+			ImGui::AlignTextToFramePadding();
+			bool open = ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow | flags);
+
+			if(ImGui::IsItemClicked())
+			{
+				m_MainEditorPanel->SetSelectedComponent(component);
+			}
+
+			/*ImGui::TableNextColumn();
+			ImGui::TextDisabled("%s", GetIconForComponent(component));*/
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s %s", EUI::GetIconForComponent(component), component->GetTypeName());
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			bool active = component->IsActive() && component->IsParentActive();
+			if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
+			{
+				component->SetActive(active);
+			}
+
+			for(ActorComponent* child : childComponents)
+			{
+				if (SceneComponent* childScene = SceneComponent::SafeCast(child))
+				{
+					DrawSceneComponent(ID, childScene, open && opened);
+				}
+				else
+				{
+					DrawActorComponent(ID, child, open && opened);
+				}
+			}
+
+			if (open)
+			{
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::PopID();
+	}
+
+	void SceneHierarchyWindow::DrawActorComponent(int& ID, ActorComponent* component, bool opened)
+	{
+		ImGui::PushID(ID++);
+
+		if (not opened)
+		{
+			ImGui::PopID();
+			return;
+		}
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+
+		int flags = m_MainEditorPanel->GetSelectedComponent() == component ? ImGuiTreeNodeFlags_Selected : 0;
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | flags);
+
+		if(ImGui::IsItemClicked())
+		{
+			m_MainEditorPanel->SetSelectedComponent(component);
+		}
+
+		/*ImGui::TableNextColumn();
+		ImGui::TextDisabled("%s", GetIconForComponent(component));*/
+		ImGui::TableNextColumn();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("%s %s", EUI::GetIconForComponent(component), component->GetTypeName());
+		ImGui::TableNextColumn();
+		ImGui::AlignTextToFramePadding();
+		bool active = component->IsActive() && component->IsParentActive();
+		if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
+		{
+			component->SetActive(active);
+		}
+
+		ImGui::PopID();
+	}
+
 	void SceneHierarchyWindow::Update(double delta)
 	{
 		static int ID = 0;
 		ID = 0;
-
-		std::function<void(SceneComponent* component, bool)> drawComponent;
-		drawComponent = [this, &drawComponent](SceneComponent* component, bool opened) -> void
-		{
-			ImGui::PushID(ID++);
-
-			const std::vector<SceneComponent*>& childComponents = component->GetComponents();
-
-			if(!opened)
-			{
-				for(SceneComponent* child : childComponents)
-				{
-					drawComponent(child, false);
-				}
-				ImGui::PopID();
-				return;
-			}
-
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-
-			int flags = m_MainEditorPanel->GetSelectedComponent() == component ? ImGuiTreeNodeFlags_Selected : 0;
-
-			if(childComponents.empty())
-			{
-				ImGui::AlignTextToFramePadding();
-				ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth | flags);
-
-				if(ImGui::IsItemClicked())
-				{
-					m_MainEditorPanel->SetSelectedComponent(component);
-				}
-
-				/*ImGui::TableNextColumn();
-				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
-				ImGui::TableNextColumn();
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("%s %s", EUI::GetIconForComponent(component), component->GetTypeName());
-				ImGui::TableNextColumn();
-				ImGui::AlignTextToFramePadding();
-				bool active = component->IsActive() && component->IsParentActive();
-				if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
-				{
-					component->SetActive(active);
-				}
-			}
-			else
-			{
-				ImGui::AlignTextToFramePadding();
-				bool open = ImGui::TreeNodeEx(component->GetName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow | flags);
-
-				if(ImGui::IsItemClicked())
-				{
-					m_MainEditorPanel->SetSelectedComponent(component);
-				}
-
-				/*ImGui::TableNextColumn();
-				ImGui::TextDisabled("%s", GetIconForComponent(component));*/
-				ImGui::TableNextColumn();
-				ImGui::AlignTextToFramePadding();
-				ImGui::Text("%s %s", EUI::GetIconForComponent(component), component->GetTypeName());
-				ImGui::TableNextColumn();
-				ImGui::AlignTextToFramePadding();
-				bool active = component->IsActive() && component->IsParentActive();
-				if(ImGui::IconCheckbox(ICON_FA_EYE, &active))
-				{
-					component->SetActive(active);
-				}
-
-				for(SceneComponent* child : childComponents)
-				{
-					drawComponent(child, open && opened);
-				}
-
-				if (open)
-				{
-					ImGui::TreePop();
-				}
-			}
-
-			ImGui::PopID();
-		};
 
 		const float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
 		const float ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_EYE).x;
@@ -287,7 +347,7 @@ namespace Aurora
 						actor->SetActive(active);
 					}
 
-					drawComponent(actor->GetRootComponent(), open);
+					DrawSceneComponent(ID, actor->GetRootComponent(), open);
 
 					if (open)
 					{
