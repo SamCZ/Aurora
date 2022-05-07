@@ -51,7 +51,7 @@ namespace Aurora
 
 			[[nodiscard]] inline double GetElapsedTimeInSeconds() const
 			{
-				return GetElapsedTimeInMilliseconds() / 1000;
+				return GetElapsedTimeInMilliseconds() / 1000.0;
 			}
 		};
 	private:
@@ -116,8 +116,8 @@ namespace Aurora
 		{
 			auto endTime = std::chrono::high_resolution_clock::now();
 			auto nanoTime = (endTime - m_StartTime).count();
-			auto microTime = nanoTime / 1000;
-			auto miliTime = microTime / 1000;
+			auto microTime = nanoTime / 1000.0;
+			auto miliTime = microTime / 1000.0;
 			AU_LOG_INFO("Scope ", m_Name, " took ", miliTime, "ms ", microTime, "us");
 		}
 	};

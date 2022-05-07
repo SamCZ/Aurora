@@ -247,8 +247,15 @@ namespace Aurora
 			if (ImGui::BeginMenu("Graphics"))
 			{
 				if (sceneRenderer)
-					ImGui::Checkbox("Enable bloom", &sceneRenderer->GetBloomSettings().Enabled);
-					ImGui::Checkbox("Enable bloom compute", &sceneRenderer->GetBloomSettings().UseComputeShader);
+				{
+					SceneRenderer::BloomSettings& bloomSettings = sceneRenderer->GetBloomSettings();
+
+					ImGui::Checkbox("Enable bloom", &bloomSettings.Enabled);
+					ImGui::Checkbox("Enable bloom compute", &bloomSettings.UseComputeShader);
+					ImGui::DragFloat("Bloom Threshold", &bloomSettings.Threshold, 0.01f);
+					ImGui::DragFloat("Bloom Knee", &bloomSettings.Knee, 0.01f);
+					ImGui::DragFloat("Bloom Intensity", &bloomSettings.Intensity, 0.01f);
+				}
 				ImGui::EndMenu();
 			}
 

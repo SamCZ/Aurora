@@ -53,6 +53,9 @@ namespace Aurora
 		if(block.Name == "BaseVSData")
 			return false;
 
+		if (block.Name.rfind("GLOB_", 0) == 0)
+			return false;
+
 		// TODO: Find a better way to exclude global blocks
 
 		return true;

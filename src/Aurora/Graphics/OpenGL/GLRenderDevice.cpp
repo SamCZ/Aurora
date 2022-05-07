@@ -660,7 +660,7 @@ namespace Aurora
 
 			if (desc.IsDMA)
 			{
-				glBufferStorage(bindTarget, desc.ByteSize, nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
+				glBufferStorage(bindTarget, desc.ByteSize, nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_DYNAMIC_STORAGE_BIT);
 				mappedData = (uint8_t*)glMapBufferRange(bindTarget, 0, desc.ByteSize, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 				if(data) memcpy(mappedData, data, desc.ByteSize);
 			}
@@ -1240,7 +1240,8 @@ namespace Aurora
 
 		auto shader = static_cast<GLShaderProgram*>(state.Shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
-		for (const auto& imageResource : shader->GetGLResource().GetSamplers()) {
+		for (const auto& imageResource : shader->GetGLResource().GetSamplers())
+		{
 			auto boundTextureIt = state.BoundTextures.find(imageResource.Name);
 
 			const TextureBinding* targetTextureBinding = nullptr;
@@ -1274,7 +1275,8 @@ namespace Aurora
 			m_ContextState.BindTexture(imageResource.Binding, glTexture);
 		}
 
-		for (const auto& imageResource : shader->GetGLResource().GetImages()) {
+		for (const auto& imageResource : shader->GetGLResource().GetImages())
+		{
 			auto boundTextureIt = state.BoundTextures.find(imageResource.Name);
 
 			const TextureBinding* targetTextureBinding = nullptr;
@@ -1378,6 +1380,110 @@ namespace Aurora
 			}
 
 			m_ContextState.BindStorageBlock(uniformResource.Binding, GetBuffer(ssboBufferHandle));
+		}
+
+		ApplyShaderUniformResources(state.Shader, state.Uniforms);
+	}
+
+	void GLRenderDevice::ApplyShaderUniformResources(const Shader_ptr& shader, const UniformResources& resources)
+	{
+		if (shader == nullptr) return;
+
+		auto glShader = static_cast<GLShaderProgram*>(shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+
+		const auto& uniforms = glShader->GetGLResource().GetUniforms();
+
+		for (const auto& [typeID, uniform]: resources.Uniforms)
+		{
+			auto uniformTypeIt = uniforms.find(typeID);
+
+			if (uniformTypeIt == uniforms.end())
+				continue;
+
+			const UniformInfo& uniformInfo = uniformTypeIt->second;
+
+			if (uniformInfo.Type != uniform.Type)
+			{
+				AU_LOG_WARNING("Uniform ", uniformInfo.Name, " ", VarType_Strings[(int)uniformInfo.Type], " has wrong type ", VarType_Strings[(int)uniform.Type],"!");
+				continue;
+			}
+
+			// TODO: Complete types
+
+			switch (uniformInfo.Type)
+			{
+				case VarType::Float:
+					glUniform1f(uniformInfo.Location, uniform.TypeData.Float);
+					break;
+				case VarType::Int:
+					glUniform1i(uniformInfo.Location, uniform.TypeData.Int);
+					break;
+				case VarType::UnsignedInt:
+					glUniform1ui(uniformInfo.Location, uniform.TypeData.UInt);
+					break;
+				case VarType::Bool:
+					glUniform1i(uniformInfo.Location, uniform.TypeData.Bool ? 1 : 0);
+					break;
+				case VarType::Vec2:
+					glUniform2f(uniformInfo.Location, uniform.TypeData.Vec2.x, uniform.TypeData.Vec2.y);
+					break;
+				case VarType::Vec3:
+					glUniform3f(uniformInfo.Location, uniform.TypeData.Vec3.x, uniform.TypeData.Vec3.y, uniform.TypeData.Vec3.z);
+					break;
+				case VarType::Vec4:
+					glUniform4f(uniformInfo.Location, uniform.TypeData.Vec4.x, uniform.TypeData.Vec4.y, uniform.TypeData.Vec4.z, uniform.TypeData.Vec4.w);
+					break;
+				case VarType::IVec2:
+					glUniform2i(uniformInfo.Location, uniform.TypeData.IVec2.x, uniform.TypeData.IVec2.y);
+					break;
+				case VarType::IVec3:
+					glUniform3i(uniformInfo.Location, uniform.TypeData.IVec3.x, uniform.TypeData.IVec3.y, uniform.TypeData.IVec3.z);
+					break;
+				case VarType::IVec4:
+					glUniform4i(uniformInfo.Location, uniform.TypeData.IVec4.x, uniform.TypeData.IVec4.y, uniform.TypeData.IVec4.z, uniform.TypeData.IVec4.w);
+					break;
+				case VarType::UIVec2:
+					glUniform2ui(uniformInfo.Location, uniform.TypeData.UIVec2.x, uniform.TypeData.UIVec2.y);
+					break;
+				case VarType::UIVec3:
+					glUniform3ui(uniformInfo.Location, uniform.TypeData.UIVec3.x, uniform.TypeData.UIVec3.y, uniform.TypeData.UIVec3.z);
+					break;
+				case VarType::UIVec4:
+					glUniform4ui(uniformInfo.Location, uniform.TypeData.UIVec4.x, uniform.TypeData.UIVec4.y, uniform.TypeData.UIVec4.z, uniform.TypeData.UIVec4.w);
+					break;
+
+				/*case VarType::BoolVec2:
+					break;
+				case VarType::BoolVec3:
+					break;
+				case VarType::BoolVec4:
+					break;*/
+
+				case VarType::Mat4x4:
+					glUniformMatrix4fv(uniformInfo.Location, 1, false, glm::value_ptr(uniform.TypeData.Mat4x4));
+					break;
+				case VarType::Mat3x3:
+					glUniformMatrix3fv(uniformInfo.Location, 1, false, glm::value_ptr(uniform.TypeData.Mat3x3));
+					break;
+
+				/*case VarType::Mat2x3:
+					break;
+				case VarType::Mat2x4:
+					break;
+				case VarType::Mat3x2:
+					break;
+				case VarType::Mat3x4:
+					break;
+				case VarType::Mat4x2:
+					break;
+				case VarType::Mat4x3:
+					break;*/
+
+				case VarType::Unknown:
+					break;
+				default:
+					break;
+			}
 		}
 	}
 
@@ -1497,6 +1603,8 @@ namespace Aurora
 
 		CHECK_GL_ERROR();
 
+		framebuffer->Name = fbName;
+
 		AU_LOG_INFO("New FB(", framebuffer->Handle, "): ", fbName);
 		glObjectLabel(GL_FRAMEBUFFER, framebuffer->Handle, static_cast<GLsizei>(fbName.size()), fbName.c_str());
 
@@ -1526,6 +1634,7 @@ namespace Aurora
 					m_CurrentFrameBuffer = nullptr;
 				}
 
+				AU_LOG_INFO("Destroyed FB: ", fb->Name);
 				return true;
 			}
 
@@ -1539,6 +1648,7 @@ namespace Aurora
 					m_CurrentFrameBuffer = nullptr;
 				}
 
+				AU_LOG_INFO("Destroyed FB: ", fb->Name);
 				return true;
 			}
 

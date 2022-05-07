@@ -62,12 +62,13 @@ namespace Aurora
 	{
 		std::string Name;
 		size_t Size;
+		uint8_t ComponentCount;
 		GraphicsFormat Format;
 	};
 
 	static GLType GetGLType(GLenum glType)
 	{
-#define GET_GL_TYPE(glType, type, components, format) case glType: return {#glType, (sizeof(type) * (components)), format};
+#define GET_GL_TYPE(glType, type, components, format) case glType: return {#glType, (sizeof(type) * (components)), components, format};
 		switch (glType) {
 			GET_GL_TYPE(GL_FLOAT, float, 1, GraphicsFormat::R32_FLOAT)
 			GET_GL_TYPE(GL_INT, int32_t, 1, GraphicsFormat::Unknown)
@@ -117,5 +118,50 @@ namespace Aurora
 	static size_t GetOpenGLDataTypeSize(GLenum dataType)
 	{
 		return GetGLType(dataType).Size;
+	}
+
+	static VarType GetGLVarType(GLenum glType)
+	{
+#define GET_GL_VARTYPE(glType, format) case glType: return format;
+		switch (glType) {
+			GET_GL_VARTYPE(GL_FLOAT, VarType::Float)
+			GET_GL_VARTYPE(GL_INT, VarType::Int)
+			GET_GL_VARTYPE(GL_UNSIGNED_INT, VarType::UnsignedInt)
+			GET_GL_VARTYPE(GL_BOOL, VarType::Bool)
+
+			GET_GL_VARTYPE(GL_FLOAT_VEC2, VarType::Vec2)
+			GET_GL_VARTYPE(GL_FLOAT_VEC3, VarType::Vec3)
+			GET_GL_VARTYPE(GL_FLOAT_VEC4, VarType::Vec4)
+
+			GET_GL_VARTYPE(GL_INT_VEC2, VarType::IVec2)
+			GET_GL_VARTYPE(GL_INT_VEC3, VarType::IVec3)
+			GET_GL_VARTYPE(GL_INT_VEC4, VarType::IVec4)
+
+			GET_GL_VARTYPE(GL_UNSIGNED_INT_VEC2, VarType::UIVec2)
+			GET_GL_VARTYPE(GL_UNSIGNED_INT_VEC3, VarType::UIVec3)
+			GET_GL_VARTYPE(GL_UNSIGNED_INT_VEC4, VarType::UIVec4)
+
+			GET_GL_VARTYPE(GL_BOOL_VEC2, VarType::BoolVec2)
+			GET_GL_VARTYPE(GL_BOOL_VEC3, VarType::BoolVec3)
+			GET_GL_VARTYPE(GL_BOOL_VEC4, VarType::BoolVec4)
+
+			GET_GL_VARTYPE(GL_FLOAT_MAT3, VarType::Mat3x3)
+			GET_GL_VARTYPE(GL_FLOAT_MAT4, VarType::Mat4x4)
+
+			GET_GL_VARTYPE(GL_FLOAT_MAT2x3, VarType::Mat2x3)
+			GET_GL_VARTYPE(GL_FLOAT_MAT2x4, VarType::Mat2x4)
+
+			GET_GL_VARTYPE(GL_FLOAT_MAT3x2, VarType::Mat3x2)
+			GET_GL_VARTYPE(GL_FLOAT_MAT3x4, VarType::Mat3x4)
+
+			GET_GL_VARTYPE(GL_FLOAT_MAT4x2, VarType::Mat4x2)
+			GET_GL_VARTYPE(GL_FLOAT_MAT4x3, VarType::Mat4x3)
+
+			default:
+			AU_LOG_FATAL("Unknown opengl type for size conversion: ", glType);
+				return {};
+		}
+
+#undef GL_TYPE
 	}
 }

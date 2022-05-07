@@ -17,6 +17,7 @@
 #include "FDepthStencilState.hpp"
 
 #include "../ViewPort.hpp"
+#include "Aurora/Core/Hash.hpp"
 #include "Aurora/Tools/robin_hood.h"
 
 namespace Aurora
@@ -71,6 +72,227 @@ namespace Aurora
 		uint32_t Size = 0;
 	};
 
+	struct UniformVariable
+	{
+		union Data
+		{
+			int32_t Int;
+			uint32_t UInt;
+			float Float;
+			bool Bool;
+
+			Vector2 Vec2;
+			Vector3 Vec3;
+			Vector4 Vec4;
+
+			Vector2i IVec2;
+			Vector3i IVec3;
+			Vector4i IVec4;
+
+			Vector2ui UIVec2;
+			Vector3ui UIVec3;
+			Vector4ui UIVec4;
+
+			Matrix4 Mat4x4;
+			Matrix3 Mat3x3;
+
+			uint8_t RawData[sizeof(Matrix4)]{0};
+
+			Data() : RawData() {}
+		} TypeData;
+
+		VarType Type;
+
+		UniformVariable() : TypeData(), Type(VarType::Unknown)
+		{
+
+		}
+	};
+
+	struct UniformResources
+	{
+		robin_hood::unordered_map<TTypeID, UniformVariable> Uniforms{};
+
+		void ResetResources()
+		{
+			Uniforms.clear();
+		}
+
+		inline bool GetVar(UniformVariable*& var_out, TTypeID typeID, VarType type)
+		{
+			UniformVariable& uv = Uniforms[typeID];
+
+			if (uv.Type == VarType::Unknown)
+				uv.Type = type;
+
+			if (uv.Type != type)
+			{
+				AU_LOG_ERROR("Cannot reinitialize uniform variable ", typeID, " from ", VarType_Strings[(int)uv.Type], " to ", VarType_Strings[(int)type], " !");
+				return false;
+			}
+
+			var_out = &uv;
+
+			return true;
+		}
+
+		void SetFloat(TTypeID typeID, float val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Float))
+				return;
+
+			uv->TypeData.Float = val;
+		}
+
+		void SetInt(TTypeID typeID, int32_t val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Int))
+				return;
+
+			uv->TypeData.Int = val;
+		}
+
+		void SetUInt(TTypeID typeID, uint32_t val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::UnsignedInt))
+				return;
+
+			uv->TypeData.UInt = val;
+		}
+
+		void SetBool(TTypeID typeID, bool val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Bool))
+				return;
+
+			uv->TypeData.Bool = val;
+		}
+
+		void SetVec2(TTypeID typeID, const Vector2& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Vec2))
+				return;
+
+			uv->TypeData.Vec2 = val;
+		}
+
+		void SetVec3(TTypeID typeID, const Vector3& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Vec3))
+				return;
+
+			uv->TypeData.Vec3 = val;
+		}
+
+		void SetVec4(TTypeID typeID, const Vector4& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Vec4))
+				return;
+
+			uv->TypeData.Vec4 = val;
+		}
+
+		// int vectors
+
+		void SetIVec2(TTypeID typeID, const Vector2i& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::IVec2))
+				return;
+
+			uv->TypeData.IVec2 = val;
+		}
+
+		void SetIVec3(TTypeID typeID, const Vector3i& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::IVec3))
+				return;
+
+			uv->TypeData.IVec3 = val;
+		}
+
+		void SetIVec4(TTypeID typeID, const Vector4i& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::IVec4))
+				return;
+
+			uv->TypeData.IVec4 = val;
+		}
+
+		// unsigned int vectors
+
+		void SetUIVec2(TTypeID typeID, const Vector2ui& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::UIVec2))
+				return;
+
+			uv->TypeData.UIVec2 = val;
+		}
+
+		void SetUIVec3(TTypeID typeID, const Vector3ui& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::UIVec3))
+				return;
+
+			uv->TypeData.UIVec3 = val;
+		}
+
+		void SetUIVec4(TTypeID typeID, const Vector4ui& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::UIVec4))
+				return;
+
+			uv->TypeData.UIVec4 = val;
+		}
+
+		// Matrices
+
+		void SetMat4x4(TTypeID typeID, const Matrix4& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Mat4x4))
+				return;
+
+			uv->TypeData.Mat4x4 = val;
+		}
+
+		void SetMat3x3(TTypeID typeID, const Matrix3& val)
+		{
+			UniformVariable* uv;
+
+			if (not GetVar(uv, typeID, VarType::Mat3x3))
+				return;
+
+			uv->TypeData.Mat3x3 = val;
+		}
+	};
+
 	struct StateResources
 	{
 		static constexpr uint8_t MaxBoundTextures = 8;
@@ -80,12 +302,16 @@ namespace Aurora
 		robin_hood::unordered_map<std::string, UniformBufferBinding> BoundUniformBuffers{};
 		robin_hood::unordered_map<std::string, Buffer_ptr> SSBOBuffers{};
 
+		UniformResources Uniforms;
+
 		virtual void ResetResources()
 		{
 			BoundTextures.clear();
 			BoundSamplers.clear();
 			BoundUniformBuffers.clear();
 			SSBOBuffers.clear();
+
+			Uniforms.ResetResources();
 		}
 
 		inline void BindTexture(const std::string& name, const Texture_ptr& texture, bool isUAV = false, TextureBinding::EAccess access = TextureBinding::EAccess::Write, int mipLevel = 0)
@@ -291,7 +517,7 @@ namespace Aurora
 		uint32_t  baseInstance;
 	} DrawElementsIndirectCommand;
 
-	class IRenderDevice
+	class AU_API IRenderDevice
 	{
 	protected:
 		FrameRenderStatistics m_FrameRenderStatistics = {};
@@ -356,6 +582,7 @@ namespace Aurora
 		[[nodiscard]] virtual const FViewPort& GetCurrentViewPort() const = 0;
 
 		virtual void BindShaderResources(const BaseState& state) = 0;
+		virtual void ApplyShaderUniformResources(const Shader_ptr& shader, const UniformResources& resources) = 0;
 		virtual void ApplyDispatchState(const DispatchState& state) = 0;
 		virtual void ApplyDrawCallState(const DrawCallState& state) = 0;
 		virtual void BindShaderInputs(const DrawCallState &state, bool force = false) = 0;

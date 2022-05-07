@@ -521,6 +521,7 @@ namespace Aurora
 				state.BindTarget(0, viewPort->Target);
 				state.BindTexture("SceneHRDTexture", compositeRT);
 				state.BindTexture("BloomTexture", bloomRT);
+				state.Uniforms.SetFloat("BloomIntensity"_HASH, m_BloomSettings.Intensity);
 
 				if (!outlineRT.Empty())
 				{

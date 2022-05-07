@@ -68,6 +68,15 @@ namespace Aurora
 
 	class AU_API SceneRenderer
 	{
+	public:
+		struct BloomSettings
+		{
+			bool Enabled = true;
+			bool UseComputeShader = true;
+			float Threshold = 1.1f;
+			float Knee = 0.1f;
+			float Intensity = 1.0f;
+		};
 	private:
 		Buffer_ptr m_BaseVsDataBuffer;
 		Buffer_ptr m_InstancesBuffer;
@@ -83,16 +92,7 @@ namespace Aurora
 		Shader_ptr m_BloomShader;
 		Shader_ptr m_BloomShaderSS;
 		Buffer_ptr m_BloomDescBuffer;
-		struct BloomSettings
-		{
-			bool Enabled = true;
-			bool UseComputeShader = true;
-			float Threshold = 1.1f;
-			float Knee = 0.1f;
-			float UpsampleScale = 1.0f;
-			float Intensity = 1.0f;
-			float DirtIntensity = 1.0f;
-		} m_BloomSettings;
+		BloomSettings m_BloomSettings;
 		const int m_BloomComputeWorkgroupSize = 16;
 
 		robin_hood::unordered_map<TTypeID, InputLayout_ptr> m_MeshInputLayouts;

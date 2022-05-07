@@ -5,6 +5,8 @@
 #include <map>
 #include <vector>
 
+#include "Aurora/Core/Hash.hpp"
+#include "Aurora/Tools/robin_hood.h"
 #include "../Base/ShaderBase.hpp"
 #include "GLUtils.hpp"
 
@@ -26,6 +28,14 @@ namespace Aurora
 		EShaderType ShadersIn = EShaderType::Unknown;
 		size_t Size = 0;
 		std::vector<ShaderVariable> Variables = {};
+	};
+
+	struct UniformInfo final : GLResourceAttribs
+	{
+		GLint Location;
+		uint8_t ComponentCount = 0;
+		size_t Size = 0;
+		VarType Type;
 	};
 
 	struct SamplerInfo final : GLResourceAttribs
@@ -54,6 +64,7 @@ namespace Aurora
 		uint32_t m_StorageBufferBinding;
 
 		std::vector<UniformBufferInfo> m_UniformBlocks;
+		robin_hood::unordered_map<TTypeID, UniformInfo> m_Uniforms;
 		std::vector<SamplerInfo>       m_Samplers;
 		std::vector<ImageInfo>         m_Images;
 		std::vector<StorageBlockInfo>  m_StorageBlocks;
@@ -63,6 +74,7 @@ namespace Aurora
 		void LoadUniforms(GLuint program);
 
 		[[nodiscard]] inline const std::vector<UniformBufferInfo>& GetUniformBlocks() const noexcept { return m_UniformBlocks; }
+		[[nodiscard]] inline const robin_hood::unordered_map<TTypeID, UniformInfo>& GetUniforms() const noexcept { return m_Uniforms; }
 		[[nodiscard]] inline const std::vector<SamplerInfo>& GetSamplers() const noexcept { return m_Samplers; }
 		[[nodiscard]] inline const std::vector<ImageInfo>& GetImages() const noexcept { return m_Images; }
 		[[nodiscard]] inline const std::vector<StorageBlockInfo>& GetStorageBlocks() const noexcept { return m_StorageBlocks; }

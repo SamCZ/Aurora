@@ -9,6 +9,9 @@ uniform sampler2D BloomTexture;
 #ifdef USE_OUTLINE
 uniform sampler2D OutlineTexture;
 #endif
+
+uniform float BloomIntensity;
+
 void main()
 {
 	vec4 sceneColor = texelFetch(SceneHRDTexture, ivec2(gl_FragCoord.xy), 0);
@@ -17,7 +20,7 @@ void main()
 	const float gamma = 2.2;
 
 	FragColor = sceneColor;
-	FragColor.rgb += bloomColor.rgb;
+	FragColor.rgb += bloomColor.rgb * BloomIntensity;
 	//FragColor.rgb = Reinhard(FragColor.rgb);
 	//FragColor.a = sceneColor.a;
 

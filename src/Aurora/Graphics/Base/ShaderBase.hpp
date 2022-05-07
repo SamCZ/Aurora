@@ -22,6 +22,8 @@ namespace Aurora
 		/// Constant (uniform) buffer
 		ConstantBuffer,
 
+		Uniform,
+
 		/// Shader resource view of a texture (sampled image)
 		TextureSRV,
 
@@ -63,6 +65,71 @@ namespace Aurora
 		RayIntersection,
 		Callable
 	};
+
+	enum class VarType : uint8_t
+	{
+		Unknown,
+		Float,
+		Int,
+		UnsignedInt,
+		Bool,
+
+		Vec2,
+		Vec3,
+		Vec4,
+
+		IVec2,
+		IVec3,
+		IVec4,
+
+		UIVec2,
+		UIVec3,
+		UIVec4,
+
+		BoolVec2,
+		BoolVec3,
+		BoolVec4,
+
+		Mat4x4,
+		Mat3x3,
+		Mat2x3,
+		Mat2x4,
+		Mat3x2,
+		Mat3x4,
+		Mat4x2,
+		Mat4x3
+	};
+
+	static const char* VarType_Strings[] = { "Unknown",
+	                                         "Float",
+	                                         "Int",
+	                                         "UnsignedInt",
+	                                         "Bool",
+
+	                                         "Vec2",
+	                                         "Vec3",
+	                                         "Vec4",
+
+	                                         "IVec2",
+	                                         "IVec3",
+	                                         "IVec4",
+
+	                                         "UIVec2",
+	                                         "UIVec3",
+	                                         "UIVec4",
+
+	                                         "BoolVec2",
+	                                         "BoolVec3",
+	                                         "BoolVec4",
+
+	                                         "Mat4x4",
+	                                         "Mat3x3",
+	                                         "Mat2x3",
+	                                         "Mat2x4",
+	                                         "Mat3x2",
+	                                         "Mat3x4",
+	                                         "Mat4x2",
+	                                         "Mat4x3" };
 
 	static std::string ShaderType_ToString(const EShaderType& shaderType)
 	{

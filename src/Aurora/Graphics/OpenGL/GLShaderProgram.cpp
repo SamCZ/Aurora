@@ -157,4 +157,16 @@ namespace Aurora
 
 		return {};
 	}
+
+	GLint GLShaderProgram::GetUniformLocation(TTypeID nameID) const
+	{
+		auto it = m_Resources.GetUniforms().find(nameID);
+
+		if (it == m_Resources.GetUniforms().end())
+		{
+			return -1;
+		}
+
+		return it->second.Location;
+	}
 }

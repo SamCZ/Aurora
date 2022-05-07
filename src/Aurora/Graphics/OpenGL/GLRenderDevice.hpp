@@ -110,6 +110,7 @@ namespace Aurora
 	class FrameBuffer
 	{
 	public:
+		std::string Name;
 		GLuint Handle;
 		GLenum DrawBuffers[8]{};
 		uint32_t NumBuffers;
@@ -203,6 +204,7 @@ namespace Aurora
 		size_t GetUsedGPUMemory() override;
 	public:
 		void BindShaderResources(const BaseState& state) override;
+		void ApplyShaderUniformResources(const Shader_ptr& shader, const UniformResources& resources) override;
 		void ApplyDispatchState(const DispatchState& state) override;
 		void ApplyDrawCallState(const DrawCallState& state) override;
 		void BindShaderInputsCached(const DrawCallState &state);

@@ -295,7 +295,10 @@ namespace Aurora
 					GLuint uniformIndex;
 					const GLchar* namec = Name.data();
 					glGetUniformIndices(program, 1, &namec, &uniformIndex);
-					size_t varSize = GetOpenGLDataTypeSize(dataType);
+					GLType glType = GetGLType(dataType);
+					size_t varSize = glType.Size;
+
+					GLint uniformLocation = glGetUniformLocation(program, namec);
 
 					BasicUniform basicUniform = {};
 					basicUniform.Name = Name.data();
@@ -303,6 +306,11 @@ namespace Aurora
 					basicUniform.ArraySize = size;
 
 					BasicUniforms[uniformIndex] = basicUniform;
+
+					if (uniformLocation >= 0)
+					{
+						m_Uniforms[Hash_djb2(namec)] = {namec, ShaderResourceType::Uniform, 0, 1, uniformLocation, glType.ComponentCount, glType.Size, GetGLVarType(dataType)};
+					}
 
 					break;
 				}
