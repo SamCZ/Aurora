@@ -2,21 +2,21 @@
 
 namespace Aurora
 {
-	AABB::AABB() : m_Min(), m_Max()
+	AABB::AABB() : m_Min(), m_Max(), m_SurfaceArea(0)
 	{
 
 	}
 
-	AABB::AABB(const Vector3 &min, const Vector3 &max) : m_Min(min), m_Max(max)
+	AABB::AABB(const Vector3 &min, const Vector3 &max) : m_Min(min), m_Max(max), m_SurfaceArea(0)
 	{
-
+		m_SurfaceArea = CalculateSurfaceArea();
 	}
 
 	AABB::~AABB() = default;
 
 	AABB AABB::FromExtent(const Vector3 &origin, const Vector3 &extent)
 	{
-		return AABB(origin - extent, origin + extent);
+		return {origin - extent, origin + extent};
 	}
 
 	const Vector3 &AABB::GetMin() const
@@ -44,11 +44,15 @@ namespace Aurora
 	{
 		m_Min = min;
 		m_Max = max;
+
+		m_SurfaceArea = CalculateSurfaceArea();
 	}
 
 	void AABB::Extend(const Vector3 &point)
 	{
 		CheckMinMax(m_Min, m_Max, point);
+
+		m_SurfaceArea = CalculateSurfaceArea();
 	}
 
 	bool AABB::IntersectsWith(const AABB &other) const
@@ -92,6 +96,11 @@ namespace Aurora
 	Vector3 AABB::GetExtent() const
 	{
 		return (m_Max - m_Min) / 2.0f;
+	}
+
+	float AABB::CalculateSurfaceArea() const
+	{
+		return m_SurfaceArea;
 	}
 
 	/*int AABB::CollideWithRay(const Ray &ray, CollisionResults &results) const
@@ -181,14 +190,16 @@ namespace Aurora
 
 	BBCollisionResult AABB::CollideWithOther(const AABB& other)
 	{
-		Vector3D distances1 = other.m_Min - this->m_Max;
-		Vector3D distances2 = this->m_Min - other.m_Max;
-		Vector3D distances = glm::max(distances1, distances2);
+		Vector3 distances1 = other.m_Min - this->m_Max;
+		Vector3 distances2 = this->m_Min - other.m_Max;
+		Vector3 distances = glm::max(distances1, distances2);
 
 		BBCollisionResult result;
+		result.Distance = distances;
 
 		for(int axis = 0; axis < 3; axis++) {
 			result.CollidingAxes[axis] = distances[axis] < 0;
+			result.CollidingAxesV[axis] = distances[axis] < 0;
 			result.AxesDistances[axis] = distances[axis];
 		}
 

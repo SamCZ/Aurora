@@ -6,6 +6,8 @@ namespace Aurora
 {
 	struct BBCollisionResult
 	{
+		Vector3 Distance;
+		Vector3i CollidingAxesV;
 		bool CollidingAxes[3]{};
 		double AxesDistances[3]{};
 	};
@@ -15,6 +17,7 @@ namespace Aurora
 	private:
 		Vector3 m_Min;
 		Vector3 m_Max;
+		float m_SurfaceArea;
 	public:
 		AABB();
 		AABB(const Vector3& min, const Vector3& max);
@@ -34,8 +37,54 @@ namespace Aurora
 
 		[[nodiscard]] bool IntersectsWith(const AABB& other) const;
 
+		[[nodiscard]] bool Overlaps(const AABB& other) const
+		{
+			// y is deliberately first in the list of checks below as it is seen as more likely than things
+			// collide on x,z but not on y than they do on y thus we drop out sooner on a y fail
+			return m_Max.x > other.m_Min.x &&
+				m_Min.x < other.m_Max.x &&
+				m_Max.y > other.m_Min.y &&
+				m_Min.y < other.m_Max.y &&
+				m_Max.z > other.m_Min.z &&
+				m_Min.z < other.m_Max.z;
+		}
+
+		[[nodiscard]] bool Contains(const AABB& other) const
+		{
+			return other.m_Min.x >= m_Min.x &&
+				other.m_Max.x <= m_Max.x &&
+				other.m_Min.y >= m_Min.y &&
+				other.m_Max.y <= m_Max.y &&
+				other.m_Min.z >= m_Min.z &&
+				other.m_Max.z <= m_Max.z;
+		}
+
+		[[nodiscard]] AABB Merge(const AABB& other) const
+		{
+			return {
+				{std::min(m_Min.x, other.m_Min.x), std::min(m_Min.y, other.m_Min.y), std::min(m_Min.z, other.m_Min.z)},
+				{std::max(m_Max.x, other.m_Max.x), std::max(m_Max.y, other.m_Max.y), std::max(m_Max.z, other.m_Max.z)}
+			};
+		}
+
+		[[nodiscard]] AABB Intersection(const AABB& other) const
+		{
+			return {
+				{std::max(m_Min.x, other.m_Min.x), std::max(m_Min.y, other.m_Min.y), std::max(m_Min.z, other.m_Min.z)},
+				{std::min(m_Max.x, other.m_Max.x), std::min(m_Max.y, other.m_Max.y), std::min(m_Max.z, other.m_Max.z)}
+			};
+		}
+
 		[[nodiscard]] Vector3 GetOrigin() const;
 		[[nodiscard]] Vector3 GetExtent() const;
+		[[nodiscard]] Vector3 GetSize() const { return m_Max - m_Min; }
+
+		[[nodiscard]] inline float GetWidth() const { return m_Max.x - m_Min.x; }
+		[[nodiscard]] inline float GetHeight() const { return m_Max.y - m_Min.y; }
+		[[nodiscard]] inline float GetDepth() const { return m_Max.z - m_Min.z; }
+		[[nodiscard]] inline float GetSurfaceArea() const { return m_SurfaceArea; }
+
+		[[nodiscard]] float CalculateSurfaceArea() const;
 
 		//int CollideWithRay(const Ray& ray, CollisionResults& results) const override;
 
@@ -49,7 +98,7 @@ namespace Aurora
 			return os;
 		}
 
-		void Transform(const Matrix4& matrix)
+		[[nodiscard]] AABB Transform(const Matrix4& matrix) const
 		{
 			Vector3 corners[8];
 
@@ -71,20 +120,18 @@ namespace Aurora
 				max = glm::max(max, Vector3(transformed));
 			}
 
-			Set(min, max);
+			return {min, max};
 		}
 
 		AABB& operator*=(const Matrix4& matrix)
 		{
-			Transform(matrix);
+			*this = Transform(matrix);
 			return *this;
 		}
 
 		AABB operator*(const Matrix4& matrix)
 		{
-			AABB copy = *this;
-			copy.Transform(matrix);
-			return copy;
+			return Transform(matrix);
 		}
 	private:
 		static bool Clip(double denom, double numer, double t[]);

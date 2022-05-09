@@ -172,10 +172,15 @@ class BaseAppContext : public AppContext
 
 		for (int i = 0; i < 10; ++i)
 		{
-			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box", Vector3(i * 2.2f - 5, 10, 0), {}, Vector3(0.01f));
+			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box " + std::to_string(i), Vector3(i * 2.2f - 5, 10, 0), {}, Vector3(0.005f));
+
+			if (i == 9)
+			{
+				testActor2->GetTransform().SetLocation(4 * 2.2f - 5, 20, 0);
+			}
 
 			RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
-			ColliderComponent* collider = testActor2->AddComponent<ColliderComponent>();
+			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
 
 			if(importedData2)
 			{

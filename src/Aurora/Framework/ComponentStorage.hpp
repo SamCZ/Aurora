@@ -55,6 +55,8 @@ namespace Aurora
 		{
 		}
 
+		[[nodiscard]] std::vector<std::uintptr_t>::size_type size() const { return m_DataVector.size(); }
+
 		ComponentIterator<T> begin()
 		{
 			if(m_DataVector.empty())

@@ -37,16 +37,23 @@ namespace Aurora
 		template<typename T>
 		void GetComponentsOfType(std::vector<T*>& components)
 		{
-			if(HasType(T::TypeID()))
+			if (HasType(T::TypeID()))
 			{
 				components.push_back(T::Cast(this));
 			}
 
-			for(ActorComponent* component : m_Components)
+			for (ActorComponent* component : m_Components)
 			{
 				if (SceneComponent* sceneComponent = SceneComponent::SafeCast(component))
 				{
 					sceneComponent->GetComponentsOfType<T>(components);
+				}
+				else
+				{
+					if (component->HasType(T::TypeID()))
+					{
+						components.push_back(T::Cast(component));
+					}
 				}
 			}
 		}

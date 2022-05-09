@@ -85,10 +85,7 @@ namespace Aurora
 		Matrix4 transform = meshComponent->GetTransformationMatrix();
 		Mesh_ptr mesh = meshComponent->GetMesh();
 
-		AABB worldBounds = mesh->m_Bounds;
-		worldBounds.Transform(transform);
-
-		if (!camera->GetFrustum().IsBoxVisible(worldBounds))
+		if (!camera->GetFrustum().IsBoxVisible(mesh->m_Bounds.Transform(transform)))
 		{
 			return;
 		}
@@ -402,8 +399,6 @@ namespace Aurora
 				// Render debug shapes
 				DShapes::Render(drawState);
 			}
-
-			GEngine->GetRenderDevice()->InvalidateState();
 
 			TemporalRenderTarget outlineRT;
 			TemporalRenderTarget outlineDepthRT;
