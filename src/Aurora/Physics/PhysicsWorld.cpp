@@ -9,6 +9,8 @@
 
 namespace Aurora
 {
+	AABBTree<ColliderComponent> aabbTree(1);
+
 	PhysicsWorld::PhysicsWorld(Scene* scene) : m_Scene(scene), m_Accumulator(0), m_Time(0)
 	{
 
@@ -28,12 +30,20 @@ namespace Aurora
 			m_Time += timeStep;
 			m_Accumulator -= timeStep;
 		}
+
+		for (const auto& node : aabbTree.GetNodes())
+		{
+			if (node.ParentNodeIndex == AABB_NULL_NODE || !node.IsLeaf())
+				continue;
+
+			DShapes::Box(node.Bounds, Color::green(), true, 1.0f, 0, false);
+		}
 	}
 
 	void PhysicsWorld::RunPhysics(double time, double timeStep)
 	{
 		ComponentView<ColliderComponent> colliderComponents = m_Scene->GetComponents<ColliderComponent>();
-		AABBTree<ColliderComponent> aabbTree(colliderComponents.size());
+		aabbTree = AABBTree<ColliderComponent>(colliderComponents.size());
 
 		for (ColliderComponent* collider : colliderComponents)
 		{
@@ -42,17 +52,12 @@ namespace Aurora
 			aabbTree.InsertObject(collider, bounds);
 		}
 
-		for (const auto& node : aabbTree.GetNodes())
-		{
-			if (node.ParentNodeIndex == AABB_NULL_NODE || !node.IsLeaf())
-				continue;
-
-			DShapes::Box(node.Bounds, Color::green(), true, 1.5f, 0, false);
-		}
-
 		ComponentView<RigidBodyComponent> bodyComponents = m_Scene->GetComponents<RigidBodyComponent>();
 		for (RigidBodyComponent* rigidBodyComponent : bodyComponents)
 		{
+			if (rigidBodyComponent->IsKinematic())
+				continue;
+
 			SceneComponent* parent = rigidBodyComponent->GetParent() != nullptr ? rigidBodyComponent->GetParent() : rigidBodyComponent->GetOwner()->GetRootComponent();
 			std::vector<BoxColliderComponent*> colliders;
 			parent->GetComponentsOfType(colliders);
@@ -84,7 +89,7 @@ namespace Aurora
 
 				AABB intersection = bounds.Intersection(boundsOther);
 
-				AU_LOG_INFO("Overlap ", parent->GetOwner()->GetName(), " with ", overlap->GetOwner()->GetName());
+				/*AU_LOG_INFO("Overlap ", parent->GetOwner()->GetName(), " with ", overlap->GetOwner()->GetName());
 				AU_LOG_INFO("Overlap ", glm::to_string(collider->GetParent()->GetWorldPosition()));
 				AU_LOG_INFO("Overlap ", glm::to_string(overlap->GetParent()->GetWorldPosition()));
 				AU_LOG_INFO("Overlap ");
@@ -92,20 +97,27 @@ namespace Aurora
 				AU_LOG_INFO("Overlap ", boundsOther);
 				AU_LOG_INFO("Overlap ", intersection);
 				AU_LOG_INFO("Overlap ", glm::to_string(res.Distance));
-				AU_LOG_INFO("Overlap ", glm::to_string(res.CollidingAxesV));
+				AU_LOG_INFO("Overlap ", glm::to_string(res.CollidingAxesV));*/
 
 				//AU_LOG_FATAL("yo");
 
+				//transform.AddLocation(0, timeStep * 10.0f, 0);
 				transform.SetLocation(transform.GetLocation() + Vector3(0, intersection.GetHeight(), 0));
 				overlaps = true;
-				break;
+				//break;
 				//transform.AddLocation(0, +timeStep * 10.0f, 0);
 			}
 
-			if (transform.GetLocation().y < 0.0 && !overlaps)
+			/*if (transform.GetLocation().y < 0.0 && !overlaps)
 			{
 				transform.SetLocation(transform.GetLocation() * Vector3(1, 0.0, 1));
 
+				bounds = collider->GetAABB();
+				bounds.SetOffset(collider->GetParent()->GetWorldPosition());
+				aabbTree.UpdateObject(collider, bounds);
+			}*/
+
+			{
 				bounds = collider->GetAABB();
 				bounds.SetOffset(collider->GetParent()->GetWorldPosition());
 				aabbTree.UpdateObject(collider, bounds);

@@ -164,6 +164,11 @@ class BaseAppContext : public AppContext
 			}
 		}
 
+		{
+			Actor* groundActor = GetScene()->SpawnActor<Actor>("Ground", {0, -0.5f, 0});
+			groundActor->AddComponent<BoxColliderComponent>(50, 1, 50);
+		}
+
 		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box_cubeUV.fbx"));
 		auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
 		auto matInstance = matDef->CreateInstance();
@@ -174,10 +179,24 @@ class BaseAppContext : public AppContext
 		{
 			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box " + std::to_string(i), Vector3(i * 2.2f - 5, 10, 0), {}, Vector3(0.005f));
 
-			if (i == 9)
+			RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
+			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
+
+			if(importedData2)
 			{
-				testActor2->GetTransform().SetLocation(4 * 2.2f - 5, 20, 0);
+				auto* meshComponent = StaticMeshComponent::Cast(testActor2->GetRootComponent());
+				meshComponent->SetMesh(importedData2.Mesh);
+
+				for (auto &item : meshComponent->GetMaterialSet())
+				{
+					item.second.Material = matInstance;
+				}
 			}
+		}
+
+		for (int i = 0; i < 10; ++i)
+		{
+			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box " + std::to_string(i), Vector3(i * 2.2f - 5, 10 + i + 1, 0), {}, Vector3(0.005f));
 
 			RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
 			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
