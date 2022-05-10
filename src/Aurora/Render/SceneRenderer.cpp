@@ -400,6 +400,8 @@ namespace Aurora
 				DShapes::Render(drawState);
 			}
 
+			GEngine->GetRenderDevice()->InvalidateState();
+
 			TemporalRenderTarget outlineRT;
 			TemporalRenderTarget outlineDepthRT;
 			{ // Outline
