@@ -12,6 +12,12 @@ namespace Aurora
 		double AxesDistances[3]{};
 	};
 
+	struct AABBHit
+	{
+		Vector3D Point;
+		double Distance;
+	};
+
 	class AU_API AABB
 	{
 	private:
@@ -86,7 +92,7 @@ namespace Aurora
 
 		[[nodiscard]] float CalculateSurfaceArea() const;
 
-		//int CollideWithRay(const Ray& ray, CollisionResults& results) const override;
+		int CollideWithRay(const Vector3D& origin, const Vector3D& direction, std::vector<AABBHit>& hits) const;
 
 		static void CheckMinMax(Vector3& min, Vector3& max, const Vector3& point);
 

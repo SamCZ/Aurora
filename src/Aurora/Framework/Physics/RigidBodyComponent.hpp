@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ActorComponent.hpp"
+#include "Aurora/Physics/TransformUtil.hpp"
 
 namespace Aurora
 {
@@ -11,8 +12,18 @@ namespace Aurora
 		bool m_CanSleep;
 		bool m_HasGravity;
 		bool m_IsKinematic;
+
+		phVector3 m_LinearVelocity;
+		phVector3 m_AngularVelocity;
 	public:
 		CLASS_OBJ(RigidBodyComponent, ActorComponent);
+
+		RigidBodyComponent() : ActorComponent(), m_LinearVelocity(0), m_AngularVelocity(0)
+		{
+
+		}
+
+		inline void SetLinearVelocity(const phVector3& velocity) { m_LinearVelocity = velocity; }
 
 		[[nodiscard]] bool HasGravity() const
 		{
@@ -33,5 +44,9 @@ namespace Aurora
 		{
 			m_IsKinematic = mIsKinematic;
 		}
+
+		void PredictIntegratedTransform(phScalar timeStep, Transform& predictedTransform);
+
+		Transform& GetWorldTransform();
 	};
 }

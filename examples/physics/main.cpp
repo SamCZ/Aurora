@@ -41,12 +41,18 @@ public:
 	CLASS_OBJ(CameraActor, Actor);
 	DEFAULT_COMPONENT(CameraComponent);
 
+	RigidBodyComponent* rigidBody;
+
 	void InitializeComponents() override
 	{
 		m_Camera = CameraComponent::Cast(GetRootComponent());
 		m_Camera->SetName("Camera");
 		m_Camera->SetViewPort(GEngine->GetViewPortManager()->Get());
 		m_Camera->SetPerspective(75, 0.1f, 2000.0f);
+
+		//rigidBody = AddComponent<RigidBodyComponent>();
+
+		//AddComponent<BoxColliderComponent>(1, 1, 1);
 	}
 
 	void Tick(double delta) override
@@ -55,33 +61,31 @@ public:
 
 		//GetTransform().Rotation.x += delta;
 
-		/*GetTransform().Rotation.x -= ImGui::GetIO().MouseDelta.y * 0.1f;
-		GetTransform().Rotation.y -= ImGui::GetIO().MouseDelta.x * 0.1f;
-
-		GetTransform().Rotation.x = glm::clamp(GetTransform().Rotation.x, -90.0f, 90.0f);
-		GetTransform().Rotation.y = fmod(GetTransform().Rotation.y, 360.0f);
+		float yaw = ImGui::GetIO().MouseDelta.y * -0.1f;
+		float pitch = ImGui::GetIO().MouseDelta.x * -0.1f;
+		m_Camera->GetTransform().AddRotation(yaw, pitch, 0.0f);
 
 		Matrix4 transform = m_Camera->GetTransformationMatrix();
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
 		{
-			GetTransform().Location -= Vector3(transform[2]) * (float)delta * m_FlySpeed;
+			m_Camera->GetTransform().AddLocation(-Vector3(transform[2]) * (float)delta * m_FlySpeed);
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
 		{
-			GetTransform().Location += Vector3(transform[2]) * (float)delta * m_FlySpeed;
+			m_Camera->GetTransform().AddLocation(Vector3(transform[2]) * (float)delta * m_FlySpeed);
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
 		{
-			GetTransform().Location -= Vector3(transform[0]) * (float)delta * m_FlySpeed;
+			m_Camera->GetTransform().AddLocation(-Vector3(transform[0]) * (float)delta * m_FlySpeed);
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
 		{
-			GetTransform().Location += Vector3(transform[0]) * (float)delta * m_FlySpeed;
-		}*/
+			m_Camera->GetTransform().AddLocation(Vector3(transform[0]) * (float)delta * m_FlySpeed);
+		}
 	}
 
 	CameraComponent* GetCamera()
@@ -119,6 +123,7 @@ class BaseAppContext : public AppContext
 
 	// FIXME: this is just an hack!
 	SceneRenderer* GetSceneRenderer() override { return sceneRenderer; }
+	PhysicsWorld* GetPhysicsWorld() override { return m_PhysicsWorld; }
 
 	void Init() override
 	{
@@ -196,10 +201,19 @@ class BaseAppContext : public AppContext
 
 		for (int i = 0; i < 10; ++i)
 		{
-			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box " + std::to_string(i), Vector3(i * 2.2f - 5, 10 + i + 1, 0), {}, Vector3(0.005f));
+			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box B " + std::to_string(i), Vector3(i * 2.2f - 5, 10 + i + 1, 0), {}, Vector3(0.005f));
 
-			RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
 			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
+
+			if (i != 9)
+			{
+				RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
+			}
+			else
+			{
+				testActor->SetName("Static box");
+				testActor2->GetTransform().SetLocation(0, 0, 0);
+			}
 
 			if(importedData2)
 			{

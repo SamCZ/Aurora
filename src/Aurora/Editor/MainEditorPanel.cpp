@@ -12,6 +12,7 @@
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Tools/IconsFontAwesome5.hpp"
 #include "Aurora/Render/SceneRenderer.hpp"
+#include "Aurora/Physics/PhysicsWorld.hpp"
 
 
 #include "Aurora/Core/Profiler.hpp"
@@ -258,6 +259,28 @@ namespace Aurora
 					ImGui::DragFloat("Bloom Knee", &bloomSettings.Knee, 0.01f);
 					ImGui::DragFloat("Bloom Intensity", &bloomSettings.Intensity, 0.01f);
 				}
+				ImGui::EndMenu();
+			}
+
+			PhysicsWorld* physicsWorld = GEngine->GetAppContext()->GetPhysicsWorld();
+
+			if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_D, false))
+			{
+				physicsWorld->ToggleDebugRender();
+			}
+
+			if (ImGui::BeginMenu("Physics"))
+			{
+				if (physicsWorld)
+				{
+					bool debugDraw = physicsWorld->IsDebugRender();
+
+					if (ImGui::Checkbox("DebugDraw", &debugDraw))
+					{
+						physicsWorld->SetDebugRender(debugDraw);
+					}
+				}
+
 				ImGui::EndMenu();
 			}
 

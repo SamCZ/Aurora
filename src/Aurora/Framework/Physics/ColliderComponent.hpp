@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../ActorComponent.hpp"
+#include "../Transform.hpp"
 #include "Aurora/Physics/AABB.hpp"
+#include "Aurora/Physics/Types.hpp"
 
 namespace Aurora
 {
@@ -14,6 +16,22 @@ namespace Aurora
 		CLASS_OBJ(ColliderComponent, ActorComponent);
 
 		ColliderComponent() : m_Bounds(), m_Origin() {}
+
+		virtual void GetAabb(const Transform& transform, phVector3& aabbMin, phVector3& aabbMax) const
+		{
+			AABB transformed = m_Bounds.Transform(transform.GetTransform());
+			aabbMin = transformed.GetMin();
+			aabbMax = transformed.GetMax();
+		}
+
+		virtual void GetBoundingSphere(phVector3& center, phScalar& radius) const
+		{
+			phVector3 aabbMin = m_Bounds.GetMin();
+			phVector3 aabbMax = m_Bounds.GetMax();
+
+			radius = glm::length(aabbMax - aabbMin) * phScalar(0.5);
+			center = (aabbMin + aabbMax) * phScalar(0.5);
+		}
 
 		[[nodiscard]] const AABB& GetAABB() const { return m_Bounds; }
 	};

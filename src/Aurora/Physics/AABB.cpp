@@ -103,13 +103,12 @@ namespace Aurora
 		return m_SurfaceArea;
 	}
 
-	/*int AABB::CollideWithRay(const Ray &ray, CollisionResults &results) const
+	int AABB::CollideWithRay(const Vector3D& origin, const Vector3D& direction, std::vector<AABBHit>& hits) const
 	{
 		double m_ClipTemp[2];
 
 		Vector3 extent = GetExtent();
-		glm::vec3 diff = ray.Origin - GetOrigin();
-		glm::vec3 direction = ray.Direction;
+		glm::vec3 diff = origin - (Vector3D)GetOrigin();
 
 		m_ClipTemp[0] = 0.0;
 		m_ClipTemp[1] = std::numeric_limits<double>::infinity();
@@ -130,29 +129,20 @@ namespace Aurora
 		{
 			if (m_ClipTemp[1] > m_ClipTemp[0])
 			{
-				glm::dvec3 point0 = (ray.Direction * m_ClipTemp[0]) + ray.Origin;
-				glm::dvec3 point1 = (ray.Direction * m_ClipTemp[1]) + ray.Origin;
+				glm::dvec3 point0 = (direction * m_ClipTemp[0]) + origin;
+				glm::dvec3 point1 = (direction * m_ClipTemp[1]) + origin;
 
-				CollisionResult result;
-				result.ContactPoint = point0;
-				result.Distance = m_ClipTemp[0];
-				results.AddCollision(result);
-
-				CollisionResult result2;
-				result2.ContactPoint = point1;
-				result2.Distance = m_ClipTemp[1];
-				results.AddCollision(result2);
+				hits.emplace_back(AABBHit{point0, m_ClipTemp[0]});
+				hits.emplace_back(AABBHit{point1, m_ClipTemp[1]});
+				return 2;
 			} else {
-				glm::dvec3 point = (ray.Direction * m_ClipTemp[0]) + ray.Origin;
-				CollisionResult result;
-				result.ContactPoint = point;
-				result.Distance = m_ClipTemp[0];
-				results.AddCollision(result);
+				glm::dvec3 point = (direction * m_ClipTemp[0]) + origin;
+				hits.emplace_back(AABBHit{point, m_ClipTemp[0]});
+				return 1;
 			}
-			return 1;
 		}
 		return 0;
-	}*/
+	}
 
 	bool AABB::Clip(double denom, double numer, double *t)
 	{

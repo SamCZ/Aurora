@@ -6,6 +6,7 @@
 #include "Aurora/Aurora.hpp"
 #include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
+#include "Aurora/Graphics/DShape.hpp"
 #include "Aurora/Framework/Actor.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
@@ -13,6 +14,7 @@
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
+#include "Aurora/Physics/PhysicsWorld.hpp"
 
 #include "MainEditorPanel.hpp"
 
@@ -191,10 +193,10 @@ namespace Aurora
 				ImGui::EndDragDropTarget();
 			}
 
-			// Actor icons
 
 			if (m_EditorCameraActor->IsActive())
 			{
+				// Actor icons
 				const float ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_EYE).x;
 
 				char tmps[10];
@@ -255,6 +257,25 @@ namespace Aurora
 					if(manipulated)
 					{
 						(void)m_MainPanel->SetSelectedObjectTransform(transform);
+					}
+				}
+
+				// Click to select object
+				if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && not ImGuizmo::IsUsing() && not ImGuizmo::IsOver())
+				{
+					ImVec2 windowCursorPos = ImVec2(ImGui::GetMousePos().x - pos.x, ImGui::GetMousePos().y - pos.y);
+					if (windowCursorPos.x >= 0 && windowCursorPos.y >= 0 && windowCursorPos.x < viewPortSize.x && windowCursorPos.y < viewPortSize.y)
+					{
+						Ray ray = m_EditorCamera->GetRayFromScreen(windowCursorPos.x, viewPortSize.y - windowCursorPos.y);
+
+						//AU_LOG_INFO(glm::to_string(ray.Origin));
+
+						std::vector<RayCastHitResult> results;
+						if (GEngine->GetAppContext()->GetPhysicsWorld()->RayCast(ray.Origin, ray.Origin + ray.Direction * 1000.0f, results))
+						{
+							const RayCastHitResult& closesResult = results[0];
+							m_MainPanel->SetSelectedActor(closesResult.HitActor);
+						}
 					}
 				}
 

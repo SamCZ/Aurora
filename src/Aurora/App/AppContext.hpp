@@ -9,6 +9,7 @@
 namespace Aurora
 {
 	class SceneRenderer;
+	class PhysicsWorld;
 
 	class GameContext
 	{
@@ -58,6 +59,7 @@ namespace Aurora
 		virtual void RenderVg() {}
 
 		virtual SceneRenderer* GetSceneRenderer() { return nullptr; }
+		virtual PhysicsWorld* GetPhysicsWorld() { return nullptr; }
 
 		static EventEmitter<Scene*>& GetSceneChangeEmitter() { return m_SceneChangeEmitter; }
 

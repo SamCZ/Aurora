@@ -122,7 +122,7 @@ namespace Aurora
 			// if we have no free tree nodes then grow the pool
 			if (m_NextFreeNodeIndex == AABB_NULL_NODE)
 			{
-				assert(_allocatedNodeCount == _nodeCapacity);
+				assert(m_AllocatedNodeCount == m_NodeCapacity);
 
 				m_NodeCapacity += m_GrowthSize;
 				m_Nodes.resize(m_NodeCapacity);
@@ -157,9 +157,9 @@ namespace Aurora
 		void InsertLeaf(NodeIndex_t leafNodeIndex)
 		{
 			// make sure we're inserting a new leaf
-			assert(_nodes[leafNodeIndex].ParentNodeIndex == AABB_NULL_NODE);
-			assert(_nodes[leafNodeIndex].LeftNodeIndex == AABB_NULL_NODE);
-			assert(_nodes[leafNodeIndex].RightNodeIndex == AABB_NULL_NODE);
+			assert(m_Nodes[leafNodeIndex].ParentNodeIndex == AABB_NULL_NODE);
+			assert(m_Nodes[leafNodeIndex].LeftNodeIndex == AABB_NULL_NODE);
+			assert(m_Nodes[leafNodeIndex].RightNodeIndex == AABB_NULL_NODE);
 
 			// if the tree is empty then we make the root the leaf
 			if (m_RootNodeIndex == AABB_NULL_NODE)
