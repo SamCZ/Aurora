@@ -12,9 +12,10 @@
 
 namespace Aurora
 {
-	AABBTree<ColliderComponent> aabbTree(1);
+	//AABBTree<ColliderComponent> aabbTree(1);
+	AABBTreeRaw aabbTreeRaw(1);
 
-	PhysicsWorld::PhysicsWorld(Scene* scene) : m_Scene(scene), m_Accumulator(0), m_Time(0), m_DebugRender(false)
+	PhysicsWorld::PhysicsWorld(Scene* scene) : m_Scene(scene), m_Accumulator(0), m_Time(0), m_DebugRender(false), m_Gravity(0, -0.5f, 0), m_UpdateRate(1.0 / 120.0)
 	{
 
 	}
@@ -23,41 +24,40 @@ namespace Aurora
 	{
 		CPU_DEBUG_SCOPE("PhysicsWorld");
 
-		if (frameTime > 0.25)
-			frameTime = 0.25;
-
-		const double timeStep = 1.0 / 60.0;
 		m_Accumulator += frameTime;
 
-		while (m_Accumulator >= timeStep)
+		while (m_Accumulator >= m_UpdateRate)
 		{
-			RunPhysics(m_Time, timeStep);
-			m_Time += timeStep;
-			m_Accumulator -= timeStep;
+			RunPhysics();
+			m_Time += m_UpdateRate;
+			m_Accumulator -= m_UpdateRate;
 		}
 
 		if (IsDebugRender())
 		{
-			for (const auto& node : aabbTree.GetNodes())
+			for (const auto& node : aabbTreeRaw.GetNodes())
 			{
-				if (node.ParentNodeIndex == AABB_NULL_NODE || !node.IsLeaf())
+				if (node.parentNodeIndex == AABB_NULL_NODE || !node.isLeaf())
 					continue;
 
-				DShapes::Box(node.Bounds, Color::green(), true, 1.0f, 0, false);
+				if (node.isLeaf())
+					DShapes::Box(node.aabb, Color::red(), true, 1.2f, 0, false);
+				else
+					DShapes::Box(node.aabb, Color::green(), true, 1.0f, 0, false);
 			}
 		}
 	}
 
-	void PhysicsWorld::RunPhysics(double time, double timeStep)
+	void PhysicsWorld::RunPhysics()
 	{
 		ComponentView<ColliderComponent> colliderComponents = m_Scene->GetComponents<ColliderComponent>();
-		aabbTree = AABBTree<ColliderComponent>(colliderComponents.size());
+		aabbTreeRaw = AABBTreeRaw(colliderComponents.size() * 2);
 
 		for (ColliderComponent* collider : colliderComponents)
 		{
 			AABB bounds = collider->GetAABB();
 			bounds.SetOffset(collider->GetParent()->GetTransform().GetLocation());
-			aabbTree.InsertObject(collider, bounds);
+			aabbTreeRaw.insertObject(collider, bounds);
 		}
 
 		ComponentView<RigidBodyComponent> bodyComponents = m_Scene->GetComponents<RigidBodyComponent>();
@@ -66,135 +66,60 @@ namespace Aurora
 			if (rigidBodyComponent->IsKinematic())
 				continue;
 
+			rigidBodyComponent->GetOwner()->FixedStep();
+
 			SceneComponent* parent = rigidBodyComponent->GetParent() != nullptr ? rigidBodyComponent->GetParent() : rigidBodyComponent->GetOwner()->GetRootComponent();
 			std::vector<BoxColliderComponent*> colliders;
 			parent->GetComponentsOfType(colliders);
-			BoxColliderComponent* collider = colliders[0];
 
-			rigidBodyComponent->SetLinearVelocity({0, -10, 0});
+			Transform& transform = rigidBodyComponent->GetOwner()->GetRootComponent()->GetTransform();
 
-			if (false)
-			{ // new physics
-				Transform predictedTrans;
-				rigidBodyComponent->PredictIntegratedTransform(timeStep, predictedTrans);
+			Vector3 velocity = rigidBodyComponent->GetVelocity();
 
-				AABB bounds = collider->GetAABB();
-				bounds.SetOffset(rigidBodyComponent->GetWorldTransform().GetLocation());
-				aabbTree.UpdateObject(collider, bounds);
-
-				phScalar squareMotion = glm::length2(predictedTrans.GetLocation() - rigidBodyComponent->GetWorldTransform().GetLocation());
-
-				if (squareMotion > 0.0)
-				{
-					Transform modifiedPredictedTrans = predictedTrans;
-					modifiedPredictedTrans.SetRotation(rigidBodyComponent->GetWorldTransform().GetRotation());
-
-					for (auto collisionObject : aabbTree.QueryOverlaps(collider, bounds))
-					{
-						phVector3 collisionObjectAabbMin, collisionObjectAabbMax;
-						collisionObject->GetAabb(collisionObject->GetParent()->GetTransform(), collisionObjectAabbMin, collisionObjectAabbMax);
-
-						collisionObjectAabbMin += bounds.GetMin();
-						collisionObjectAabbMax += bounds.GetMax();
-						//AabbExpand(collisionObjectAabbMin, collisionObjectAabbMax, castShapeAabbMin, castShapeAabbMax);
-
-						phScalar hitLambda = phScalar(1.);  //could use resultCallback.m_closestHitFraction, but needs testing
-						phVector3 hitNormal;
-
-						if (phRayAabb(rigidBodyComponent->GetWorldTransform().GetLocation(), predictedTrans.GetLocation(), collisionObjectAabbMin, collisionObjectAabbMax, hitLambda, hitNormal))
-						{
-							rigidBodyComponent->PredictIntegratedTransform(timeStep * hitLambda, predictedTrans);
-							rigidBodyComponent->GetWorldTransform().SetFromMatrixNoScale(predictedTrans.GetTransform());
-						}
-
-					}
-
-					//ConvexSweepTest(&tmpSphere, body->getWorldTransform(), modifiedPredictedTrans, sweepResults);
-				}
-
-				rigidBodyComponent->GetWorldTransform().SetFromMatrixNoScale(predictedTrans.GetTransform());
-			}
-			else
+			if (true) // if gravity
 			{
-				Transform& transform = rigidBodyComponent->GetOwner()->GetRootComponent()->GetTransform();
+				velocity += m_Gravity;
+			}
 
-				Vector3 velocity = {0, -timeStep * 10.0f, 0};
-				//transform.AddLocation(velocity);
+			velocity += rigidBodyComponent->GetAcceleration();
 
-				AABB bounds = collider->GetAABB();
-				bounds.SetOffset(collider->GetParent()->GetWorldPosition());
-				aabbTree.UpdateObject(collider, bounds);
+			if (glm::length2(velocity) == 0) continue;
 
-				transform.AddLocation(velocity);
+			transform.SetLocation(transform.GetLocation() + velocity * (float)m_UpdateRate);
 
-				for (auto collisionObject : aabbTree.QueryOverlaps(collider, bounds))
+			for (BoxColliderComponent* collider : colliders)
+			{
+				//Vector3 predictedLocation = transform.GetLocation() + velocity * (float)m_UpdateRate;
+
+				// Predict bounding box
+				AABB predictedBounds = collider->GetAABB();
+				predictedBounds.SetOffset(transform.GetLocation());
+				aabbTreeRaw.updateObject(collider, predictedBounds);
+
+				for (auto collisionObject : aabbTreeRaw.queryOverlaps(collider, predictedBounds))
 				{
-					if (collisionObject->GetParent()->GetName() == "Camera") continue;
-
-					//AU_LOG_INFO("Overlap ", parent->GetOwner()->GetName(), " with ", collisionObject->GetOwner()->GetName());
-
 					AABB boundsOther = collisionObject->GetAABB();
 					boundsOther.SetOffset(collisionObject->GetParent()->GetWorldPosition());
 
-					/*for (int axis = 0; axis < 3; ++axis)
+					if (predictedBounds.GetMin().y < boundsOther.GetMax().y)
 					{
-						float axisVelocity = velocity[axis];
-						if (glm::abs(axisVelocity) == 0) continue;
+						//AU_LOG_INFO("diff ", (boundsOther.GetMax().y - predictedBounds.GetMin().y) );
 
-						Vector3 localAxisVelocity = { 0, 0, 0 };
-						localAxisVelocity[axis] = axisVelocity;
+						transform.AddLocation(0, boundsOther.GetMax().y - predictedBounds.GetMin().y, 0);
+						velocity.y = 0;
+						//velocity.y += 0.5f + boundsOther.GetMax().y - predictedBounds.GetMin().y;
+					}
 
-						bounds = collider->GetAABB();
-						bounds.SetOffset(collider->GetParent()->GetWorldPosition() - velocity + localAxisVelocity);
-
-						AABB intersection = bounds.Intersection(boundsOther);
-
-						Vector3 objPos = transform.GetLocation();
-						objPos[axis] += intersection.GetSize()[axis];
-						transform.SetLocation(objPos);
-					}*/
-
-					/*phVector3 collisionObjectAabbMin, collisionObjectAabbMax;
-					collisionObject->GetAabb(collisionObject->GetParent()->GetTransform(), collisionObjectAabbMin, collisionObjectAabbMax);
-
-					collisionObjectAabbMin += bounds.GetMin();
-					collisionObjectAabbMax += bounds.GetMax();
-
-					AABB boundsOther(collisionObjectAabbMin, collisionObjectAabbMax);*/
-
-					/*Vector3 ray_origin = bounds.GetOrigin();
-					Vector3 ray_dir = velocity;
-					float maxDistance = glm::length(ray_dir);
-
-					std::vector<AABBHit> hits;
-					if (boundsOther.CollideWithRay(ray_origin, ray_dir, hits))
-					{
-						std::sort(hits.begin(), hits.end(), [](const AABBHit& left, const AABBHit& right) -> bool { return left.Distance < right.Distance; });
-
-						const AABBHit& closestHit = hits[0];
-
-						Vector3 normal = glm::sign((Vector3)closestHit.Point - boundsOther.GetOrigin());
-
-						//velocity *= -normal * 1.0f - (float(closestHit.Distance) / maxDistance);
-						transform.AddLocation(velocity * -normal * 1.0f - (float(closestHit.Distance) / maxDistance));
-					}*/
-
-					AABB intersection = bounds.Intersection(boundsOther);
-
-					//AU_LOG_INFO("Overlap ", parent->GetOwner()->GetName(), " with ", overlap->GetOwner()->GetName());
-					transform.SetLocation(transform.GetLocation() + Vector3(0, intersection.GetHeight(), 0));
 				}
 
-
-
-			}
-
-
-			{
+				// Revert bounds back
 				AABB bounds = collider->GetAABB();
 				bounds.SetOffset(collider->GetParent()->GetWorldPosition());
-				aabbTree.UpdateObject(collider, bounds);
+				aabbTreeRaw.updateObject(collider, bounds);
 			}
+
+			rigidBodyComponent->SetVelocity(velocity);
+			//transform.SetLocation(transform.GetLocation() + velocity * (float)m_UpdateRate);
 		}
 	}
 
@@ -222,9 +147,7 @@ namespace Aurora
 
 				if (closestHit.Distance <= maxDistance)
 				{
-					// FIXME: this normal calculation is wrong
-					Vector3 normal = glm::sign((Vector3)closestHit.Point - bounds.GetOrigin());
-
+					Vector3 normal = bounds.GetRayHitNormal((Vector3)closestHit.Point);
 					results.emplace_back(RayCastHitResult{collider->GetOwner(), closestHit.Point, normal, closestHit.Distance});
 
 					count++;

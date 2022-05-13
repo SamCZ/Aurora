@@ -115,6 +115,7 @@ namespace Aurora
 		inline virtual void BeginPlay() {}
 		inline virtual void BeginDestroy() {}
 		inline virtual void Tick(double delta) {}
+		inline virtual void FixedStep() {}
 		inline virtual void SetActive(bool newActive) { m_IsActive = newActive; }
 		inline virtual void ToggleActive() { m_IsActive = !m_IsActive; }
 		virtual inline bool IsActive() { return m_IsActive; }

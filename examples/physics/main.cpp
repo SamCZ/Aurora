@@ -50,61 +50,69 @@ public:
 		m_Camera->SetViewPort(GEngine->GetViewPortManager()->Get());
 		m_Camera->SetPerspective(75, 0.1f, 2000.0f);
 
-		//rigidBody = AddComponent<RigidBodyComponent>();
+		rigidBody = AddComponent<RigidBodyComponent>();
 
-		//AddComponent<BoxColliderComponent>(1, 1, 1);
+		AddComponent<BoxColliderComponent>(1, 1, 1);
 	}
 
 	void Tick(double delta) override
 	{
-		float m_FlySpeed = 10.0f;
-
 		//GetTransform().Rotation.x += delta;
 
 		float yaw = ImGui::GetIO().MouseDelta.y * -0.1f;
 		float pitch = ImGui::GetIO().MouseDelta.x * -0.1f;
 		m_Camera->GetTransform().AddRotation(yaw, pitch, 0.0f);
+	}
+
+	void FixedStep() override
+	{
+		float m_FlySpeed = 6.0f;
 
 		Matrix4 transform = m_Camera->GetTransformationMatrix();
 
+		bool hadAccY = rigidBody->GetAcceleration().y > 0;
+
+		rigidBody->SetVelocity({0, 0, 0});
+		rigidBody->SetAcceleration({0, 0, 0});
+
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
 		{
-			m_Camera->GetTransform().AddLocation(-Vector3(transform[2]) * (float)delta * m_FlySpeed);
+			//m_Camera->GetTransform().AddLocation(-Vector3(transform[2]) * (float)delta * m_FlySpeed);
+			rigidBody->AddVelocity(-Vector3(transform[2]) * m_FlySpeed);
+			//rigidBody->SetLinearVelocity();
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
 		{
-			m_Camera->GetTransform().AddLocation(Vector3(transform[2]) * (float)delta * m_FlySpeed);
+			//m_Camera->GetTransform().AddLocation(Vector3(transform[2]) * (float)delta * m_FlySpeed);
+			rigidBody->AddVelocity(Vector3(transform[2]) * m_FlySpeed);
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
 		{
-			m_Camera->GetTransform().AddLocation(-Vector3(transform[0]) * (float)delta * m_FlySpeed);
+			//m_Camera->GetTransform().AddLocation(-Vector3(transform[0]) * (float)delta * m_FlySpeed);
+			rigidBody->AddVelocity(-Vector3(transform[0]) * m_FlySpeed);
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
 		{
-			m_Camera->GetTransform().AddLocation(Vector3(transform[0]) * (float)delta * m_FlySpeed);
+			//m_Camera->GetTransform().AddLocation(Vector3(transform[0]) * (float)delta * m_FlySpeed);
+			rigidBody->AddVelocity(Vector3(transform[0]) * m_FlySpeed);
 		}
+
+		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_Space)] && not hadAccY)
+		{
+			//m_Camera->GetTransform().AddLocation(Vector3(transform[0]) * (float)delta * m_FlySpeed);
+			rigidBody->SetAcceleration({0, 40, 0});
+		}
+
+		//rigidBody->SetVelocity(rigidBody->GetVelocity() * 0.99f);
 	}
 
 	CameraComponent* GetCamera()
 	{
 		return m_Camera;
 	}
-};
-
-struct PhBody
-{
-	Vector3 Location;
-	AABB Bounds;
-};
-
-struct PhDynamicBody : PhBody
-{
-	Vector3 Velocity;
-	Vector3 Acceleration;
-	Vector3 LocalInertia;
 };
 
 class BaseAppContext : public AppContext
@@ -184,8 +192,8 @@ class BaseAppContext : public AppContext
 		{
 			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box " + std::to_string(i), Vector3(i * 2.2f - 5, 10, 0), {}, Vector3(0.005f));
 
-			RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
-			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
+			//RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
+			//BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
 
 			if(importedData2)
 			{
@@ -197,17 +205,19 @@ class BaseAppContext : public AppContext
 					item.second.Material = matInstance;
 				}
 			}
+
+			//break;
 		}
 
 		for (int i = 0; i < 10; ++i)
 		{
 			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box B " + std::to_string(i), Vector3(i * 2.2f - 5, 10 + i + 1, 0), {}, Vector3(0.005f));
 
-			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
+			//BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
 
 			if (i != 9)
 			{
-				RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
+				//RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
 			}
 			else
 			{

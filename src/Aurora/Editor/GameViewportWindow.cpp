@@ -229,17 +229,17 @@ namespace Aurora
 			{
 				if(!ImGui::GetIO().WantTextInput && !m_MouseViewportGrabbed)
 				{
-					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
+					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_R)])
 					{
 						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::SCALE;
 					}
 
-					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_R)])
+					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_E)])
 					{
 						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::ROTATE;
 					}
 
-					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_T)])
+					if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
 					{
 						m_CurrentManipulatorOperation = ImGuizmo::OPERATION::TRANSLATE;
 					}
@@ -261,7 +261,7 @@ namespace Aurora
 				}
 
 				// Click to select object
-				if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && not ImGuizmo::IsUsing() && not ImGuizmo::IsOver())
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && not ImGuizmo::IsUsing() && not ImGuizmo::IsOver())
 				{
 					ImVec2 windowCursorPos = ImVec2(ImGui::GetMousePos().x - pos.x, ImGui::GetMousePos().y - pos.y);
 					if (windowCursorPos.x >= 0 && windowCursorPos.y >= 0 && windowCursorPos.x < viewPortSize.x && windowCursorPos.y < viewPortSize.y)

@@ -47,12 +47,13 @@ namespace Aurora
 		{
 			// y is deliberately first in the list of checks below as it is seen as more likely than things
 			// collide on x,z but not on y than they do on y thus we drop out sooner on a y fail
-			return m_Max.x > other.m_Min.x &&
+			/*return m_Max.x > other.m_Min.x &&
 				m_Min.x < other.m_Max.x &&
 				m_Max.y > other.m_Min.y &&
 				m_Min.y < other.m_Max.y &&
 				m_Max.z > other.m_Min.z &&
-				m_Min.z < other.m_Max.z;
+				m_Min.z < other.m_Max.z;*/
+			return IntersectsWith(other);
 		}
 
 		[[nodiscard]] bool Contains(const AABB& other) const
@@ -67,18 +68,14 @@ namespace Aurora
 
 		[[nodiscard]] AABB Merge(const AABB& other) const
 		{
-			return {
-				{std::min(m_Min.x, other.m_Min.x), std::min(m_Min.y, other.m_Min.y), std::min(m_Min.z, other.m_Min.z)},
-				{std::max(m_Max.x, other.m_Max.x), std::max(m_Max.y, other.m_Max.y), std::max(m_Max.z, other.m_Max.z)}
-			};
+			return AABB({std::min(m_Min.x, other.m_Min.x), std::min(m_Min.y, other.m_Min.y), std::min(m_Min.z, other.m_Min.z)},
+				{std::max(m_Max.x, other.m_Max.x), std::max(m_Max.y, other.m_Max.y), std::max(m_Max.z, other.m_Max.z)});
 		}
 
 		[[nodiscard]] AABB Intersection(const AABB& other) const
 		{
-			return {
-				{std::max(m_Min.x, other.m_Min.x), std::max(m_Min.y, other.m_Min.y), std::max(m_Min.z, other.m_Min.z)},
-				{std::min(m_Max.x, other.m_Max.x), std::min(m_Max.y, other.m_Max.y), std::min(m_Max.z, other.m_Max.z)}
-			};
+			return AABB({std::max(m_Min.x, other.m_Min.x), std::max(m_Min.y, other.m_Min.y), std::max(m_Min.z, other.m_Min.z)},
+				{std::min(m_Max.x, other.m_Max.x), std::min(m_Max.y, other.m_Max.y), std::min(m_Max.z, other.m_Max.z)});
 		}
 
 		[[nodiscard]] Vector3 GetOrigin() const;
@@ -93,6 +90,8 @@ namespace Aurora
 		[[nodiscard]] float CalculateSurfaceArea() const;
 
 		int CollideWithRay(const Vector3D& origin, const Vector3D& direction, std::vector<AABBHit>& hits) const;
+
+		Vector3 GetRayHitNormal(const Vector3 hitPoint) const;
 
 		static void CheckMinMax(Vector3& min, Vector3& max, const Vector3& point);
 

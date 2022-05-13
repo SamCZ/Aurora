@@ -23,18 +23,21 @@ namespace Aurora
 		double m_Accumulator;
 
 		bool m_DebugRender;
+
+		Vector3 m_Gravity;
+		double m_UpdateRate;
 	public:
-		PhysicsWorld(Scene* scene);
+		explicit PhysicsWorld(Scene* scene);
 		~PhysicsWorld();
 
 		inline void SetDebugRender(bool debugRender) { m_DebugRender = debugRender; }
-		inline bool IsDebugRender() const { return m_DebugRender; }
+		[[nodiscard]] inline bool IsDebugRender() const { return m_DebugRender; }
 		inline void ToggleDebugRender() { m_DebugRender = !m_DebugRender; }
 
 		void Update(double frameTime);
 
 		int32_t RayCast(const Vector3& fromPos, const Vector3& toPos, std::vector<RayCastHitResult>& results) const;
 	private:
-		void RunPhysics(double time, double timeStep);
+		void RunPhysics();
 	};
 }

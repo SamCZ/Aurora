@@ -1,5 +1,7 @@
 #include "AABB.hpp"
 
+#include "Aurora/Logger/Logger.hpp"
+
 namespace Aurora
 {
 	AABB::AABB() : m_Min(), m_Max(), m_SurfaceArea(0)
@@ -16,7 +18,7 @@ namespace Aurora
 
 	AABB AABB::FromExtent(const Vector3 &origin, const Vector3 &extent)
 	{
-		return {origin - extent, origin + extent};
+		return AABB(origin - extent, origin + extent);
 	}
 
 	const Vector3 &AABB::GetMin() const
@@ -100,7 +102,7 @@ namespace Aurora
 
 	float AABB::CalculateSurfaceArea() const
 	{
-		return m_SurfaceArea;
+		return 2.0f * (GetWidth() * GetHeight() + GetWidth() * GetDepth() + GetHeight() * GetDepth());;
 	}
 
 	int AABB::CollideWithRay(const Vector3D& origin, const Vector3D& direction, std::vector<AABBHit>& hits) const
@@ -142,6 +144,27 @@ namespace Aurora
 			}
 		}
 		return 0;
+	}
+
+	Vector3 AABB::GetRayHitNormal(const Vector3 hitPoint) const
+	{
+		Vector3 localPosition = hitPoint - GetOrigin();
+		Vector3 extent = GetExtent();
+		Vector3 normal;
+
+		for (int axis = 0; axis < 3; ++axis)
+		{
+			if (glm::abs(glm::abs(localPosition[axis]) - extent[axis]) < glm::epsilon<float>())
+			{
+				normal[axis] = glm::sign(localPosition[axis]);
+			}
+			else
+			{
+				normal[axis] = 0;
+			}
+		}
+
+		return normal;
 	}
 
 	bool AABB::Clip(double denom, double numer, double *t)

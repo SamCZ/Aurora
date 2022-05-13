@@ -343,4 +343,55 @@ namespace Aurora
 			}
 		}
 	};
+
+	class ColliderComponent;
+
+	struct AABBNodeRaw
+	{
+		AABB aabb;
+		ColliderComponent* object;
+		// tree links
+		unsigned parentNodeIndex;
+		unsigned leftNodeIndex;
+		unsigned rightNodeIndex;
+		// node linked list link
+		unsigned nextNodeIndex;
+
+		bool isLeaf() const { return leftNodeIndex == AABB_NULL_NODE; }
+
+		AABBNodeRaw() : object(nullptr), parentNodeIndex(AABB_NULL_NODE), leftNodeIndex(AABB_NULL_NODE), rightNodeIndex(AABB_NULL_NODE), nextNodeIndex(AABB_NULL_NODE)
+		{
+
+		}
+	};
+
+	class AABBTreeRaw
+	{
+	private:
+		std::map<ColliderComponent*, unsigned> _objectNodeIndexMap;
+		std::vector<AABBNodeRaw> _nodes;
+		unsigned _rootNodeIndex;
+		unsigned _allocatedNodeCount;
+		unsigned _nextFreeNodeIndex;
+		unsigned _nodeCapacity;
+		unsigned _growthSize;
+
+		unsigned allocateNode();
+		void deallocateNode(unsigned nodeIndex);
+		void insertLeaf(unsigned leafNodeIndex);
+		void removeLeaf(unsigned leafNodeIndex);
+		void updateLeaf(unsigned leafNodeIndex, const AABB& newAaab);
+		void fixUpwardsTree(unsigned treeNodeIndex);
+
+	public:
+		AABBTreeRaw(unsigned initialSize);
+		~AABBTreeRaw();
+
+		const std::vector<AABBNodeRaw>& GetNodes() const { return _nodes; }
+
+		void insertObject(ColliderComponent* object, const AABB& aabb);
+		void removeObject(ColliderComponent* object);
+		void updateObject(ColliderComponent* object, const AABB& aabb);
+		std::forward_list<ColliderComponent*> queryOverlaps(ColliderComponent* object, const AABB& aabb) const;
+	};
 }

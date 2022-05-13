@@ -13,17 +13,24 @@ namespace Aurora
 		bool m_HasGravity;
 		bool m_IsKinematic;
 
-		phVector3 m_LinearVelocity;
-		phVector3 m_AngularVelocity;
+		Vector3 m_Velocity;
+		Vector3 m_AngularVelocity;
+		Vector3 m_Acceleration;
 	public:
 		CLASS_OBJ(RigidBodyComponent, ActorComponent);
 
-		RigidBodyComponent() : ActorComponent(), m_LinearVelocity(0), m_AngularVelocity(0)
+		RigidBodyComponent() : ActorComponent(), m_Velocity(0), m_AngularVelocity(0), m_Acceleration(0)
 		{
 
 		}
 
-		inline void SetLinearVelocity(const phVector3& velocity) { m_LinearVelocity = velocity; }
+		inline void SetVelocity(const Vector3& velocity) { m_Velocity = velocity; }
+		inline void AddVelocity(const Vector3& velocity) { m_Velocity += velocity; }
+		[[nodiscard]] inline const Vector3& GetVelocity() const { return m_Velocity; }
+
+		inline void SetAcceleration(const Vector3& acceleration) { m_Acceleration = acceleration; }
+		inline void AddAcceleration(const Vector3& acceleration) { m_Acceleration += acceleration; }
+		[[nodiscard]] inline const Vector3& GetAcceleration() const { return m_Acceleration; }
 
 		[[nodiscard]] bool HasGravity() const
 		{
