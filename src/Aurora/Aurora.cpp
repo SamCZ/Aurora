@@ -497,7 +497,7 @@ namespace Aurora
 				m_RenderManager->EndFrame();
 				m_RenderDevice->ResetFrameRenderStatistics();
 				CPU_DEBUG_SCOPE("Swap chain");
-				m_SwapChain->Present(0);
+				m_SwapChain->Present(1);
 			}
 
 #if AU_TRACY_ENABLED

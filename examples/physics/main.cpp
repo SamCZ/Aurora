@@ -142,10 +142,6 @@ class BaseAppContext : public AppContext
 
 		sceneRenderer = new SceneRenderer();
 
-		{ // Init floor
-
-		}
-
 		AssimpModelLoader modelLoader;
 		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/socuwan.fbx"));
 
@@ -177,9 +173,21 @@ class BaseAppContext : public AppContext
 			}
 		}
 
+		if(false)
 		{
 			Actor* groundActor = GetScene()->SpawnActor<Actor>("Ground", {0, -0.5f, 0});
 			groundActor->AddComponent<BoxColliderComponent>(50, 1, 50);
+		}
+		else
+		{
+			for (int x = -10; x < 10; ++x)
+			{
+				for (int z = -10; z < 10; ++z)
+				{
+					Actor* groundActor = GetScene()->SpawnActor<Actor>("Ground", {x + 0.5f, -0.5f, z + 0.5f});
+					groundActor->AddComponent<BoxColliderComponent>(1, 1, 1);
+				}
+			}
 		}
 
 		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box_cubeUV.fbx"));
@@ -221,6 +229,7 @@ class BaseAppContext : public AppContext
 			}
 			else
 			{
+				BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
 				testActor->SetName("Static box");
 				testActor2->GetTransform().SetLocation(0, 0, 0);
 			}

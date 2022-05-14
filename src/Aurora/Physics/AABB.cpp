@@ -92,7 +92,7 @@ namespace Aurora
 
 	Vector3 AABB::GetOrigin() const
 	{
-		return m_Min + ((m_Max - m_Min) / 2.0f);
+		return m_Min + GetExtent();
 	}
 
 	Vector3 AABB::GetExtent() const
