@@ -150,13 +150,19 @@ namespace Aurora
 	{
 		Vector3 localPosition = hitPoint - GetOrigin();
 		Vector3 extent = GetExtent();
-		Vector3 normal;
+		Vector3 normal = {0, 0, 0};
 
 		for (int axis = 0; axis < 3; ++axis)
 		{
 			if (glm::abs(glm::abs(localPosition[axis]) - extent[axis]) < glm::epsilon<float>())
 			{
+				if (axis == 1) // FIXME: What if you hit two axis? this is just an ugly hack
+					normal = {0, 0, 0};
+
 				normal[axis] = glm::sign(localPosition[axis]);
+
+				if (axis == 1)
+					return normal;
 			}
 			else
 			{

@@ -10,12 +10,14 @@
 #include "AABBTree.hpp"
 #include "AABBUtil.hpp"
 
+#include "Integration.hpp"
+
 namespace Aurora
 {
 	//AABBTree<ColliderComponent> aabbTree(1);
 	AABBTreeRaw aabbTreeRaw(1);
 
-	PhysicsWorld::PhysicsWorld(Scene* scene) : m_Scene(scene), m_Accumulator(0), m_Time(0), m_DebugRender(false), m_Gravity(0, -10.0f, 0), m_UpdateRate(1.0 / 120.0)
+	PhysicsWorld::PhysicsWorld(Scene* scene) : m_Scene(scene), m_Accumulator(0), m_Time(0), m_DebugRender(false), m_Gravity(0, -20.0f, 0), m_UpdateRate(1.0 / 120.0)
 	{
 
 	}
@@ -48,52 +50,6 @@ namespace Aurora
 		}
 	}
 
-	static bool RayAABB(const Vector3& rayOrigin, const Vector3& rayDirection, const AABB& aabb, Vector3& contactPoint, Vector3& contactNormal, float& t_hit_near)
-	{
-		Vector3 invDir = 1.0f / rayDirection;
-
-		Vector3 t_near = (aabb.GetMin() - rayOrigin) * invDir;
-		Vector3 t_far = (aabb.GetMax() - rayOrigin) * invDir;
-
-		if (glm::any(glm::isnan(t_near))) return false;
-		if (glm::any(glm::isnan(t_far))) return false;
-
-		// Sort distances
-		if (t_near.x > t_far.x) std::swap(t_near.x, t_far.x);
-		if (t_near.y > t_far.y) std::swap(t_near.y, t_far.y);
-		if (t_near.z > t_far.z) std::swap(t_near.z, t_far.z);
-
-		if (t_near.x > t_far.y || t_near.y > t_far.x) return false;
-		if (t_near.x > t_far.z || t_near.z > t_far.x) return false;
-
-		// Closest 'time' will be the first contact
-		t_hit_near = std::max(t_near.x, std::max(t_near.y, t_near.z));
-
-		// Furthest 'time' is contact on opposite side of target
-		float t_hit_far = std::min(t_far.x, std::min(t_far.y, t_far.z));
-
-		// Reject if ray direction is pointing away from object
-		if (t_hit_far < 0)
-			return false;
-
-		// Contact point of collision from parametric line equation
-		contactPoint = rayOrigin + t_hit_near * rayDirection;
-
-		contactNormal = aabb.GetRayHitNormal(contactPoint);
-		return true;
-	}
-
-	bool AABBVsAABB(const AABB& firstAABB, const AABB& secondAABB, const Vector3& velocity, Vector3& contactPoint, Vector3& contactNormal, float& t_hit_near)
-	{
-		if (glm::length2(velocity) == 0)
-			return false;
-
-		AABB expandedAABB(secondAABB.GetMin() - firstAABB.GetSize() / 2.0f, secondAABB.GetMax() + firstAABB.GetSize() / 2.0f);
-
-		Vector3 origin = firstAABB.GetOrigin();
-		return RayAABB(origin, velocity, expandedAABB, contactPoint, contactNormal, t_hit_near) && t_hit_near >= 0.0f && t_hit_near < 1.0f;
-	}
-
 	void PhysicsWorld::RunPhysics()
 	{
 		ComponentView<ColliderComponent> colliderComponents = m_Scene->GetComponents<ColliderComponent>();
@@ -101,6 +57,9 @@ namespace Aurora
 
 		for (ColliderComponent* collider : colliderComponents)
 		{
+			if (!collider->IsActive() || !collider->GetParent()->IsActive() || !collider->GetOwner()->IsActive())
+				continue;
+
 			AABB bounds = collider->GetAABB();
 			bounds.SetOffset(collider->GetParent()->GetTransform().GetLocation());
 			aabbTreeRaw.insertObject(collider, bounds);
@@ -109,10 +68,11 @@ namespace Aurora
 		ComponentView<RigidBodyComponent> bodyComponents = m_Scene->GetComponents<RigidBodyComponent>();
 		for (RigidBodyComponent* rigidBodyComponent : bodyComponents)
 		{
-			if (rigidBodyComponent->IsKinematic())
+			if (rigidBodyComponent->IsKinematic() || !rigidBodyComponent->IsActive() || !rigidBodyComponent->GetOwner()->IsActive())
 				continue;
 
 			rigidBodyComponent->GetOwner()->FixedStep();
+			rigidBodyComponent->AddAcceleration(m_Gravity * (float)m_UpdateRate);
 
 			SceneComponent* parent = rigidBodyComponent->GetParent() != nullptr ? rigidBodyComponent->GetParent() : rigidBodyComponent->GetOwner()->GetRootComponent();
 			std::vector<BoxColliderComponent*> colliders;
@@ -121,75 +81,145 @@ namespace Aurora
 			Transform& transform = rigidBodyComponent->GetOwner()->GetRootComponent()->GetTransform();
 
 			Vector3 velocity = rigidBodyComponent->GetVelocity();
-
-			if (true) // if gravity
-			{
-				velocity += m_Gravity;
-			}
-
 			velocity += rigidBodyComponent->GetAcceleration();
 
-			if (glm::length2(velocity) == 0) continue;
-
-			for (BoxColliderComponent* collider : colliders)
+			if (rigidBodyComponent->GetFriction() > 0.0f)
 			{
-				// Predict bounding box
-				AABB colliderBounds = collider->GetAABB();
-				AABB predictedBounds = colliderBounds;
-
-				colliderBounds.SetOffset(transform.GetLocation());
-
-				predictedBounds.SetOffset(transform.GetLocation() + velocity * (float)m_UpdateRate);
-				aabbTreeRaw.updateObject(collider, predictedBounds);
-
-				struct CollideData
-				{
-					ColliderComponent* Object;
-					AABB Bounds;
-					Vector3 Point;
-					Vector3 Normal;
-					float HitTime;
-				};
-
-				std::vector<CollideData> collides;
-
-				for (auto collisionObject : aabbTreeRaw.queryOverlaps(collider, predictedBounds))
-				{
-					AABB boundsOther = collisionObject->GetAABB();
-					boundsOther.SetOffset(collisionObject->GetParent()->GetWorldPosition());
-
-					Vector3 contactPoint, contactNormal;
-					float t_hit_near = 0.0f;
-					if (AABBVsAABB(colliderBounds, boundsOther, velocity * (float)m_UpdateRate, contactPoint, contactNormal, t_hit_near))
-					{
-						collides.emplace_back(CollideData{collisionObject, boundsOther, contactPoint, contactNormal, t_hit_near});
-					}
-				}
-
-				std::sort(collides.begin(), collides.end(), [](const CollideData& a, const CollideData& b)
-				{
-					return a.HitTime < b.HitTime;
-				});
-
-				for (const CollideData& collision : collides)
-				{
-					Vector3 contactPoint, contactNormal;
-					float t_hit_near = 0.0f;
-					if (AABBVsAABB(colliderBounds, collision.Bounds, velocity * (float)m_UpdateRate, contactPoint, contactNormal, t_hit_near))
-					{
-						velocity += contactNormal * glm::abs(velocity) * (1.0f - t_hit_near);
-					}
-				}
-
-				transform.SetLocation(transform.GetLocation() + velocity * (float)m_UpdateRate);
-
-				// Revert bounds back
-				AABB bounds = collider->GetAABB();
-				bounds.SetOffset(collider->GetParent()->GetWorldPosition());
-				aabbTreeRaw.updateObject(collider, bounds);
+				velocity.x *= rigidBodyComponent->GetFriction();
+				velocity.z *= rigidBodyComponent->GetFriction();
 			}
 
+			bool isMoving = glm::length2(velocity) > 0.0f;
+
+			rigidBodyComponent->YCollided = false;
+
+			if (isMoving)
+			{
+				for (BoxColliderComponent* collider : colliders)
+				{
+					// Predict bounding box
+					AABB colliderBounds = collider->GetTransformedAABB();
+
+					AABB predictedBounds = colliderBounds;
+					predictedBounds.SetOffset(velocity * (float)m_UpdateRate);
+					//AABB expandedAABB(predictedBounds.GetMin() - colliderBounds.GetSize() / 2.0f, predictedBounds.GetMax() + colliderBounds.GetSize() / 2.0f);
+
+					//DShapes::Box(expandedAABB, Color::blue(), true, 1.0f);
+
+					aabbTreeRaw.updateObject(collider, predictedBounds);
+
+					struct CollideData
+					{
+						ColliderComponent* Object;
+						AABB Bounds;
+						Vector3 Point;
+						Vector3 Normal;
+						float HitTime;
+					};
+
+					std::vector<CollideData> collides;
+
+					int a = 0;
+
+					auto possibleColliders = aabbTreeRaw.queryOverlaps(collider, predictedBounds);
+					for (auto collisionObject : possibleColliders)
+					{
+						a++;
+						AABB boundsOther = collisionObject->GetAABB();
+						boundsOther.SetOffset(collisionObject->GetParent()->GetWorldPosition());
+
+						Vector3 contactPoint, contactNormal;
+						float t_hit_near = 0.0f;
+
+						if (AABBVsAABB(colliderBounds, boundsOther, velocity * (float)m_UpdateRate, contactPoint, contactNormal, t_hit_near))
+						{
+							collides.emplace_back(CollideData{collisionObject, boundsOther, contactPoint, contactNormal, t_hit_near});
+						}
+					}
+
+					static int lastCount = 0;
+
+					std::sort(collides.begin(), collides.end(), [](const CollideData& a, const CollideData& b)
+					{
+						return a.HitTime < b.HitTime;
+					});
+
+					if (lastCount != collides.size() && false)
+					{
+						lastCount = collides.size();
+
+						AU_LOG_INFO("---------------");
+
+						if (lastCount > 0)
+							AU_LOG_INFO(velocity.y * (float)m_UpdateRate, " - ", collides.size(), ", ", glm::to_string(collides[0].Normal), ", ", a);
+						else
+							AU_LOG_WARNING(velocity.y * (float)m_UpdateRate, " - ", collides.size(), ", ", a);
+
+						for (auto collisionObject : possibleColliders)
+						{
+							AU_LOG_INFO(collisionObject->GetOwner()->GetName());
+						}
+
+						for (const CollideData& data : collides)
+						{
+							AU_LOG_INFO(data.HitTime, " - ", glm::to_string(data.Normal));
+						}
+					}
+
+					for (const CollideData& collision : collides)
+					{
+						Vector3 contactPoint, contactNormal;
+						float t_hit_near = 0.0f;
+
+						// FIXME: velocity should be multiplied by frame time, but if I do that I often tunnel through objects
+						if (AABBVsAABB(colliderBounds, collision.Bounds, velocity * (float)m_UpdateRate, contactPoint, contactNormal, t_hit_near))
+						{
+							// Push back rigid bodies
+							/*std::vector<RigidBodyComponent*> bodies;
+							if (collision.Object->GetParent()->GetComponentsOfType(bodies))
+							{
+								RigidBodyComponent* collisionBody = bodies[0];
+
+								if (!collisionBody->IsKinematic() && collisionBody->IsActive() && collisionBody->GetOwner()->IsActive())
+								{
+									// I think this is just a hack, and it should not work like this
+									collisionBody->AddVelocity(-(contactNormal * glm::abs(velocity) * (1.0f - t_hit_near)));
+								}
+							}*/
+
+							if (glm::abs(contactNormal.y) > 0)
+							{
+								rigidBodyComponent->YCollided = true;
+							}
+
+							velocity += contactNormal * glm::abs(velocity) * (1.0f - t_hit_near);
+
+							/*if (rigidBodyComponent->GetFriction() > 0.0f)
+							{
+								velocity.x *= rigidBodyComponent->GetFriction();
+								velocity.z *= rigidBodyComponent->GetFriction();
+							}*/
+						}
+					}
+				}
+			}
+
+			/*Vector3 location = transform.GetLocation();
+			MotionIntegrators::ModifiedEuler(location, velocity, rigidBodyComponent->GetAcceleration(), (float)m_UpdateRate);
+			transform.SetLocation(location);*/
+			transform.SetLocation(transform.GetLocation() + velocity * (float)m_UpdateRate);
+
 			rigidBodyComponent->SetVelocity(velocity);
+			rigidBodyComponent->SetAcceleration({0, 0, 0});
+
+			if (isMoving)
+			{
+				for (BoxColliderComponent* collider : colliders)
+				{
+					// Revert bounds back
+					aabbTreeRaw.updateObject(collider, collider->GetTransformedAABB());
+				}
+			}
 		}
 	}
 

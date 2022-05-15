@@ -35,7 +35,7 @@ namespace Aurora
 		[[nodiscard]] const std::vector<ActorComponent*>& GetComponents() const { return m_Components; }
 
 		template<typename T>
-		void GetComponentsOfType(std::vector<T*>& components)
+		bool GetComponentsOfType(std::vector<T*>& components)
 		{
 			if (HasType(T::TypeID()))
 			{
@@ -56,6 +56,8 @@ namespace Aurora
 					}
 				}
 			}
+
+			return !components.empty();
 		}
 	};
 }

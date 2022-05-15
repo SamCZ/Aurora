@@ -1886,7 +1886,7 @@ namespace Aurora
 		au_assert(src != nullptr);
 		au_assert(src != dest);
 
-		/*if(src->GetDesc().IsRenderTarget)
+		if(src->GetDesc().IsRenderTarget)
 		{
 			DrawCallState srcState;
 			srcState.BindTarget(0, src);
@@ -1913,9 +1913,10 @@ namespace Aurora
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 			return;
-		}*/
+		}
 
-		SetShader(m_BlitShader);
+		// This not works on: Intel(R) UHD Graphics 630
+		/*SetShader(m_BlitShader);
 
 		FRasterState rasterState = m_LastRasterState;
 		rasterState.CullMode = ECullMode::None;
@@ -1946,7 +1947,7 @@ namespace Aurora
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 		//glDrawArraysInstanced(GL_TRIANGLES, 0, 3, 1);
-		CHECK_GL_ERROR();
+		CHECK_GL_ERROR();*/
 	}
 
 	void GLRenderDevice::SetViewPort(const FViewPort &wp)

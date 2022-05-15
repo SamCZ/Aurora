@@ -37,7 +37,7 @@ namespace Aurora
 		void SetName(const String& name) { m_Name = name; }
 		[[nodiscard]] const String& GetName() const { return m_Name; }
 
-		SceneComponent* GetParent() const { return m_Parent; }
+		[[nodiscard]] SceneComponent* GetParent() const { return m_Parent; }
 		[[nodiscard]] bool HasParent() const { return m_Parent != nullptr;}
 		[[nodiscard]] bool IsParentActive() const;
 

@@ -1,76 +1,56 @@
 #pragma once
 
 #include "Types.hpp"
-
-// Most of the code taken from bullet3
+#include "Aurora/Graphics/DShape.hpp"
 
 namespace Aurora
 {
-	inline int phOutcode(const phVector3& p, const phVector3& halfExtent)
+	static bool RayAABB(const Vector3& rayOrigin, const Vector3& rayDirection, const AABB& aabb, Vector3& contactPoint, Vector3& contactNormal, float& t_hit_near)
 	{
-		return (p.x < -halfExtent.x ? 0x01 : 0x0) |
-			(p.x > halfExtent.x ? 0x08 : 0x0) |
-			(p.y < -halfExtent.y ? 0x02 : 0x0) |
-			(p.y > halfExtent.y ? 0x10 : 0x0) |
-			(p.z < -halfExtent.z ? 0x4 : 0x0) |
-			(p.z > halfExtent.z ? 0x20 : 0x0);
+		Vector3 invDir = 1.0f / rayDirection;
+
+		Vector3 t_near = (aabb.GetMin() - rayOrigin) * invDir;
+		Vector3 t_far = (aabb.GetMax() - rayOrigin) * invDir;
+
+		if (glm::any(glm::isnan(t_near))) return false;
+		if (glm::any(glm::isnan(t_far))) return false;
+
+		// Sort distances
+		if (t_near.x > t_far.x) std::swap(t_near.x, t_far.x);
+		if (t_near.y > t_far.y) std::swap(t_near.y, t_far.y);
+		if (t_near.z > t_far.z) std::swap(t_near.z, t_far.z);
+
+		if (t_near.x > t_far.y || t_near.y > t_far.x) return false;
+		if (t_near.x > t_far.z || t_near.z > t_far.x) return false;
+
+		// Closest 'time' will be the first contact
+		t_hit_near = std::max(t_near.x, std::max(t_near.y, t_near.z));
+
+		// Furthest 'time' is contact on opposite side of target
+		float t_hit_far = std::min(t_far.x, std::min(t_far.y, t_far.z));
+
+		// Reject if ray direction is pointing away from object
+		if (t_hit_far < 0)
+			return false;
+
+		// Contact point of collision from parametric line equation
+		contactPoint = rayOrigin + t_hit_near * rayDirection;
+
+		// Replaced instead of https://github.com/OneLoneCoder/olcPixelGameEngine/blob/master/Videos/OneLoneCoder_PGE_Rectangles.cpp#L123
+		contactNormal = aabb.GetRayHitNormal(contactPoint);
+		return true;
 	}
 
-	inline bool phRayAabb(const phVector3& rayFrom,
-		const phVector3& rayTo,
-		const phVector3& aabbMin,
-		const phVector3& aabbMax,
-		phScalar& param, phVector3& normal)
+	bool AABBVsAABB(const AABB& firstAABB, const AABB& secondAABB, const Vector3& velocity, Vector3& contactPoint, Vector3& contactNormal, float& t_hit_near)
 	{
-		phVector3 aabbHalfExtent = (aabbMax - aabbMin) * phScalar(0.5);
-		phVector3 aabbCenter = (aabbMax + aabbMin) * phScalar(0.5);
-		phVector3 source = rayFrom - aabbCenter;
-		phVector3 target = rayTo - aabbCenter;
+		if (glm::length2(velocity) == 0)
+			return false;
 
-		int sourceOutcode = phOutcode(source, aabbHalfExtent);
-		int targetOutcode = phOutcode(target, aabbHalfExtent);
+		AABB expandedAABB(secondAABB.GetMin() - firstAABB.GetSize() / 2.0f, secondAABB.GetMax() + firstAABB.GetSize() / 2.0f);
 
-		if ((sourceOutcode & targetOutcode) == 0x0)
-		{
-			phScalar lambda_enter = phScalar(0.0);
-			phScalar lambda_exit = param;
-			phVector3 r = target - source;
-			int i;
-			phScalar normSign = 1;
-			phVector3 hitNormal(0, 0, 0);
-			int bit = 1;
+		//DShapes::Box(expandedAABB, Color::green(), true, 1.0f);
 
-			for (int j = 0; j < 2; j++)
-			{
-				for (i = 0; i != 3; ++i)
-				{
-					if (sourceOutcode & bit)
-					{
-						phScalar lambda = (-source[i] - aabbHalfExtent[i] * normSign) / r[i];
-						if (lambda_enter <= lambda)
-						{
-							lambda_enter = lambda;
-							hitNormal = {0, 0, 0};
-							hitNormal[i] = normSign;
-						}
-					}
-					else if (targetOutcode & bit)
-					{
-						phScalar lambda = (-source[i] - aabbHalfExtent[i] * normSign) / r[i];
-						lambda_exit = std::min(lambda_exit, lambda);
-					}
-					bit <<= 1;
-				}
-				normSign = phScalar(-1.);
-			}
-			if (lambda_enter <= lambda_exit)
-			{
-				param = lambda_enter;
-				normal = hitNormal;
-				return true;
-			}
-		}
-		return false;
+		Vector3 origin = firstAABB.GetOrigin();
+		return RayAABB(origin, velocity, expandedAABB, contactPoint, contactNormal, t_hit_near) && t_hit_near >= 0.0f && t_hit_near < 1.0f;
 	}
-
 }

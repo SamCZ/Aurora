@@ -6,6 +6,7 @@
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
 #include <Aurora/Graphics/Material/Material.hpp>
 #include <Aurora/Graphics/ViewPortManager.hpp>
+#include <Aurora/Graphics/DShape.hpp>
 #include <Aurora/Resource/MaterialLoader.hpp>
 
 #include <Shaders/World/PBRBasic/cb_pbr.h>
@@ -42,6 +43,7 @@ public:
 	DEFAULT_COMPONENT(CameraComponent);
 
 	RigidBodyComponent* rigidBody;
+	BoxColliderComponent* collider;
 
 	void InitializeComponents() override
 	{
@@ -51,13 +53,19 @@ public:
 		m_Camera->SetPerspective(75, 0.1f, 2000.0f);
 
 		rigidBody = AddComponent<RigidBodyComponent>();
+		rigidBody->SetFriction(0.80f);
 
-		AddComponent<BoxColliderComponent>(1, 1, 1);
+		collider = AddComponent<BoxColliderComponent>(1, 1, 1);
 	}
 
 	void Tick(double delta) override
 	{
 		//GetTransform().Rotation.x += delta;
+
+		DShapes::Box(collider->GetTransformedAABB(), Color::blue(), true);
+
+		if (GEngine->GetInputManager()->IsCursorLocked() && AppContext::IsEditorMode())
+			return;
 
 		float yaw = ImGui::GetIO().MouseDelta.y * -0.1f;
 		float pitch = ImGui::GetIO().MouseDelta.x * -0.1f;
@@ -66,47 +74,53 @@ public:
 
 	void FixedStep() override
 	{
-		float m_FlySpeed = 6.0f;
+		if (GEngine->GetInputManager()->IsCursorLocked() && AppContext::IsEditorMode())
+			return;
+
+		float speed = 1.0f;
 
 		Matrix4 transform = m_Camera->GetTransformationMatrix();
+		Vector3 forward = -glm::normalize(Vector3(transform[2])) * speed;
+		Vector3 left = -glm::normalize(Vector3(transform[0])) * speed;
 
-		bool hadAccY = rigidBody->GetAcceleration().y > 0;
+		forward.y = 0;
+		left.y = 0;
 
-		rigidBody->SetVelocity({0, 0, 0});
-		rigidBody->SetAcceleration({0, 0, 0});
+		//AU_LOG_INFO(glm::to_string(rigidBody->GetVelocity()));
+
+		bool isOnGround = glm::abs(rigidBody->GetVelocity().y) <= 0.01f;
+
+		if (not isOnGround)
+		{
+			forward *= 0.5f;
+			left *= 0.5f;
+		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_W)])
 		{
-			//m_Camera->GetTransform().AddLocation(-Vector3(transform[2]) * (float)delta * m_FlySpeed);
-			rigidBody->AddVelocity(-Vector3(transform[2]) * m_FlySpeed);
+			rigidBody->AddAcceleration(forward);
 			//rigidBody->SetLinearVelocity();
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_S)])
 		{
-			//m_Camera->GetTransform().AddLocation(Vector3(transform[2]) * (float)delta * m_FlySpeed);
-			rigidBody->AddVelocity(Vector3(transform[2]) * m_FlySpeed);
+			rigidBody->AddAcceleration(-forward);
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_A)])
 		{
-			//m_Camera->GetTransform().AddLocation(-Vector3(transform[0]) * (float)delta * m_FlySpeed);
-			rigidBody->AddVelocity(-Vector3(transform[0]) * m_FlySpeed);
+			rigidBody->AddAcceleration(left);
 		}
 
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
 		{
-			//m_Camera->GetTransform().AddLocation(Vector3(transform[0]) * (float)delta * m_FlySpeed);
-			rigidBody->AddVelocity(Vector3(transform[0]) * m_FlySpeed);
+			rigidBody->AddAcceleration(-left);
 		}
 
-		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_Space)] && not hadAccY)
+		if(ImGui::IsKeyPressed(ImGuiKey_Space, false) && isOnGround)
 		{
-			//m_Camera->GetTransform().AddLocation(Vector3(transform[0]) * (float)delta * m_FlySpeed);
-			rigidBody->SetAcceleration({0, 40, 0});
+			rigidBody->AddAcceleration({0, 10, 0});
 		}
-
-		//rigidBody->SetVelocity(rigidBody->GetVelocity() * 0.99f);
 	}
 
 	CameraComponent* GetCamera()
@@ -146,7 +160,6 @@ class BaseAppContext : public AppContext
 		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/socuwan.fbx"));
 
 		testActor = GetScene()->SpawnActor<Actor, StaticMeshComponent>("TestActor", Vector3(0, 0, 0), {}, Vector3(0.01f));
-		//CameraComponent* cameraComponent = actor->AddComponent<CameraComponent>("Camera");
 
 		auto normalMap = GEngine->GetResourceManager()->LoadTexture("Assets/Textures/dry-rocky-ground-unity/dry-rocky-ground_normal-ogl.png");
 
@@ -173,6 +186,12 @@ class BaseAppContext : public AppContext
 			}
 		}
 
+		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box_cubeUV.fbx"));
+		auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
+		auto matInstance = matDef->CreateInstance();
+		matInstance->SetTexture("Texture"_HASH, GEngine->GetResourceManager()->LoadTexture("Assets/Textures/dry-rocky-ground-unity/dry-rocky-ground_albedo.png"));
+		matInstance->SetTexture("NormalMap"_HASH, normalMap);
+
 		if(false)
 		{
 			Actor* groundActor = GetScene()->SpawnActor<Actor>("Ground", {0, -0.5f, 0});
@@ -184,24 +203,36 @@ class BaseAppContext : public AppContext
 			{
 				for (int z = -10; z < 10; ++z)
 				{
-					Actor* groundActor = GetScene()->SpawnActor<Actor>("Ground", {x + 0.5f, -0.5f, z + 0.5f});
+					Actor* groundActor = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Ground " + std::to_string(x) + ", " + std::to_string(z), {x + 0.5f, -0.5f, z + 0.5f}, {}, Vector3(0.005f));
 					groundActor->AddComponent<BoxColliderComponent>(1, 1, 1);
+
+					if (x == 0 && z == 1)
+					{
+						groundActor->GetTransform().AddLocation(0, 1.0f, 0);
+					}
+
+					if(importedData2)
+					{
+						auto* meshComponent = StaticMeshComponent::Cast(groundActor->GetRootComponent());
+						meshComponent->SetMesh(importedData2.Mesh);
+
+						for (auto &item : meshComponent->GetMaterialSet())
+						{
+							item.second.Material = matInstance;
+						}
+					}
 				}
 			}
 		}
 
-		MeshImportedData importedData2 = modelLoader.ImportModel("box", GEngine->GetResourceManager()->LoadFile("Assets/box_cubeUV.fbx"));
-		auto matDef = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Textured.matd");
-		auto matInstance = matDef->CreateInstance();
-		matInstance->SetTexture("Texture"_HASH, GEngine->GetResourceManager()->LoadTexture("Assets/Textures/dry-rocky-ground-unity/dry-rocky-ground_albedo.png"));
-		matInstance->SetTexture("NormalMap"_HASH, normalMap);
-
 		for (int i = 0; i < 10; ++i)
 		{
-			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box " + std::to_string(i), Vector3(i * 2.2f - 5, 10, 0), {}, Vector3(0.005f));
+			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box " + std::to_string(i), Vector3(i * 2.2f - 5, 0.5f, 0), {}, Vector3(0.005f));
 
 			//RigidBodyComponent* rigidBodyComponent = testActor2->AddComponent<RigidBodyComponent>();
-			//BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
+			//rigidBodyComponent->SetFriction(2.0f);
+
+			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
 
 			if(importedData2)
 			{
@@ -214,14 +245,14 @@ class BaseAppContext : public AppContext
 				}
 			}
 
-			//break;
+			break;
 		}
 
-		for (int i = 0; i < 10; ++i)
+		/*for (int i = 0; i < 10; ++i)
 		{
 			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box B " + std::to_string(i), Vector3(i * 2.2f - 5, 10 + i + 1, 0), {}, Vector3(0.005f));
 
-			//BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
+			BoxColliderComponent* collider = testActor2->AddComponent<BoxColliderComponent>(1, 1, 1);
 
 			if (i != 9)
 			{
@@ -244,11 +275,16 @@ class BaseAppContext : public AppContext
 					item.second.Material = matInstance;
 				}
 			}
-		}
+		}*/
 
-		GetScene()->SpawnActor<CameraActor>("Camera", {0, 3, 5});
+		Actor* camera = GetScene()->SpawnActor<CameraActor>("Camera", {0, 3, 5});
 
 		GetScene()->SpawnActor<PointLight>("PointLight", {-1, 3, 1});
+
+		if (!AppContext::IsEditorMode())
+		{
+			GEngine->GetInputManager()->LockCursor();
+		}
 	}
 
 	void Update(double delta) override

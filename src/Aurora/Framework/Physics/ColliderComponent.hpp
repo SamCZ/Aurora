@@ -7,7 +7,7 @@
 
 namespace Aurora
 {
-	class ColliderComponent : public ActorComponent
+	class AU_API ColliderComponent : public ActorComponent
 	{
 	protected:
 		AABB m_Bounds;
@@ -34,6 +34,7 @@ namespace Aurora
 		}
 
 		[[nodiscard]] const AABB& GetAABB() const { return m_Bounds; }
+		[[nodiscard]] AABB GetTransformedAABB() const;
 	};
 
 	class BoxColliderComponent : public ColliderComponent

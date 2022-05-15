@@ -97,6 +97,8 @@ namespace Aurora
 		return ICON_FA_USER;
 	}
 
+	bool m_ShowIcons = true;
+
 	void GameViewportWindow::Update(double delta)
 	{
 		CPU_DEBUG_SCOPE("GameViewportWindow");
@@ -135,6 +137,8 @@ namespace Aurora
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 0.25f));
 				ImGui::Text("Fly speed: %.1fx", m_FlySpeed);
 				ImGui::PopStyleColor();
+
+				ImGui::Checkbox("Icons", &m_ShowIcons);
 
 				ImGui::EndMenuBar();
 			}
@@ -194,7 +198,7 @@ namespace Aurora
 			}
 
 
-			if (m_EditorCameraActor->IsActive())
+			if (m_EditorCameraActor->IsActive() && m_ShowIcons)
 			{
 				// Actor icons
 				const float ICON_BASE_WIDTH = ImGui::CalcTextSize(ICON_FA_EYE).x;

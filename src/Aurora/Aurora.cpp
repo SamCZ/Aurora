@@ -317,7 +317,7 @@ namespace Aurora
 
 				if(m_EditorPanel)
 				{
-					updateScene = m_EditorPanel->IsPlayMode();
+					//updateScene = m_EditorPanel->IsPlayMode();
 				}
 
 				CPU_DEBUG_SCOPE("Game update");
