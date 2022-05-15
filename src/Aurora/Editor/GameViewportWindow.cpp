@@ -30,6 +30,8 @@ namespace Aurora
 		{
 			//gameModeBase->BeginPlay();
 		}
+
+		GEngine->GetInputManager()->LockCursor();
 	}
 
 	void SwitchToStopMode()
@@ -42,6 +44,8 @@ namespace Aurora
 		{
 			//gameModeBase->BeginDestroy();
 		}
+
+		GEngine->GetInputManager()->UnlockCursor();
 	}
 
 	GameViewportWindow::GameViewportWindow(MainEditorPanel* mainEditorPanel)
@@ -288,6 +292,17 @@ namespace Aurora
 		}
 		ImGui::End();
 		ImGui::PopStyleVar();
+
+		if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+		{
+			m_MainPanel->SetPlayMode(false);
+			SwitchToStopMode();
+		}
+
+		if (ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyPressed(ImGuiKey_1))
+		{
+			GEngine->GetInputManager()->UnlockCursor();
+		}
 
 		HandleEditorCamera(delta);
 	}

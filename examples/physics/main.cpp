@@ -55,7 +55,7 @@ public:
 		rigidBody = AddComponent<RigidBodyComponent>();
 		rigidBody->SetFriction(0.80f);
 
-		collider = AddComponent<BoxColliderComponent>(1, 1, 1);
+		collider = AddComponent<BoxColliderComponent>(0.75f, 2, 0.75f);
 	}
 
 	void Tick(double delta) override
@@ -64,9 +64,6 @@ public:
 
 		DShapes::Box(collider->GetTransformedAABB(), Color::blue(), true);
 
-		if (GEngine->GetInputManager()->IsCursorLocked() && AppContext::IsEditorMode())
-			return;
-
 		float yaw = ImGui::GetIO().MouseDelta.y * -0.1f;
 		float pitch = ImGui::GetIO().MouseDelta.x * -0.1f;
 		m_Camera->GetTransform().AddRotation(yaw, pitch, 0.0f);
@@ -74,9 +71,6 @@ public:
 
 	void FixedStep() override
 	{
-		if (GEngine->GetInputManager()->IsCursorLocked() && AppContext::IsEditorMode())
-			return;
-
 		float speed = 1.0f;
 
 		Matrix4 transform = m_Camera->GetTransformationMatrix();
@@ -88,7 +82,7 @@ public:
 
 		//AU_LOG_INFO(glm::to_string(rigidBody->GetVelocity()));
 
-		bool isOnGround = glm::abs(rigidBody->GetVelocity().y) <= 0.01f;
+		bool isOnGround = rigidBody->CollidedSides[1];
 
 		if (not isOnGround)
 		{
@@ -192,7 +186,7 @@ class BaseAppContext : public AppContext
 		matInstance->SetTexture("Texture"_HASH, GEngine->GetResourceManager()->LoadTexture("Assets/Textures/dry-rocky-ground-unity/dry-rocky-ground_albedo.png"));
 		matInstance->SetTexture("NormalMap"_HASH, normalMap);
 
-		if(false)
+		if(true)
 		{
 			Actor* groundActor = GetScene()->SpawnActor<Actor>("Ground", {0, -0.5f, 0});
 			groundActor->AddComponent<BoxColliderComponent>(50, 1, 50);
