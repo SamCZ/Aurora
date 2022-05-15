@@ -32,7 +32,7 @@ namespace Aurora
 		AddComponentGuiMethod<SkyLightComponent>(&PropertiesWindow::DrawSkyLightComponent);
 		AddComponentGuiMethod<CameraComponent>(&PropertiesWindow::DrawCameraComponent);
 		AddComponentGuiMethod<RigidBodyComponent>(&PropertiesWindow::DrawRigidBodyComponent);
-		AddComponentGuiMethod<ColliderComponent>(&PropertiesWindow::DrawColliderComponent);
+		AddComponentGuiMethod<BoxColliderComponent>(&PropertiesWindow::DrawColliderComponent);
 	}
 
 	void PropertiesWindow::DrawMeshComponentGui(ActorComponent* baseComponent)
@@ -194,7 +194,7 @@ namespace Aurora
 
 		ColliderComponent* component = ColliderComponent::Cast(baseComponent);
 
-
+		ImGui::DragFloat3("Origin", glm::value_ptr(component->GetOrigin()), 0.01f);
 	}
 
 	void PropertiesWindow::OnGui()

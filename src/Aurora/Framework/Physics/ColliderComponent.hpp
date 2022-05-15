@@ -15,7 +15,7 @@ namespace Aurora
 	public:
 		CLASS_OBJ(ColliderComponent, ActorComponent);
 
-		ColliderComponent() : m_Bounds(), m_Origin() {}
+		ColliderComponent() : m_Bounds(), m_Origin(0.0f) {}
 
 		virtual void GetAabb(const Transform& transform, phVector3& aabbMin, phVector3& aabbMax) const
 		{
@@ -32,6 +32,10 @@ namespace Aurora
 			radius = glm::length(aabbMax - aabbMin) * phScalar(0.5);
 			center = (aabbMin + aabbMax) * phScalar(0.5);
 		}
+
+		inline void SetOrigin(const Vector3& origin) { m_Origin = origin; }
+		inline const Vector3& GetOrigin() const { return m_Origin; }
+		inline Vector3& GetOrigin() { return m_Origin; }
 
 		[[nodiscard]] const AABB& GetAABB() const { return m_Bounds; }
 		[[nodiscard]] AABB GetTransformedAABB() const;
@@ -61,6 +65,7 @@ namespace Aurora
 
 		inline void SetSize(const Vector3& size)
 		{
+			m_Size = size;
 			m_Bounds = AABB::FromExtent(m_Origin, size / 2.0f);
 		}
 

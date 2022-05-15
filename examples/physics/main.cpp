@@ -55,7 +55,8 @@ public:
 		rigidBody = AddComponent<RigidBodyComponent>();
 		rigidBody->SetFriction(0.80f);
 
-		collider = AddComponent<BoxColliderComponent>(0.75f, 2, 0.75f);
+		collider = AddComponent<BoxColliderComponent>(0.75f, 1.75f, 0.75f);
+		collider->SetOrigin({0, -0.7f, 0});
 	}
 
 	void Tick(double delta) override
@@ -239,10 +240,9 @@ class BaseAppContext : public AppContext
 				}
 			}
 
-			break;
 		}
 
-		/*for (int i = 0; i < 10; ++i)
+		for (int i = 0; i < 10; ++i)
 		{
 			Actor* testActor2 = GetScene()->SpawnActor<Actor, StaticMeshComponent>("Box B " + std::to_string(i), Vector3(i * 2.2f - 5, 10 + i + 1, 0), {}, Vector3(0.005f));
 
@@ -269,7 +269,7 @@ class BaseAppContext : public AppContext
 					item.second.Material = matInstance;
 				}
 			}
-		}*/
+		}
 
 		Actor* camera = GetScene()->SpawnActor<CameraActor>("Camera", {0, 3, 5});
 

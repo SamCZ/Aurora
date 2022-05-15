@@ -103,7 +103,7 @@ namespace Aurora
 					AABB colliderBounds = collider->GetTransformedAABB();
 
 					// Broadphase
-					for (int axis = 0; axis < 3; ++axis)
+					for (uint8_t axis = 0; axis < 3; ++axis)
 					{
 						AABB predictedBounds = colliderBounds;
 
@@ -120,9 +120,9 @@ namespace Aurora
 							AABB otherBounds = collisionObject->GetTransformedAABB();
 
 							/*Vector3 delta = glm::abs(otherBounds.GetOrigin() - encapsulatedBounds.GetOrigin());
-							Vector3 intersectVec = delta - (otherBounds.GetExtent() + encapsulatedBounds.GetExtent());
+							Vector3 intersectVec = delta - (otherBounds.GetExtent() + encapsulatedBounds.GetExtent());*/
 
-							AABB intersect = encapsulatedBounds.Intersection(otherBounds);
+							/*AABB intersect = encapsulatedBounds.Intersection(otherBounds);
 							Vector3 diffMinMax = glm::abs(encapsulatedBounds.GetMin() - otherBounds.GetMax());
 							Vector3 diffMaxMin = glm::abs(encapsulatedBounds.GetMax() - otherBounds.GetMin());
 							Vector3 minimal = glm::min(diffMinMax, diffMaxMin);
