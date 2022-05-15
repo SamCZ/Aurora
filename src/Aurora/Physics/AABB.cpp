@@ -146,7 +146,7 @@ namespace Aurora
 		return 0;
 	}
 
-	Vector3 AABB::GetRayHitNormal(const Vector3 hitPoint) const
+	Vector3 AABB::GetRayHitNormal(const Vector3& hitPoint) const
 	{
 		Vector3 localPosition = hitPoint - GetOrigin();
 		Vector3 extent = GetExtent();

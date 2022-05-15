@@ -91,7 +91,7 @@ namespace Aurora
 
 		int CollideWithRay(const Vector3D& origin, const Vector3D& direction, std::vector<AABBHit>& hits) const;
 
-		Vector3 GetRayHitNormal(const Vector3 hitPoint) const;
+		[[nodiscard]] Vector3 GetRayHitNormal(const Vector3& hitPoint) const;
 
 		static void CheckMinMax(Vector3& min, Vector3& max, const Vector3& point);
 
@@ -126,6 +126,11 @@ namespace Aurora
 			}
 
 			return {min, max};
+		}
+
+		AABB operator*(const float scale) const
+		{
+			return AABB::FromExtent(GetOrigin(), GetExtent() * scale);
 		}
 
 		AABB& operator*=(const Matrix4& matrix)

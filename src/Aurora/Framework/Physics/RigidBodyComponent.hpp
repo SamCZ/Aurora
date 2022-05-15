@@ -20,7 +20,7 @@ namespace Aurora
 		Vector3 m_AngularVelocity;
 		Vector3 m_Acceleration;
 	public:
-		bool YCollided;
+		bool CollidedSides[3];
 
 		CLASS_OBJ(RigidBodyComponent, ActorComponent);
 
