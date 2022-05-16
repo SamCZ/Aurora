@@ -3,21 +3,21 @@
 #include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Framework/Scene.hpp"
 #include "Aurora/Framework/Physics/RigidBodyComponent.hpp"
-#include "Aurora/Framework/Physics/ColliderComponent.hpp"
-
 #include "Aurora/Graphics/DShape.hpp"
 
-#include "AABBTree.hpp"
-#include "AABBUtil.hpp"
-
 #include "Integration.hpp"
+#include "Collision.hpp"
 
 namespace Aurora
 {
-	//AABBTree<ColliderComponent> aabbTree(1);
-	AABBTreeRaw aabbTreeRaw(1);
-
-	PhysicsWorld::PhysicsWorld(Scene* scene) : m_Scene(scene), m_Accumulator(0), m_Time(0), m_DebugRender(false), m_Gravity(0, -20.0f, 0), m_UpdateRate(1.0 / 120.0)
+	PhysicsWorld::PhysicsWorld(Scene* scene) :
+		m_Scene(scene),
+		m_Accumulator(0),
+		m_Time(0),
+		m_DebugRender(false),
+		m_Gravity(0, -20.0f, 0),
+		m_UpdateRate(1.0 / 120.0),
+		m_AABBTree(1)
 	{
 
 	}
@@ -37,12 +37,12 @@ namespace Aurora
 
 		if (IsDebugRender())
 		{
-			for (const auto& node : aabbTreeRaw.GetNodes())
+			for (const auto& node : m_AABBTree.GetNodes())
 			{
-				if (node.parentNodeIndex == AABB_NULL_NODE || !node.isLeaf())
+				if (node.parentNodeIndex == AABB_NULL_NODE || !node.IsLeaf())
 					continue;
 
-				if (node.isLeaf())
+				if (node.IsLeaf())
 					DShapes::Box(node.aabb, Color::red(), true, 1.2f, 0, false);
 				else
 					DShapes::Box(node.aabb, Color::green(), true, 1.0f, 0, false);
@@ -53,16 +53,14 @@ namespace Aurora
 	void PhysicsWorld::RunPhysics()
 	{
 		ComponentView<ColliderComponent> colliderComponents = m_Scene->GetComponents<ColliderComponent>();
-		aabbTreeRaw = AABBTreeRaw(colliderComponents.size() * 2);
+		m_AABBTree = AABBTree<ColliderComponent>(colliderComponents.size() * 2);
 
 		for (ColliderComponent* collider : colliderComponents)
 		{
 			if (!collider->IsActive() || !collider->GetParent()->IsActive() || !collider->GetOwner()->IsActive())
 				continue;
 
-			AABB bounds = collider->GetAABB();
-			bounds.SetOffset(collider->GetParent()->GetTransform().GetLocation());
-			aabbTreeRaw.insertObject(collider, bounds);
+			m_AABBTree.InsertObject(collider, collider->GetTransformedAABB());
 		}
 
 		ComponentView<RigidBodyComponent> bodyComponents = m_Scene->GetComponents<RigidBodyComponent>();
@@ -77,8 +75,6 @@ namespace Aurora
 			SceneComponent* parent = rigidBodyComponent->GetParent() != nullptr ? rigidBodyComponent->GetParent() : rigidBodyComponent->GetOwner()->GetRootComponent();
 			std::vector<BoxColliderComponent*> colliders;
 			parent->GetComponentsOfType(colliders);
-
-			Transform& transform = rigidBodyComponent->GetOwner()->GetRootComponent()->GetTransform();
 
 			Vector3 velocity = rigidBodyComponent->GetVelocity();
 			velocity += rigidBodyComponent->GetAcceleration();
@@ -99,49 +95,14 @@ namespace Aurora
 			{
 				for (BoxColliderComponent* collider : colliders)
 				{
-					// Predict bounding box
-					AABB colliderBounds = collider->GetTransformedAABB();
-
-					// Broadphase
-					for (uint8_t axis = 0; axis < 3; ++axis)
-					{
-						AABB predictedBounds = colliderBounds;
-
-						Vector3 offset = {0, 0, 0};
-						offset[axis] = velocity[axis] * (float)m_UpdateRate;
-
-						predictedBounds.SetOffset(offset);
-						AABB encapsulatedBounds = predictedBounds.Merge(colliderBounds);
-						DShapes::Box(encapsulatedBounds, Color::blue(), true, 1.0f);
-						//aabbTreeRaw.updateObject(collider, encapsulatedBounds);
-						auto possibleColliders = aabbTreeRaw.queryOverlaps(collider, encapsulatedBounds);
-						for (auto collisionObject : possibleColliders)
-						{
-							AABB otherBounds = collisionObject->GetTransformedAABB();
-
-							/*Vector3 delta = glm::abs(otherBounds.GetOrigin() - encapsulatedBounds.GetOrigin());
-							Vector3 intersectVec = delta - (otherBounds.GetExtent() + encapsulatedBounds.GetExtent());*/
-
-							/*AABB intersect = encapsulatedBounds.Intersection(otherBounds);
-							Vector3 diffMinMax = glm::abs(encapsulatedBounds.GetMin() - otherBounds.GetMax());
-							Vector3 diffMaxMin = glm::abs(encapsulatedBounds.GetMax() - otherBounds.GetMin());
-							Vector3 minimal = glm::min(diffMinMax, diffMaxMin);
-							//AU_LOG_INFO(glm::to_string(minimal));
-							Vector3 intersectionSize = minimal;*/
-
-							DShapes::Box(collisionObject->GetTransformedAABB() * 1.1f, Color::green(), true, 1.0f);
-
-							velocity[axis] = 0;
-							rigidBodyComponent->CollidedSides[axis] = true;
-							break;
-						}
-					}
+					BroadPhase::FromAABB(collider, m_AABBTree, velocity, rigidBodyComponent->CollidedSides, m_UpdateRate);
 				}
 			}
 
 			/*Vector3 location = transform.GetLocation();
 			MotionIntegrators::ModifiedEuler(location, velocity, rigidBodyComponent->GetAcceleration(), (float)m_UpdateRate);
 			transform.SetLocation(location);*/
+			Transform& transform = rigidBodyComponent->GetOwner()->GetRootComponent()->GetTransform();
 			transform.SetLocation(transform.GetLocation() + velocity * (float)m_UpdateRate);
 
 			rigidBodyComponent->SetVelocity(velocity);
@@ -152,7 +113,7 @@ namespace Aurora
 				for (BoxColliderComponent* collider : colliders)
 				{
 					// Revert bounds back
-					aabbTreeRaw.updateObject(collider, collider->GetTransformedAABB());
+					m_AABBTree.UpdateObject(collider, collider->GetTransformedAABB());
 				}
 			}
 		}

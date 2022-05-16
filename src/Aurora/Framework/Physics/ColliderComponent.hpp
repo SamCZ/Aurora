@@ -41,6 +41,14 @@ namespace Aurora
 		[[nodiscard]] AABB GetTransformedAABB() const;
 	};
 
+	class ProxyColliderComponent : public ColliderComponent
+	{
+	public:
+		CLASS_OBJ(ProxyColliderComponent, ColliderComponent);
+
+		virtual bool CollideWith(const AABB& bounds, const AABB& encapsulatedBounds, Vector3& velocity, double updateRate, uint8_t axis) = 0;
+	};
+
 	class BoxColliderComponent : public ColliderComponent
 	{
 	private:

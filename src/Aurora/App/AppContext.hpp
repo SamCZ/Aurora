@@ -59,7 +59,7 @@ namespace Aurora
 		virtual void RenderVg() {}
 
 		virtual SceneRenderer* GetSceneRenderer() { return nullptr; }
-		virtual PhysicsWorld* GetPhysicsWorld() { return nullptr; }
+		virtual PhysicsWorld* GetPhysicsWorld() { return &m_GameContext->m_Scene->GetPhysicsWorld(); }
 
 		static EventEmitter<Scene*>& GetSceneChangeEmitter() { return m_SceneChangeEmitter; }
 

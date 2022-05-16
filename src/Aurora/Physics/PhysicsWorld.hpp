@@ -2,6 +2,8 @@
 
 #include "Aurora/Core/Library.hpp"
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Framework/Physics/ColliderComponent.hpp"
+#include "AABBTree.hpp"
 
 namespace Aurora
 {
@@ -26,6 +28,8 @@ namespace Aurora
 
 		Vector3 m_Gravity;
 		double m_UpdateRate;
+
+		AABBTree<ColliderComponent> m_AABBTree;
 	public:
 		explicit PhysicsWorld(Scene* scene);
 		~PhysicsWorld();

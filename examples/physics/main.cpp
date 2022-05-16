@@ -130,24 +130,18 @@ class BaseAppContext : public AppContext
 
 	Actor* testActor = nullptr;
 
-	PhysicsWorld* m_PhysicsWorld;
-
 	~BaseAppContext() override
 	{
-		delete m_PhysicsWorld;
 		delete sceneRenderer;
 	}
 
 	// FIXME: this is just an hack!
 	SceneRenderer* GetSceneRenderer() override { return sceneRenderer; }
-	PhysicsWorld* GetPhysicsWorld() override { return m_PhysicsWorld; }
 
 	void Init() override
 	{
 		SetGameContext<GameContext>();
 		SwitchGameModeImmediately<GameModeBase>()->BeginPlay();
-
-		m_PhysicsWorld = new PhysicsWorld(GetScene());
 
 		sceneRenderer = new SceneRenderer();
 
@@ -283,7 +277,7 @@ class BaseAppContext : public AppContext
 
 	void Update(double delta) override
 	{
-		m_PhysicsWorld->Update(delta);
+
 	}
 
 	void Render() override

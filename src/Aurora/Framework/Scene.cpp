@@ -4,7 +4,7 @@
 namespace Aurora
 {
 
-	Scene::Scene() : m_ActorMemory()
+	Scene::Scene() : m_ActorMemory(), m_PhysicsWorld(this)
 	{
 
 	}
@@ -67,5 +67,7 @@ namespace Aurora
 		{
 			actorComponent->Tick(delta);
 		}
+
+		m_PhysicsWorld.Update(delta);
 	}
 }

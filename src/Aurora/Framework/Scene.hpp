@@ -4,6 +4,7 @@
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Logger/Logger.hpp"
 #include "Aurora/Memory/Aum.hpp"
+#include "Aurora/Physics/PhysicsWorld.hpp"
 #include "ComponentStorage.hpp"
 #include "SceneComponent.hpp"
 #include "Actor.hpp"
@@ -16,11 +17,14 @@ namespace Aurora
 		Aum m_ActorMemory;
 		std::vector<Actor*> m_Actors;
 		ComponentStorage m_ComponentStorage;
+		PhysicsWorld m_PhysicsWorld;
 	public:
 		friend class Actor;
 
 		Scene();
 		~Scene();
+
+		inline PhysicsWorld& GetPhysicsWorld() { return m_PhysicsWorld; }
 
 		template<class T, class RootCmp = typename T::DefaultComponent_t, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
 		T* SpawnActor(const String& name, const Vector3& position, const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
