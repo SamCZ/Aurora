@@ -10,6 +10,7 @@
 #include <GLFW/glfw3native.h>
 #endif
 
+#include "Aurora/Engine.hpp"
 #include "Input/GLFW/Manager.hpp"
 #include "Aurora/Graphics/OpenGL/GL.hpp"
 
@@ -350,6 +351,8 @@ namespace Aurora
 		glfwSetCharModsCallback(m_WindowHandle, GLFWWindow::CharModsCallback);
 
 		glfwSetDropCallback(m_WindowHandle, GLFWWindow::OnFileDropListener);
+
+		glfwSetJoystickCallback(GLFWWindow::JoystickCallback);
 
 		glDisable(GL_FRAMEBUFFER_SRGB);
 
@@ -703,6 +706,20 @@ namespace Aurora
 		 }
 
 		 window->m_DropFileEmitter.Invoke(std::forward<std::vector<Path>>(files));
+	 }
+
+	 void GLFWWindow::JoystickCallback(int jid, int event)
+	 {
+		 std::dynamic_pointer_cast<Input::Manager>(GEngine->GetWindow()->GetInputManager())->OnJoystickConnectChange(jid, event == GLFW_CONNECTED);
+
+		 if (event == GLFW_CONNECTED)
+		 {
+			 AU_LOG_INFO("The joystick was connected ", jid);
+		 }
+		 else if (event == GLFW_DISCONNECTED)
+		 {
+			 AU_LOG_INFO("The joystick was disconnected ", jid);
+		 }
 	 }
  }
 #endif

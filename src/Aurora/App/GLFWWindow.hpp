@@ -133,6 +133,7 @@ namespace Aurora
 		static void OnMouseButtonCallback(GLFWwindow* rawWindow, int button, int action, int mods);
 		static void CharModsCallback(GLFWwindow* rawWindow, uint32_t codepoint, int mods);
 		static void OnFileDropListener(GLFWwindow* rawWindow, int count, const char** paths);
+		static void JoystickCallback(int jid, int event);
 	};
 }
 #endif
