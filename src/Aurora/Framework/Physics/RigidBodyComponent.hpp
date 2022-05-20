@@ -57,7 +57,7 @@ namespace Aurora
 		void SetHasGravity(bool mHasGravity) { m_HasGravity = mHasGravity; }
 
 		[[nodiscard]] bool IsKinematic() const { return m_IsKinematic; }
-		void SetMIsKinematic(bool mIsKinematic) { m_IsKinematic = mIsKinematic; }
+		void SetIsKinematic(bool mIsKinematic) { m_IsKinematic = mIsKinematic; }
 
 		Transform& GetWorldTransform();
 	};

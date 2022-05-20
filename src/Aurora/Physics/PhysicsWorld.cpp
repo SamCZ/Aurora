@@ -53,7 +53,15 @@ namespace Aurora
 	void PhysicsWorld::RunPhysics()
 	{
 		ComponentView<ColliderComponent> colliderComponents = m_Scene->GetComponents<ColliderComponent>();
-		m_AABBTree = AABBTree<ColliderComponent>(colliderComponents.size() * 2);
+
+		if (colliderComponents.empty())
+		{
+			m_AABBTree = AABBTree<ColliderComponent>(1);
+		}
+		else
+		{
+			m_AABBTree = AABBTree<ColliderComponent>(colliderComponents.size() * 2);
+		}
 
 		for (ColliderComponent* collider : colliderComponents)
 		{
@@ -70,7 +78,9 @@ namespace Aurora
 				continue;
 
 			rigidBodyComponent->GetOwner()->FixedStep();
-			rigidBodyComponent->AddAcceleration(m_Gravity * (float)m_UpdateRate);
+
+			if (rigidBodyComponent->HasGravity())
+				rigidBodyComponent->AddAcceleration(m_Gravity * (float)m_UpdateRate);
 
 			SceneComponent* parent = rigidBodyComponent->GetParent() != nullptr ? rigidBodyComponent->GetParent() : rigidBodyComponent->GetOwner()->GetRootComponent();
 			std::vector<BoxColliderComponent*> colliders;
