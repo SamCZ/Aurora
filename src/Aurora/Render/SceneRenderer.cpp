@@ -221,6 +221,8 @@ namespace Aurora
 	{
 		for (CameraComponent* camera : scene->GetComponents<CameraComponent>())
 		{
+			CPU_DEBUG_SCOPE("RenderCamera");
+
 			ClearVisibleEntities();
 
 			if (!camera->GetOwner()->IsActive() || !camera->IsActive())
@@ -257,6 +259,7 @@ namespace Aurora
 
 			{ // Base Ambient pass
 				GPU_DEBUG_SCOPE("AmbientPass");
+				CPU_DEBUG_SCOPE("AmbientPass");
 				DrawCallState drawCallState;
 				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
@@ -287,55 +290,58 @@ namespace Aurora
 
 			/////////////////////////////////////////////////////////////////////////////////////////////////
 
-			// Sky light update
-			SkyLightStorage skyLightStorage = {};
-
-			if (SkyLightComponent* skylightComponent = scene->FindFirstComponent<SkyLightComponent>())
 			{
-				skyLightStorage.AmbientColorAndIntensity = Vector4(skylightComponent->GetAmbientColor(), skylightComponent->GetAmbientIntensity());
+				CPU_DEBUG_SCOPE("LightBufferUpdate");
+				// Sky light update
+				SkyLightStorage skyLightStorage = {};
+
+				if (SkyLightComponent* skylightComponent = scene->FindFirstComponent<SkyLightComponent>())
+				{
+					skyLightStorage.AmbientColorAndIntensity = Vector4(skylightComponent->GetAmbientColor(), skylightComponent->GetAmbientIntensity());
+				}
+
+				GEngine->GetRenderDevice()->WriteBuffer(m_SkyLightBuffer, &skyLightStorage);
+
+				// Collect and update directional light buffers
+				DirectionalLightStorage dirLights = {};
+				dirLights.DirLightCount = 0;
+
+				for (DirectionalLightComponent* lightComponent : scene->GetComponents<DirectionalLightComponent>())
+				{
+					if (!lightComponent->GetOwner()->IsActive() || !lightComponent->IsActive())
+						continue;
+
+					auto& light = dirLights.DirLights[dirLights.DirLightCount];
+					light.DirectionIntensity = Vector4(lightComponent->GetForwardVector(), lightComponent->GetIntensity());
+					light.Color = Vector4(lightComponent->GetColor(), 1.0f);
+					dirLights.DirLightCount++;
+
+					if(dirLights.DirLightCount == MAX_DIRECTIONAL_LIGHTS)
+						break;
+				}
+
+				GEngine->GetRenderDevice()->WriteBuffer(m_DirLightsBuffer, &dirLights);
+
+				// Collect and update point light buffers
+				PointLightStorage pointLights = {};
+				pointLights.PointLightCount = 0;
+
+				for (PointLightComponent* lightComponent : scene->GetComponents<PointLightComponent>())
+				{
+					if (!lightComponent->GetOwner()->IsActive() || !lightComponent->IsActive())
+						continue;
+
+					auto& light = pointLights.PointLights[pointLights.PointLightCount];
+					light.PositionIntensity = Vector4(lightComponent->GetWorldPosition(), lightComponent->GetIntensity());
+					light.ColorRadius = Vector4(lightComponent->GetColor(), lightComponent->GetRadius());
+					pointLights.PointLightCount++;
+
+					if(pointLights.PointLightCount == MAX_POINT_LIGHTS)
+						break;
+				}
+
+				GEngine->GetRenderDevice()->WriteBuffer(m_PointLightsBuffer, &pointLights);
 			}
-
-			GEngine->GetRenderDevice()->WriteBuffer(m_SkyLightBuffer, &skyLightStorage);
-
-			// Collect and update directional light buffers
-			DirectionalLightStorage dirLights = {};
-			dirLights.DirLightCount = 0;
-
-			for (DirectionalLightComponent* lightComponent : scene->GetComponents<DirectionalLightComponent>())
-			{
-				if (!lightComponent->GetOwner()->IsActive() || !lightComponent->IsActive())
-					continue;
-
-				auto& light = dirLights.DirLights[dirLights.DirLightCount];
-				light.DirectionIntensity = Vector4(lightComponent->GetForwardVector(), lightComponent->GetIntensity());
-				light.Color = Vector4(lightComponent->GetColor(), 1.0f);
-				dirLights.DirLightCount++;
-
-				if(dirLights.DirLightCount == MAX_DIRECTIONAL_LIGHTS)
-					break;
-			}
-
-			GEngine->GetRenderDevice()->WriteBuffer(m_DirLightsBuffer, &dirLights);
-
-			// Collect and update point light buffers
-			PointLightStorage pointLights = {};
-			pointLights.PointLightCount = 0;
-
-			for (PointLightComponent* lightComponent : scene->GetComponents<PointLightComponent>())
-			{
-				if (!lightComponent->GetOwner()->IsActive() || !lightComponent->IsActive())
-					continue;
-
-				auto& light = pointLights.PointLights[pointLights.PointLightCount];
-				light.PositionIntensity = Vector4(lightComponent->GetWorldPosition(), lightComponent->GetIntensity());
-				light.ColorRadius = Vector4(lightComponent->GetColor(), lightComponent->GetRadius());
-				pointLights.PointLightCount++;
-
-				if(pointLights.PointLightCount == MAX_POINT_LIGHTS)
-					break;
-			}
-
-			GEngine->GetRenderDevice()->WriteBuffer(m_PointLightsBuffer, &pointLights);
 
 			// Write defaults
 			CompositeDefaults defaults = {};
@@ -461,6 +467,7 @@ namespace Aurora
 					// Render outline post process
 					{
 						GPU_DEBUG_SCOPE("PostPass");
+						CPU_DEBUG_SCOPE("Outline");
 
 						glEnable(GL_BLEND);
 						glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

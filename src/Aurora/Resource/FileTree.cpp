@@ -132,4 +132,22 @@ namespace Aurora
 				foundFiles.push_back(child);
 		}
 	}
+
+	bool PathNode::SearchForFilesWithExtension(const std::string& extension, std::vector<PathNode>& foundFiles) const
+	{
+		if (Path.has_extension() && Path.extension() == extension)
+		{
+			foundFiles.push_back(*this);
+		}
+
+		if (IsDirectory)
+		{
+			for (const auto& child: Childrens)
+			{
+				child.SearchForFilesWithExtension(extension, foundFiles);
+			}
+		}
+
+		return !foundFiles.empty();
+	}
 }

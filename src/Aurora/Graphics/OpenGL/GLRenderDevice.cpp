@@ -1387,6 +1387,8 @@ namespace Aurora
 
 	void GLRenderDevice::ApplyShaderUniformResources(const Shader_ptr& shader, const UniformResources& resources)
 	{
+		CPU_DEBUG_SCOPE("ApplyShaderUniformResources");
+
 		if (shader == nullptr) return;
 
 		auto glShader = static_cast<GLShaderProgram*>(shader.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)

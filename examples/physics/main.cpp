@@ -68,6 +68,13 @@ public:
 		float yaw = ImGui::GetIO().MouseDelta.y * -0.1f;
 		float pitch = ImGui::GetIO().MouseDelta.x * -0.1f;
 		m_Camera->GetTransform().AddRotation(yaw, pitch, 0.0f);
+
+		bool isOnGround = rigidBody->GetVelocity().y >= 0 && rigidBody->GetVelocity().y < 0.05f;
+
+		if(ImGui::IsKeyPressed(ImGuiKey_Space, false) && isOnGround)
+		{
+			rigidBody->AddAcceleration({0, 10, 0});
+		}
 	}
 
 	void FixedStep() override
@@ -83,7 +90,7 @@ public:
 
 		//AU_LOG_INFO(glm::to_string(rigidBody->GetVelocity()));
 
-		bool isOnGround = rigidBody->CollidedSides[1];
+		bool isOnGround = rigidBody->GetVelocity().y >= 0 && rigidBody->GetVelocity().y < 0.05f;
 
 		if (not isOnGround)
 		{
@@ -110,11 +117,6 @@ public:
 		if(ImGui::GetIO().KeysDown[ImGui::GetKeyIndex(ImGuiKey_D)])
 		{
 			rigidBody->AddAcceleration(-left);
-		}
-
-		if(ImGui::IsKeyPressed(ImGuiKey_Space, false) && isOnGround)
-		{
-			rigidBody->AddAcceleration({0, 10, 0});
 		}
 	}
 

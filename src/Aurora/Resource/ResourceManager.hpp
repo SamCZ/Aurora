@@ -85,6 +85,7 @@ namespace Aurora
 		void AddFileSearchPath(const String& path);
 		FileTree* CreateFileTree(const Path& path, bool watch);
 		FileTree* GetFileTree(const Path& path);
+		std::vector<FileTreeContainer*> GetFileTreeContainers() const;
 
 		void LoadPackageFile(const Path& path);
 
@@ -128,6 +129,9 @@ namespace Aurora
 
 		bool SaveCubeMapDef(const Path& path, const std::array<Texture_ptr, 6>& textures);
 		Texture_ptr LoadCubeMapDef(const Path& path);
+
+		Material_ptr CreateMaterialInstance(const Path& path, const Path& matdefPath);
+		Material_ptr CreateMaterialInstance(const Path& path, const MaterialDefinition_ptr& matdef);
 
 		[[nodiscard]] inline const std::vector<Path>& GetFileSearchPaths() const { return m_FileSearchPaths; }
 		[[nodiscard]] inline const std::unordered_map<Path, MaterialDefinition_ptr, path_hash>& GetMaterialDefs() const { return m_MaterialDefinitions; }

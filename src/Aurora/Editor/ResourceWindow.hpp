@@ -48,6 +48,15 @@ namespace Aurora
 			String Filename;
 			std::array<Texture_ptr, 6> CubeMapTextures;
 		} m_CubeMapCreateData;
+
+		Path m_FocusedResourceItem;
+
+		bool m_CreatedMaterialInstancePopupOpen = false;
+		Path m_SelectedMaterialDef;
+		std::vector<PathNode> m_FoundMaterialDefs;
+		std::vector<String> m_FoundMaterialDefsStrings;
+		int m_SelectedFoundMaterialDef = 0;
+		String m_NewMaterialInstanceName;
 	public:
 		explicit ResourceWindow(MainEditorPanel* mainEditorPanel);
 		~ResourceWindow();
@@ -66,6 +75,9 @@ namespace Aurora
 
 		void OpenCubeMapCreateWindow();
 		void DrawCubeMapCreateWindow();
+
+		void OpenCreateMaterialInstanceWindow(const Path& path);
+		void DrawCreateMaterialInstanceWindow();
 	public:
 		const char* GetFileTypeIconOrTexture(const Path& path, Texture_ptr& textureOut);
 	};

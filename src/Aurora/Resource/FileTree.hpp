@@ -37,6 +37,7 @@ namespace Aurora
 		bool RenameFile(const std::filesystem::path& newPath, const std::filesystem::path& oldNamePath);
 
 		void SearchFor(std::string searchString, std::vector<PathNode>& foundFiles, bool includeDirectories) const;
+		bool SearchForFilesWithExtension(const std::string& extension, std::vector<PathNode>& foundFiles) const;
 
 		void Traverse();
 	private:

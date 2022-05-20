@@ -1,5 +1,6 @@
 #include "Material.hpp"
 #include "Aurora/Engine.hpp"
+#include "Aurora/Core/Profiler.hpp"
 #include "Aurora/Graphics/RenderManager.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 
@@ -63,6 +64,8 @@ namespace Aurora
 
 	void Material::BeginPass(PassType_t pass, DrawCallState& drawState)
 	{
+		CPU_DEBUG_SCOPE("Material::BeginPass");
+
 		IRenderDevice* renderDevice = GEngine->GetRenderDevice();
 
 		MaterialPassDef* passDef = m_MatDef->GetPassDefinition(pass);
@@ -125,6 +128,8 @@ namespace Aurora
 
 	void Material::EndPass(PassType_t pass, DrawCallState& state)
 	{
+		CPU_DEBUG_SCOPE("Material::EndPass");
+
 		(void)pass;
 		(void)state;
 

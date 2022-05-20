@@ -117,6 +117,18 @@ namespace Aurora
 		return nullptr;
 	}
 
+	std::vector<FileTreeContainer*> ResourceManager::GetFileTreeContainers() const
+	{
+		std::vector<FileTreeContainer*> trees;
+
+		for (auto& [key, container] : m_FileTrees)
+		{
+			trees.push_back(container);
+		}
+
+		return trees;
+	}
+
 	void ResourceManager::LoadPackageFile(const Path& path)
 	{
 		auto map = AssetBank::ReadHeadersFromPackage(path);
@@ -892,6 +904,44 @@ namespace Aurora
 		}
 
 		return GEngine->GetRenderManager()->CreateCubeMap(textures, true);
+	}
+
+	Material_ptr ResourceManager::CreateMaterialInstance(const Path& path, const Path& matdefPath)
+	{
+		Path relativeMathDefPath = matdefPath;
+
+		for (const auto& item: m_FileSearchPaths)
+		{
+			Path rel = std::filesystem::relative(matdefPath, item);
+
+			if (!rel.empty())
+				relativeMathDefPath = rel;
+		}
+
+		return CreateMaterialInstance(path, GetOrLoadMaterialDefinition(relativeMathDefPath));
+	}
+
+	Material_ptr ResourceManager::CreateMaterialInstance(const Path& path, const MaterialDefinition_ptr& matdef)
+	{
+		if (matdef == nullptr)
+		{
+			AU_LOG_ERROR("Cannot create material instance because definition is null !");
+			return nullptr;
+		}
+
+		nlohmann::json json;
+		json["name"] = path.stem().string();
+		json["base"] = matdef->GetPath().string();
+
+		std::ofstream stream;
+		stream.open(path);
+		if(stream.is_open())
+		{
+			stream << std::setw(4) << json << std::endl;
+			stream.close();
+		}
+
+		return nullptr;
 	}
 
 	static const char* ImageExtensions[] = {

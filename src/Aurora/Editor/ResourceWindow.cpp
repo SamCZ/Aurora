@@ -82,6 +82,7 @@ namespace Aurora
 		(void) delta;
 
 		DrawCubeMapCreateWindow();
+		DrawCreateMaterialInstanceWindow();
 
 		CPU_DEBUG_SCOPE("ResourceWindow");
 
@@ -142,11 +143,6 @@ namespace Aurora
 							m_CurrentBasePath = path;
 						}
 
-						if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-						{
-							ImGui::OpenPopup("resource-file-list-context");
-						}
-
 #ifdef _WIN32
 						if (ImGui::BeginPopupContextItem())
 						{
@@ -199,11 +195,30 @@ namespace Aurora
 
 				if (ImGui::BeginPopupContextWindow())
 				{
-					if (ImGui::BeginMenu("Create"))
+					bool isResourceFocused = !m_FocusedResourceItem.empty();
+
+					if (isResourceFocused)
+					{
+						if (ResourceManager::IsFileType(m_FocusedResourceItem, FT_MATERIAL_DEF))
+						{
+							if (ImGui::MenuItem("Create Material Instance from this"))
+							{
+								OpenCreateMaterialInstanceWindow(m_FocusedResourceItem);
+							}
+							ImGui::Separator();
+						}
+					}
+
+					if (!isResourceFocused && ImGui::BeginMenu("Create"))
 					{
 						if (ImGui::MenuItem("CubeMap"))
 						{
 							OpenCubeMapCreateWindow();
+						}
+
+						if (ImGui::MenuItem("Material Instance"))
+						{
+							OpenCreateMaterialInstanceWindow("");
 						}
 
 						ImGui::EndMenu();
@@ -211,10 +226,14 @@ namespace Aurora
 #ifdef _WIN32
 					if (ImGui::MenuItem("Open in explorer"))
 					{
-						ShellExecuteA(nullptr, "open", m_CurrentPath.string().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
+						ShellExecuteA(nullptr, "open", isResourceFocused ? m_FocusedResourceItem.string().c_str() : m_CurrentPath.string().c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
 					}
 #endif
 					ImGui::EndPopup();
+				}
+				else
+				{
+					m_FocusedResourceItem = "";
 				}
 
 				bool foundPath = false;
@@ -312,6 +331,12 @@ namespace Aurora
 			{
 				m_CurrentPath = path;
 			}
+
+			if (ImGui::IsItemHovered())
+			{
+				ImGui::SetTooltip("%s", path.filename().string().c_str());
+				m_FocusedResourceItem = path;
+			}
 		}
 		else
 		{
@@ -364,6 +389,7 @@ namespace Aurora
 			if (ImGui::IsItemHovered())
 			{
 				ImGui::SetTooltip("%s", path.filename().string().c_str());
+				m_FocusedResourceItem = path;
 			}
 
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
@@ -371,17 +397,17 @@ namespace Aurora
 				SelectAsset(path);
 			}
 
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+			/*if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
 			{
 				ImGui::OpenPopup("resourceManagerContextMenu");
-			}
+			}*/
 
 			if (ImGui::IsItemClicked(ImGuiMouseButton_Left) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{
 				OpenAsset(path);
 			}
 
-			if (ImGui::BeginPopup("resourceManagerContextMenu"))
+			/*if (ImGui::BeginPopup("resourceManagerContextMenu"))
 			{
 				ImGui::Text("File menu");
 				ImGui::Separator();
@@ -391,7 +417,7 @@ namespace Aurora
 				}
 
 				ImGui::EndPopup();
-			}
+			}*/
 
 		}
 
@@ -657,5 +683,104 @@ namespace Aurora
 		ImGui::EndDisabled();
 
 		ImGui::End();
+	}
+
+	void ResourceWindow::OpenCreateMaterialInstanceWindow(const Path& path)
+	{
+		m_CreatedMaterialInstancePopupOpen = true;
+
+		m_SelectedMaterialDef = path;
+
+		for (FileTreeContainer* treeContainer : GEngine->GetResourceManager()->GetFileTreeContainers())
+		{
+			treeContainer->Tree->SearchForFilesWithExtension(".matd", m_FoundMaterialDefs);
+		}
+
+		m_FoundMaterialDefsStrings.clear();
+		m_SelectedFoundMaterialDef = 0;
+		m_NewMaterialInstanceName = "";
+
+		int i = 0;
+		for (const auto& item: m_FoundMaterialDefs)
+		{
+			m_FoundMaterialDefsStrings.push_back(item.Path.filename().string());
+
+			if (item.Path == path)
+			{
+				m_SelectedFoundMaterialDef = i;
+			}
+
+			i++;
+		}
+	}
+
+	static bool String_ArrayGetter(void* data, int idx, const char** out_text)
+	{
+		std::vector<String>* nodes = reinterpret_cast<std::vector<String>*>(data);
+
+		if (out_text)
+			*out_text = nodes->at(idx).c_str();
+		return true;
+	}
+
+	void ResourceWindow::DrawCreateMaterialInstanceWindow()
+	{
+		if (m_CreatedMaterialInstancePopupOpen)
+		{
+			m_CreatedMaterialInstancePopupOpen = false;
+			ImGui::OpenPopup("Create Material Instance");
+		}
+
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+		if (ImGui::BeginPopupModal("Create Material Instance", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Combo("Material Definition", &m_SelectedFoundMaterialDef, String_ArrayGetter, (void*)&m_FoundMaterialDefsStrings, (int)m_FoundMaterialDefsStrings.size());
+			ImGui::Separator();
+			ImGui::InputTextLabel("Name", m_NewMaterialInstanceName);
+
+			/*ImGui::Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n");
+			ImGui::Separator();
+
+			static bool dont_ask_me_next_time = false;
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+			ImGui::Checkbox("Don't ask me next time", &dont_ask_me_next_time);
+			ImGui::PopStyleVar();*/
+
+			Path newInsPath = m_CurrentPath / (m_NewMaterialInstanceName + ".mat");
+
+			bool exists = false;
+			if (GEngine->GetResourceManager()->FileExists(newInsPath))
+			{
+				exists = true;
+				ImGui::TextColored(ImVec4(1, 0, 0, 1), "File already exists !");
+			}
+
+			if (m_NewMaterialInstanceName.empty() || exists)
+			{
+				ImGui::BeginDisabled();
+			}
+
+			if (ImGui::Button("Create", ImVec2(120, 0)))
+			{
+				GEngine->GetResourceManager()->CreateMaterialInstance(newInsPath, m_FoundMaterialDefs[m_SelectedFoundMaterialDef].Path);
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (m_NewMaterialInstanceName.empty())
+			{
+				ImGui::EndDisabled();
+			}
+
+			ImGui::SetItemDefaultFocus();
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			{
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndPopup();
+		}
 	}
 }
