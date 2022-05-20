@@ -2,7 +2,7 @@
 
 #include "Aurora/Framework/Scene.hpp"
 #include "Aurora/Graphics/Material/Material.hpp"
-#include "Aurora/Render/SceneRenderer.hpp"
+#include "Aurora/Render/SceneRendererDeferred.hpp"
 
 namespace Aurora
 {
@@ -14,7 +14,7 @@ namespace Aurora
 	{
 	private:
 		Scene* m_Scene;
-		SceneRenderer m_SceneRenderer;
+		SceneRendererDeferred m_SceneRenderer;
 
 		ViewPortManager* m_ViewPortManager;
 		CameraComponent* m_Camera;

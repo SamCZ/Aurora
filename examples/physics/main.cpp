@@ -26,7 +26,7 @@
 
 #include <Aurora/Graphics/VgRender.hpp>
 
-#include <Aurora/Render/SceneRenderer.hpp>
+#include <Aurora/Render/SceneRendererDeferred.hpp>
 
 #include <Aurora/Physics/PhysicsWorld.hpp>
 #include <Aurora/Framework/Physics/RigidBodyComponent.hpp>
@@ -128,7 +128,7 @@ public:
 
 class BaseAppContext : public AppContext
 {
-	SceneRenderer* sceneRenderer;
+	SceneRendererDeferred* sceneRenderer;
 
 	Actor* testActor = nullptr;
 
@@ -138,14 +138,14 @@ class BaseAppContext : public AppContext
 	}
 
 	// FIXME: this is just an hack!
-	SceneRenderer* GetSceneRenderer() override { return sceneRenderer; }
+	SceneRendererDeferred* GetSceneRenderer() override { return sceneRenderer; }
 
 	void Init() override
 	{
 		SetGameContext<GameContext>();
 		SwitchGameModeImmediately<GameModeBase>()->BeginPlay();
 
-		sceneRenderer = new SceneRenderer();
+		sceneRenderer = new SceneRendererDeferred();
 
 		AssimpModelLoader modelLoader;
 		MeshImportedData importedData = modelLoader.ImportModel("Test", GEngine->GetResourceManager()->LoadFile("Assets/socuwan.fbx"));

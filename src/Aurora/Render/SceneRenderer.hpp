@@ -77,28 +77,6 @@ namespace Aurora
 			float Knee = 0.1f;
 			float Intensity = 1.0f;
 		};
-	private:
-		Buffer_ptr m_BaseVsDataBuffer;
-		Buffer_ptr m_InstancesBuffer;
-
-		Buffer_ptr m_SkyLightBuffer;
-		Buffer_ptr m_DirLightsBuffer;
-		Buffer_ptr m_PointLightsBuffer;
-		Buffer_ptr m_CompositeDefaultsBuffer;
-		Shader_ptr m_CompositeShader;
-		Shader_ptr m_HDRCompositeShader;
-		Shader_ptr m_HDRCompositeShaderNoOutline;
-
-		Shader_ptr m_BloomShader;
-		Shader_ptr m_BloomShaderSS;
-		Buffer_ptr m_BloomDescBuffer;
-		BloomSettings m_BloomSettings;
-		const int m_BloomComputeWorkgroupSize = 16;
-
-		robin_hood::unordered_map<TTypeID, InputLayout_ptr> m_MeshInputLayouts;
-
-		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
-		std::array<PassRenderEventEmitter, Pass::Count> m_InjectedPasses;
 
 		struct OutlineContext
 		{
@@ -116,14 +94,22 @@ namespace Aurora
 			inline void AddSet(const OutlineActorSet& set) { Sets.push_back(set); }
 			inline void AddSet(OutlineActorSet&& set) { Sets.emplace_back(std::forward<OutlineActorSet>(set)); }
 			inline void Clear() { Sets.clear(); }
-		} m_OutlineContext;
+		};
 
-		Shader_ptr m_OutlineShader;
-		Buffer_ptr m_OutlineDescBuffer;
-		Texture_ptr m_OutlineStripeTexture;
+	protected:
+		robin_hood::unordered_map<TTypeID, InputLayout_ptr> m_MeshInputLayouts;
+		std::array<std::vector<VisibleEntity>, SortTypeCount> m_VisibleEntities;
+		std::array<PassRenderEventEmitter, Pass::Count> m_InjectedPasses;
+
+		Buffer_ptr m_InstancesBuffer;
+
+		BloomSettings m_BloomSettings;
+		OutlineContext m_OutlineContext;
 	public:
 		SceneRenderer();
-		void LoadShaders();
+		virtual ~SceneRenderer() = default;
+
+		virtual void LoadShaders() = 0;
 
 		inline void ClearVisibleEntities()
 		{
@@ -138,10 +124,8 @@ namespace Aurora
 		void PrepareVisibleEntities(Actor* actor, CameraComponent* camera);
 		void FillRenderSet(RenderSet& renderSet);
 
-		void Render(Scene* scene);
+		virtual void Render(Scene* scene) = 0;
 		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected = true);
-
-		TemporalRenderTarget RenderBloom(const FViewPort& wp, const Texture_ptr& inputHDRRT);
 
 		const InputLayout_ptr& GetInputLayoutForMesh(Mesh* mesh);
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }
