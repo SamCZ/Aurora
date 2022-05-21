@@ -75,6 +75,7 @@ namespace Aurora
 		m_CurrentState.DepthStencilState.DepthEnable = false;
 		m_CurrentState.ClearColorTarget = false;
 		m_CurrentState.ClearDepthTarget = false;
+		m_CurrentState.BlendState.Enabled = true;
 
 		m_CurrentState.RasterState.CullMode = ECullMode::None;
 
