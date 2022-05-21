@@ -120,7 +120,7 @@ namespace Aurora
 
 		MaterialPassState& passState = m_PassStates[pass];
 		renderDevice->SetRasterState(passState.RasterState);
-		renderDevice->SetDepthStencilState(passState.DepthStencilState);
+		//renderDevice->SetDepthStencilState(passState.DepthStencilState);
 		// TODO: Set blend state
 
 

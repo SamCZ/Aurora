@@ -26,8 +26,6 @@ namespace Aurora
 {
 	SceneRendererDeferred::SceneRendererDeferred() : SceneRenderer()
 	{
-		m_BaseVsDataBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
-
 		m_CompositeDefaultsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("CompositeDefaults", sizeof(CompositeDefaults), EBufferType::UniformBuffer));
 		m_SkyLightBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("SkyLight", sizeof(SkyLightStorage), EBufferType::UniformBuffer));
 		m_DirLightsBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("DirLights", sizeof(DirectionalLightStorage), EBufferType::UniformBuffer));

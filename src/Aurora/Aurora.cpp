@@ -204,7 +204,7 @@ namespace Aurora
 		m_ViewPortManager = new ViewPortManager();
 		GEngine->m_ViewPortManager = m_ViewPortManager;
 
-		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::SRGBA8_UNORM);
+		m_RenderViewPort = GEngine->GetViewPortManager()->Create(0, GraphicsFormat::RGBA8_UNORM);
 
 		m_RenderViewPort->ResizeEmitter.Bind([](const glm::ivec2& coord) ->void
 		{
@@ -460,9 +460,9 @@ namespace Aurora
 
 			if(!m_EditorPanel)
 			{
-				glEnable(GL_FRAMEBUFFER_SRGB);
+				//glEnable(GL_FRAMEBUFFER_SRGB);
 				m_RenderManager->Blit(m_RenderViewPort->Target);
-				glDisable(GL_FRAMEBUFFER_SRGB);
+				//glDisable(GL_FRAMEBUFFER_SRGB);
 			}
 
 			m_RenderDevice->SetViewPort(FViewPort(m_Window->GetSize()));

@@ -102,6 +102,7 @@ namespace Aurora
 		std::array<PassRenderEventEmitter, Pass::Count> m_InjectedPasses;
 
 		Buffer_ptr m_InstancesBuffer;
+		Buffer_ptr m_BaseVsDataBuffer;
 
 		BloomSettings m_BloomSettings;
 		OutlineContext m_OutlineContext;
@@ -109,7 +110,7 @@ namespace Aurora
 		SceneRenderer();
 		virtual ~SceneRenderer() = default;
 
-		virtual void LoadShaders() = 0;
+		virtual void LoadShaders() {};
 
 		inline void ClearVisibleEntities()
 		{

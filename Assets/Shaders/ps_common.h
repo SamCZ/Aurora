@@ -40,8 +40,6 @@ vec3 toLinear(vec3 sRGB)
 
 	return mix(higher, lower, vec3(cutoff));
 }
-#endif
-
 const float near_plane = 0.1f;
 const float far_plane = 2000.0f;
 
@@ -53,3 +51,5 @@ float linearize_depth(float d,float zNear,float zFar)
 float LinearizeDepth(float depth) {
 	return linearize_depth(depth, near_plane, far_plane);
 }
+
+#endif

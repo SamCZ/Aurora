@@ -7,8 +7,6 @@ namespace Aurora
 	class AU_API SceneRendererDeferred : public SceneRenderer
 	{
 	private:
-		Buffer_ptr m_BaseVsDataBuffer;
-
 		Buffer_ptr m_SkyLightBuffer;
 		Buffer_ptr m_DirLightsBuffer;
 		Buffer_ptr m_PointLightsBuffer;
