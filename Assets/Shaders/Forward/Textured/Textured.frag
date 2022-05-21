@@ -20,10 +20,10 @@ uniform sampler2D NormalMap;
 void main()
 {
 	FragColor = texture(Texture, TexCoord) * u_Tint;
-
+#ifdef USE_ALPHA_THRESHOLD
 	if(FragColor.a < 0.5)
 		discard;
-
+#endif
 #if USE_NORMAL_MAP
 	vec4 normalColor = texture(NormalMap, TexCoord);
 	vec3 normalFromTex = normalize(TBN * (normalColor.xyz * 2.0f - 1.0f));

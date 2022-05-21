@@ -210,7 +210,7 @@ namespace Aurora
 		void BindShaderInputsCached(const DrawCallState &state);
 		void BindShaderInputs(const DrawCallState &state, bool force) override;
 		void BindRenderTargets(const DrawCallState &state) override;
-		void SetBlendState(const DrawCallState &state) override;
+		void SetBlendState(const FBlendState& state) override;
 		void SetRasterState(const FRasterState& rasterState) override;
 		void ClearRenderTargets(const DrawCallState &state) override;
 		void SetDepthStencilState(FDepthStencilState state) override;

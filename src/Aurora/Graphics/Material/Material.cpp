@@ -6,6 +6,8 @@
 
 #include "MaterialDefinition.hpp"
 
+#include "Aurora/Graphics/OpenGL/GLRenderGroupScope.hpp"
+
 namespace Aurora
 {
 	uint64_t HashShaderMacros(const ShaderMacros& macros)
@@ -66,6 +68,16 @@ namespace Aurora
 	{
 		CPU_DEBUG_SCOPE("Material::BeginPass");
 
+		if (m_StateCheck > 0)
+		{
+			AU_LOG_FATAL("BeginPass was already called ! You need to call EndPass()");
+		}
+		m_StateCheck++;
+
+		char groupName[512];
+		snprintf(groupName, sizeof(groupName), "Material: %s", m_MatDef->GetName().c_str());
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, static_cast<GLsizei>(strlen(groupName)), groupName);
+
 		IRenderDevice* renderDevice = GEngine->GetRenderDevice();
 
 		MaterialPassDef* passDef = m_MatDef->GetPassDefinition(pass);
@@ -109,6 +121,7 @@ namespace Aurora
 			{
 				// TODO: Look at this and maybe fix this
 				drawState.BindTexture(textureVar->InShaderName, GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png"));
+				drawState.BindSampler(textureVar->InShaderName, textureVar->Sampler);
 				continue;
 			}
 
@@ -120,15 +133,20 @@ namespace Aurora
 
 		MaterialPassState& passState = m_PassStates[pass];
 		renderDevice->SetRasterState(passState.RasterState);
-		//renderDevice->SetDepthStencilState(passState.DepthStencilState);
-		// TODO: Set blend state
-
-
+		renderDevice->SetDepthStencilState(passState.DepthStencilState);
+		renderDevice->SetBlendState(passState.BlendState);
 	}
 
 	void Material::EndPass(PassType_t pass, DrawCallState& state)
 	{
+		if (m_StateCheck > 1)
+		{
+			AU_LOG_FATAL("Forgot to call EndPass on material !");
+		}
+		m_StateCheck--;
+
 		CPU_DEBUG_SCOPE("Material::EndPass");
+		glPopDebugGroup();
 
 		(void)pass;
 		(void)state;

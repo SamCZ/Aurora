@@ -119,6 +119,33 @@ namespace Aurora
 
 			ImGui::PopID();
 		}
+
+		ImGui::Separator();
+
+		bool useAlphaThreshold = m_CurrentMaterial->IsAlphaThresholdSet();
+		if (ImGui::Checkbox("Alpha threshold enabled", &useAlphaThreshold))
+		{
+			m_CurrentMaterial->SetAlphaThresholdEnabled(useAlphaThreshold);
+		}
+
+		ImGui::BeginDisabled();
+		float alphaThreshold = 0.5;
+		ImGui::DragFloat("Alpha threshold", &alphaThreshold, 0.01f, 0, 1);
+		ImGui::EndDisabled();
+
+		ImGui::Separator();
+
+		RenderSortType sortType = m_CurrentMaterial->GetSortType();
+		int currentSortInt = (int) sortType;
+		if (ENUM_COMBO("SortType", &currentSortInt, RenderSortType))
+		{
+			m_CurrentMaterial->SetSortType((RenderSortType)currentSortInt);
+		}
+
+		if (ImGui::Checkbox("Blending", &m_CurrentMaterial->BlendState(0).Enabled))
+		{
+			m_CurrentMaterial->BlendState(1).Enabled = m_CurrentMaterial->BlendState(0).Enabled;
+		}
 	}
 
 	void MaterialWindow::Open(const Path &path)

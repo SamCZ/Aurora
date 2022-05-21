@@ -4,15 +4,15 @@
 		{
 			"name": "Depth",
 			"shaders": {
-				"vertex": "Assets/Shaders/BaseDepth.vert",
-				"pixel": "Assets/Shaders/Empty.frag"
+				"vertex": "Assets/Shaders/Forward/Textured/Textured_Depth.vert",
+				"pixel": "Assets/Shaders/Forward/Textured/Textured_Depth.frag"
 			}
 		},
 		{
 			"name": "Ambient",
 			"shaders": {
-				"vertex": "Assets/Shaders/Test/ambient.vert",
-				"pixel": "Assets/Shaders/Test/ambient.frag"
+				"vertex": "Assets/Shaders/Forward/Textured/Textured.vert",
+				"pixel": "Assets/Shaders/Forward/Textured/Textured.frag"
 			}
 		}
 	],

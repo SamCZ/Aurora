@@ -99,7 +99,7 @@ namespace Aurora
 		GEngine->GetRenderDevice()->BindShaderInputs(m_CurrentState);
 		GEngine->GetRenderDevice()->BindShaderResources(m_CurrentState);
 
-		GEngine->GetRenderDevice()->SetBlendState(m_CurrentState);
+		GEngine->GetRenderDevice()->SetBlendState(m_CurrentState.BlendState);
 		GEngine->GetRenderDevice()->SetRasterState(m_CurrentState.RasterState);
 		GEngine->GetRenderDevice()->SetDepthStencilState(m_CurrentState.DepthStencilState);
 

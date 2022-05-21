@@ -81,11 +81,16 @@ namespace Aurora
 		}
 	}
 
-	void SceneRenderer::FillRenderSet(RenderSet& renderSet)
+	void SceneRenderer::FillRenderSet(RenderSet& renderSet, int numberOfPasses, ...)
 	{
+		std::va_list args;
+		va_start(args, numberOfPasses);
+
 		// Sort and prepare model contexts
-		for (int i = 0; i < SortTypeCount; ++i)
+		for (uint8_t j = 0; j < numberOfPasses; ++j)
 		{
+			uint8_t i = (uint8_t) va_arg(args, RenderSortType);
+
 			std::vector<VisibleEntity>& visibleEntities = m_VisibleEntities[i];
 
 			if(visibleEntities.empty())
@@ -154,6 +159,7 @@ namespace Aurora
 				renderSet.emplace_back(currentModelContext);
 			}
 		}
+		va_end(args);
 	}
 
 	void SceneRenderer::RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected)

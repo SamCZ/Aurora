@@ -75,6 +75,8 @@ namespace Aurora
 				macros[var.MacroName] = "1";
 		}
 
+		macros["USE_ALPHA_THRESHOLD"] = "1";
+
 		std::vector<std::tuple<size_t, size_t, std::vector<float>>> defaultsToWrite;
 
 		for(auto& [passType, passDesc] : desc.ShaderPasses)

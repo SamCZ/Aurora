@@ -8,6 +8,10 @@
 
 #include "Aurora/Framework/Mesh/Mesh.hpp"
 
+struct aiTexture;
+struct aiMaterial;
+struct aiScene;
+
 namespace Aurora
 {
 	struct MeshImportOptions
@@ -36,7 +40,13 @@ namespace Aurora
 	{
 	private:
 		Assimp::Importer m_Importer;
+		std::unordered_map<const aiTexture*, Texture_ptr> m_TextureCache;
 	public:
+		AssimpModelLoader();
+
 		MeshImportedData ImportModel(const String& name, const DataBlob& data, MeshImportOptions importOptions = {});
+
+	public:
+		void LoadMaterial(const aiScene* scene, const Mesh_ptr& mesh, int32_t materialIndex, const aiMaterial* sourceMaterial);
 	};
 }

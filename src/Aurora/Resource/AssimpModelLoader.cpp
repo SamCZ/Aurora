@@ -15,6 +15,11 @@
 
 namespace Aurora
 {
+	AssimpModelLoader::AssimpModelLoader()
+	{
+		//m_Importer.SetIOHandler();
+	}
+
 	std::vector<std::string> TextureTypeEnumToString = {
 		"aiTextureType_NONE", "aiTextureType_DIFFUSE", "aiTextureType_SPECULAR",
 		"aiTextureType_AMBIENT", "aiTextureType_EMISSIVE", "aiTextureType_HEIGHT",
@@ -97,7 +102,7 @@ namespace Aurora
 		mesh->LODResources[lod].Sections.emplace_back(section);
 	}
 
-	void LoadMaterial(const aiScene* scene, const Mesh_ptr& mesh, int32_t materialIndex, const aiMaterial* sourceMaterial)
+	void AssimpModelLoader::LoadMaterial(const aiScene* scene, const Mesh_ptr& mesh, int32_t materialIndex, const aiMaterial* sourceMaterial)
 	{
 		if(!mesh->MaterialSlots.contains(materialIndex))
 		{
@@ -124,79 +129,88 @@ namespace Aurora
 
 				if (const aiTexture* asTexture = scene->GetEmbeddedTexture(texturePathAiStr.C_Str()))
 				{
-					AU_LOG_INFO("Image format: ", asTexture->achFormatHint);
+					Texture_ptr texture;
 
-					String imageFormatStr = asTexture->achFormatHint;
-
-					int desiredChannels = 4;
-
-					if(imageFormatStr == "tga")
+					if (m_TextureCache.contains(asTexture))
 					{
-						desiredChannels = 3;
+						texture = m_TextureCache.at(asTexture);
 					}
-
-					int width;
-					int height;
-					int channels;
-					uint8_t* imageData = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(asTexture->pcData), asTexture->mWidth, &width, &height, &channels, desiredChannels);
-
-					if(desiredChannels != channels)
+					else
 					{
-						stbi_image_free(imageData);
-						imageData = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(asTexture->pcData), asTexture->mWidth, &width, &height, &channels, channels);
-					}
+						AU_LOG_INFO("Image format: ", asTexture->achFormatHint);
 
-					AU_LOG_INFO("Image info: ", width, ",", height, ",", channels);
+						String imageFormatStr = asTexture->achFormatHint;
 
-					GraphicsFormat format = GraphicsFormat::Unknown;
+						int desiredChannels = 4;
 
-					switch (channels)
-					{
-						case 1:
-							format = GraphicsFormat::R8_UNORM;
-							break;
-						case 2:
-							format = GraphicsFormat::RG8_UNORM;
-							break;
-						case 3:
-							format = GraphicsFormat::RGB8_UNORM;
-							break;
-						case 4:
-							format = GraphicsFormat::SRGBA8_UNORM;
-							break;
-						default:
-							AU_LOG_WARNING("Unknown number of channels: ", channels);
-							break;
-					}
-
-					TextureDesc textureDesc;
-					textureDesc.Width = width;
-					textureDesc.Height = height;
-					textureDesc.MipLevels = textureDesc.GetMipLevelCount();
-					textureDesc.ImageFormat = format;
-					textureDesc.Name = "[Embedded]";
-					auto texture = GEngine->GetRenderDevice()->CreateTexture(textureDesc, nullptr);
-
-					for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
-					{
-						GEngine->GetRenderDevice()->WriteTexture(texture, mipLevel, 0, imageData);
-
-						if (mipLevel < textureDesc.MipLevels - 1u)
+						if(imageFormatStr == "tga")
 						{
-							int newWidth = std::max<int>(1, width >> 1);
-							int newHeight = std::max<int>(1, height >> 1);
-
-							auto* resizedData = new uint8_t[newWidth * newHeight * channels];
-							stbir_resize_uint8(imageData, width, height, 0, resizedData, newWidth, newHeight, 0, channels);
-
-							stbi_image_free(imageData);
-							imageData = resizedData;
-							width = newWidth;
-							height = newHeight;
+							desiredChannels = 3;
 						}
-					}
 
-					stbi_image_free(imageData);
+						int width;
+						int height;
+						int channels;
+						uint8_t* imageData = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(asTexture->pcData), asTexture->mWidth, &width, &height, &channels, desiredChannels);
+
+						if(desiredChannels != channels)
+						{
+							stbi_image_free(imageData);
+							imageData = stbi_load_from_memory(reinterpret_cast<stbi_uc*>(asTexture->pcData), asTexture->mWidth, &width, &height, &channels, channels);
+						}
+
+						AU_LOG_INFO("Image info: ", width, ",", height, ",", channels);
+
+						GraphicsFormat format = GraphicsFormat::Unknown;
+
+						switch (channels)
+						{
+							case 1:
+								format = GraphicsFormat::R8_UNORM;
+								break;
+							case 2:
+								format = GraphicsFormat::RG8_UNORM;
+								break;
+							case 3:
+								format = GraphicsFormat::RGB8_UNORM;
+								break;
+							case 4:
+								format = GraphicsFormat::RGBA8_UNORM;
+								break;
+							default:
+								AU_LOG_WARNING("Unknown number of channels: ", channels);
+								break;
+						}
+
+						TextureDesc textureDesc;
+						textureDesc.Width = width;
+						textureDesc.Height = height;
+						textureDesc.MipLevels = textureDesc.GetMipLevelCount();
+						textureDesc.ImageFormat = format;
+						textureDesc.Name = "[Embedded]";
+						texture = GEngine->GetRenderDevice()->CreateTexture(textureDesc, nullptr);
+
+						for (unsigned int mipLevel = 0; mipLevel < textureDesc.MipLevels; mipLevel++)
+						{
+							GEngine->GetRenderDevice()->WriteTexture(texture, mipLevel, 0, imageData);
+
+							if (mipLevel < textureDesc.MipLevels - 1u)
+							{
+								int newWidth = std::max<int>(1, width >> 1);
+								int newHeight = std::max<int>(1, height >> 1);
+
+								auto* resizedData = new uint8_t[newWidth * newHeight * channels];
+								stbir_resize_uint8(imageData, width, height, 0, resizedData, newWidth, newHeight, 0, channels);
+
+								stbi_image_free(imageData);
+								imageData = resizedData;
+								width = newWidth;
+								height = newHeight;
+							}
+						}
+
+						stbi_image_free(imageData);
+					}
 
 					// Convert texture type
 
@@ -221,7 +235,7 @@ namespace Aurora
 	}
 
 	template<typename MeshProcessor>
-	void ProcessNode(std::vector<Mesh_ptr>& meshes, int32_t& currentMeshIndex, int32_t& currentMaterialIndex, MeshProcessor& meshProcessor, const aiScene* scene, aiNode* node, const aiMatrix4x4& parentTransform, const MeshImportOptions& importOptions)
+	void ProcessNode(AssimpModelLoader* loader, std::vector<Mesh_ptr>& meshes, int32_t& currentMeshIndex, int32_t& currentMaterialIndex, MeshProcessor& meshProcessor, const aiScene* scene, aiNode* node, const aiMatrix4x4& parentTransform, const MeshImportOptions& importOptions)
 	{
 		//std::cout << node->mName.C_Str() << std::endl;
 
@@ -286,7 +300,7 @@ namespace Aurora
 			Mesh_ptr mesh = meshes[currentMeshIndex];
 
 			aiMaterial* sourceMaterial = scene->mMaterials[sourceMesh->mMaterialIndex];
-			LoadMaterial(scene, mesh, currentMaterialIndex, sourceMaterial);
+			loader->LoadMaterial(scene, mesh, currentMaterialIndex, sourceMaterial);
 			meshProcessor(mesh, sourceMesh, mat4_cast(transform), (LOD)0, importOptions, currentMaterialIndex);
 
 			currentMaterialIndex++;
@@ -301,7 +315,7 @@ namespace Aurora
 		// Iterate over children
 		for (uint i = 0; i < node->mNumChildren; i++)
 		{
-			ProcessNode(meshes, currentMeshIndex, currentMaterialIndex, meshProcessor, scene, node->mChildren[i], node->mTransformation, importOptions);
+			ProcessNode(loader, meshes, currentMeshIndex, currentMaterialIndex, meshProcessor, scene, node->mChildren[i], node->mTransformation, importOptions);
 		}
 	}
 
@@ -331,7 +345,7 @@ namespace Aurora
 		}
 		else
 		{
-			ProcessNode(importedData.Meshes, currentMesh, currentMaterial, ProcessStaticMesh, scene, scene->mRootNode, aiMatrix4x4(), importOptions);
+			ProcessNode(this, importedData.Meshes, currentMesh, currentMaterial, ProcessStaticMesh, scene, scene->mRootNode, aiMatrix4x4(), importOptions);
 		}
 
 		m_Importer.FreeScene();

@@ -24,6 +24,18 @@
 
 namespace Aurora
 {
+	void UpdateModelState(PassType_t pass, const RenderSet& set, void(*callback)(FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState))
+	{
+		Material* lastMaterial = nullptr;
+		for (const ModelContext& mc : set)
+		{
+			if (mc.Material != lastMaterial)
+			{
+				lastMaterial = mc.Material;
+				callback(mc.Material->RasterState(pass), mc.Material->DepthStencilState(pass), mc.Material->BlendState(pass));
+			}
+		}
+	}
 
 	void SceneRendererForward::Render(Scene* scene)
 	{
@@ -59,8 +71,15 @@ namespace Aurora
 
 			// Prepate sets
 			PrepareVisibleEntities(scene, camera);
-			RenderSet modelContexts;
-			FillRenderSet(modelContexts);
+
+			RenderSet modelContextsOpaque;
+			FillRenderSet(modelContextsOpaque, 2, RenderSortType::Opaque, RenderSortType::Transparent);
+
+			RenderSet translucentModelContexts;
+			FillRenderSet(translucentModelContexts, 1, RenderSortType::Translucent);
+
+			RenderSet skyModelContexts;
+			FillRenderSet(skyModelContexts, 1, RenderSortType::Sky);
 
 			// Setup base vs data
 			BaseVSData baseVsData;
@@ -71,6 +90,7 @@ namespace Aurora
 
 			GEngine->GetRenderDevice()->InvalidateState();
 
+			//if (!modelContextsOpaque.empty())
 			{ // Depth pre pass
 				GPU_DEBUG_SCOPE("DepthPrePass");
 				CPU_DEBUG_SCOPE("DepthPrePass");
@@ -85,18 +105,20 @@ namespace Aurora
 				drawCallState.ClearColorTarget = false;
 				drawCallState.ClearDepthTarget = true;
 
-				drawCallState.DepthStencilState.DepthFunc = EComparisonFunc::Less;
-				drawCallState.DepthStencilState.DepthWriteMask = EDepthWriteMask::All;
+				UpdateModelState(Pass::Depth, modelContextsOpaque, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				{
+					depthState.DepthFunc = EComparisonFunc::Less;
+					depthState.DepthWriteMask = EDepthWriteMask::All;
+				});
 
 				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 				GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
 
-				GEngine->GetRenderDevice()->SetDepthStencilState(drawCallState.DepthStencilState);
-
-				RenderPass(Pass::Depth, drawCallState, camera, modelContexts);
+				RenderPass(Pass::Depth, drawCallState, camera, modelContextsOpaque);
 			}
 
-			{ // Ambient
+			//if (!modelContextsOpaque.empty())
+			{ // Ambient opaque + transparent
 				GPU_DEBUG_SCOPE("AmbientPass");
 				CPU_DEBUG_SCOPE("AmbientPass");
 
@@ -111,15 +133,65 @@ namespace Aurora
 				drawCallState.ClearColor = camera->GetClearColor();
 				drawCallState.ClearColorTarget = true;
 				drawCallState.ClearDepthTarget = false;
-				drawCallState.DepthStencilState.DepthFunc = EComparisonFunc::LessEqual;
-				drawCallState.DepthStencilState.DepthWriteMask = EDepthWriteMask::Zero;
+
+				UpdateModelState(Pass::Ambient, modelContextsOpaque, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				{
+					depthState.DepthFunc = EComparisonFunc::Equal;
+					depthState.DepthWriteMask = EDepthWriteMask::Zero;
+				});
 
 				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 				GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
 
-				GEngine->GetRenderDevice()->SetDepthStencilState(drawCallState.DepthStencilState);
+				RenderPass(Pass::Ambient, drawCallState, camera, modelContextsOpaque);
+			}
 
-				RenderPass(Pass::Ambient, drawCallState, camera, modelContexts);
+			if (!skyModelContexts.empty())
+			{ // Sky
+				GPU_DEBUG_SCOPE("SkyPass");
+				CPU_DEBUG_SCOPE("SkyPass");
+
+				DrawCallState drawCallState;
+				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
+
+				drawCallState.ViewPort = viewPort->ViewPort;
+				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
+
+				UpdateModelState(Pass::Ambient, skyModelContexts, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				{
+					depthState.DepthFunc = EComparisonFunc::LessEqual;
+					depthState.DepthWriteMask = EDepthWriteMask::Zero;
+				});
+
+				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+
+				RenderPass(Pass::Ambient, drawCallState, camera, skyModelContexts, false);
+			}
+
+			if (!translucentModelContexts.empty())
+			{ // Translucent
+				GPU_DEBUG_SCOPE("TranslucentPass");
+				CPU_DEBUG_SCOPE("TranslucentPass");
+
+				DrawCallState drawCallState;
+				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
+
+				drawCallState.ViewPort = viewPort->ViewPort;
+				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
+
+				UpdateModelState(Pass::Ambient, translucentModelContexts, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				{
+					depthState.DepthFunc = EComparisonFunc::Less;
+					depthState.DepthWriteMask = EDepthWriteMask::All;
+				});
+
+				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+
+				RenderPass(Pass::Ambient, drawCallState, camera, translucentModelContexts, false);
 			}
 
 			// Reset State

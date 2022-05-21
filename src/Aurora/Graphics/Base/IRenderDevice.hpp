@@ -379,6 +379,8 @@ namespace Aurora
 		FRasterState RasterState;
 		FViewPort ViewPort;
 
+		FBlendState BlendState;
+
 		DrawCallState()
 		: BaseState(),
 		  DepthTarget(nullptr),
@@ -398,6 +400,7 @@ namespace Aurora
 		  IndexBufferOffset(0),
 		  PrimitiveType(EPrimitiveType::TriangleList),
 		  RasterState(),
+		  BlendState(),
 		  ViewPort(0, 0) { }
 
 		inline void ResetTargets()
@@ -587,7 +590,7 @@ namespace Aurora
 		virtual void ApplyDrawCallState(const DrawCallState& state) = 0;
 		virtual void BindShaderInputs(const DrawCallState &state, bool force = false) = 0;
 		virtual void BindRenderTargets(const DrawCallState &state) = 0;
-		virtual void SetBlendState(const DrawCallState &state) = 0;
+		virtual void SetBlendState(const FBlendState& state) = 0;
 		virtual void SetRasterState(const FRasterState& rasterState) = 0;
 		virtual void ClearRenderTargets(const DrawCallState &state) = 0;
 		virtual void SetDepthStencilState(FDepthStencilState state) = 0;

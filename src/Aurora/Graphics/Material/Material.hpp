@@ -100,10 +100,12 @@ namespace Aurora
 	{
 		Sky = 0,
 		Opaque,
-		Translucent,
 		Transparent,
+		Translucent,
 		Count
 	};
+
+	static const char* RenderSortType_Strings[] = { "Sky", "Opaque", "Translucent", "Transparent" };
 
 	enum MaterialFlags : uint8_t
 	{
@@ -129,6 +131,8 @@ namespace Aurora
 
 		RenderSortType m_SortType = RenderSortType::Opaque;
 		uint8_t m_Flags = MF_INSTANCED | MF_TRANSFORM;
+
+		uint8_t m_StateCheck = 0;
 	public:
 		explicit Material(MaterialDefinition* matDef);
 		Material(MaterialDefinition* matDef, bool instance);
@@ -154,6 +158,23 @@ namespace Aurora
 
 		std::shared_ptr<Material> Clone();
 		virtual void ReloadShader();
+
+		void SetAlphaThresholdEnabled(bool alphaThreshold)
+		{
+			if (alphaThreshold)
+			{
+				m_Macros["USE_ALPHA_THRESHOLD"] = "1";
+			}
+			else if (m_Macros.contains("USE_ALPHA_THRESHOLD"))
+			{
+				m_Macros.erase("USE_ALPHA_THRESHOLD");
+			}
+		}
+
+		[[nodiscard]] bool IsAlphaThresholdSet() const
+		{
+			return m_Macros.contains("USE_ALPHA_THRESHOLD");
+		}
 
 		uint8* GetBlockMemory(TTypeID id, size_t size);
 

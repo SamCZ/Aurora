@@ -199,6 +199,10 @@ class BaseAppContext : public AppContext
 			{
 				auto matInstance = matDef->CreateInstance();
 				matInstance->SetTexture("Texture"_HASH, item.second.Textures["Diffuse"]);
+
+				matInstance->RasterState(0).CullMode = ECullMode::None;
+				matInstance->RasterState(1).CullMode = ECullMode::None;
+
 				if (item.second.Textures.contains("Normal"))
 				{
 					matInstance->SetTexture("NormalMap"_HASH, item.second.Textures["Normal"]);

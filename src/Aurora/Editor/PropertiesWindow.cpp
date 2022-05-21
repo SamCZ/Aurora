@@ -17,10 +17,6 @@
 #include "ResourceWindow.hpp"
 #include "Utils.hpp"
 
-#define ARSIZE(arr) (sizeof(arr)/sizeof((arr)[0]))
-
-#define ENUM_COMBO(name, current, enum_name) ImGui::Combo(name, current, enum_name##_Strings, ARSIZE(enum_name##_Strings))
-
 namespace Aurora
 {
 	PropertiesWindow::PropertiesWindow(MainEditorPanel *mainEditorPanel)

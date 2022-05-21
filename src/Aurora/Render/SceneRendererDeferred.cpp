@@ -134,7 +134,7 @@ namespace Aurora
 				PrepareVisibleEntities(scene, camera);
 
 				RenderSet modelContexts;
-				FillRenderSet(modelContexts);
+				FillRenderSet(modelContexts, 4, RenderSortType::Opaque, RenderSortType::Transparent, RenderSortType::Sky, RenderSortType::Translucent);
 
 				RenderPass(Pass::Ambient, drawCallState, camera, modelContexts);
 			}
@@ -290,7 +290,7 @@ namespace Aurora
 					}
 
 					RenderSet outlineModelContexts;
-					FillRenderSet(outlineModelContexts);
+					FillRenderSet(outlineModelContexts, 4, RenderSortType::Opaque, RenderSortType::Transparent, RenderSortType::Sky, RenderSortType::Translucent);
 
 					if (outlineModelContexts.empty())
 						continue;

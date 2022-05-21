@@ -123,7 +123,7 @@ namespace Aurora
 		void PrepareMeshComponent(MeshComponent* scene, CameraComponent* camera);
 		void PrepareVisibleEntities(Scene* scene, CameraComponent* camera);
 		void PrepareVisibleEntities(Actor* actor, CameraComponent* camera);
-		void FillRenderSet(RenderSet& renderSet);
+		void FillRenderSet(RenderSet& renderSet, int numberOfPasses, ...);
 
 		virtual void Render(Scene* scene) = 0;
 		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected = true);

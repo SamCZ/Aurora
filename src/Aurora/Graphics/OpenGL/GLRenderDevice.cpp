@@ -954,7 +954,18 @@ namespace Aurora
 	void GLRenderDevice::DrawIndirect(const DrawCallState &state, const Buffer_ptr &indirectParams, uint32_t offsetBytes)
 	{
 		CPU_DEBUG_SCOPE("DrawIndirect");
-		// TODO: Indirect render
+
+		GLenum primitiveType = ConvertPrimType(state.PrimitiveType);
+		GLenum ibFormat = ConvertIndexBufferFormat(state.IndexBuffer.Format);
+
+		GLBuffer* indexbuff = GetBuffer(state.IndexBuffer.Buffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexbuff->Handle());
+
+		GLBuffer* ib = GetBuffer(indirectParams);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, ib->Handle());
+		//glDrawElementsIndirect(primitiveType, ibFormat, nullptr);
+
+		glMultiDrawElementsIndirect(primitiveType, ibFormat, (const void*)0, offsetBytes, sizeof(DrawElementsIndirectCommand));
 	}
 
 	void GLRenderDevice::ApplyDrawCallState(const DrawCallState &state)
@@ -966,7 +977,7 @@ namespace Aurora
 
 		BindRenderTargets(state);
 
-		SetBlendState(state);
+		SetBlendState(state.BlendState);
 		SetRasterState(state.RasterState);
 
 		SetDepthStencilState(state.DepthStencilState);
@@ -1073,11 +1084,12 @@ namespace Aurora
 
 	void GLRenderDevice::BindShaderInputs(const DrawCallState &state, bool force)
 	{
-		if (true)
+		/*if (true)
 		{
+		    // FIXME: Sometime the screen in black wher rotating camera
 			BindShaderInputsCached(state);
 			return;
-		}
+		}*/
 
 		auto glShader = GetShader(state.Shader);
 		const auto& inputVars = glShader->GetInputVariables();
@@ -1214,7 +1226,7 @@ namespace Aurora
 
 	void GLRenderDevice::InvalidateState()
 	{
-		//m_ContextState.Invalidate();
+		m_ContextState.Invalidate();
 
 		m_LastRasterState = FRasterState();
 		m_LastDepthState = FDepthStencilState();
@@ -1680,9 +1692,46 @@ namespace Aurora
 		}
 	}
 
-	void GLRenderDevice::SetBlendState(const DrawCallState &state)
+	void GLRenderDevice::SetBlendState(const FBlendState& state)
 	{
-		// TODO: Blend state
+		if (state.AlphaToCoverage)
+		{
+			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
+
+		// TODO: Finish proper blending
+
+		if (state.Enabled)
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		else
+		{
+			glDisable(GL_BLEND);
+		}
+
+		/*for (uint32_t i = 0; i < targetCount; ++i)
+		{
+			if (blendState.blendEnable[i])
+				glEnablei(GL_BLEND, i);
+
+			uint32_t BlendOpRGB = convertBlendOp(blendState.blendOp[i]);
+			uint32_t BlendOpAlpha = convertBlendOp(blendState.blendOpAlpha[i]);
+			glBlendEquationSeparatei(i, BlendOpRGB, BlendOpAlpha);
+
+			uint32_t SrcBlendRGB = convertBlendValue(blendState.srcBlend[i]);
+			uint32_t DstBlendRGB = convertBlendValue(blendState.destBlend[i]);
+			uint32_t SrcBlendAlpha = convertBlendValue(blendState.srcBlendAlpha[i]);
+			uint32_t DstBlendAlpha = convertBlendValue(blendState.destBlendAlpha[i]);
+			glBlendFuncSeparatei(i, SrcBlendRGB, DstBlendRGB, SrcBlendAlpha, DstBlendAlpha);
+
+			glColorMaski(i,
+				(blendState.colorWriteEnable[i] & BlendState::COLOR_MASK_RED) != 0,
+				(blendState.colorWriteEnable[i] & BlendState::COLOR_MASK_GREEN) != 0,
+				(blendState.colorWriteEnable[i] & BlendState::COLOR_MASK_BLUE) != 0,
+				(blendState.colorWriteEnable[i] & BlendState::COLOR_MASK_ALPHA) != 0);
+		}*/
 	}
 
 	void GLRenderDevice::SetRasterState(const FRasterState& rasterState)
