@@ -79,7 +79,6 @@ namespace Aurora
 		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, static_cast<GLsizei>(strlen(groupName)), groupName);
 
 		IRenderDevice* renderDevice = GEngine->GetRenderDevice();
-
 		MaterialPassDef* passDef = m_MatDef->GetPassDefinition(pass);
 
 		if(passDef == nullptr)
@@ -144,6 +143,8 @@ namespace Aurora
 			AU_LOG_FATAL("Forgot to call EndPass on material !");
 		}
 		m_StateCheck--;
+
+		state.Uniforms.ResetResources();
 
 		CPU_DEBUG_SCOPE("Material::EndPass");
 		glPopDebugGroup();

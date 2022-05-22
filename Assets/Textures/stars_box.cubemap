@@ -1,0 +1,10 @@
+{
+    "textures": [
+        "{9cac4a88-56ec-6306-6d60-4cc3444b7e4e}Assets\\Textures\\StarsSkybox\\stars_right1.png",
+        "{b82fc0cc-55db-7519-7351-959a1e6eff1f}Assets\\Textures\\StarsSkybox\\stars_left2.png",
+        "{02893457-af8f-5eba-a117-dcee1d6f4fa2}Assets\\Textures\\StarsSkybox\\stars_top3.png",
+        "{ec2bd03d-b20f-f4b9-0cec-6b4c8360e3cd}Assets\\Textures\\StarsSkybox\\stars_bottom4.png",
+        "{f291963f-5515-840b-55b7-939ecef76d3d}Assets\\Textures\\StarsSkybox\\stars_back6.png",
+        "{2c4bd687-1486-45d2-cd1f-3016cfababc2}Assets\\Textures\\StarsSkybox\\stars_front5.png"
+    ]
+}

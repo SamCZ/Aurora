@@ -181,6 +181,7 @@ namespace Aurora
 					currentMaterial->EndPass(pass, drawCallState);
 				}
 				currentMaterial = modelContext.Material;
+				currentMaterial->BeforeMaterialBegin.Invoke(std::forward<PassType_t>(pass), std::forward<DrawCallState&>(drawCallState), std::forward<CameraComponent*>(camera), std::forward<Material*>(currentMaterial));
 				currentMaterial->BeginPass(pass, drawCallState);
 				updateInputLayout = true;
 			}

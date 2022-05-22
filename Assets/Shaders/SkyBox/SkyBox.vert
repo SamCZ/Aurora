@@ -4,7 +4,7 @@
 layout(location = 0) in vec3 POSITION;
 layout(location = 2) in vec3 NORMAL;
 
-out vec3 Normal;
+out vec3 ViewVec;
 
 void main() {
 	#ifdef SKY_MAPPING
@@ -15,5 +15,5 @@ void main() {
 	#else
 	gl_Position = ProjectionMatrix * ViewMatrix * INST_TRANSFORM * vec4(POSITION, 1.0);
 	#endif
-	Normal = POSITION - vec3(0.0);
+	ViewVec = POSITION - vec3(0.0);
 }

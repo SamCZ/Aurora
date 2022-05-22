@@ -3,6 +3,7 @@
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/Object.hpp"
 #include "Aurora/Core/String.hpp"
+#include "Aurora/Core/Delegate.hpp"
 
 #include "Aurora/Tools/robin_hood.h"
 
@@ -133,6 +134,9 @@ namespace Aurora
 		uint8_t m_Flags = MF_INSTANCED | MF_TRANSFORM;
 
 		uint8_t m_StateCheck = 0;
+
+	public:
+		EventEmitter<PassType_t, DrawCallState&, class CameraComponent*, Material*> BeforeMaterialBegin;
 	public:
 		explicit Material(MaterialDefinition* matDef);
 		Material(MaterialDefinition* matDef, bool instance);
