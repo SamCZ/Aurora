@@ -7,6 +7,7 @@
 #include <vector>
 #include <Aurora/Core/Library.hpp>
 #include <Aurora/Core/FormatString.hpp>
+#include <Aurora/Core/SystemUtils.hpp>
 
 namespace Aurora
 {
@@ -50,6 +51,11 @@ namespace Aurora
 			for(auto& sink : m_Sinks) {
 				sink->Log(severity, messageSeverity, fileName, fncStr, line, message);
 			}
+
+			if (severity == Severity::FatalError)
+			{
+				ShowErrorTraceWindow(message);
+			}
 		}
 
 		template<class Sink, typename... ArgsType>
@@ -87,4 +93,4 @@ namespace Aurora
 #define AU_LOG_INFO(...) AU_LOG(Info, __VA_ARGS__)
 #define AU_LOG_WARNING(...) AU_LOG(Warning, __VA_ARGS__)
 #define AU_LOG_ERROR(...) AU_LOG(Error, __VA_ARGS__)
-#define AU_LOG_FATAL(...) AU_LOG(FatalError, __VA_ARGS__); exit(-1)
+#define AU_LOG_FATAL(...) AU_LOG(FatalError, __VA_ARGS__);

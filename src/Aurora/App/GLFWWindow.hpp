@@ -112,6 +112,10 @@ namespace Aurora
 
 		void SetClipboardString(const String& str) override;
 		String GetClipboardString() override;
+
+#if _WIN32
+		HWND GetWindowWin32Handle();
+#endif
 	public:
 		inline void SetSwapChain(ISwapChain_ptr swapChain) override
 		{

@@ -87,6 +87,12 @@ namespace Aurora::FS
 
 	bool FileExists(const Path &path)
 	{
-		return std::filesystem::exists(path);
+		try {
+			return std::filesystem::exists(path);
+		} catch (std::exception& e)
+		{
+			//AU_LOG_INFO("Weird fs error: ", e.what());
+			return false;
+		}
 	}
 }

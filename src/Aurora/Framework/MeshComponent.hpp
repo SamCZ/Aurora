@@ -9,6 +9,7 @@ namespace Aurora
 	{
 	protected:
 		MaterialSet m_MaterialSlots;
+		bool m_IgnoreFrustumChecks = false;
 	public:
 		CLASS_OBJ(MeshComponent, SceneComponent);
 
@@ -20,6 +21,9 @@ namespace Aurora
 		[[nodiscard]] virtual bool HasMesh() const = 0;
 
 		[[nodiscard]] virtual TTypeID GetSupportedMeshType() const = 0;
+
+		void SetIgnoreFrustumChecks(bool ignoreFrustum = true) { m_IgnoreFrustumChecks = ignoreFrustum; }
+		[[nodiscard]] bool IsIgnoringFrustumChecks() const { return m_IgnoreFrustumChecks; }
 
 		void SetMaterial(int slot, const matref& material)
 		{

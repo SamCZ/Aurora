@@ -37,10 +37,14 @@ namespace Aurora
 		std::unordered_set<std::string> NamesPool;
 		std::map<GLuint, BasicUniform> BasicUniforms;
 
+		CHECK_GL_ERROR_AND_THROW("Unknown error");
+
 		GLint lastUsedProgramID = 0;
 		glGetIntegerv(GL_CURRENT_PROGRAM, &lastUsedProgramID);
+		CHECK_GL_ERROR_AND_THROW("Unable to get current program");
 
 		glUseProgram(program);
+		CHECK_GL_ERROR_AND_THROW("Unable to use program");
 
 		GLint numActiveUniforms = 0;
 		glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &numActiveUniforms);

@@ -207,7 +207,7 @@ namespace Aurora
 				return;
 			}
 
-			for (int i = 0; i < vertexBuffer->GetCount(); ++i)
+			for (size_t i = 0; i < vertexBuffer->GetCount(); ++i)
 			{
 				const Vertex& vertex = vertexBuffer->Get(i);
 				m_Bounds.Extend(vertex.Position);
@@ -224,7 +224,7 @@ namespace Aurora
 				archive << lod;
 				VertexBuffer<Vertex>* vertexBuffer = GetVertexBuffer<Vertex>(lod);
 				archive << (uint32_t)vertexBuffer->GetCount();
-				for (int i = 0; i < vertexBuffer->GetCount(); ++i)
+				for (size_t i = 0; i < vertexBuffer->GetCount(); ++i)
 				{
 					const Vertex& vertex = vertexBuffer->Get(i);
 					archive.Write(vertex);
@@ -255,7 +255,7 @@ namespace Aurora
 			uint32_t numLods;
 			archive >> numLods;
 
-			for (int i = 0; i < numLods; ++i)
+			for (uint32_t i = 0; i < numLods; ++i)
 			{
 				LOD lod;
 				archive >> lod;
@@ -283,7 +283,7 @@ namespace Aurora
 			uint32_t materialSlots;
 			archive >> materialSlots;
 
-			for (int i = 0; i < materialSlots; ++i)
+			for (uint32_t i = 0; i < materialSlots; ++i)
 			{
 				MaterialSlot slot;
 

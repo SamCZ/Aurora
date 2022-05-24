@@ -24,7 +24,7 @@ namespace Aurora
 		Matrix4 transform = meshComponent->GetTransformationMatrix();
 		Mesh_ptr mesh = meshComponent->GetMesh();
 
-		if (!camera->GetFrustum().IsBoxVisible(mesh->m_Bounds.Transform(transform)))
+		if (!camera->GetFrustum().IsBoxVisible(mesh->m_Bounds.Transform(transform)) && !meshComponent->IsIgnoringFrustumChecks())
 		{
 			return;
 		}

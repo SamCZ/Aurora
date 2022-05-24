@@ -96,16 +96,24 @@ namespace Aurora
 
 	void GLRenderDevice::Init()
 	{
+		CHECK_GL_ERROR_AND_THROW("Error before GLRenderDevice::Init");
+
 		glGenVertexArrays(1, &m_nVAO);
+		CHECK_GL_ERROR_AND_THROW("Cannot gen default vao");
 		glGenVertexArrays(1, &m_nVAOEmpty);
+		CHECK_GL_ERROR_AND_THROW("Cannot gen empty vao");
 		glBindVertexArray(m_nVAO);
+		CHECK_GL_ERROR_AND_THROW("Cannot bind empty vao");
 
 
 		glDepthRangef(0.0f, 1.0f);
+		CHECK_GL_ERROR_AND_THROW("Cannot set glDepthRangef");
 		// Enable depth remapping to [0, 1] interval
 		glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+		CHECK_GL_ERROR_AND_THROW("Cannot set glClipControl");
 
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		CHECK_GL_ERROR_AND_THROW("Cannot enable GL_TEXTURE_CUBE_MAP_SEAMLESS");
 
         const GLubyte* vendor = glGetString(GL_VENDOR); // Returns the vendor
         const GLubyte* renderer = glGetString(GL_RENDERER); // Returns a hint to the model
@@ -153,11 +161,15 @@ namespace Aurora
 		}
 
 		glDisable(GL_MULTISAMPLE);
+		CHECK_GL_ERROR_AND_THROW("Cannot disable multisampling");
 
 		InvalidateState();
+		CHECK_GL_ERROR_AND_THROW("Cannot invalidate state");
 
 		SetRasterState(m_LastRasterState);
+		CHECK_GL_ERROR_AND_THROW("Cannot set raster state");
 		SetDepthStencilState(m_LastDepthState);
+		CHECK_GL_ERROR_AND_THROW("Cannot set depth state");
 
 		{ // Init blit shader
 			ShaderProgramDesc desc("_Blit_Embedded");
@@ -171,6 +183,7 @@ namespace Aurora
 
 	Shader_ptr GLRenderDevice::CreateShaderProgram(const ShaderProgramDesc &desc)
 	{
+		CHECK_GL_ERROR_AND_THROW("error before CreateShaderProgram", desc.GetName());
 		CPU_DEBUG_SCOPE("CreateShaderProgram");
 
 		const auto& shaderDescriptions = desc.GetShaderDescriptions();
@@ -257,25 +270,30 @@ namespace Aurora
 		}
 
 		GLuint programID = glCreateProgram();
+		CHECK_GL_ERROR_AND_THROW("Could not create program ", desc.GetName());
 
 		// Attach shaders
 
 		for (auto shaderID : compiledShaders)
 		{
 			glAttachShader(programID, shaderID);
+			CHECK_GL_ERROR_AND_THROW("Could not attach shader ", desc.GetName());
 		}
 
 		// Link program
 
 		glLinkProgram(programID);
+		CHECK_GL_ERROR_AND_THROW("Could not link program ", desc.GetName());
 		GLint linkStatus = 0;
 		glGetProgramiv(programID, GL_LINK_STATUS, &linkStatus);
+		CHECK_GL_ERROR_AND_THROW("Could not get link status ", desc.GetName());
 
 		if (linkStatus == GL_FALSE)
 		{
 			GLchar error[1024] = { 0 };
 			GLsizei logLength = 0;
 			glGetProgramInfoLog(programID, sizeof(error), &logLength, error);
+			CHECK_GL_ERROR_AND_THROW("Could not get error log ", desc.GetName());
 
 			if (desc.HasSetErrorOutput())
 			{
@@ -292,14 +310,17 @@ namespace Aurora
 		// Validate program
 
 		glValidateProgram(programID);
+		CHECK_GL_ERROR_AND_THROW("Could not validate program ", desc.GetName());
 		GLint validateStatus = 0;
 		glGetProgramiv(programID, GL_VALIDATE_STATUS, &validateStatus);
+		CHECK_GL_ERROR_AND_THROW("Could get validation status", desc.GetName());
 
 		if (validateStatus == GL_FALSE)
 		{
 			GLchar error[1024] = { 0 };
 			GLsizei logLength = 0;
 			glGetProgramInfoLog(programID, sizeof(error), &logLength, error);
+			CHECK_GL_ERROR_AND_THROW("Could not get error log");
 
 			if (desc.HasSetErrorOutput())
 			{
@@ -347,17 +368,20 @@ namespace Aurora
 		}
 
 		GLuint shaderID = glCreateShader(type);
+		CHECK_GL_ERROR_AND_THROW("Cannot create shader", sourceString);
 
 		const GLchar* source = sourceString.data();
 		auto length = static_cast<GLint>(sourceString.length());
 		glShaderSource(shaderID, 1, &source, &length);
 		glCompileShader(shaderID);
+		CHECK_GL_ERROR_AND_THROW("Cannot compile shader", sourceString);
 
 		GLint compileStatus = 0;
 		GLchar error[1024] = { 0 };
 		GLsizei logLength = 0;
 
 		glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compileStatus);
+		CHECK_GL_ERROR_AND_THROW("Cannot get compile status", sourceString);
 		if (compileStatus == GL_FALSE)
 		{
 			glGetShaderInfoLog(shaderID, sizeof(error), &logLength, error);
@@ -1951,17 +1975,22 @@ namespace Aurora
 				dstState.BindTarget(0, dest);
 				FrameBuffer_ptr dstFramebuffer = GetCachedFrameBuffer(dstState);
 
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dstFramebuffer->Handle);
+				if (m_CurrentFrameBuffer != dstFramebuffer)
+				{
+					glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dstFramebuffer->Handle);
+					m_CurrentFrameBuffer = dstFramebuffer;
+				}
 			}
-			else
+			else if (m_CurrentFrameBuffer != nullptr)
 			{
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+				m_CurrentFrameBuffer = nullptr;
 			}
 
 			glBlitFramebuffer(0, 0, src->GetDesc().Width, src->GetDesc().Height, 0, 0, src->GetDesc().Width, src->GetDesc().Height,  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-			//Just set the read buffer to the target as well otherwise we might get fucked..
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			//m_CurrentFrameBuffer = nullptr;
 
 			return;
 		}

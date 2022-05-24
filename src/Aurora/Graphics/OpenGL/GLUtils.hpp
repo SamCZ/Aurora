@@ -7,6 +7,32 @@
 #include "GL.hpp"
 
 #include "../Base/Format.hpp"
+#include "../Base/ShaderBase.hpp"
+
+static const char* GLErrorToString(GLenum e)
+{
+	switch (e)
+	{
+		case GL_NO_ERROR:
+			return "GL_NO_ERROR";
+		case GL_INVALID_ENUM:
+			return "GL_INVALID_ENUM";
+		case GL_INVALID_VALUE:
+			return "GL_INVALID_VALUE";
+		case GL_INVALID_OPERATION:
+			return "GL_INVALID_OPERATION";
+		case GL_INVALID_FRAMEBUFFER_OPERATION:
+			return "GL_INVALID_FRAMEBUFFER_OPERATION";
+		case GL_OUT_OF_MEMORY:
+			return "GL_OUT_OF_MEMORY";
+		case GL_STACK_UNDERFLOW:
+			return "GL_STACK_UNDERFLOW";
+		case GL_STACK_OVERFLOW:
+			return "GL_STACK_OVERFLOW";
+		default:
+			return "UNKNOWN_ERROR";
+	}
+}
 
 #if OPENGL_ERROR_CHECKING
 #ifndef CHECK_GL_ERROR_ARG
@@ -16,7 +42,7 @@
         auto err = glGetError();                                                                                         \
         if (err != GL_NO_ERROR)                                                                                          \
         {                                                                                                                \
-        	AU_LOG_ERROR(__VA_ARGS__, "\nGL Error Code: ", err);                                                         \
+        	AU_LOG_ERROR(__VA_ARGS__, "\nGL Error Code: ", GLErrorToString(err));                                                         \
         }                                                                                                                \
     } while (false);
 #define CHECK_GL_ERROR(...)                                                                                                 \
@@ -25,8 +51,7 @@
         auto err = glGetError();                                                                                         \
         if (err != GL_NO_ERROR)                                                                                          \
         {                                                                                                                \
-        	AU_LOG_ERROR("\nGL Error Code: ", err);                                                                            \
-        	throw std::runtime_error("OpenGL Error !");                                                                 \
+        	AU_LOG_ERROR("\nGL Error Code: ", GLErrorToString(err));                                                     \
         }                                                                                                                \
     } while (false);
 #endif
@@ -38,8 +63,7 @@
         auto err = glGetError();                                                                                        \
         if (err != GL_NO_ERROR)                                                                                         \
         {                                                                                                               \
-        	AU_LOG_ERROR(__VA_ARGS__, "\nGL Error Code: ", err);                                                        \
-        	throw std::runtime_error("OpenGL Error !");                                                                 \
+        	AU_LOG_ERROR(__VA_ARGS__, "\nGL Error Code: ", GLErrorToString(err));                                       \
         }                                                                                                               \
     } while (false);
 #endif

@@ -14,6 +14,7 @@ namespace Aurora
 	{
 		SkyLightComponent* component = SkyLightComponent::Cast(GetRootComponent());
 		component->SetMesh(GEngine->GetResourceManager()->LoadMesh("Assets/Shapes/Box.amesh"));
+		component->SetIgnoreFrustumChecks();
 
 		/*auto cubemap = GEngine->GetRenderManager()->CreateCubeMap({
 			"Assets/Textures/CloudyCrown_01_Midday/CloudyCrown_Midday_Right.png",
