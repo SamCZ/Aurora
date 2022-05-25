@@ -15,7 +15,7 @@ namespace Aurora
 		m_Accumulator(0),
 		m_Time(0),
 		m_DebugRender(false),
-		m_Gravity(0, -20.0f, 0),
+		m_Gravity(0, -30.0f, 0),
 		m_UpdateRate(1.0 / 120.0),
 		m_AABBTree(1)
 	{
