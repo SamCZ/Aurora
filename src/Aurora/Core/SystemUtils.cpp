@@ -9,6 +9,8 @@
 #include <Aurora/App/GLFWWindow.hpp>
 #include <Aurora/Tools/backward.hpp>
 
+#pragma comment(lib, "dbghelp.lib")
+
 namespace Aurora
 {
 	void InitDebugSymbols()

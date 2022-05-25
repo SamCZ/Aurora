@@ -39,9 +39,10 @@ namespace Aurora
 
 	GLFWWindow::~GLFWWindow()
 	{
-#ifdef GLAD_INSTALL_DEBUG
-		gladUninstallGLDebug();
-#endif
+		if (m_HasGraphicsDebug)
+		{
+			gladUninstallGLDebug();
+		}
 	}
 
 	void MessageCallback(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam)
@@ -108,6 +109,7 @@ namespace Aurora
 	void GLFWWindow::Initialize(const WindowDefinition& windowDefinition, const std::shared_ptr<ISystemWindow>& parentWindow)
 	{
 		m_Title = windowDefinition.Title;
+		m_HasGraphicsDebug = windowDefinition.GraphicsDebug;
 
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 		//glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
@@ -185,7 +187,7 @@ namespace Aurora
 		glfwMakeContextCurrent(m_WindowHandle);
 
 		// This is gonna break after second window is created !
-		if(!gladLoadGL()) {
+		if(!gladLoadGL(glfwGetProcAddress)) {
 			AU_LOG_FATAL("Count not initialize OpenGL");
 		}
 		CHECK_GL_ERROR_AND_THROW("Count not initialize OpenGL");
@@ -197,11 +199,11 @@ namespace Aurora
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 		CHECK_GL_ERROR_AND_THROW("Cannot enable gl error function")
 #endif
-#ifdef GLAD_INSTALL_DEBUG
-		gladInstallGLDebug();
-#endif
 
-		AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
+		if (m_HasGraphicsDebug)
+			gladInstallGLDebug();
+
+		//AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
 
 		if(!GLAD_GL_EXT_texture_array) {
 			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
