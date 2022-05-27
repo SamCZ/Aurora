@@ -9,10 +9,13 @@
 #include <Aurora/App/GLFWWindow.hpp>
 #include <Aurora/Tools/backward.hpp>
 
-#pragma comment(lib, "dbghelp.lib")
+#ifdef _WIN32
+	#pragma comment(lib, "dbghelp.lib")
+#endif
 
 namespace Aurora
 {
+#ifdef _WIN32
 	void InitDebugSymbols()
 	{
 		char buff[MAX_PATH + 1];
@@ -32,6 +35,7 @@ namespace Aurora
 			//::GetLastError();
 		}
 	}
+#endif
 
 	void ShowErrorTraceWindow(const std::string& message)
 	{
