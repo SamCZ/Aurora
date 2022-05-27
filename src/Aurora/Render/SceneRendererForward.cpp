@@ -1,6 +1,7 @@
 #include "SceneRendererForward.hpp"
 
 #include "Aurora/Engine.hpp"
+#include "Aurora/App/AppContext.hpp"
 
 #include "Aurora/Core/Profiler.hpp"
 
@@ -9,6 +10,7 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
+#include "Aurora/Framework/Decal.hpp"
 
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
@@ -21,10 +23,11 @@
 #include "Shaders/PBR/Composite.h"
 #include "Shaders/PostProcess/ub_bloom.h"
 #include "Shaders/PostProcess/ub_outline.h"
+#include "Shaders/Decals.h"
 
 namespace Aurora
 {
-	void UpdateModelState(PassType_t pass, const RenderSet& set, void(*callback)(FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState))
+	void UpdateModelState(PassType_t pass, const RenderSet& set, void(*callback)(Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState))
 	{
 		Material* lastMaterial = nullptr;
 		for (const ModelContext& mc : set)
@@ -32,9 +35,15 @@ namespace Aurora
 			if (mc.Material != lastMaterial)
 			{
 				lastMaterial = mc.Material;
-				callback(mc.Material->RasterState(pass), mc.Material->DepthStencilState(pass), mc.Material->BlendState(pass));
+				callback(mc.Material, mc.Material->RasterState(pass), mc.Material->DepthStencilState(pass), mc.Material->BlendState(pass));
 			}
 		}
+	}
+
+	SceneRendererForward::SceneRendererForward() : SceneRenderer()
+	{
+		m_VSDecalBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("GLOB_DecalMatricesVS", sizeof(GLOB_DecalMatricesVS), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+		m_PSDecalBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("GLOB_DecalMatricesPS", sizeof(GLOB_DecalMatricesPS), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
 	}
 
 	void SceneRendererForward::Render(Scene* scene)
@@ -105,7 +114,7 @@ namespace Aurora
 				drawCallState.ClearColorTarget = false;
 				drawCallState.ClearDepthTarget = true;
 
-				UpdateModelState(Pass::Depth, modelContextsOpaque, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				UpdateModelState(Pass::Depth, modelContextsOpaque, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
 				{
 					depthState.DepthFunc = EComparisonFunc::Less;
 					depthState.DepthWriteMask = EDepthWriteMask::All;
@@ -122,28 +131,61 @@ namespace Aurora
 				GPU_DEBUG_SCOPE("AmbientPass");
 				CPU_DEBUG_SCOPE("AmbientPass");
 
-				DrawCallState drawCallState;
-				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
-				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
+				DrawCallState drawState;
+				drawState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
-				drawCallState.ViewPort = viewPort->ViewPort;
-				drawCallState.BindTarget(0, viewPort->Target);
-				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
+				{ // Decals
+					drawState.BindTexture("g_DecalTexture", GEngine->GetResourceManager()->LoadTexture("Assets/Textures/decals_0003_1k_F6fzPK.png"));
+					drawState.BindSampler("g_DecalTexture", Samplers::ClampClampLinearLinear);
 
-				drawCallState.ClearColor = camera->GetClearColor();
-				drawCallState.ClearColorTarget = true;
-				drawCallState.ClearDepthTarget = false;
+					drawState.BindUniformBuffer("GLOB_DecalMatricesVS", m_VSDecalBuffer);
+					drawState.BindUniformBuffer("GLOB_DecalMatricesPS", m_PSDecalBuffer);
 
-				UpdateModelState(Pass::Ambient, modelContextsOpaque, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+					Matrix4 scale = glm::translate(Vector3(0.5f)) * glm::scale(Vector3(0.5f / 1.0f));
+					uint i = 0;
+
+					GLOB_DecalMatricesVS vsDecalData = {};
+					GLOB_DecalMatricesPS psDecalData = {};
+
+					for (DecalComponent* decalComponent : AppContext::GetScene()->GetComponents<DecalComponent>())
+					{
+						const Transform& decalTransform = decalComponent->GetTransform();
+						Matrix4 rawDecalMatrix = decalTransform.GetTransform();
+						rawDecalMatrix[3] = Vector4((Vector3)rawDecalMatrix[3] - glm::normalize((Vector3)rawDecalMatrix[2]) * 0.5f, rawDecalMatrix[3].w);
+						rawDecalMatrix[0] *= 0.5f;
+						rawDecalMatrix[1] *= 0.5f;
+						//rawDecalMatrix[2] *= 0.5f;
+						vsDecalData.DecalMatrices[i] = glm::inverse(rawDecalMatrix);
+						i++;
+					}
+
+					vsDecalData.DecalCountVS = i;
+					psDecalData.DecalCountPS = i;
+
+					GEngine->GetRenderDevice()->WriteBuffer(m_VSDecalBuffer, &vsDecalData);
+					GEngine->GetRenderDevice()->WriteBuffer(m_PSDecalBuffer, &psDecalData);
+				}
+
+				drawState.ViewPort = viewPort->ViewPort;
+				drawState.BindTarget(0, viewPort->Target);
+				drawState.BindDepthTarget(depthBuffer, 0, 0);
+
+				drawState.ClearColor = camera->GetClearColor();
+				drawState.ClearColorTarget = true;
+				drawState.ClearDepthTarget = false;
+
+				UpdateModelState(Pass::Ambient, modelContextsOpaque, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
 				{
 					depthState.DepthFunc = EComparisonFunc::Equal;
 					depthState.DepthWriteMask = EDepthWriteMask::Zero;
+					mat->SetMacro("HAS_DECALS", "1");
 				});
 
-				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
-				GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
+				GEngine->GetRenderDevice()->BindRenderTargets(drawState);
+				GEngine->GetRenderDevice()->ClearRenderTargets(drawState);
 
-				RenderPass(Pass::Ambient, drawCallState, camera, modelContextsOpaque);
+				RenderPass(Pass::Ambient, drawState, camera, modelContextsOpaque);
 			}
 
 			if (!skyModelContexts.empty())
@@ -159,7 +201,7 @@ namespace Aurora
 				drawCallState.BindTarget(0, viewPort->Target);
 				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 
-				UpdateModelState(Pass::Ambient, skyModelContexts, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				UpdateModelState(Pass::Ambient, skyModelContexts, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
 				{
 					depthState.DepthFunc = EComparisonFunc::LessEqual;
 					depthState.DepthWriteMask = EDepthWriteMask::Zero;
@@ -183,7 +225,7 @@ namespace Aurora
 				drawCallState.BindTarget(0, viewPort->Target);
 				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 
-				UpdateModelState(Pass::Ambient, translucentModelContexts, [](FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				UpdateModelState(Pass::Ambient, translucentModelContexts, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
 				{
 					depthState.DepthFunc = EComparisonFunc::Less;
 					depthState.DepthWriteMask = EDepthWriteMask::All;
@@ -192,6 +234,29 @@ namespace Aurora
 				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 
 				RenderPass(Pass::Ambient, drawCallState, camera, translucentModelContexts, false);
+			}
+
+			{ // Debug shapes
+				CPU_DEBUG_SCOPE("DebugShapes");
+				GPU_DEBUG_SCOPE("Debug Shapes");
+				DrawCallState drawState;
+				drawState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+
+				drawState.ClearDepthTarget = false;
+				drawState.ClearColorTarget = false;
+				drawState.DepthStencilState.DepthEnable = true;
+				drawState.RasterState.CullMode = ECullMode::Back;
+
+				drawState.ViewPort = viewPort->ViewPort;
+
+				drawState.BindTarget(0, viewPort->Target);
+				drawState.BindDepthTarget(depthBuffer, 0, 0);
+
+				drawState.DepthStencilState.DepthWriteMask = EDepthWriteMask::Zero;
+
+				GEngine->GetRenderDevice()->BindRenderTargets(drawState);
+				// Render debug shapes
+				DShapes::Render(drawState);
 			}
 
 			// Reset State

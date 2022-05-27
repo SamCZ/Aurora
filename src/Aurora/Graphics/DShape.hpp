@@ -153,7 +153,9 @@ namespace Aurora
 
 		inline static void Arrow(const Vector3& pos, const Vector3& dir, Color color = Color::green(), bool wireframe = false, float thickness = 1.0f, uint32_t lifetime = 0, bool useDepthBuffer = true)
 		{
-			ShapeStructs::ArrowShape shape;
+			Line(pos, pos + dir * 0.5f, color, thickness, lifetime, useDepthBuffer);
+
+			/*ShapeStructs::ArrowShape shape;
 			shape.Position = pos;
 			shape.Direction = dir;
 
@@ -162,7 +164,7 @@ namespace Aurora
 			shape.LifeTime = lifetime;
 			shape.Wireframe = wireframe;
 			shape.UseDepthBuffer = useDepthBuffer;
-			m_ArrowShapes.emplace_back(shape);
+			m_ArrowShapes.emplace_back(shape);*/
 		}
 
 		inline static void Text(const Vector3& pos, const String& text, Color color = Color::green())

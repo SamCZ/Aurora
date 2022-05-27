@@ -6,8 +6,11 @@ namespace Aurora
 {
 	class AU_API SceneRendererForward : public SceneRenderer
 	{
+	private:
+		Buffer_ptr m_VSDecalBuffer;
+		Buffer_ptr m_PSDecalBuffer;
 	public:
-		SceneRendererForward() : SceneRenderer() {}
+		SceneRendererForward();
 
 		void Render(Scene* scene) override;
 	};

@@ -13,6 +13,7 @@
 #include "Aurora/Framework/StaticMeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
+#include "Aurora/Framework/Decal.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Physics/PhysicsWorld.hpp"
 
@@ -302,6 +303,15 @@ namespace Aurora
 		if (ImGui::IsKeyDown(ImGuiKey_LeftShift) && ImGui::IsKeyPressed(ImGuiKey_1))
 		{
 			GEngine->GetInputManager()->UnlockCursor();
+		}
+
+		if (m_EditorCameraActor->IsActive())
+		{
+			for (DecalComponent* decalComponent : AppContext::GetScene()->GetComponents<DecalComponent>())
+			{
+				DShapes::Box(decalComponent->GetTransformationMatrix(), AABB::FromExtent(Vector3(0.0f), Vector3(0.5f)), Color::white(), true, 1.0f, 0, false);
+				DShapes::Arrow(decalComponent->GetLocation(), decalComponent->GetForwardVector(), Color::green(), true, 1.0f, 0, false);
+			}
 		}
 
 		HandleEditorCamera(delta);

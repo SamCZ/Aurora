@@ -2,6 +2,7 @@
 
 #if defined(SHADER_ENGINE_SIDE)
 #include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Types.hpp"
 
 using namespace Aurora;
 

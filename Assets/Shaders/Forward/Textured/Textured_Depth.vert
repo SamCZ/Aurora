@@ -10,6 +10,7 @@ out mat3 TBN;
 
 void main()
 {
-	gl_Position = ProjectionMatrix * ViewMatrix * INST_TRANSFORM * vec4(POSITION, 1.0);
+	vec4 worldPos = INST_TRANSFORM * vec4(POSITION, 1.0);
+	gl_Position = ProjectionMatrix * (ViewMatrix * worldPos);
 	TexCoord = TEXCOORD;
 }

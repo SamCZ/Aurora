@@ -10,6 +10,7 @@
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
+#include "Aurora/Framework/Decal.hpp"
 #include "Aurora/Framework/Physics/RigidBodyComponent.hpp"
 #include "Aurora/Framework/Physics/ColliderComponent.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
@@ -241,7 +242,9 @@ namespace Aurora
 						"Spot light",
 						"-",
 						"Box",
-						"Sphere"
+						"Sphere",
+						"-",
+						"Decal"
 					};
 
 					for (int i = 0; i < std::size(types); ++i)
@@ -280,6 +283,10 @@ namespace Aurora
 								case 4:
 									m_MainEditorPanel->SetSelectedActor(
 										AppContext::GetScene()->SpawnActor<SpotLight>("SpotLight", {0, 0, 0}) );
+									break;
+								case 9:
+									m_MainEditorPanel->SetSelectedActor(
+										AppContext::GetScene()->SpawnActor<Decal>("Decal", {0, 0, 0}) );
 									break;
 								default:
 									break;

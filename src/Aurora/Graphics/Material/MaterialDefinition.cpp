@@ -93,6 +93,10 @@ namespace Aurora
 			for(const ShaderResourceDesc& sampler : shader->GetResources(ShaderResourceType::Sampler))
 			{
 				String samplerName = sampler.Name;
+
+				if(samplerName[0] == 'g' && samplerName[1] == '_')
+					continue;
+
 				TTypeID samplerId = Hash_djb2(samplerName.c_str());
 
 				const auto& it = m_TextureVars.find(samplerId);
