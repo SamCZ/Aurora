@@ -84,6 +84,7 @@ namespace Aurora
 		[[nodiscard]] Ray GetRayFromScreen(float x, float y) const;
 		[[nodiscard]] Ray GetRayFromScreen(int x, int y) const;
 		[[nodiscard]] Ray GetRayFromScreen(const Vector2i& screenPos) const;
+		[[nodiscard]] Ray GetRayFromScreenCenter(const Vector2i& offset = {0, 0}) const;
 		[[nodiscard]] Ray GetRay() const;
 
 		[[nodiscard]] const PerspectiveSettings& GetPerspectiveSettings() const;

@@ -151,9 +151,14 @@ namespace Aurora
 		return GetRayFromScreen(screenPos.x, screenPos.y);
 	}
 
+	Ray CameraComponent::GetRayFromScreenCenter(const Vector2i& offset) const
+	{
+		return GetRayFromScreen(((Vector2i)GetViewPort()->ViewPort / 2) + offset);
+	}
+
 	Ray CameraComponent::GetRay() const
 	{
-		return Ray(GetWorldPosition(), GetForwardVector());
+		return {GetWorldPosition(), -GetForwardVector()};
 	}
 
 	void CameraComponent::Tick(double delta)
