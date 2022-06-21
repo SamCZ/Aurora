@@ -27,7 +27,7 @@ namespace Aurora
 		inline PhysicsWorld& GetPhysicsWorld() { return m_PhysicsWorld; }
 
 		template<class T, class RootCmp = typename T::DefaultComponent_t, typename std::enable_if<std::is_base_of<Actor, T>::value>::type* = nullptr>
-		T* SpawnActor(const String& name, const Vector3& position, const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
+		T* SpawnActor(const String& name, const Vector3& position = Vector3(0.0), const Vector3& rotation = Vector3(0.0), const Vector3& scale = Vector3(1.0))
 		{
 			T* actor = BeginSpawnActor<T, RootCmp>(name, position, rotation, scale);
 			FinishSpawningActor(actor);

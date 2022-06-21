@@ -11,6 +11,9 @@
 #include "Aurora/Tools/robin_hood.h"
 #include "VertexBuffer.hpp"
 
+#include "Aurora/Framework/Animation/Armature.hpp"
+#include "Aurora/Framework/Animation/Animation.hpp"
+
 namespace Aurora
 {
 	typedef uint32_t Index_t;
@@ -78,7 +81,7 @@ namespace Aurora
 		MaterialSet MaterialSlots;
 		AABB m_Bounds;
 
-		virtual VertexLayout GetVertexLayoutDesc() const = 0;
+		[[nodiscard]] virtual VertexLayout GetVertexLayoutDesc() const = 0;
 
 		void UploadToGPU(bool keepCPUData, bool dynamic = false);
 
@@ -184,7 +187,7 @@ namespace Aurora
 			Vector3 BiTangent;
 		};
 
-		VertexLayout GetVertexLayoutDesc() const override
+		[[nodiscard]] VertexLayout GetVertexLayoutDesc() const override
 		{
 			return {
 				{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(StaticMesh::Vertex, Position), 0, sizeof(StaticMesh::Vertex), false, false},
@@ -305,10 +308,35 @@ namespace Aurora
 		}
 	};
 
+	#define NUM_BONES_PER_VEREX 4
+	#define MAX_BONES 120
+
+	struct VertexBoneData
+	{
+		int32_t Ids[NUM_BONES_PER_VEREX]{-1};   // we have 4 bone ids for EACH vertex & 4 weights for EACH vertex
+		float Weights[NUM_BONES_PER_VEREX]{0.0f};
+
+		inline void addBoneData(int32_t bone_id, float weight)
+		{
+			for (uint32_t i = 0; i < NUM_BONES_PER_VEREX; i++)
+			{
+				if (Ids[i] < 0)
+				{
+					Ids[i] = bone_id;
+					Weights[i] = weight;
+					return;
+				}
+			}
+		}
+	};
+
 	AU_CLASS(SkeletalMesh) : public Mesh, public MeshBufferHelper<SkeletalMesh>
 	{
 	public:
 		CLASS_OBJ(SkeletalMesh, Mesh);
+
+		Animation::Armature Armature;
+		std::vector<Animation::FAnimation> Animations;
 
 		struct Vertex
 		{
@@ -322,7 +350,7 @@ namespace Aurora
 			Vector4 BoneWeights;
 		};
 
-		VertexLayout GetVertexLayoutDesc() const override
+		[[nodiscard]] VertexLayout GetVertexLayoutDesc() const override
 		{
 			return {
 				{"POSITION", GraphicsFormat::RGB32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, Position), 0, sizeof(SkeletalMesh::Vertex), false, false},
@@ -334,6 +362,25 @@ namespace Aurora
 				{"BONEINDICES", GraphicsFormat::RGBA32_UINT, 0, offsetof(SkeletalMesh::Vertex, BoneIndices), 5, sizeof(SkeletalMesh::Vertex), false, false},
 				{"BONEWEIGHTS", GraphicsFormat::RGBA32_FLOAT, 0, offsetof(SkeletalMesh::Vertex, BoneWeights), 6, sizeof(SkeletalMesh::Vertex), false, false}
 			};
+		}
+
+		void ComputeAABB() override
+		{
+			m_Bounds.Set(Vector3(FLT_MAX), Vector3(FLT_MIN));
+
+			VertexBuffer<Vertex>* vertexBuffer = GetVertexBuffer<Vertex>(0);
+
+			if (!vertexBuffer)
+			{
+				AU_LOG_WARNING("Could not calculate mesh bounds because LOD0 does not exists !");
+				return;
+			}
+
+			for (size_t i = 0; i < vertexBuffer->GetCount(); ++i)
+			{
+				const Vertex& vertex = vertexBuffer->Get(i);
+				m_Bounds.Extend(vertex.Position);
+			}
 		}
 
 		void Serialize(Archive& archive) override

@@ -12,6 +12,14 @@ namespace Aurora
 	{
 		m_InstancesBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Instances", sizeof(Matrix4) * MaxInstances, EBufferType::UniformBuffer, EBufferUsage::DynamicDraw, false));
 		m_BaseVsDataBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
+		m_BonesBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Bones", sizeof(Matrix4) * MAX_BONES, EBufferType::UniformBuffer));
+
+		Matrix4* bones = GEngine->GetRenderDevice()->MapBuffer<Matrix4>(m_BonesBuffer, EBufferAccess::WriteOnly);
+		for (int i = 0; i < MAX_BONES; ++i)
+		{
+			bones[i] = glm::identity<Matrix4>();
+		}
+		GEngine->GetRenderDevice()->UnmapBuffer(m_BonesBuffer);
 	}
 
 	void SceneRenderer::PrepareMeshComponent(MeshComponent* meshComponent, CameraComponent* camera)
@@ -55,6 +63,7 @@ namespace Aurora
 			{
 				VisibleEntity visibleEntity;
 				visibleEntity.Material = material.get();
+				visibleEntity.MeshComponent = meshComponent;
 				visibleEntity.Mesh = mesh.get();
 				visibleEntity.MeshSection = sectionID;
 				visibleEntity.Lod = lod;
@@ -110,9 +119,9 @@ namespace Aurora
 				return false;
 			});
 
-			VisibleEntity lastVisibleEntity = {nullptr, nullptr, 0, 0, {}};
+			VisibleEntity lastVisibleEntity = {nullptr, nullptr, nullptr, 0, 0, {}};
 			bool lastCanBeInstanced = false;
-			ModelContext currentModelContext = {nullptr, nullptr, nullptr, nullptr, {}};
+			ModelContext currentModelContext = {nullptr, nullptr, nullptr, nullptr, nullptr, {}};
 
 			for (const VisibleEntity& visibleEntity : visibleEntities)
 			{
@@ -124,6 +133,7 @@ namespace Aurora
 					lastCanBeInstanced = canBeInstanced;
 
 					currentModelContext.Material = visibleEntity.Material;
+					currentModelContext.MeshComponent = visibleEntity.MeshComponent;
 					currentModelContext.Mesh = visibleEntity.Mesh;
 					currentModelContext.LodResource = &visibleEntity.Mesh->LODResources[visibleEntity.Lod];
 					currentModelContext.MeshSection = &currentModelContext.LodResource->Sections[visibleEntity.MeshSection];
@@ -143,10 +153,11 @@ namespace Aurora
 					if(!currentModelContext.Instances.empty())
 					{
 						renderSet.emplace_back(currentModelContext);
-						currentModelContext = {nullptr, nullptr, nullptr, nullptr, {}};
+						currentModelContext = {nullptr, nullptr, nullptr, nullptr, nullptr, {}};
 					}
 
 					currentModelContext.Material = visibleEntity.Material;
+					currentModelContext.MeshComponent = visibleEntity.MeshComponent;
 					currentModelContext.Mesh = visibleEntity.Mesh;
 					currentModelContext.LodResource = &visibleEntity.Mesh->LODResources[visibleEntity.Lod];
 					currentModelContext.MeshSection = &currentModelContext.LodResource->Sections[visibleEntity.MeshSection];
@@ -170,6 +181,7 @@ namespace Aurora
 		Mesh* currentMesh = nullptr;
 		MeshLodResource* currentLodResource = nullptr;
 		FMeshSection* currentSection = nullptr;
+		MeshComponent* currentComponent = nullptr;
 		bool updateInputLayout = false;
 
 		for (const ModelContext& modelContext : renderSet)
@@ -206,6 +218,15 @@ namespace Aurora
 			{
 				GEngine->GetRenderDevice()->BindShaderInputs(drawCallState, true);
 				updateInputLayout = false;
+			}
+
+			if (currentComponent != modelContext.MeshComponent)
+			{
+				currentComponent = modelContext.MeshComponent;
+
+				currentComponent->UploadAnimation(m_BonesBuffer);
+				drawCallState.BindUniformBuffer("GLOB_BoneData", m_BonesBuffer);
+				GEngine->GetRenderDevice()->BindShaderResources(drawCallState);
 			}
 
 			// Write instances

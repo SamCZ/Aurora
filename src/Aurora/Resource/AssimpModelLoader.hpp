@@ -34,6 +34,17 @@ namespace Aurora
 		{
 			return Imported;
 		}
+
+		bool operator==(bool other) const
+		{
+			return Imported == other;
+		}
+
+		template<class T>
+		std::shared_ptr<T> Get(uint32_t index = 0)
+		{
+			return T::SafeCast(Meshes[index]);
+		}
 	};
 
 	class AU_API AssimpModelLoader
@@ -45,6 +56,7 @@ namespace Aurora
 		AssimpModelLoader();
 
 		MeshImportedData ImportModel(const String& name, const DataBlob& data, MeshImportOptions importOptions = {});
+		bool ImportAnimation(const DataBlob& data, SkeletalMesh_ptr& skeletalMesh);
 
 	public:
 		void LoadMaterial(const aiScene* scene, const Mesh_ptr& mesh, int32_t materialIndex, const aiMaterial* sourceMaterial);

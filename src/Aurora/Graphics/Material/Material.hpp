@@ -103,6 +103,7 @@ namespace Aurora
 		Opaque,
 		Transparent,
 		Translucent,
+		Overlay,
 		Count
 	};
 

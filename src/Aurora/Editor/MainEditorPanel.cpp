@@ -16,6 +16,7 @@
 
 
 #include "Aurora/Core/Profiler.hpp"
+#include "Aurora/Memory/Aum.hpp"
 
 ImVec2 operator+(const ImVec2& left, const ImVec2& right)
 {
@@ -90,6 +91,24 @@ namespace Aurora
 					}
 				}
 				ImGui::PopID();
+			}
+			ImGui::End();
+		}
+
+		{
+			if (ImGui::Begin("Memory Allocators"))
+			{
+				for (Aum* al : Aum::AllMemoryAllocators)
+				{
+					ImGui::Text("%s", al->GetName().c_str());
+					int i = 0;
+					for (const Aum::MemoryBlock& block : al->GetMemoryBlocks())
+					{
+						ImGui::Text(" - Block #%d: fragments=%llu", i, block.Fragments.size());
+						i++;
+					}
+					ImGui::Separator();
+				}
 			}
 			ImGui::End();
 		}

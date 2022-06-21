@@ -24,6 +24,7 @@ namespace Aurora
 	struct VisibleEntity
 	{
 		Aurora::Material* Material;
+		Aurora::MeshComponent* MeshComponent;
 		Aurora::Mesh* Mesh;
 		uint MeshSection;
 		LOD Lod;
@@ -46,6 +47,7 @@ namespace Aurora
 		Aurora::Mesh* Mesh;
 		MeshLodResource* LodResource;
 		FMeshSection* MeshSection;
+		Aurora::MeshComponent* MeshComponent;
 		std::vector<Matrix4> Instances;
 	};
 
@@ -103,6 +105,7 @@ namespace Aurora
 
 		Buffer_ptr m_InstancesBuffer;
 		Buffer_ptr m_BaseVsDataBuffer;
+		Buffer_ptr m_BonesBuffer;
 
 		BloomSettings m_BloomSettings;
 		OutlineContext m_OutlineContext;

@@ -24,6 +24,7 @@ namespace Aurora
 	public:
 		virtual ~IDelegate() = default;
 		virtual ReturnType Invoke(ArgsTypes&& ...args) = 0;
+		virtual ReturnType InvokeCopy(ArgsTypes ...args) = 0;
 	};
 
 	template<class UserClass, typename ReturnType, typename... ArgsTypes>
@@ -43,6 +44,12 @@ namespace Aurora
 			return (*m_Instance.*m_Method)(std::forward<ArgsTypes&&>(args)...);
 			//return std::invoke(m_Method, *m_Instance, args...);
 		}
+
+		ReturnType InvokeCopy(ArgsTypes ...args) override
+		{
+			return (*m_Instance.*m_Method)(args...);
+			//return std::invoke(m_Method, *m_Instance, args...);
+		}
 	};
 
 	template<typename ReturnType, typename... ArgsTypes>
@@ -58,6 +65,11 @@ namespace Aurora
 		ReturnType Invoke(ArgsTypes&& ...args) override
 		{
 			return m_Function(std::forward<ArgsTypes&&>(args)...);
+		}
+
+		ReturnType InvokeCopy(ArgsTypes ...args) override
+		{
+			return m_Function(args...);
 		}
 	};
 
@@ -180,6 +192,14 @@ namespace Aurora
 			for(const Delegate& delegate : m_Delegates)
 			{
 				delegate->Invoke(std::forward<ArgsTypes>(args)...);
+			}
+		}
+
+		void InvokeCopy(ArgsTypes ...args) const
+		{
+			for(const Delegate& delegate : m_Delegates)
+			{
+				delegate->InvokeCopy(args...);
 			}
 		}
 	};

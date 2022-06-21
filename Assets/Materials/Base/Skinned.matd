@@ -1,18 +1,18 @@
 {
-	"name": "Textured",
+	"name": "Skinned",
 	"passes": [
 		{
 			"name": "Depth",
 			"shaders": {
-				"vertex": "Assets/Shaders/Forward/PBR/Textured_Depth.vert",
-				"pixel": "Assets/Shaders/Forward/PBR/Textured_Depth.frag"
+				"vertex": "Assets/Shaders/Skinned/Skinned_Depth.vert",
+				"pixel": "Assets/Shaders/Skinned/Skinned_Depth.frag"
 			}
 		},
 		{
 			"name": "Ambient",
 			"shaders": {
-				"vertex": "Assets/Shaders/Forward/PBR/Textured.vert",
-				"pixel": "Assets/Shaders/Forward/PBR/Textured.frag"
+				"vertex": "Assets/Shaders/Skinned/Skinned.vert",
+				"pixel": "Assets/Shaders/Skinned/Skinned.frag"
 			}
 		}
 	],

@@ -16,6 +16,7 @@
 #include <Aurora/Framework/SceneComponent.hpp>
 #include <Aurora/Framework/CameraComponent.hpp>
 #include <Aurora/Framework/StaticMeshComponent.hpp>
+#include <Aurora/Framework/SkeletalMeshComponent.hpp>
 #include <Aurora/Framework/Lights.hpp>
 
 #include <Aurora/Resource/AssimpModelLoader.hpp>
@@ -27,6 +28,7 @@
 
 #include <Aurora/Render/SceneRendererDeferred.hpp>
 #include <Aurora/Render/SceneRendererForward.hpp>
+#include <Aurora/Render/SceneRendererDeferredNew.hpp>
 
 using namespace Aurora;
 
@@ -168,6 +170,7 @@ class BaseAppContext : public AppContext
 	~BaseAppContext() override
 	{
 		delete sceneRenderer;
+
 	}
 
 	// FIXME: this is just an hack!
@@ -240,6 +243,35 @@ class BaseAppContext : public AppContext
 		GetScene()->SpawnActor<CameraActor>("Camera", {0, 0, 5});
 
 		GetScene()->SpawnActor<PointLight>("PointLight", {-1, 3, 1});
+
+		{ // Animation Test
+			MeshImportedData animImport = modelLoader.ImportModel("hands", GEngine->GetResourceManager()->LoadFile("Assets/Aim/Pickaxe_swing_animation.fbx"));
+
+			auto skinnedMat = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Skinned.matd")->CreateInstance();
+
+			if (animImport == true)
+			{
+				SkeletalMesh_ptr skeletalMesh = animImport.Get<SkeletalMesh>();
+
+				//modelLoader.ImportAnimation(GEngine->GetResourceManager()->LoadFile("Assets/Aim/Pupper - anim.fbx"), skeletalMesh);
+				//modelLoader.ImportAnimation(GEngine->GetResourceManager()->LoadFile("Assets/Aim/jump.fbx"), skeletalMesh);
+				//modelLoader.ImportAnimation(GEngine->GetResourceManager()->LoadFile("Assets/Aim/walk.fbx"), skeletalMesh);
+
+				SkeletalMeshComponent* skeletalMeshComponent = GetScene()->SpawnActor<Actor, SkeletalMeshComponent>("AnimationTest")->GetRootComponent<SkeletalMeshComponent>();
+				skeletalMeshComponent->SetMesh(skeletalMesh);
+				skeletalMeshComponent->SetIgnoreFrustumChecks(true);
+
+				//skeletalMeshComponent->GetTransform().SetLocation(-animImport.Mesh->m_Bounds.GetOrigin());
+
+				AU_LOG_INFO(glm::to_string(animImport.Mesh->m_Bounds.GetOrigin()));
+				AU_LOG_INFO(glm::to_string(animImport.Mesh->m_Bounds.GetSize()));
+
+				for (auto &item : skeletalMeshComponent->GetMaterialSet())
+				{
+					item.second.Material = skinnedMat;
+				}
+			}
+		}
 	}
 
 	void Update(double delta) override

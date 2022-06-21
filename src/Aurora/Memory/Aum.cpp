@@ -1,14 +1,17 @@
 #include "Aum.hpp"
 
-#include <string.h>
+#include <cstring>
 #include "Aurora/Core/assert.hpp"
 #include "Aurora/Core/String.hpp"
 #include <iostream>
 
 namespace Aurora
 {
+	std::vector<Aum*> Aum::AllMemoryAllocators;
+
 	Aum::Aum(MemSize blockSize) : m_BlockSize(blockSize)
 	{
+		AllMemoryAllocators.push_back(this);
 		AllocateMemoryBlock();
 	}
 
@@ -19,6 +22,11 @@ namespace Aurora
 
 	Aum::~Aum()
 	{
+		auto it = std::find(AllMemoryAllocators.begin(), AllMemoryAllocators.end(), this);
+		if (it != AllMemoryAllocators.end())
+		{
+			AllMemoryAllocators.erase(it);
+		}
 		DestroyMemory();
 	}
 
@@ -34,8 +42,6 @@ namespace Aurora
 
 	Aum::MemoryBlock& Aum::AllocateMemoryBlock()
 	{
-		DestroyMemory();
-
 		MemoryBlock memoryBlock;
 		memoryBlock.Memory = new uint8_t[m_BlockSize];
 		memoryBlock.Fragments.emplace_back(MemoryFragment{memoryBlock.Memory, memoryBlock.Memory + m_BlockSize, m_BlockSize});

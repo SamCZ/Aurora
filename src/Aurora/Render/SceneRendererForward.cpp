@@ -90,6 +90,9 @@ namespace Aurora
 			RenderSet skyModelContexts;
 			FillRenderSet(skyModelContexts, 1, RenderSortType::Sky);
 
+			RenderSet overlayModelContexts;
+			FillRenderSet(overlayModelContexts, 1, RenderSortType::Overlay);
+
 			// Setup base vs data
 			BaseVSData baseVsData;
 			baseVsData.ProjectionMatrix = camera->GetProjectionMatrix();
@@ -167,6 +170,11 @@ namespace Aurora
 					GEngine->GetRenderDevice()->WriteBuffer(m_PSDecalBuffer, &psDecalData);
 				}
 
+				for (DirectionalLightComponent* dirLight : scene->GetComponents<DirectionalLightComponent>())
+				{
+					drawState.Uniforms.SetVec3("LightDir"_HASH, glm::normalize(dirLight->GetForwardVector()));
+				}
+
 				drawState.ViewPort = viewPort->ViewPort;
 				drawState.BindTarget(0, viewPort->Target);
 				drawState.BindDepthTarget(depthBuffer, 0, 0);
@@ -179,7 +187,7 @@ namespace Aurora
 				{
 					depthState.DepthFunc = EComparisonFunc::Equal;
 					depthState.DepthWriteMask = EDepthWriteMask::Zero;
-					mat->SetMacro("HAS_DECALS", "1");
+					//mat->SetMacro("HAS_DECALS", "1");
 				});
 
 				GEngine->GetRenderDevice()->BindRenderTargets(drawState);
@@ -259,10 +267,46 @@ namespace Aurora
 				DShapes::Render(drawState);
 			}
 
+			if (overlayModelContexts.empty() == false)
+			{
+				GPU_DEBUG_SCOPE("OverlayPass");
+				CPU_DEBUG_SCOPE("OverlayPass");
+
+				DrawCallState drawCallState;
+				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
+
+				drawCallState.ViewPort = viewPort->ViewPort;
+				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
+				drawCallState.ClearColor = camera->GetClearColor();
+				drawCallState.ClearColorTarget = false;
+				drawCallState.ClearDepthTarget = true;
+				drawCallState.DepthStencilState.DepthEnable = true;
+
+				for (DirectionalLightComponent* dirLight : scene->GetComponents<DirectionalLightComponent>())
+				{
+					drawCallState.Uniforms.SetVec3("LightDir"_HASH, glm::normalize(dirLight->GetForwardVector()));
+				}
+
+				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+
+				// TODO: Find out why clearing depth does not work
+				//GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
+				GEngine->GetRenderDevice()->ClearTextureFloat(depthBuffer, 1);
+
+				UpdateModelState(Pass::Ambient, overlayModelContexts, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
+				{
+					depthState.DepthFunc = EComparisonFunc::Less;
+					depthState.DepthWriteMask = EDepthWriteMask::All;
+				});
+
+				RenderPass(Pass::Ambient, drawCallState, camera, overlayModelContexts, false);
+			}
+
 			// Reset State
 			DrawCallState drawCallState;
 			GEngine->GetRenderDevice()->SetDepthStencilState(drawCallState.DepthStencilState);
-			// TODO
 
 			depthBuffer.Free();
 		}

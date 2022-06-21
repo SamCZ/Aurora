@@ -23,6 +23,7 @@ namespace Aurora
 		: EditorWindowBase("Properties", true, true), m_MainPanel(mainEditorPanel), m_IsTransformBeingCopied(false)
 	{
 		AddComponentGuiMethod<StaticMeshComponent>(&PropertiesWindow::DrawMeshComponentGui);
+		AddComponentGuiMethod<SkeletalMeshComponent>(&PropertiesWindow::DrawMeshComponentGui);
 		AddComponentGuiMethod<DirectionalLightComponent>(&PropertiesWindow::DrawDirectionalLightComponentGui);
 		AddComponentGuiMethod<PointLightComponent>(&PropertiesWindow::DrawPointLightComponentGui);
 		AddComponentGuiMethod<SkyLightComponent>(&PropertiesWindow::DrawSkyLightComponent);
@@ -33,7 +34,7 @@ namespace Aurora
 
 	void PropertiesWindow::DrawMeshComponentGui(ActorComponent* baseComponent)
 	{
-		if(!ImGui::CollapsingHeader("MeshComponent", ImGuiTreeNodeFlags_DefaultOpen))
+		if(!ImGui::CollapsingHeader(baseComponent->GetTypeName(), ImGuiTreeNodeFlags_DefaultOpen))
 			return;
 
 		MeshComponent* component = MeshComponent::Cast(baseComponent);
@@ -89,6 +90,18 @@ namespace Aurora
 				ImGui::TreePop();
 			}
 			ImGui::PopID();
+		}
+
+		if (SkeletalMeshComponent* skeletalMeshComponent = SkeletalMeshComponent::SafeCast(component))
+		{
+			if (skeletalMeshComponent->HasMesh())
+			{
+				ImGui::Combo("Animation", &skeletalMeshComponent->SelectedAnimation, [](void* vec, int idx, const char** out_text) -> bool {
+					std::vector<Animation::FAnimation>* animations = reinterpret_cast<std::vector<Animation::FAnimation>*>(vec);
+					*out_text = animations->at(idx).Name.c_str();
+					return true;
+				}, reinterpret_cast<void*>(&skeletalMeshComponent->GetSkeletalMesh()->Animations), skeletalMeshComponent->GetSkeletalMesh()->Animations.size());
+			}
 		}
 	}
 

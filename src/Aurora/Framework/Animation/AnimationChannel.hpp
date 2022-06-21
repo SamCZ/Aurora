@@ -5,17 +5,23 @@
 
 namespace Aurora::Animation
 {
-	class AnimationChannel
+	template<typename T>
+	struct AnimationKey
 	{
-	public:
+		double Time;
+		T Value;
+	};
+
+	struct AnimationChannel
+	{
 		int Index;
 		String Name;
 
+		std::vector<AnimationKey<Vector3>> PositionKeys;
+		std::vector<AnimationKey<Quaternion>> RotationKeys;
+		std::vector<AnimationKey<Vector3>> ScaleKeys;
+
 		AnimationChannel() : Index(-1), Name() { }
 		AnimationChannel(int index, String name) : Index(index), Name(std::move(name)) { }
-
-		std::vector<std::pair<double, Vector3>> PositionKeys;
-		std::vector<std::pair<double, Quaternion>> RotationKeys;
-		std::vector<std::pair<double, Vector3>> ScaleKeys;
 	};
 }

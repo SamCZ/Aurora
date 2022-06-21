@@ -6,7 +6,7 @@ namespace Aurora
 
 	Scene::Scene() : m_ActorMemory(), m_PhysicsWorld(this)
 	{
-
+		m_ActorMemory.SetName("Actors");
 	}
 
 	Scene::~Scene()

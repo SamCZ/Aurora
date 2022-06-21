@@ -84,7 +84,7 @@ namespace Aurora
 		if(passDef == nullptr)
 		{
 			//TODO: Do something
-			AU_LOG_WARNING("Pass ", pass, " not found for for ", m_MatDef->m_Name);
+			AU_LOG_WARNING("Pass ", (uint32_t)pass, " not found for ", m_MatDef->m_Name);
 		}
 
 		Shader_ptr shader = passDef->GetShader(m_Macros);
@@ -144,7 +144,7 @@ namespace Aurora
 		}
 		m_StateCheck--;
 
-		state.Uniforms.ResetResources();
+		//state.Uniforms.ResetResources();
 
 		CPU_DEBUG_SCOPE("Material::EndPass");
 		glPopDebugGroup();

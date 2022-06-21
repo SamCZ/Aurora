@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include <string>
 #include "Aurora/Core/Library.hpp"
 #include "Aurora/Tools/robin_hood.h"
 
@@ -28,6 +29,7 @@ namespace Aurora
 
 	class AU_API Aum
 	{
+	public:
 		struct MemoryFragment
 		{
 			MemPtr Begin;
@@ -42,6 +44,7 @@ namespace Aurora
 			MemSize FreeMemory;
 		};
 
+		static std::vector<Aum*> AllMemoryAllocators;
 	private:
 		MemSize m_BlockSize;
 		std::vector<MemoryBlock> m_Memory;
@@ -50,6 +53,7 @@ namespace Aurora
 #else
 		robin_hood::unordered_map<uintptr_t, MemSize> m_MemorySizes;
 #endif
+		std::string m_Name = "Unknown";
 	public:
 		explicit Aum(MemSize blockSize = 8388608); // 8MB Default block
 		Aum(MemSize objectSize, MemSize objectCount); // 8MB Default block
@@ -104,6 +108,13 @@ namespace Aurora
 			return m_BlockSize;
 		}
 
+		[[nodiscard]] const std::vector<MemoryBlock>& GetMemoryBlocks() const
+		{
+			return m_Memory;
+		}
+
+		inline const std::string& GetName() const { return m_Name; }
+		inline void SetName(const std::string& name) { m_Name = name; }
 	private:
 		MemoryBlock& AllocateMemoryBlock();
 		void DestroyMemory();

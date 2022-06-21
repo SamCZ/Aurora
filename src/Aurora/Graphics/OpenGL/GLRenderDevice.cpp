@@ -591,13 +591,13 @@ namespace Aurora
 		glBindTexture(glTexture->BindTarget(), 0);
 	}
 
-	void GLRenderDevice::ClearTextureFloat(const Texture_ptr &texture, const Color &clearColor)
+	void GLRenderDevice::ClearTextureFloat(const Texture_ptr &texture, float val)
 	{
 		auto* glTexture = static_cast<GLTexture*>(texture.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
 
 		for (GLint nMipLevel = 0; nMipLevel < glTexture->GetDesc().MipLevels; ++nMipLevel)
 		{
-			glClearTexImage(glTexture->Handle(), nMipLevel, glTexture->Format().BaseFormat, GL_FLOAT, &clearColor);
+			glClearTexImage(glTexture->Handle(), nMipLevel, glTexture->Format().BaseFormat, GL_FLOAT, &val);
 			CHECK_GL_ERROR();
 		}
 	}

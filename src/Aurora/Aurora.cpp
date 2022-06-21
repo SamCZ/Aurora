@@ -82,6 +82,7 @@ namespace Aurora
 	AuroraEngine::~AuroraEngine()
 	{
 		DShapes::Destroy();
+		Aum::AllMemoryAllocators.clear();
 		delete Aurora::AppContext::m_GameMode; // Needs to be deleted here because of destroy order
 		delete m_AppContext;
 		delete m_EditorPanel;

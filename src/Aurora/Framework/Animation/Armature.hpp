@@ -7,12 +7,11 @@
 
 namespace Aurora::Animation
 {
-	class Armature
+	struct Armature
 	{
-	public:
 		std::vector<Bone> Bones;
 		std::vector<Bone*> RootBones;
-		robin_hood::unordered_map<String, uint32_t> BoneMapping;
+		robin_hood::unordered_map<String, int32_t> BoneMapping;
 		Matrix4 GlobalInverseTransform;
 	};
 }

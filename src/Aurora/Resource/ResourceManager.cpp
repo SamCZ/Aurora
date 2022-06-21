@@ -539,7 +539,7 @@ namespace Aurora
 		textureDesc.Width = width;
 		textureDesc.Height = height;
 		textureDesc.MipLevels = loadDesc.GenerateMips ? textureDesc.GetMipLevelCount() : 1;
-		textureDesc.ImageFormat = format;
+		textureDesc.ImageFormat = GraphicsFormat::RGBA8_UNORM;
 		textureDesc.Name = path.string();
 		textureDesc.UseAsBindless = false;
 		texture = m_RenderDevice->CreateTexture(textureDesc, nullptr);
@@ -811,8 +811,8 @@ namespace Aurora
 			MeshImportOptions meshImportOptions;
 			meshImportOptions.UploadToGPU = false;
 			meshImportOptions.KeepCPUData = true;
-			meshImportOptions.PreTransform = true;
-			meshImportOptions.SplitMeshes = false;
+			meshImportOptions.PreTransform = false;
+			meshImportOptions.SplitMeshes = true;
 
 			AssimpModelLoader modelLoader;
 			MeshImportedData importedData = modelLoader.ImportModel("Test", data, meshImportOptions);

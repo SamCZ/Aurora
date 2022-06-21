@@ -22,6 +22,8 @@ namespace Aurora
 
 		[[nodiscard]] virtual TTypeID GetSupportedMeshType() const = 0;
 
+		virtual void UploadAnimation(Buffer_ptr& buffer) {}
+
 		void SetIgnoreFrustumChecks(bool ignoreFrustum = true) { m_IgnoreFrustumChecks = ignoreFrustum; }
 		[[nodiscard]] bool IsIgnoringFrustumChecks() const { return m_IgnoreFrustumChecks; }
 
