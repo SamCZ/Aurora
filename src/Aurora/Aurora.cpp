@@ -241,7 +241,9 @@ namespace Aurora
 
 		int FPS = 0;
 
-		while(!m_Window->IsShouldClose())
+		GEngine->m_IsRunning = true;
+
+		while(m_Window->IsShouldClose() == false && GEngine->m_IsRunning)
 		{
 			LocalProfileScope::Reset("GameFrame");
 			double currentTime = glfwGetTime();

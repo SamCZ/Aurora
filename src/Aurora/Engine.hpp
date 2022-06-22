@@ -31,6 +31,7 @@ namespace Aurora
 		VgRender* m_VgRender = nullptr;
 		ViewPortManager* m_ViewPortManager = nullptr;
 		AppContext* m_AppContext = nullptr;
+		bool m_IsRunning = false;
 	public:
 		[[nodiscard]] inline ResourceManager* GetResourceManager() const { return m_ResourceManager; }
 		[[nodiscard]] inline RenderManager* GetRenderManager() const { return m_RenderManager; }
@@ -41,6 +42,7 @@ namespace Aurora
 		[[nodiscard]] inline VgRender* GetVgRender() const { return m_VgRender; }
 		[[nodiscard]] inline ViewPortManager* GetViewPortManager() const { return m_ViewPortManager; }
 		[[nodiscard]] inline AppContext* GetAppContext() const { return m_AppContext; }
+		inline void Shutdown() { m_IsRunning = false; }
 	};
 
 	extern AU_API AuroraContext* GEngine;
