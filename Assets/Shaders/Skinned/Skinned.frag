@@ -10,12 +10,23 @@ in vec4 WorldPos;
 
 uniform vec3 LightDir;
 
+uniform sampler2D BaseColor;
+uniform sampler2D NormalMap;
+uniform sampler2D AOMap;
+
 void main()
 {
 	NormalColor = vec4(normalize(Normal) * 0.5f + 0.5f, 1.0);
 
-	float nDotL = dot(normalize(Normal), LightDir);
+	vec4 color = texture(BaseColor, TexCoord);
+
+	vec3 normalColor = texture(NormalMap, TexCoord).rgb * 2.0f - 1.0f;
+	vec3 N = normalize(TBN * normalColor);
+
+	float nDotL = dot(N, LightDir);
 	nDotL = max(nDotL, 0.5);
 
-	FragColor = vec4(vec3(nDotL), 1.0);
+	float ao = texture(AOMap, TexCoord).r;
+
+	FragColor = vec4(color.rgb * nDotL * ao, 1.0);
 }
