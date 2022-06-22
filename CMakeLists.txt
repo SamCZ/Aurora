@@ -4,9 +4,12 @@ set(CMAKE_CXX_STANDARD 20)
 
 option(AU_GPU_PROFILE "GPU profiling" ON)
 option(AU_CPU_PROFILE "CPU profiling" OFF)
+option(AU_FMOD_SOUND "Enable FMOD sound system" OFF)
 option(AU_IN_PROJECT_ASSETS "Adds Aurora search paths from source code" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_TESTING "Build tests" ON)
+
+set(FMOD_API_DIR "C:/Program Files (x86)/FMOD SoundSystem/FMOD Studio API Windows/api" CACHE STRING "FMOD api folder")
 
 set(RUNTIME_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls and binaries")
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for binaries")
@@ -92,6 +95,23 @@ endif()
 
 target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui assimp stb_utils)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
+
+if (AU_FMOD_SOUND)
+    target_compile_definitions(Aurora PUBLIC AU_FMOD_SOUND=1)
+    target_include_directories(Aurora PUBLIC ${AURORA_ADD_INCLUDE_DIRS})
+    target_link_libraries(Aurora PUBLIC ${FMOD_CORE_LIBRARY})
+    target_link_libraries(Aurora PUBLIC ${FMOD_STUDIO_LIBRARY})
+
+    add_custom_command(TARGET Aurora POST_BUILD # Adds a post-build event to MyTest
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different # which executes "cmake - E copy_if_different..."
+            "${FMOD_CORE_LIBRARY_DLL}" # <--this is in-file
+            $<TARGET_FILE_DIR:Aurora>) # <--this is out-file path
+
+    add_custom_command(TARGET Aurora POST_BUILD # Adds a post-build event to MyTest
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different # which executes "cmake - E copy_if_different..."
+            "${FMOD_STUDIO_LIBRARY_DLL}" # <--this is in-file
+            $<TARGET_FILE_DIR:Aurora>) # <--this is out-file path
+endif()
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)

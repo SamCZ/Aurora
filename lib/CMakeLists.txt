@@ -45,7 +45,7 @@ endif()
 # FMOD
 # Sound library
 #------------------------------
-if(FMOD_SUPPORTED)
+if(AU_FMOD_SOUND)
     add_subdirectory(fmod)
     #set_property(TARGET fmod PROPERTY FOLDER "GameLib")
 endif()

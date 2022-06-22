@@ -93,6 +93,11 @@ namespace Aurora
 		GEngine->m_RenderDevice = nullptr; // Important here! It's for destroying left buffers in caches
 		delete m_RenderManager;
 		delete m_RenderDevice;
+
+#ifdef AU_FMOD_SOUND
+		delete GEngine->m_SoundSystem;
+#endif
+
 		delete m_SwapChain;
 		delete m_Window;
 		delete GEngine;
@@ -226,6 +231,12 @@ namespace Aurora
 			m_RenderViewPort->Resize(m_Window->GetSize());
 		}
 
+		// Init sounds
+
+#ifdef AU_FMOD_SOUND
+		GEngine->m_SoundSystem = new FMOD::SoundSystem();
+#endif
+
 		// Init App context
 		m_AppContext = appContext;
 		m_AppContext->Init();
@@ -297,6 +308,13 @@ namespace Aurora
 					m_ResourceManager->Update();
 				}
 			}
+
+#ifdef AU_FMOD_SOUND
+			{
+				CPU_DEBUG_SCOPE("FMOD SoundSystem");
+				GEngine->m_SoundSystem->Update();
+			};
+#endif
 
 			{ // ImGui update
 				CPU_DEBUG_SCOPE("ImGui update");

@@ -2,6 +2,13 @@
 
 #include "Core/Library.hpp"
 
+#ifdef AU_FMOD_SOUND
+	#include "Aurora/Sound/FMOD/FmodSoundSystem.hpp"
+	#define AU_HAS_AUDIO 1
+#else
+	#define AU_HAS_AUDIO 0
+#endif
+
 namespace Aurora
 {
 	class ResourceManager;
@@ -31,6 +38,11 @@ namespace Aurora
 		VgRender* m_VgRender = nullptr;
 		ViewPortManager* m_ViewPortManager = nullptr;
 		AppContext* m_AppContext = nullptr;
+
+#if AU_HAS_AUDIO
+		FMOD::SoundSystem* m_SoundSystem = nullptr;
+#endif
+
 		bool m_IsRunning = false;
 	public:
 		[[nodiscard]] inline ResourceManager* GetResourceManager() const { return m_ResourceManager; }
@@ -42,6 +54,9 @@ namespace Aurora
 		[[nodiscard]] inline VgRender* GetVgRender() const { return m_VgRender; }
 		[[nodiscard]] inline ViewPortManager* GetViewPortManager() const { return m_ViewPortManager; }
 		[[nodiscard]] inline AppContext* GetAppContext() const { return m_AppContext; }
+#if AU_HAS_AUDIO
+	[[nodiscard]] inline FMOD::SoundSystem* GetSoundSystem() const { return m_SoundSystem; }
+#endif
 		inline void Shutdown() { m_IsRunning = false; }
 	};
 
