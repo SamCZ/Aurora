@@ -1966,7 +1966,12 @@ namespace Aurora
 			DrawCallState srcState;
 			srcState.BindTarget(0, src);
 			FrameBuffer_ptr srcFramebuffer = GetCachedFrameBuffer(srcState);
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, srcFramebuffer->Handle);
+
+			if (m_CurrentFrameBuffer != srcFramebuffer)
+			{
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, srcFramebuffer->Handle);
+				m_CurrentFrameBuffer = srcFramebuffer;
+			}
 			//glDrawBuffers(GLsizei(srcFramebuffer->NumBuffers), srcFramebuffer->DrawBuffers);
 
 			if(dest)
