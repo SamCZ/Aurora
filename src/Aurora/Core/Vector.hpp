@@ -52,9 +52,27 @@ typedef glm::quat Quaternion;
 
 namespace glm
 {
-	AU_API glm::dvec3 SmoothDamp(const glm::dvec3& current, glm::dvec3 target, glm::dvec3& currentVelocity, double smoothTime, double maxSpeed, double deltaTime);
-	AU_API glm::dvec3 SmoothDamp(const glm::dvec3& current, const glm::dvec3& target, glm::dvec3& currentVelocity, double smoothTime, double deltaTime);
-	AU_API glm::dvec3 MoveTowards(const glm::dvec3& current, const glm::dvec3& target, double maxDistanceDelta);
+	AU_API glm::vec3 SmoothDamp(const glm::vec3& current, glm::vec3 target, glm::vec3& currentVelocity, double smoothTime, double maxSpeed, double deltaTime);
+	AU_API glm::vec3 SmoothDamp(const glm::vec3& current, const glm::vec3& target, glm::vec3& currentVelocity, double smoothTime, double deltaTime);
+
+	template<typename T> requires(std::is_floating_point<T>::value)
+	inline vec<3, T, defaultp> MoveTowards(const vec<3, T, defaultp>& current, const vec<3, T, defaultp>& target, T maxDistanceDelta)
+	{
+		// avoid vector ops because current scripting backends are terrible at inlining
+		T toVector_x = target.x - current.x;
+		T toVector_y = target.y - current.y;
+		T toVector_z = target.z - current.z;
+
+		T sqdist = toVector_x * toVector_x + toVector_y * toVector_y + toVector_z * toVector_z;
+
+		if (sqdist == 0 || (maxDistanceDelta >= 0 && sqdist <= maxDistanceDelta * maxDistanceDelta))
+			return target;
+		double dist = glm::sqrt(sqdist);
+
+		return {current.x + toVector_x / dist * maxDistanceDelta,
+		        current.y + toVector_y / dist * maxDistanceDelta,
+		        current.z + toVector_z / dist * maxDistanceDelta};
+	}
 
 	// Taken from HazelDev
 	AU_API bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::vec3& rotation, glm::vec3& scale);

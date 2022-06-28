@@ -2,7 +2,7 @@
 
 namespace glm
 {
-	glm::dvec3 SmoothDamp(const glm::dvec3& current, glm::dvec3 target, glm::dvec3& currentVelocity, double smoothTime, double maxSpeed, double deltaTime)
+	glm::vec3 SmoothDamp(const glm::vec3& current, glm::vec3 target, glm::vec3& currentVelocity, double smoothTime, double maxSpeed, double deltaTime)
 	{
 		double output_x = 0;
 		double output_y = 0;
@@ -71,27 +71,9 @@ namespace glm
 		return {output_x, output_y, output_z};
 	}
 
-	glm::dvec3 SmoothDamp(const glm::dvec3& current, const glm::dvec3& target, glm::dvec3& currentVelocity, double smoothTime, double deltaTime)
+	glm::vec3 SmoothDamp(const glm::vec3& current, const glm::vec3& target, glm::vec3& currentVelocity, double smoothTime, double deltaTime)
 	{
 		return SmoothDamp(current, target, currentVelocity, smoothTime, std::numeric_limits<double>::max(), deltaTime);
-	}
-
-	glm::dvec3 MoveTowards(const glm::dvec3& current, const glm::dvec3& target, double maxDistanceDelta)
-	{
-		// avoid vector ops because current scripting backends are terrible at inlining
-		double toVector_x = target.x - current.x;
-		double toVector_y = target.y - current.y;
-		double toVector_z = target.z - current.z;
-
-		double sqdist = toVector_x * toVector_x + toVector_y * toVector_y + toVector_z * toVector_z;
-
-		if (sqdist == 0 || (maxDistanceDelta >= 0 && sqdist <= maxDistanceDelta * maxDistanceDelta))
-			return target;
-		double dist = glm::sqrt(sqdist);
-
-		return glm::dvec3(current.x + toVector_x / dist * maxDistanceDelta,
-			current.y + toVector_y / dist * maxDistanceDelta,
-			current.z + toVector_z / dist * maxDistanceDelta);
 	}
 
 	// Taken from HazelDev
