@@ -11,6 +11,7 @@
 #include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Framework/SkyLight.hpp"
 #include "Aurora/Framework/Decal.hpp"
+#include "Aurora/Framework/ParticleSystemComponent.hpp"
 
 #include "Aurora/Graphics/Base/IRenderDevice.hpp"
 #include "Aurora/Graphics/ViewPortManager.hpp"
@@ -218,6 +219,13 @@ namespace Aurora
 				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 
 				RenderPass(Pass::Ambient, drawCallState, camera, skyModelContexts, false);
+			}
+
+			{ // Particles
+				for (ParticleSystemComponent* particleSystemComponent : scene->GetComponents<ParticleSystemComponent>())
+				{
+
+				}
 			}
 
 			if (!translucentModelContexts.empty())
