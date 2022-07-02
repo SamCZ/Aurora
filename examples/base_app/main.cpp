@@ -18,6 +18,7 @@
 #include <Aurora/Framework/StaticMeshComponent.hpp>
 #include <Aurora/Framework/SkeletalMeshComponent.hpp>
 #include <Aurora/Framework/Lights.hpp>
+#include <Aurora/Framework/ParticleSystemComponent.hpp>
 
 #include <Aurora/Resource/AssimpModelLoader.hpp>
 #include <Aurora/Resource/ResourceName.hpp>
@@ -271,6 +272,11 @@ class BaseAppContext : public AppContext
 					item.second.Material = skinnedMat;
 				}
 			}
+		}
+
+		{ // Particle test
+			ParticleSystemComponent* particleSystemComponent = GetScene()->SpawnActor<Actor, ParticleSystemComponent>("Particles")->GetRootComponent<ParticleSystemComponent>();
+
 		}
 	}
 

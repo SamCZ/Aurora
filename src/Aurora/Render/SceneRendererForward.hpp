@@ -9,6 +9,10 @@ namespace Aurora
 	private:
 		Buffer_ptr m_VSDecalBuffer;
 		Buffer_ptr m_PSDecalBuffer;
+
+		InputLayout_ptr m_ParticleInputLayout;
+		Shader_ptr m_ParticleComputeShader;
+		Shader_ptr m_ParticleRenderShader;
 	public:
 		SceneRendererForward();
 

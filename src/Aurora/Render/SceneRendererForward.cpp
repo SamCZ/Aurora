@@ -45,6 +45,16 @@ namespace Aurora
 	{
 		m_VSDecalBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("GLOB_DecalMatricesVS", sizeof(GLOB_DecalMatricesVS), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
 		m_PSDecalBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("GLOB_DecalMatricesPS", sizeof(GLOB_DecalMatricesPS), EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+
+		m_ParticleInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
+			VertexAttributeDesc{"in_Pos", GraphicsFormat::RGBA32_FLOAT, 0, 0, 0, sizeof(Vector4), false, false}
+		});
+		m_ParticleComputeShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/Forward/Particle/Particles.comp");
+		m_ParticleRenderShader = GEngine->GetResourceManager()->LoadShader("Particles", {
+			{EShaderType::Vertex, "Assets/Shaders/Forward/Particle/Particles.vert"},
+			{EShaderType::Geometry, "Assets/Shaders/Forward/Particle/Particles.geom"},
+			{EShaderType::Pixel, "Assets/Shaders/Forward/Particle/Particles.frag"}
+		});
 	}
 
 	void SceneRendererForward::Render(Scene* scene)
@@ -222,9 +232,36 @@ namespace Aurora
 			}
 
 			{ // Particles
+				DrawCallState drawCallState;
+				drawCallState.Shader = m_ParticleRenderShader;
+				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.ViewPort = viewPort->ViewPort;
+				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
+				drawCallState.PrimitiveType = EPrimitiveType::PointList;
+
+				drawCallState.ClearColorTarget = false;
+				drawCallState.ClearDepthTarget = false;
+				drawCallState.DepthStencilState.DepthEnable = true;
+				drawCallState.InputLayoutHandle = m_ParticleInputLayout;
+
+				std::vector<DrawArguments> args;
+				args.resize(1);
+				DrawArguments& arg = args[0];
+
+
+				DispatchState dispatchState;
+				dispatchState.Shader = m_ParticleComputeShader;
 				for (ParticleSystemComponent* particleSystemComponent : scene->GetComponents<ParticleSystemComponent>())
 				{
+					dispatchState.BindSSBOBuffer("Pos", particleSystemComponent->m_GPUPosBuffer);
+					dispatchState.Uniforms.SetUInt("ParticleCount"_HASH, particleSystemComponent->m_CurrentParticles);
+					GEngine->GetRenderDevice()->Dispatch(dispatchState, (particleSystemComponent->m_CurrentParticles / 128) + 1, 1, 1);
 
+					drawCallState.SetVertexBuffer(0, particleSystemComponent->m_GPUPosBuffer);
+
+					arg.VertexCount = particleSystemComponent->m_CurrentParticles;
+					GEngine->GetRenderDevice()->Draw(drawCallState, args);
 				}
 			}
 
