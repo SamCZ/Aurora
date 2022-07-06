@@ -120,7 +120,7 @@ namespace Aurora
 
 		static GameModeBase* GetGameModeBase() { return m_GameMode; }
 
-		template<class T, typename... Args, typename std::enable_if<std::is_base_of<GameModeBase, T>::value>::type* = nullptr>
+		template<class T, typename std::enable_if<std::is_base_of<GameModeBase, T>::value>::type* = nullptr>
 		static T* GetGameMode()
 		{
 			return static_cast<T*>(m_GameMode);

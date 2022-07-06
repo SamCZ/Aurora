@@ -10,6 +10,10 @@
 #include <Aurora/RmlUI/RmlUI.hpp>
 #include <RmlUi/Core/DataModelHandle.h>
 
+#ifndef UI_DEF_CONSTRUCTOR
+	#define UI_DEF_CONSTRUCTOR(className) explicit className(UIID_t id) : UserInterface(id) {}
+#endif
+
 namespace Aurora
 {
 	typedef uint8_t UIID_t;
@@ -32,7 +36,7 @@ namespace Aurora
 
 		Rml::ElementDocument* LoadAndRegisterDocument(const String& path, bool defaultVisible = true);
 
-		Rml::ElementDocument* RegisterDocument(Rml::ElementDocument* document, bool defaultVisible = true)
+		Rml::ElementDocument* RegisterDocument(Rml::ElementDocument* document, bool defaultVisible = true, Rml::ModalFlag modal_flag = Rml::ModalFlag::None, Rml::FocusFlag focus_flag = Rml::FocusFlag::Auto)
 		{
 			m_Documents.push_back(document);
 
@@ -42,7 +46,7 @@ namespace Aurora
 			}
 			else if(!document->IsVisible() && m_Enabled && defaultVisible)
 			{
-				document->Show();
+				document->Show(modal_flag, focus_flag);
 			}
 
 			return document;
@@ -64,6 +68,11 @@ namespace Aurora
 		inline static Rml::DataModelConstructor CreateDataModel(const String& name)
 		{
 			return GEngine->GetRmlUI()->GetRmlContext()->CreateDataModel(name);
+		}
+
+		inline static void UpdateContext()
+		{
+			GEngine->GetRmlUI()->GetRmlContext()->Update();
 		}
 
 		inline static bool RemoveDataModel(const String& name)

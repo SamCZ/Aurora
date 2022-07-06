@@ -50,6 +50,38 @@ typedef glm::mat3 Matrix3;
 
 typedef glm::quat Quaternion;
 
+template<typename T, typename Min, typename Max>
+inline T Clamp(T value, Min min, Max max)
+{
+	if (value > max)
+	{
+		return max;
+	}
+
+	if (value < min)
+	{
+		return min;
+	}
+
+	return value;
+}
+
+template<typename T, typename Min, typename Max>
+inline T WrapAround(T value, Min min, Max max)
+{
+	if (value > max)
+	{
+		return (T)min;
+	}
+
+	if (value < min)
+	{
+		return (T)max;
+	}
+
+	return value;
+}
+
 namespace glm
 {
 	AU_API glm::vec3 SmoothDamp(const glm::vec3& current, glm::vec3 target, glm::vec3& currentVelocity, double smoothTime, double maxSpeed, double deltaTime);
