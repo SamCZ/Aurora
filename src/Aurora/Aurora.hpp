@@ -35,6 +35,8 @@ namespace Aurora
 
 		RenderViewPort* m_RenderViewPort;
 		MainEditorPanel* m_EditorPanel;
+
+		bool m_HasGraphicsDebug = false;
 	public:
 		AuroraEngine();
 		~AuroraEngine();

@@ -98,6 +98,11 @@ namespace Aurora
 		delete GEngine->m_SoundSystem;
 #endif
 
+		if (m_HasGraphicsDebug)
+		{
+			gladUninstallGLDebug();
+		}
+
 		delete m_SwapChain;
 		delete m_Window;
 		delete GEngine;
@@ -108,6 +113,67 @@ namespace Aurora
     {
         AU_LOG_FATAL("GLFW Error ", errorCode, ": ", description);
     }
+
+	void MessageCallback(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,const void *userParam)
+	{
+		// Note: disabling flood of notifications through glDebugMessageControl() has no effect,
+		// so we have to filter them out here
+		if (id == 131185 || // Buffer detailed info: Buffer object <X> (bound to GL_XXXX ... , usage hint is GL_DYNAMIC_DRAW)
+			// will use VIDEO memory as the source for buffer object operations.
+			id == 131186 ||   // Buffer object <X> (bound to GL_XXXX, usage hint is GL_DYNAMIC_DRAW) is being copied/moved from VIDEO memory to HOST memory.
+			id == 131204 // Unused texture
+			)
+			return;
+
+		if(severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
+
+		std::stringstream MessageSS;
+
+		MessageSS << "OpenGL debug message " << id << " (";
+		switch (source)
+		{
+			// clang-format off
+			case GL_DEBUG_SOURCE_API:             MessageSS << "Source: API.";             break;
+			case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   MessageSS << "Source: Window System.";   break;
+			case GL_DEBUG_SOURCE_SHADER_COMPILER: MessageSS << "Source: Shader Compiler."; break;
+			case GL_DEBUG_SOURCE_THIRD_PARTY:     MessageSS << "Source: Third Party.";     break;
+			case GL_DEBUG_SOURCE_APPLICATION:     MessageSS << "Source: Application.";     break;
+			case GL_DEBUG_SOURCE_OTHER:           MessageSS << "Source: Other.";           break;
+			default:                              MessageSS << "Source: Unknown (" << source << ").";
+				// clang-format on
+		}
+
+		switch (type)
+		{
+			// clang-format off
+			case GL_DEBUG_TYPE_ERROR:               MessageSS << " Type: ERROR.";                break;
+			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: MessageSS << " Type: Deprecated Behaviour."; break;
+			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  MessageSS << " Type: UNDEFINED BEHAVIOUR.";  break;
+			case GL_DEBUG_TYPE_PORTABILITY:         MessageSS << " Type: Portability.";          break;
+			case GL_DEBUG_TYPE_PERFORMANCE:         MessageSS << " Type: PERFORMANCE.";          break;
+			case GL_DEBUG_TYPE_MARKER:              MessageSS << " Type: Marker.";               break;
+			case GL_DEBUG_TYPE_PUSH_GROUP:          MessageSS << " Type: Push Group.";           break;
+			case GL_DEBUG_TYPE_POP_GROUP:           MessageSS << " Type: Pop Group.";            break;
+			case GL_DEBUG_TYPE_OTHER:               MessageSS << " Type: Other.";                break;
+			default:                                MessageSS << " Type: Unknown (" << type << ").";
+				// clang-format on
+		}
+
+		switch (severity)
+		{
+			// clang-format off
+			case GL_DEBUG_SEVERITY_HIGH:         MessageSS << " Severity: HIGH";         break;
+			case GL_DEBUG_SEVERITY_MEDIUM:       MessageSS << " Severity: Medium";       break;
+			case GL_DEBUG_SEVERITY_LOW:          MessageSS << " Severity: Low";          break;
+			case GL_DEBUG_SEVERITY_NOTIFICATION: MessageSS << " Severity: Notification"; break;
+			default:                             MessageSS << " Severity: Unknown (" << severity << ")"; break;
+				// clang-format on
+		}
+
+		MessageSS << "): " << message;
+
+		AU_LOG_FATAL(MessageSS.str());
+	}
 
 	void AuroraEngine::Init(AppContext* appContext, WindowDefinition& windowDefinition, bool editor)
 	{
@@ -131,6 +197,40 @@ namespace Aurora
 		m_Window = new GLFWWindow();
 		m_Window->Initialize(windowDefinition, nullptr);
 		m_Window->Show();
+
+		m_HasGraphicsDebug = windowDefinition.GraphicsDebug;
+
+		// Init opengl
+
+		// This is gonna break after second window is created !
+		if(!gladLoadGL(glfwGetProcAddress)) {
+			AU_LOG_FATAL("Count not initialize OpenGL");
+		}
+		CHECK_GL_ERROR_AND_THROW("Count not initialize OpenGL");
+		// During init, enable debug output
+		if (windowDefinition.GPUMessageHandler)
+		{
+			glEnable(GL_DEBUG_OUTPUT);
+			glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+			glDebugMessageCallback( MessageCallback, nullptr );
+			glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+			CHECK_GL_ERROR_AND_THROW("Cannot enable gl error function")
+		}
+
+		if (m_HasGraphicsDebug)
+		{
+			gladInstallGLDebug();
+		}
+
+		//AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
+
+		if(!GLAD_GL_EXT_texture_array) {
+			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
+		}
+
+		/*if(!GLAD_GL_NV_gpu_shader5) {
+			AU_LOG_ERROR("GLAD_GL_NV_gpu_shader5 not found !");
+		}*/
 
 		// Instantiate OpenGL swap chain
 		m_SwapChain = new GLSwapChain(((GLFWWindow*)m_Window)->GetHandle());

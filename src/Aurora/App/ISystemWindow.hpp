@@ -23,6 +23,7 @@ namespace Aurora
 		bool HasOSWindowBorder;
 		bool Maximized;
 		bool FullScreen = false;
+		bool GPUMessageHandler = false;
 		bool GraphicsDebug = false;
 
 		String Title;

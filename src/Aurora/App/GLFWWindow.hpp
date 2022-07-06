@@ -21,7 +21,6 @@ namespace Aurora
 		ECursorMode m_CursorMode;
 		bool m_Vsync;
 		Vector2i m_Size{};
-		bool m_HasGraphicsDebug = false;
 	private:
 		Input::IManager_ptr m_InputManager;
 		ISwapChain_ptr m_SwapChain;
