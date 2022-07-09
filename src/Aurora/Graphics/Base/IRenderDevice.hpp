@@ -65,7 +65,7 @@ namespace Aurora
 		IndexBufferBinding(Buffer_ptr buffer, EIndexBufferFormat format) : Buffer(std::move(buffer)), Format(format) {}
 	};
 
-	struct UniformBufferBinding
+	struct BufferBinding
 	{
 		Buffer_ptr Buffer = nullptr;
 		uint32_t Offset = 0;
@@ -299,8 +299,8 @@ namespace Aurora
 
 		robin_hood::unordered_map<std::string, TextureBinding> BoundTextures{};
 		robin_hood::unordered_map<std::string, Sampler_ptr> BoundSamplers{};
-		robin_hood::unordered_map<std::string, UniformBufferBinding> BoundUniformBuffers{};
-		robin_hood::unordered_map<std::string, Buffer_ptr> SSBOBuffers{};
+		robin_hood::unordered_map<std::string, BufferBinding> BoundUniformBuffers{};
+		robin_hood::unordered_map<std::string, BufferBinding> SSBOBuffers{};
 
 		UniformResources Uniforms;
 
@@ -329,9 +329,9 @@ namespace Aurora
 			BoundUniformBuffers[name] = {uniformBuffer, offset, size};
 		}
 
-		inline void BindSSBOBuffer(const std::string& name, const Buffer_ptr& ssbo)
+		inline void BindSSBOBuffer(const std::string& name, const Buffer_ptr& ssbo, uint32_t offset = 0, uint32_t size = 0)
 		{
-			SSBOBuffers[name] = ssbo;
+			SSBOBuffers[name] = {ssbo, offset, size};
 		}
 	};
 

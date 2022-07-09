@@ -178,13 +178,13 @@ namespace Aurora
 		}
 	}
 
-	void GLContextState::BindStorageBlock(GLContextState::BindIndex index, GLBuffer *buffer)
+	void GLContextState::BindStorageBlock(GLContextState::BindIndex index, GLBuffer *buffer, uint32_t offset, uint32_t size)
 	{
 		GLuint GLBufferHandle = 0;
 		if (UpdateBoundObjectsArr(m_BoundStorageBlocks, index, buffer, GLBufferHandle))
 		{
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, GLBufferHandle);
-			//glBindBufferRange(GL_SHADER_STORAGE_BUFFER, index, GLBufferHandle, 0, buffer->GetDesc().ByteSize);
+			//glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, GLBufferHandle);
+			glBindBufferRange(GL_SHADER_STORAGE_BUFFER, index, GLBufferHandle, offset, size);
 			CHECK_GL_ERROR("Failed to bind shader storage block to slot ", index);
 		}
 	}
