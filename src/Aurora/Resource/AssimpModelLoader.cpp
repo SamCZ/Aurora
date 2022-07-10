@@ -277,7 +277,7 @@ namespace Aurora
 								format = GraphicsFormat::RGB8_UNORM;
 								break;
 							case 4:
-								format = GraphicsFormat::SRGBA8_UNORM;
+								format = GraphicsFormat::RGBA8_UNORM;
 								break;
 							default:
 								AU_LOG_WARNING("Unknown number of channels: ", channels);
