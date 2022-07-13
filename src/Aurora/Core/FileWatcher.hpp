@@ -5,6 +5,7 @@
 
 #if defined(_WIN32)
 #include <Windows.h>
+#elif __APPLE__
 #else
 #include <sys/inotify.h>
 #include <sys/select.h>

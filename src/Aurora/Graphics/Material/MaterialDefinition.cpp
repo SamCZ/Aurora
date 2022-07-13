@@ -26,7 +26,7 @@ namespace Aurora
 
 			if(newShader == nullptr)
 			{
-				AU_LOG_WARNING("Shader permutation error! ", macros);
+				AU_LOG_WARNING("Shader permutation error! ");
 				return nullptr;
 			}
 
