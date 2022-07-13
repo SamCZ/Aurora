@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include "Aurora/Core/Library.hpp"
 #include "Aurora/Tools/robin_hood.h"
 

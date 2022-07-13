@@ -489,21 +489,21 @@ namespace Aurora
 			for (uint32_t k = 0; k < aiChannel->mNumPositionKeys; k++)
 			{
 				aiVectorKey* key = &aiChannel->mPositionKeys[k];
-				channel.PositionKeys.emplace_back(key->mTime, vec3_cast(key->mValue));
+				channel.PositionKeys.emplace_back(Animation::AnimationKey<Vector3>{key->mTime, vec3_cast(key->mValue)});
 			}
 
 			channel.RotationKeys.reserve(aiChannel->mNumRotationKeys);
 			for (uint32_t k = 0; k < aiChannel->mNumRotationKeys; k++)
 			{
 				aiQuatKey* key = &aiChannel->mRotationKeys[k];
-				channel.RotationKeys.emplace_back(key->mTime, quat_cast(key->mValue));
+				channel.RotationKeys.emplace_back(Animation::AnimationKey<Quaternion>{key->mTime, quat_cast(key->mValue)});
 			}
 
 			channel.ScaleKeys.reserve(aiChannel->mNumScalingKeys);
 			for (uint32_t k = 0; k < aiChannel->mNumScalingKeys; k++)
 			{
 				aiVectorKey* key = &aiChannel->mScalingKeys[k];
-				channel.ScaleKeys.emplace_back(key->mTime, vec3_cast(key->mValue));
+				channel.ScaleKeys.emplace_back(Animation::AnimationKey<Vector3>{key->mTime, vec3_cast(key->mValue)});
 			}
 
 			out_animation.Channels[channel.Index] = channel;
