@@ -104,7 +104,7 @@ namespace Aurora
 					int i = 0;
 					for (const Aum::MemoryBlock& block : al->GetMemoryBlocks())
 					{
-						ImGui::Text(" - Block #%d: fragments=%llu", i, block.Fragments.size());
+						ImGui::Text(" - Block #%d: fragments=%lu", i, block.Fragments.size());
 						i++;
 					}
 					ImGui::Separator();

@@ -42,6 +42,10 @@ endif()
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 add_subdirectory(lib)
 
+if (APPLE)
+    add_subdirectory(metal-cmake)
+endif()
+
 file(GLOB_RECURSE PROJECT_SOURCE src/*.hpp src/*.cpp src/*.h src/*.c)
 
 if(NOT BUILD_SHARED_LIBS)
@@ -95,6 +99,10 @@ endif()
 
 target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui assimp stb_utils)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
+
+if (APPLE)
+    target_link_libraries(Aurora PUBLIC METAL_CPP)
+endif()
 
 if (AU_FMOD_SOUND)
     target_compile_definitions(Aurora PUBLIC AU_FMOD_SOUND=1)

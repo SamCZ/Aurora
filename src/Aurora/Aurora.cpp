@@ -100,7 +100,7 @@ namespace Aurora
 
 		if (m_HasGraphicsDebug)
 		{
-			gladUninstallGLDebug();
+			//gladUninstallGLDebug();
 		}
 
 		delete m_SwapChain;
@@ -219,13 +219,13 @@ namespace Aurora
 
 		if (m_HasGraphicsDebug)
 		{
-			gladInstallGLDebug();
+			//gladInstallGLDebug();
 		}
 
 		//AU_LOG_INFO("OpenGL ", GLVersion.major, ".", GLVersion.minor);
 
 		if(!GLAD_GL_EXT_texture_array) {
-			AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
+			//AU_LOG_ERROR("GLAD_GL_EXT_texture_array not found !");
 		}
 
 		/*if(!GLAD_GL_NV_gpu_shader5) {
