@@ -399,11 +399,24 @@ namespace Aurora
 				}
 			}
 
+			LOD lod = 0;
+
+			if (importOptions.SplitMeshes == false && scene->HasAnimations() == false)
+			{
+				String nodeName = node->mName.C_Str();
+				auto lodPos = nodeName.find("_LOD");
+
+				if (lodPos != std::string::npos && (lodPos + 5) < nodeName.length())
+				{
+					lod = std::stoi(nodeName.substr(lodPos + 4));
+				}
+			}
+
 			Mesh_ptr mesh = meshes[currentMeshIndex];
 
 			aiMaterial* sourceMaterial = scene->mMaterials[sourceMesh->mMaterialIndex];
 			loader->LoadMaterial(scene, mesh, currentMaterialIndex, sourceMaterial);
-			meshProcessor(mesh, sourceMesh, mat4_cast(transform), (LOD)0, importOptions, currentMaterialIndex);
+			meshProcessor(mesh, sourceMesh, mat4_cast(transform), lod, importOptions, currentMaterialIndex);
 
 			currentMaterialIndex++;
 
@@ -489,21 +502,21 @@ namespace Aurora
 			for (uint32_t k = 0; k < aiChannel->mNumPositionKeys; k++)
 			{
 				aiVectorKey* key = &aiChannel->mPositionKeys[k];
-				channel.PositionKeys.emplace_back(Animation::AnimationKey<Vector3>{key->mTime, vec3_cast(key->mValue)});
+				channel.PositionKeys.emplace_back(key->mTime, vec3_cast(key->mValue));
 			}
 
 			channel.RotationKeys.reserve(aiChannel->mNumRotationKeys);
 			for (uint32_t k = 0; k < aiChannel->mNumRotationKeys; k++)
 			{
 				aiQuatKey* key = &aiChannel->mRotationKeys[k];
-				channel.RotationKeys.emplace_back(Animation::AnimationKey<Quaternion>{key->mTime, quat_cast(key->mValue)});
+				channel.RotationKeys.emplace_back(key->mTime, quat_cast(key->mValue));
 			}
 
 			channel.ScaleKeys.reserve(aiChannel->mNumScalingKeys);
 			for (uint32_t k = 0; k < aiChannel->mNumScalingKeys; k++)
 			{
 				aiVectorKey* key = &aiChannel->mScalingKeys[k];
-				channel.ScaleKeys.emplace_back(Animation::AnimationKey<Vector3>{key->mTime, vec3_cast(key->mValue)});
+				channel.ScaleKeys.emplace_back(key->mTime, vec3_cast(key->mValue));
 			}
 
 			out_animation.Channels[channel.Index] = channel;

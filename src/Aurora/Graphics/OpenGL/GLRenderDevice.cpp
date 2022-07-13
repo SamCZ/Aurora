@@ -630,6 +630,22 @@ namespace Aurora
 		glBindTexture(glTexture->BindTarget(), 0);
 	}
 
+	bool GLRenderDevice::ReadTexture(const Texture_ptr& texture, std::vector<uint8>& imageBuffer)
+	{
+		if (texture == nullptr)
+		{
+			return false;
+		}
+
+		auto* glTexture = static_cast<GLTexture*>(texture.get()); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast)
+
+		glBindTexture(glTexture->BindTarget(), glTexture->Handle());
+		glGetTexImage(glTexture->BindTarget(), 0, glTexture->Format().BaseFormat, glTexture->Format().Type, imageBuffer.data());
+		glBindTexture(glTexture->BindTarget(), 0);
+
+		return true;
+	}
+
 	void* GLRenderDevice::GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb)
 	{
 		if (texture == nullptr) return nullptr;

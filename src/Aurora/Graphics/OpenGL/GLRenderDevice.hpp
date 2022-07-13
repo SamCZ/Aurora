@@ -173,6 +173,7 @@ namespace Aurora
 		void ClearTextureFloat(const Texture_ptr& texture, float val) override;
 		void ClearTextureUInt(const Texture_ptr& texture, uint32_t clearColor) override;
 		void GenerateMipmaps(const Texture_ptr& texture) override;
+		bool ReadTexture(const Texture_ptr& texture, std::vector<uint8>& imageBuffer) override;
 		void* GetTextureHandleForBindless(const Texture_ptr& texture, bool srgb) override;
 		bool MakeTextureHandleResident(const Texture_ptr& texture, bool enabled) override;
 		// Buffers
