@@ -9,7 +9,7 @@ if(NOT TARGET glfw AND NOT PLATFORM_ANDROID)
     set(GLFW_BUILD_DOCS OFF)
     set(GLFW_USE_HYBRID_HPG OFF)
     add_subdirectory(glfw)
-    set_property(TARGET glfw PROPERTY FOLDER "GameLib")
+    set_property(TARGET glfw PROPERTY FOLDER "Libs")
 endif()
 
 #--------------------------------
@@ -20,7 +20,7 @@ if(NOT TARGET nlohmann_json)
     set(JSON_BuildTests OFF)
     set(JSON_Install OFF)
     add_subdirectory(nlohmann_json)
-    set_property(TARGET nlohmann_json PROPERTY FOLDER "GameLib")
+    set_property(TARGET nlohmann_json PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -29,7 +29,7 @@ endif()
 #------------------------------
 if(NOT TARGET glm)
     add_subdirectory(glm)
-    set_property(TARGET glm PROPERTY FOLDER "GameLib")
+    set_property(TARGET glm PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -38,7 +38,7 @@ endif()
 #------------------------------
 if(NOT TARGET glad AND NOT PLATFORM_ANDROID)
     add_subdirectory(glad)
-    set_property(TARGET glad PROPERTY FOLDER "GameLib")
+    set_property(TARGET glad PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -47,7 +47,7 @@ endif()
 #------------------------------
 if(AU_FMOD_SOUND)
     add_subdirectory(fmod)
-    #set_property(TARGET fmod PROPERTY FOLDER "GameLib")
+    #set_property(TARGET fmod PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -56,7 +56,7 @@ endif()
 #------------------------------
 if(NOT TARGET ImGui)
     add_subdirectory(imgui)
-    set_property(TARGET ImGui PROPERTY FOLDER "GameLib")
+    set_property(TARGET ImGui PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -72,7 +72,7 @@ if(NOT TARGET freetype)
     set(CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz ON)
     set(CMAKE_DISABLE_FIND_PACKAGE_BrotliDec ON)
     add_subdirectory(freetype)
-    set_property(TARGET freetype PROPERTY FOLDER "GameLib")
+    set_property(TARGET freetype PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -87,8 +87,8 @@ if(NOT TARGET RmlUI)
     #set(CUSTOM_LINK_LIBRARIES freetype)
     set(NO_THIRDPARTY_CONTAINERS ON)
     add_subdirectory(RmlUI)
-    set_property(TARGET RmlCore PROPERTY FOLDER "GameLib")
-    set_property(TARGET RmlDebugger PROPERTY FOLDER "GameLib")
+    set_property(TARGET RmlCore PROPERTY FOLDER "Libs")
+    set_property(TARGET RmlDebugger PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -112,6 +112,7 @@ if(NOT TARGET TracyClient)
         target_compile_definitions(TracyClient PUBLIC NOMINMAX)
     endif()
     set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_CACHE})
+    set_property(TARGET TracyClient PROPERTY FOLDER "Libs")
 endif()
 
 #------------------------------
@@ -146,10 +147,11 @@ if(NOT TARGET assimp)
     set(ASSIMP_INSTALL OFF)
     add_subdirectory(assimp)
 
-    set_property(TARGET assimp PROPERTY FOLDER "GameLib")
+    set_property(TARGET assimp PROPERTY FOLDER "Libs")
     set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_CACHE})
 endif()
 
 if(NOT TARGET stb_utils)
     add_subdirectory(stb)
+    set_property(TARGET stb_utils PROPERTY FOLDER "Libs")
 endif()
