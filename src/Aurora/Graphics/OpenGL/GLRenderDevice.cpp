@@ -160,6 +160,12 @@ namespace Aurora
 			AU_LOG_INFO("GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT is ", size);
 		}
 
+		{
+			GLint size;
+			glGetIntegerv(GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT, &size);
+			AU_LOG_INFO("GL_SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT is ", size);
+		}
+
 		glDisable(GL_MULTISAMPLE);
 		CHECK_GL_ERROR_AND_THROW("Cannot disable multisampling");
 
@@ -1377,7 +1383,7 @@ namespace Aurora
 		{
 			auto uniformBufferIt = state.BoundUniformBuffers.find(uniformResource.Name);
 
-			UniformBufferBinding uniformBinding;
+			BufferBinding uniformBinding;
 
 			if (uniformBufferIt != state.BoundUniformBuffers.end()) {
 				uniformBinding = uniformBufferIt->second;
@@ -1408,14 +1414,29 @@ namespace Aurora
 		{
 			auto ssboIt = state.SSBOBuffers.find(uniformResource.Name);
 
-			Buffer_ptr ssboBufferHandle = nullptr;
+			BufferBinding ssboBinding;
 
-			if(ssboIt != state.SSBOBuffers.end())
-			{
-				ssboBufferHandle = ssboIt->second;
+			if (ssboIt != state.SSBOBuffers.end()) {
+				ssboBinding = ssboIt->second;
 			}
 
-			m_ContextState.BindStorageBlock(uniformResource.Binding, GetBuffer(ssboBufferHandle));
+			GLBuffer* glBuffer = nullptr;
+
+			if (ssboBinding.Size == 0 && ssboBinding.Buffer != nullptr)
+			{
+				ssboBinding.Size = ssboBinding.Buffer->GetDesc().ByteSize;
+			}
+
+			if (ssboBinding.Buffer != nullptr)
+			{
+				glBuffer = GetBuffer(ssboBinding.Buffer);
+			}
+			else
+			{
+				continue;
+			}
+
+			m_ContextState.BindStorageBlock(uniformResource.Binding, glBuffer, ssboBinding.Offset, ssboBinding.Size);
 		}
 
 		ApplyShaderUniformResources(state.Shader, state.Uniforms);

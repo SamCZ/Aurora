@@ -134,6 +134,10 @@ namespace Aurora
 		renderDevice->SetRasterState(passState.RasterState);
 		renderDevice->SetDepthStencilState(passState.DepthStencilState);
 		renderDevice->SetBlendState(passState.BlendState);
+
+		drawState.RasterState = passState.RasterState;
+		drawState.DepthStencilState = passState.DepthStencilState;
+		drawState.BlendState = passState.BlendState;
 	}
 
 	void Material::EndPass(PassType_t pass, DrawCallState& state)
