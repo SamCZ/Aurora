@@ -56,12 +56,12 @@ namespace Aurora
 			{EShaderType::Pixel, "Assets/Shaders/Forward/Particle/Particles.frag"}
 		});
 
-		m_TonemappingShader = GEngine->GetResourceManager()->LoadShader("BloomScreenSpace", {
+		m_TonemappingShader = GEngine->GetResourceManager()->LoadShader("Tonemaping", {
 			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Tonemapping.frag"}
 		});
 
-		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("BloomScreenSpace", {
+		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("ScreenSpaceQuadTexture", {
 			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/ScreenTexture.frag"}
 		});
