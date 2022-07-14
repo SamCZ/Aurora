@@ -17,6 +17,7 @@ namespace Aurora
 		bool m_IsActive;
 		Actor* m_Owner;
 		Scene* m_Scene;
+		String m_Socket;
 	protected:
 		SceneComponent* m_Parent;
 	public:
@@ -41,7 +42,9 @@ namespace Aurora
 		[[nodiscard]] bool HasParent() const { return m_Parent != nullptr;}
 		[[nodiscard]] bool IsParentActive() const;
 
-		bool AttachToComponent(SceneComponent* InParent);
+		virtual int32_t GetSocketIndex(const String& socket) const { return -1; };
+
+		bool AttachToComponent(SceneComponent* InParent, const String& socket = "");
 		void DetachFromComponent();
 	};
 }

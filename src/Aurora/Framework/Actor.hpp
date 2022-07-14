@@ -44,7 +44,7 @@ namespace Aurora
 		}
 
 		template<typename T, typename... Args, typename std::enable_if<std::is_base_of<ActorComponent, T>::value>::type* = nullptr>
-		T* AddComponent(const String& name, Args&& ... args)
+		T* AddComponentNamed(const String& name, Args&& ... args)
 		{
 			ActorComponent* component = GetComponentStorage().CreateComponent<T, Args...>(name, std::forward<Args>(args)...);
 

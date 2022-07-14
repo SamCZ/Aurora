@@ -34,6 +34,8 @@ namespace Aurora
 
 		[[nodiscard]] const std::vector<ActorComponent*>& GetComponents() const { return m_Components; }
 
+		virtual Matrix4 GetSocketTransform(int32_t socketId) const { return glm::identity<Matrix4>(); }
+
 		template<typename T>
 		bool GetComponentsOfType(std::vector<T*>& components)
 		{
