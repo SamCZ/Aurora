@@ -55,6 +55,17 @@ namespace Aurora
 			{EShaderType::Geometry, "Assets/Shaders/Forward/Particle/Particles.geom"},
 			{EShaderType::Pixel, "Assets/Shaders/Forward/Particle/Particles.frag"}
 		});
+
+		m_TonemappingShader = GEngine->GetResourceManager()->LoadShader("BloomScreenSpace", {
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Tonemapping.frag"}
+		});
+
+		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("BloomScreenSpace", {
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
+			{EShaderType::Pixel, "Assets/Shaders/ScreenTexture.frag"}
+		});
+
 	}
 
 	void SceneRendererForward::Render(Scene* scene)
@@ -249,7 +260,6 @@ namespace Aurora
 				args.resize(1);
 				DrawArguments& arg = args[0];
 
-
 				DispatchState dispatchState;
 				dispatchState.Shader = m_ParticleComputeShader;
 				for (ParticleSystemComponent* particleSystemComponent : scene->GetComponents<ParticleSystemComponent>())
@@ -312,6 +322,7 @@ namespace Aurora
 				DShapes::Render(drawState);
 			}
 
+
 			if (overlayModelContexts.empty() == false)
 			{
 				GPU_DEBUG_SCOPE("OverlayPass");
@@ -347,6 +358,55 @@ namespace Aurora
 				});
 
 				RenderPass(Pass::Ambient, drawCallState, camera, overlayModelContexts, false);
+			}
+
+			{
+				CPU_DEBUG_SCOPE("Tonemapping");
+				GPU_DEBUG_SCOPE("Tonemapping");
+
+				TemporalRenderTarget tempRenderTarget =
+					GEngine->GetRenderManager()->CreateTemporalRenderTarget(
+						"TempRenderTarget",
+						(Vector2i)viewPort->ViewPort,
+						viewPort->Target->GetDesc().ImageFormat
+					);
+				// prepare post-processing
+				DrawCallState drawCallState;
+				drawCallState.Shader = m_TonemappingShader;
+
+				drawCallState.ViewPort = viewPort->ViewPort;
+				drawCallState.BindTarget(0, tempRenderTarget);
+				drawCallState.BindTexture("u_Texture", viewPort->Target);
+				drawCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
+				drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
+				drawCallState.RasterState.CullMode = ECullMode::Back;
+				drawCallState.DepthStencilState.DepthEnable = false;
+
+				drawCallState.ClearColorTarget = false;
+				drawCallState.ClearDepthTarget = false;
+
+				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+				GEngine->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4) }, true);
+
+				// draw post-processing to the screen
+				DrawCallState screenCallState;
+				screenCallState.Shader = m_ScreenTextureShader;
+
+				screenCallState.ViewPort = viewPort->ViewPort;
+				screenCallState.BindTarget(0, viewPort->Target);
+				screenCallState.BindTexture("u_Texture", tempRenderTarget);
+				screenCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
+				screenCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
+				screenCallState.RasterState.CullMode = ECullMode::Back;
+				screenCallState.DepthStencilState.DepthEnable = false;
+
+				screenCallState.ClearColorTarget = false;
+				screenCallState.ClearDepthTarget = false;
+
+				GEngine->GetRenderDevice()->BindRenderTargets(screenCallState);
+				GEngine->GetRenderDevice()->Draw(screenCallState, {DrawArguments(4) }, true);
+
+				tempRenderTarget.Free();
 			}
 
 			// Reset State

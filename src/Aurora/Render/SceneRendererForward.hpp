@@ -12,7 +12,10 @@ namespace Aurora
 
 		InputLayout_ptr m_ParticleInputLayout;
 		Shader_ptr m_ParticleComputeShader;
+		Shader_ptr m_TonemappingShader;
+		Shader_ptr m_ScreenTextureShader;
 		Shader_ptr m_ParticleRenderShader;
+
 	public:
 		SceneRendererForward();
 
