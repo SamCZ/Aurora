@@ -1686,9 +1686,21 @@ namespace Aurora
 		uint32_t status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE)
 		{
-			AU_LOG_ERROR("Incomplete framebuffer!");
+			std::stringstream MessageSS;
+			MessageSS << "Framebuffer Incomplate! ";
+			switch(status)
+			{
+				case GL_FRAMEBUFFER_UNDEFINED:                      MessageSS << "GL_FRAMEBUFFER_UNDEFINED:                     "; break;
+				case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:          MessageSS << "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:         "; break;
+				case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:  MessageSS << "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: "; break;
+				case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER :        MessageSS << "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER :       "; break;
+				case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER :        MessageSS << "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER :       "; break;
+				case GL_FRAMEBUFFER_UNSUPPORTED:                    MessageSS << "GL_FRAMEBUFFER_UNSUPPORTED:                   "; break;
+				case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:         MessageSS << "GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:        "; break;
+				case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:       MessageSS << "GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:      "; break;
+			};
+			AU_LOG_ERROR(MessageSS.str());
 		}
-
 
 		glBindFramebuffer(GL_FRAMEBUFFER, m_CurrentFrameBuffer != nullptr ? m_CurrentFrameBuffer->Handle : 0);
 

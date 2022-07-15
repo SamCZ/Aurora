@@ -28,6 +28,14 @@
 
 namespace Aurora
 {
+	struct BloomDesc
+	{
+		Vector2i screenSize; 
+		int size;
+		int operation;
+		float treshold;
+	};
+	
 	void UpdateModelState(PassType_t pass, const RenderSet& set, void(*callback)(Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState))
 	{
 		Material* lastMaterial = nullptr;
@@ -61,11 +69,21 @@ namespace Aurora
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Tonemapping.frag"}
 		});
 
-		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("ScreenSpaceQuadTexture", {
+		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("TonemapBloomMerge", {
 			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
-			{EShaderType::Pixel, "Assets/Shaders/ScreenTexture.frag"}
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/TonemapBloomMerge.frag"}
 		});
 
+		m_BloomShader = GEngine->GetResourceManager()->LoadShader("EmberBloom", {
+			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/EmberBloom.frag"}
+		});
+		
+		m_BloomDescBuffer = 
+			GEngine->GetRenderDevice()->CreateBuffer(
+				BufferDesc("BloomDesc", sizeof(Aurora::BloomDesc),
+						EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+		
 	}
 
 	void SceneRendererForward::Render(Scene* scene)
@@ -360,22 +378,24 @@ namespace Aurora
 				RenderPass(Pass::Ambient, drawCallState, camera, overlayModelContexts, false);
 			}
 
+			TemporalRenderTarget toneMappingRenderTexture =
+				GEngine->GetRenderManager()->CreateTemporalRenderTarget(
+				"TempRenderTarget",
+				(Vector2i)viewPort->ViewPort,
+				GraphicsFormat::RGBA16_FLOAT
+			);
+
+			// tonemaping pass
 			{
 				CPU_DEBUG_SCOPE("Tonemapping");
 				GPU_DEBUG_SCOPE("Tonemapping");
 
-				TemporalRenderTarget tempRenderTarget =
-					GEngine->GetRenderManager()->CreateTemporalRenderTarget(
-						"TempRenderTarget",
-						(Vector2i)viewPort->ViewPort,
-						viewPort->Target->GetDesc().ImageFormat
-					);
-				// prepare post-processing
+				// prepare tone-mapping
 				DrawCallState drawCallState;
 				drawCallState.Shader = m_TonemappingShader;
 
 				drawCallState.ViewPort = viewPort->ViewPort;
-				drawCallState.BindTarget(0, tempRenderTarget);
+				drawCallState.BindTarget(0, toneMappingRenderTexture);
 				drawCallState.BindTexture("u_Texture", viewPort->Target);
 				drawCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
 				drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
@@ -386,27 +406,39 @@ namespace Aurora
 				drawCallState.ClearDepthTarget = false;
 
 				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
-				GEngine->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4) }, true);
+				GEngine->GetRenderDevice()->Draw(drawCallState, { DrawArguments(4) }, true);
+			}
+			
+			TemporalRenderTarget bloomRenderTexture = RenderBloom(viewPort);
 
-				// draw post-processing to the screen
+			// merge tonemapping with bloom
+			{
+				CPU_DEBUG_SCOPE("Merge Tonemaping With bloom");
+				GPU_DEBUG_SCOPE("Merge Tonemaping With bloom");
+
 				DrawCallState screenCallState;
 				screenCallState.Shader = m_ScreenTextureShader;
 
 				screenCallState.ViewPort = viewPort->ViewPort;
 				screenCallState.BindTarget(0, viewPort->Target);
-				screenCallState.BindTexture("u_Texture", tempRenderTarget);
+				screenCallState.BindTexture("u_Texture", toneMappingRenderTexture);
 				screenCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
+				
+				screenCallState.BindTexture("u_BloomTexture", bloomRenderTexture);
+				screenCallState.BindSampler("u_BloomTexture", Samplers::ClampClampNearestNearest);
+
 				screenCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
 				screenCallState.RasterState.CullMode = ECullMode::Back;
 				screenCallState.DepthStencilState.DepthEnable = false;
 
 				screenCallState.ClearColorTarget = false;
 				screenCallState.ClearDepthTarget = false;
-
+				
 				GEngine->GetRenderDevice()->BindRenderTargets(screenCallState);
-				GEngine->GetRenderDevice()->Draw(screenCallState, {DrawArguments(4) }, true);
+				GEngine->GetRenderDevice()->Draw(screenCallState, { DrawArguments(4) }, true);
 
-				tempRenderTarget.Free();
+				toneMappingRenderTexture.Free();
+				bloomRenderTexture.Free();
 			}
 
 			// Reset State
@@ -416,4 +448,99 @@ namespace Aurora
 			depthBuffer.Free();
 		}
 	}
+
+	TemporalRenderTarget SceneRendererForward::BloomPass(
+		RenderViewPort* viewPort,
+		Texture_ptr texture,
+		int pass,
+		int operation,
+		Texture_ptr biggerTexture)
+	{
+		const TextureDesc& viewportTextureDesc = viewPort->Target->GetDesc();
+
+		TemporalRenderTarget tempRenderTarget =
+			GEngine->GetRenderManager()->CreateTemporalRenderTarget(
+				"BloomPass" + std::to_string(pass),
+				viewportTextureDesc.Width  >> pass,
+				viewportTextureDesc.Height >> pass,
+				GraphicsFormat::RGBA16_FLOAT,
+				EDimensionType::TYPE_2D,
+				1,
+				0,
+				TextureDesc::EUsage::Default,
+				true
+			);
+	
+		DrawCallState drawCallState;
+		drawCallState.Shader = m_BloomShader;
+		
+		drawCallState.ViewPort = viewPort->ViewPort;
+		drawCallState.BindTarget(0, tempRenderTarget);
+		drawCallState.BindTexture("u_Texture", texture);
+		drawCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
+		
+		if (biggerTexture != nullptr)
+		{
+			drawCallState.BindTexture("u_BloomTexture", biggerTexture);
+			drawCallState.BindSampler("u_BloomTexture", Samplers::ClampClampNearestNearest);
+		}
+
+		drawCallState.BindUniformBuffer("bloomDesc", m_BloomDescBuffer);
+		drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
+		drawCallState.RasterState.CullMode = ECullMode::Back;
+		drawCallState.DepthStencilState.DepthEnable = false;
+		
+		Aurora::BloomDesc bloomDesc;
+		bloomDesc.size = 1 << pass;
+		bloomDesc.screenSize.x = viewPort->ViewPort.Width;
+		bloomDesc.screenSize.y = viewPort->ViewPort.Height;
+		bloomDesc.operation = operation;
+		bloomDesc.treshold = 0.95f;
+		
+		GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc, sizeof(BloomDesc), 0);
+
+		drawCallState.ClearColorTarget = false;
+		drawCallState.ClearDepthTarget = false;
+		
+		GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+		GEngine->GetRenderDevice()->Draw(drawCallState, { DrawArguments(4) }, true);
+		
+		return tempRenderTarget;
+	}
+
+	// 11 pass single shader bloom
+	TemporalRenderTarget SceneRendererForward::RenderBloom(RenderViewPort* viewPort)
+	{
+		// bloom operation constants
+		constexpr int BloomOpt_FragPrefilter13  = 1;
+		constexpr int BloomOpt_FragPrefilter4   = 2;
+		constexpr int BloomOpt_FragDownsample13 = 3;
+		constexpr int BloomOpt_FragDownsample4  = 4;
+		constexpr int BloomOpt_FragUpsampleTent = 5;
+		constexpr int BloomOpt_FragUpsampleBox  = 6;
+
+		CPU_DEBUG_SCOPE("PostProcessingBloom");
+		GPU_DEBUG_SCOPE("PostProcessingBloom");
+		
+		// down-sample passes
+		auto ds0 = BloomPass(viewPort, viewPort->Target   , 0, BloomOpt_FragPrefilter13 , nullptr);
+		auto ds1 = BloomPass(viewPort, ds0.GetTexturePtr(), 1, BloomOpt_FragPrefilter4  , nullptr);
+		auto ds2 = BloomPass(viewPort, ds1.GetTexturePtr(), 2, BloomOpt_FragDownsample13, nullptr);
+		auto ds3 = BloomPass(viewPort, ds2.GetTexturePtr(), 3, BloomOpt_FragDownsample4 , nullptr);
+		auto ds4 = BloomPass(viewPort, ds3.GetTexturePtr(), 4, BloomOpt_FragDownsample13, nullptr);
+		auto ds5 = BloomPass(viewPort, ds4.GetTexturePtr(), 5, BloomOpt_FragDownsample4 , nullptr);
+		
+		// up-sample passes
+		auto us4 = BloomPass(viewPort, ds5.GetTexturePtr(), 4, BloomOpt_FragUpsampleTent, ds4);
+		auto us3 = BloomPass(viewPort, us4.GetTexturePtr(), 3, BloomOpt_FragUpsampleBox , ds3);
+		auto us2 = BloomPass(viewPort, us3.GetTexturePtr(), 2, BloomOpt_FragUpsampleTent, ds2);
+		auto us1 = BloomPass(viewPort, us2.GetTexturePtr(), 1, BloomOpt_FragUpsampleBox , ds1);
+		auto us0 = BloomPass(viewPort, us1.GetTexturePtr(), 0, BloomOpt_FragUpsampleTent, ds0);
+
+		ds0.Free(); ds1.Free(); ds2.Free(); ds3.Free(); ds4.Free(); ds5.Free();
+		/*-------*/ us1.Free(); us2.Free(); us3.Free(); us4.Free();
+		
+		return us0;
+	}
+
 }

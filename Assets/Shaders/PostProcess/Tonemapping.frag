@@ -1,7 +1,7 @@
 // #include "tonemappers.glsl"
 
 in vec2 TexCoord;
-out vec4 colorOut;
+out vec4 FragColor;
 
 uniform sampler2D u_Texture;
 
@@ -14,5 +14,5 @@ vec3 aces(in vec3 x) {
 
 void main()
 {
-	  colorOut = vec4(aces(texture(u_Texture, TexCoord).rgb), 1);
+	FragColor = vec4(aces(texture(u_Texture, TexCoord).rgb), 1);
 }
