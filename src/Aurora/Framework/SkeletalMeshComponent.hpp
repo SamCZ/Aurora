@@ -8,6 +8,7 @@ class AU_API SkeletalMeshComponent : public MeshComponent
 {
 private:
 	SkeletalMesh_ptr m_Mesh = nullptr;
+	Matrix4 Bones[MAX_BONES];
 public:
 	CLASS_OBJ(SkeletalMeshComponent, MeshComponent);
 
@@ -30,6 +31,24 @@ public:
 		AnimationTime = 0;
 		Playing = true;
 	}
+
+	int32_t GetBoneIndex(const String& name) const
+	{
+		if (m_Mesh == nullptr)
+		{
+			return -1;
+		}
+
+		return m_Mesh->Armature.BoneMapping[name];
+	}
+
+	Matrix4 GetBoneTransform(int32_t boneIndex) const
+	{
+		return Bones[boneIndex];
+	}
+
+	int32_t GetSocketIndex(const String& socket) const override { return GetBoneIndex(socket); }
+	Matrix4 GetSocketTransform(int32_t socketId) const override { return GetBoneTransform(socketId); }
 
 	void SetMesh(const Mesh_ptr& mesh) override
 	{

@@ -6,8 +6,6 @@ using namespace Aurora::Animation;
 
 namespace Aurora
 {
-	Matrix4 Bones[MAX_BONES];
-
 	const AnimationChannel* FindChannel(const FAnimation& animation, const Bone& bone)
 	{
 		for (auto& channel : animation.Channels)

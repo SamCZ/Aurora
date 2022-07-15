@@ -14,7 +14,7 @@ namespace Aurora
 		return m_Owner->IsActive() && m_Parent->IsActive();
 	}
 
-	bool ActorComponent::AttachToComponent(SceneComponent *InParent)
+	bool ActorComponent::AttachToComponent(SceneComponent* InParent, const String& socket)
 	{
 		if (m_Parent == InParent)
 		{
@@ -26,11 +26,15 @@ namespace Aurora
 		m_Parent = InParent;
 		InParent->m_Components.push_back(this);
 
+		m_Socket = socket;
+
 		return true;
 	}
 
 	void ActorComponent::DetachFromComponent()
 	{
+		m_Socket = "";
+
 		if (m_Parent)
 		{
 			VectorRemove<ActorComponent*>(m_Parent->m_Components, this);

@@ -1,7 +1,6 @@
 layout(early_fragment_tests) in;
 
 layout(location = 0) out vec4 FragColor;
-layout(location = 1) out vec4 NormalColor;
 
 #include "../../Decals.h"
 
@@ -24,7 +23,12 @@ uniform sampler2D Texture;
 uniform sampler2D NormalMap;
 #endif
 
+#if USE_AO_MAP
+uniform sampler2D AOMap;
+#endif
+
 uniform sampler2D g_DecalTexture;
+uniform vec3 LightDir;
 
 void main()
 {
@@ -33,14 +37,23 @@ void main()
 	if(FragColor.a < 0.5)
 		discard;
 #endif
+
+#if USE_AO_MAP
+	FragColor.rgb *= texture(AOMap, TexCoord).rgb;
+#endif
+
 #if USE_NORMAL_MAP
 	vec4 normalColor = texture(NormalMap, TexCoord);
-	vec3 normalFromTex = normalize(TBN * (normalColor.xyz * 2.0f - 1.0f));
-	NormalColor.rgb = normalFromTex * 0.5f + 0.5f;
+	vec3 N = normalize(TBN * (normalColor.xyz * 2.0f - 1.0f));
 #else
-	NormalColor.rgb = normalize(Normal) * 0.5f + 0.5f;
+	vec3 N = normalize(Normal);
 #endif
-	NormalColor.a = 0.0f;
+
+	float nDotL = dot(N, LightDir);
+	nDotL = max(nDotL, 0.5);
+
+	FragColor.rgb *= nDotL;
+
 #ifdef HAS_DECALS
 	vec3 projCoords;
 	vec4 decalColor;

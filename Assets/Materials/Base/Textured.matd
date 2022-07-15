@@ -31,7 +31,15 @@
 			"in_shader_name": "NormalMap",
 			"value": "",
 			"macro": "USE_NORMAL_MAP"
-		}
+		},
+    {
+      "name": "AOMap",
+     	"type": "Texture2D",
+     	"widget": "Texture",
+     	"in_shader_name": "AOMap",
+     	"value": "",
+     	"macro": "USE_AO_MAP"
+    }
 	],
 	"macros": {}
 }

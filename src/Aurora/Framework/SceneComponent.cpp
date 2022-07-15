@@ -15,6 +15,16 @@ namespace Aurora
 
 		if(m_Parent)
 		{
+			if (not m_Socket.empty())
+			{
+				int32_t socketIndex = m_Parent->GetSocketIndex(m_Socket);
+
+				if (socketIndex >= 0)
+				{
+					return m_Parent->GetTransformationMatrix() * m_Parent->GetSocketTransform(socketIndex) * m_Transform.GetTransform();
+				}
+			}
+
 			return m_Parent->GetTransformationMatrix() * m_Transform.GetTransform();
 		}
 

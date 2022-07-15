@@ -8,7 +8,10 @@ namespace Aurora
 	void StaticMeshComponent::SetMesh(const Mesh_ptr& mesh)
 	{
 		if(!mesh)
+		{
+			m_Mesh = nullptr;
 			return;
+		}
 
 		if(!mesh->HasType(GetSupportedMeshType()))
 		{

@@ -154,6 +154,13 @@ namespace Aurora
 			path = source.substr(3);
 		}
 
+		// This is for absolute paths
+		String::size_type absCharIndex = source.find('>');
+		if (absCharIndex != String::npos)
+		{
+			path = source.substr(absCharIndex + 1);
+		}
+
 		{
 			auto customTexture = m_RegisteredCustomTextures.find(path.filename().string());
 
