@@ -124,6 +124,8 @@ vec4 DownsampleBox13Tap(sampler2D tex, vec2 texCoord, vec2 texelSize)
 
 vec4 Prefilter(float Treshold, vec4 color, vec2 uv)
 {
+	Treshold = 1.8;
+
 	// static const float Treshold = 0.65;
 	const float knee = 0.33f;
 	// x: threshold value (linear), y: threshold - knee, z: knee * 2, w: 0.25 / knee
@@ -134,7 +136,7 @@ vec4 Prefilter(float Treshold, vec4 color, vec2 uv)
 
 void main()
 {
-	vec2 texelSize = vec2(1.0, 1.0) / bloomDesc.screenSize;
+	vec2 texelSize = vec2(1.0) / bloomDesc.screenSize;
 	vec2 texCoord = TexCoord * bloomDesc.size;
 
 	if (bloomDesc.operation == OPERATION_FragPrefilter13)
@@ -144,8 +146,7 @@ void main()
 	}
 	else if (bloomDesc.operation == OPERATION_FragPrefilter4)
 	{
-		vec4 color = DownsampleBox4Tap(u_Texture, texCoord, texelSize);
-		FragColor = Prefilter(bloomDesc.treshold, SafeHDR(color), texCoord);
+		FragColor = DownsampleBox4Tap(u_Texture, texCoord, texelSize);
 	}
 	else if (bloomDesc.operation == OPERATION_FragDownsample13)
 	{

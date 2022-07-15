@@ -105,8 +105,6 @@ namespace Aurora
 			return m_Texture;
 		}
 
-		Texture_ptr GetTexturePtr() { return m_Texture; }
-
 		const Texture_ptr &operator->() const
 		{
 			return m_Texture;

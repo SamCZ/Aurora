@@ -22,6 +22,8 @@ namespace Aurora
 	public:
 		SceneRendererForward();
 
+		void LoadShaders() override;
+
 		void Render(Scene* scene) override;
 		TemporalRenderTarget BloomPass(RenderViewPort* viewPort, Texture_ptr texture, int pass, int operation, Texture_ptr biggerTexture);
 		TemporalRenderTarget RenderBloom(RenderViewPort* viewPort);

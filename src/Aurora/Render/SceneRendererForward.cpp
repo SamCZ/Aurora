@@ -57,6 +57,17 @@ namespace Aurora
 		m_ParticleInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
 			VertexAttributeDesc{"in_Pos", GraphicsFormat::RGBA32_FLOAT, 0, 0, 0, sizeof(Vector4), false, false}
 		});
+		
+		m_BloomDescBuffer = 
+			GEngine->GetRenderDevice()->CreateBuffer(
+				BufferDesc("BloomDesc", sizeof(Aurora::BloomDesc),
+						EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+
+		LoadShaders();
+	}
+
+	void SceneRendererForward::LoadShaders()
+	{
 		m_ParticleComputeShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/Forward/Particle/Particles.comp");
 		m_ParticleRenderShader = GEngine->GetResourceManager()->LoadShader("Particles", {
 			{EShaderType::Vertex, "Assets/Shaders/Forward/Particle/Particles.vert"},
@@ -78,12 +89,6 @@ namespace Aurora
 			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/EmberBloom.frag"}
 		});
-		
-		m_BloomDescBuffer = 
-			GEngine->GetRenderDevice()->CreateBuffer(
-				BufferDesc("BloomDesc", sizeof(Aurora::BloomDesc),
-						EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
-		
 	}
 
 	void SceneRendererForward::Render(Scene* scene)
@@ -425,7 +430,7 @@ namespace Aurora
 				screenCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
 				
 				screenCallState.BindTexture("u_BloomTexture", bloomRenderTexture);
-				screenCallState.BindSampler("u_BloomTexture", Samplers::ClampClampNearestNearest);
+				screenCallState.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
 
 				screenCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
 				screenCallState.RasterState.CullMode = ECullMode::Back;
@@ -477,15 +482,15 @@ namespace Aurora
 		drawCallState.ViewPort = viewPort->ViewPort;
 		drawCallState.BindTarget(0, tempRenderTarget);
 		drawCallState.BindTexture("u_Texture", texture);
-		drawCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
+		drawCallState.BindSampler("u_Texture", Samplers::ClampClampLinearLinear);
 		
 		if (biggerTexture != nullptr)
 		{
 			drawCallState.BindTexture("u_BloomTexture", biggerTexture);
-			drawCallState.BindSampler("u_BloomTexture", Samplers::ClampClampNearestNearest);
+			drawCallState.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
 		}
 
-		drawCallState.BindUniformBuffer("bloomDesc", m_BloomDescBuffer);
+		drawCallState.BindUniformBuffer("BloomDesc", m_BloomDescBuffer);
 		drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
 		drawCallState.RasterState.CullMode = ECullMode::Back;
 		drawCallState.DepthStencilState.DepthEnable = false;
@@ -523,19 +528,19 @@ namespace Aurora
 		GPU_DEBUG_SCOPE("PostProcessingBloom");
 		
 		// down-sample passes
-		auto ds0 = BloomPass(viewPort, viewPort->Target   , 0, BloomOpt_FragPrefilter13 , nullptr);
-		auto ds1 = BloomPass(viewPort, ds0.GetTexturePtr(), 1, BloomOpt_FragPrefilter4  , nullptr);
-		auto ds2 = BloomPass(viewPort, ds1.GetTexturePtr(), 2, BloomOpt_FragDownsample13, nullptr);
-		auto ds3 = BloomPass(viewPort, ds2.GetTexturePtr(), 3, BloomOpt_FragDownsample4 , nullptr);
-		auto ds4 = BloomPass(viewPort, ds3.GetTexturePtr(), 4, BloomOpt_FragDownsample13, nullptr);
-		auto ds5 = BloomPass(viewPort, ds4.GetTexturePtr(), 5, BloomOpt_FragDownsample4 , nullptr);
+		auto ds0 = BloomPass(viewPort, viewPort->Target, 0, BloomOpt_FragPrefilter13 , nullptr);
+		auto ds1 = BloomPass(viewPort, ds0, 1, BloomOpt_FragPrefilter4  , nullptr);
+		auto ds2 = BloomPass(viewPort, ds1, 2, BloomOpt_FragDownsample13, nullptr);
+		auto ds3 = BloomPass(viewPort, ds2, 3, BloomOpt_FragDownsample4 , nullptr);
+		auto ds4 = BloomPass(viewPort, ds3, 4, BloomOpt_FragDownsample13, nullptr);
+		auto ds5 = BloomPass(viewPort, ds4, 5, BloomOpt_FragDownsample4 , nullptr);
 		
 		// up-sample passes
-		auto us4 = BloomPass(viewPort, ds5.GetTexturePtr(), 4, BloomOpt_FragUpsampleTent, ds4);
-		auto us3 = BloomPass(viewPort, us4.GetTexturePtr(), 3, BloomOpt_FragUpsampleBox , ds3);
-		auto us2 = BloomPass(viewPort, us3.GetTexturePtr(), 2, BloomOpt_FragUpsampleTent, ds2);
-		auto us1 = BloomPass(viewPort, us2.GetTexturePtr(), 1, BloomOpt_FragUpsampleBox , ds1);
-		auto us0 = BloomPass(viewPort, us1.GetTexturePtr(), 0, BloomOpt_FragUpsampleTent, ds0);
+		auto us4 = BloomPass(viewPort, ds5, 4, BloomOpt_FragUpsampleTent, ds4);
+		auto us3 = BloomPass(viewPort, us4, 3, BloomOpt_FragUpsampleBox , ds3);
+		auto us2 = BloomPass(viewPort, us3, 2, BloomOpt_FragUpsampleTent, ds2);
+		auto us1 = BloomPass(viewPort, us2, 1, BloomOpt_FragUpsampleBox , ds1);
+		auto us0 = BloomPass(viewPort, us1, 0, BloomOpt_FragUpsampleTent, ds0);
 
 		ds0.Free(); ds1.Free(); ds2.Free(); ds3.Free(); ds4.Free(); ds5.Free();
 		/*-------*/ us1.Free(); us2.Free(); us3.Free(); us4.Free();
