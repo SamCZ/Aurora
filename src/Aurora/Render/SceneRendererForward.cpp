@@ -122,6 +122,12 @@ namespace Aurora
 			baseVsData.ViewMatrix = viewMatrix;
 			GEngine->GetRenderDevice()->WriteBuffer(m_BaseVsDataBuffer, &baseVsData);
 
+			// Setup basic global data
+			GLOB_Data globData;
+			globData.CameraPos = camera->GetWorldPosition();
+			globData.CameraDir = camera->GetForwardVector();
+			GEngine->GetRenderDevice()->WriteBuffer(m_GlobDataBuffer, &globData);
+
 			GEngine->GetRenderDevice()->InvalidateState();
 
 			//if (!modelContextsOpaque.empty())
@@ -131,6 +137,7 @@ namespace Aurora
 
 				DrawCallState drawCallState;
 				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				drawCallState.ViewPort = viewPort->ViewPort;
@@ -158,6 +165,7 @@ namespace Aurora
 
 				DrawCallState drawState;
 				drawState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 				drawState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				{ // Decals
@@ -225,6 +233,7 @@ namespace Aurora
 
 				DrawCallState drawCallState;
 				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				drawCallState.ViewPort = viewPort->ViewPort;
@@ -246,6 +255,7 @@ namespace Aurora
 				DrawCallState drawCallState;
 				drawCallState.Shader = m_ParticleRenderShader;
 				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 				drawCallState.ViewPort = viewPort->ViewPort;
 				drawCallState.BindTarget(0, viewPort->Target);
 				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
@@ -282,6 +292,7 @@ namespace Aurora
 
 				DrawCallState drawCallState;
 				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				drawCallState.ViewPort = viewPort->ViewPort;
@@ -304,6 +315,7 @@ namespace Aurora
 				GPU_DEBUG_SCOPE("Debug Shapes");
 				DrawCallState drawState;
 				drawState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 
 				drawState.ClearDepthTarget = false;
 				drawState.ClearColorTarget = false;
@@ -330,6 +342,7 @@ namespace Aurora
 
 				DrawCallState drawCallState;
 				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+				drawCallState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				drawCallState.ViewPort = viewPort->ViewPort;

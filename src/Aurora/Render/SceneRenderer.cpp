@@ -12,6 +12,7 @@ namespace Aurora
 	{
 		m_InstancesBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Instances", sizeof(Matrix4) * MaxInstances, EBufferType::UniformBuffer, EBufferUsage::DynamicDraw, false));
 		m_BaseVsDataBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("BaseVSData", sizeof(BaseVSData), EBufferType::UniformBuffer));
+		m_GlobDataBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("GlobData", sizeof(GLOB_Data), EBufferType::UniformBuffer));
 		m_BonesBuffer = GEngine->GetRenderDevice()->CreateBuffer(BufferDesc("Bones", sizeof(Matrix4) * MAX_BONES, EBufferType::UniformBuffer));
 
 		Matrix4* bones = GEngine->GetRenderDevice()->MapBuffer<Matrix4>(m_BonesBuffer, EBufferAccess::WriteOnly);
