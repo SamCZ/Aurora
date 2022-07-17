@@ -18,6 +18,7 @@ namespace Aurora
 		Shader_ptr m_ScreenTextureShader;
 		Shader_ptr m_ParticleRenderShader;
 		Buffer_ptr m_BloomDescBuffer;
+		Buffer_ptr m_PPFinalBuffer; // Post processing final uniform buffer
 
 	public:
 		SceneRendererForward();
