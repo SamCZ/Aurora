@@ -9,7 +9,6 @@
 #include "Aurora/Framework/CameraComponent.hpp"
 #include "Aurora/Framework/MeshComponent.hpp"
 #include "Aurora/Framework/Lights.hpp"
-#include "Aurora/Framework/SkyLight.hpp"
 #include "Aurora/Framework/Decal.hpp"
 #include "Aurora/Framework/ParticleSystemComponent.hpp"
 
@@ -35,7 +34,14 @@ namespace Aurora
 		int operation;
 		float treshold;
 	};
-	
+
+	struct PostProcessingFinalBuffer
+	{
+		Vector2  sunPos;
+		float exposure ; // .3
+		int numSamples ; // 80
+	} postProcessingFinalBuffer;
+
 	void UpdateModelState(PassType_t pass, const RenderSet& set, void(*callback)(Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState))
 	{
 		Material* lastMaterial = nullptr;
@@ -62,6 +68,11 @@ namespace Aurora
 			GEngine->GetRenderDevice()->CreateBuffer(
 				BufferDesc("BloomDesc", sizeof(Aurora::BloomDesc),
 						EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
+		
+		m_PPFinalBuffer = 
+			GEngine->GetRenderDevice()->CreateBuffer(
+				BufferDesc("PostProcessingFinalBuffer", sizeof(PostProcessingFinalBuffer),
+						EBufferType::UniformBuffer, EBufferUsage::DynamicDraw));
 
 		LoadShaders();
 	}
@@ -80,9 +91,9 @@ namespace Aurora
 			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Tonemapping.frag"}
 		});
 
-		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("TonemapBloomMerge", {
+		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("PostProcessingFinal", {
 			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
-			{EShaderType::Pixel, "Assets/Shaders/PostProcess/TonemapBloomMerge.frag"}
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/PostProcessingFinal.frag"}
 		});
 
 		m_BloomShader = GEngine->GetResourceManager()->LoadShader("EmberBloom", {
@@ -119,6 +130,7 @@ namespace Aurora
 			camera->UpdateFrustum();
 
 			auto depthBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Depth", (Vector2i)viewPort->ViewPort, GraphicsFormat::D32);
+			auto depthOverlayBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Depth Overlay", (Vector2i)viewPort->ViewPort, GraphicsFormat::D32);
 
 			const FFrustum& frustum = camera->GetFrustum();
 			Matrix4 viewMatrix = camera->GetViewMatrix();
@@ -357,7 +369,6 @@ namespace Aurora
 				DShapes::Render(drawState);
 			}
 
-
 			if (overlayModelContexts.empty() == false)
 			{
 				GPU_DEBUG_SCOPE("OverlayPass");
@@ -370,10 +381,10 @@ namespace Aurora
 
 				drawCallState.ViewPort = viewPort->ViewPort;
 				drawCallState.BindTarget(0, viewPort->Target);
-				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
+				drawCallState.BindDepthTarget(depthOverlayBuffer, 0, 0);
 				drawCallState.ClearColor = camera->GetClearColor();
 				drawCallState.ClearColorTarget = false;
-				drawCallState.ClearDepthTarget = true;
+				drawCallState.ClearDepthTarget = false;
 				drawCallState.DepthStencilState.DepthEnable = true;
 
 				for (DirectionalLightComponent* dirLight : scene->GetComponents<DirectionalLightComponent>())
@@ -385,7 +396,7 @@ namespace Aurora
 
 				// TODO: Find out why clearing depth does not work
 				//GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
-				GEngine->GetRenderDevice()->ClearTextureFloat(depthBuffer, 1);
+				GEngine->GetRenderDevice()->ClearTextureFloat(depthOverlayBuffer, 1);
 
 				UpdateModelState(Pass::Ambient, overlayModelContexts, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
 				{
@@ -429,10 +440,11 @@ namespace Aurora
 			
 			TemporalRenderTarget bloomRenderTexture = RenderBloom(viewPort);
 
-			// merge tonemapping with bloom
+			// Post Processing Final Pass
+			// merge tonemapping with bloom, and apply god rays
 			{
-				CPU_DEBUG_SCOPE("Merge Tonemaping With bloom");
-				GPU_DEBUG_SCOPE("Merge Tonemaping With bloom");
+				CPU_DEBUG_SCOPE("Post Processing Final Pass");
+				GPU_DEBUG_SCOPE("Post Processing Final Pass");
 
 				DrawCallState screenCallState;
 				screenCallState.Shader = m_ScreenTextureShader;
@@ -445,6 +457,32 @@ namespace Aurora
 				screenCallState.BindTexture("u_BloomTexture", bloomRenderTexture);
 				screenCallState.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
 
+				screenCallState.BindTexture("u_SceneDepth", depthBuffer);
+				screenCallState.BindSampler("u_SceneDepth", Samplers::ClampClampLinearLinear);
+
+				screenCallState.BindTexture("u_OverlayDepth", depthOverlayBuffer);
+				screenCallState.BindSampler("u_OverlayDepth", Samplers::ClampClampLinearLinear);
+				
+				screenCallState.BindUniformBuffer("PostProcessingFinalBuffer", m_PPFinalBuffer);
+
+				glm::vec3 lightPos;
+
+				for (DirectionalLightComponent* dirLight : scene->GetComponents<DirectionalLightComponent>())
+				{
+					lightPos = glm::normalize(dirLight->GetForwardVector()) * 10000.0f;
+					break;
+				}
+
+				Vector4 clipCoords = baseVsData.ProjectionViewMatrix * Vector4(lightPos, 1.0f);
+				// convert clip coords to NDC with dividing by w and convert -1,1 range to 0-1 range by adding 1 and dividing by 2
+				postProcessingFinalBuffer.sunPos.x = ((clipCoords.x / clipCoords.w) + 1.0f) / 2.0f;
+				postProcessingFinalBuffer.sunPos.y = ((clipCoords.y / clipCoords.w) + 1.0f) / 2.0f;
+
+				postProcessingFinalBuffer.exposure = 0.3f;
+				postProcessingFinalBuffer.numSamples = 80;
+
+				GEngine->GetRenderDevice()->WriteBuffer(m_PPFinalBuffer, &postProcessingFinalBuffer, sizeof(PostProcessingFinalBuffer), 0);
+				
 				screenCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
 				screenCallState.RasterState.CullMode = ECullMode::Back;
 				screenCallState.DepthStencilState.DepthEnable = false;
@@ -464,6 +502,7 @@ namespace Aurora
 			GEngine->GetRenderDevice()->SetDepthStencilState(drawCallState.DepthStencilState);
 
 			depthBuffer.Free();
+			depthOverlayBuffer.Free();
 		}
 	}
 
@@ -539,7 +578,7 @@ namespace Aurora
 
 		CPU_DEBUG_SCOPE("PostProcessingBloom");
 		GPU_DEBUG_SCOPE("PostProcessingBloom");
-		
+
 		// down-sample passes
 		auto ds0 = BloomPass(viewPort, viewPort->Target, 0, BloomOpt_FragPrefilter13 , nullptr);
 		auto ds1 = BloomPass(viewPort, ds0, 1, BloomOpt_FragPrefilter4  , nullptr);
