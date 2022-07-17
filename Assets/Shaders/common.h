@@ -18,3 +18,15 @@ typedef glm::mat4x3 mat4x3;
 #if !defined(SHADER_ENGINE_SIDE)
 #define uniformbuffer layout(std140) uniform
 #endif
+
+uniformbuffer GLOB_Data
+{
+	vec3 CameraPos;
+#if defined(SHADER_ENGINE_SIDE)
+	float Padding0;
+#endif
+	vec3 CameraDir;
+#if defined(SHADER_ENGINE_SIDE)
+	float Padding1;
+#endif
+};

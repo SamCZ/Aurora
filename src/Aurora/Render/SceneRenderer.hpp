@@ -105,6 +105,7 @@ namespace Aurora
 
 		Buffer_ptr m_InstancesBuffer;
 		Buffer_ptr m_BaseVsDataBuffer;
+		Buffer_ptr m_GlobDataBuffer;
 		Buffer_ptr m_BonesBuffer;
 
 		BloomSettings m_BloomSettings;
