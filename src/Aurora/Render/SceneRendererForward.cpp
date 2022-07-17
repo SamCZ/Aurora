@@ -474,7 +474,7 @@ namespace Aurora
 				}
 
 				Vector4 clipCoords = baseVsData.ProjectionViewMatrix * Vector4(lightPos, 1.0f);
-				// convert clip coords to NDC with dividing by w and convert -1,1 range to 0-1 range by adding 1 and dividing by 2
+				// convert clip coords to NDC with dividing by w and convert (-1,1) range to (0,1) range by adding 1 and dividing by 2
 				postProcessingFinalBuffer.sunPos.x = ((clipCoords.x / clipCoords.w) + 1.0f) / 2.0f;
 				postProcessingFinalBuffer.sunPos.y = ((clipCoords.y / clipCoords.w) + 1.0f) / 2.0f;
 
