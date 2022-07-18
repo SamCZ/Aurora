@@ -23,6 +23,16 @@ namespace Aurora
 		GEngine->GetRenderDevice()->UnmapBuffer(m_BonesBuffer);
 	}
 
+	void SceneRenderer::LoadShaders()
+	{
+
+	}
+
+	/*TemporalRenderTarget SceneRenderer::Blur(const Texture_ptr& input, const Vector2i& resultSize)
+	{
+
+	}*/
+
 	void SceneRenderer::PrepareMeshComponent(MeshComponent* meshComponent, CameraComponent* camera)
 	{
 		if(!meshComponent->HasMesh() || !meshComponent->IsActive() || !meshComponent->IsParentActive())

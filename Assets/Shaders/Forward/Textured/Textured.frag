@@ -52,7 +52,10 @@ void main()
 	float nDotL = dot(N, LightDir);
 	nDotL = max(nDotL, 0.5);
 
-	FragColor.rgb *= nDotL;
+	float d = dot(LightDir, vec3(0, 1, 0));
+	d = clamp(d + 0.8f, 0.05f, 1.0f);
+
+	FragColor.rgb *= nDotL * d;
 
 #ifdef HAS_DECALS
 	vec3 projCoords;

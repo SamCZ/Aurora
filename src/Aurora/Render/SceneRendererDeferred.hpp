@@ -18,7 +18,6 @@ namespace Aurora
 		Shader_ptr m_BloomShader;
 		Shader_ptr m_BloomShaderSS;
 		Buffer_ptr m_BloomDescBuffer;
-		BloomSettings m_BloomSettings;
 		const int m_BloomComputeWorkgroupSize = 16;
 
 		Shader_ptr m_OutlineShader;

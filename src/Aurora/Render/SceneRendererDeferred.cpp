@@ -455,7 +455,7 @@ namespace Aurora
 				state.BindSampler("u_BloomTexture", Samplers::ClampClampLinearLinear);
 
 				state.BindTexture("u_Texture", inputHDRRT);
-				state.BindTexture("u_BloomTexture", inputHDRRT);
+				state.BindTexture("u_BloomTexture", nullptr);
 				state.BindTexture("o_Image", bloomRTs[0], true);
 
 				state.BindTarget(0, bloomRTs[0], 0, 0);
@@ -552,7 +552,7 @@ namespace Aurora
 				GEngine->GetRenderDevice()->WriteBuffer(m_BloomDescBuffer, &bloomDesc);
 
 				dispatchState.BindTexture("u_Texture", inputHDRRT);
-				dispatchState.BindTexture("u_BloomTexture", inputHDRRT);
+				dispatchState.BindTexture("u_BloomTexture", nullptr);
 				dispatchState.BindTexture("o_Image", bloomRTs[0], true);
 
 				// Prefilter

@@ -114,7 +114,7 @@ namespace Aurora
 		SceneRenderer();
 		virtual ~SceneRenderer() = default;
 
-		virtual void LoadShaders() {};
+		virtual void LoadShaders();
 
 		inline void ClearVisibleEntities()
 		{
@@ -123,6 +123,8 @@ namespace Aurora
 				m_VisibleEntities[i].clear();
 			}
 		}
+
+		//TemporalRenderTarget Blur(const Texture_ptr& input, const Vector2i& resultSize = {0, 0});
 
 		void PrepareMeshComponent(MeshComponent* scene, CameraComponent* camera);
 		void PrepareVisibleEntities(Scene* scene, CameraComponent* camera);

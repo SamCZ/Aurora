@@ -13,8 +13,17 @@ in vec3 Normal;
 
 uniform sampler2D Texture;
 
+uniform vec3 LightDir;
+
 void main()
 {
-	NormalColor = vec4(normalize(Normal) * 0.5f + 0.5f, 0.0f);
+	vec3 N = normalize(Normal);
+
+	NormalColor = vec4(N * 0.5f + 0.5f, 0.0f);
 	FragColor = u_Color;
+
+	float d = dot(N, LightDir);
+	d = max(d, 0.25);
+
+	FragColor.rgb *= d;
 }

@@ -18,7 +18,8 @@ layout(std140) uniform PostProcessingFinalBuffer
 } uniforms;
 
 void main()
-{	
+{
+	vec2 screenSize = vec2(textureSize(u_Texture, 0));
 	// Calculate vector from pixel to light source in screen space.
 	vec2 texCoord = TexCoord;
 	vec2 deltaTexCoord = (texCoord - uniforms.sunPos);
@@ -34,14 +35,13 @@ void main()
 	{     
 		// Step sample location along ray.
 		texCoord -= deltaTexCoord;
-		// Retrieve sample at new location. 
-		vec2 sunPos  = vec2(uniforms.sunPos.x, uniforms.sunPos.y);
-		float hasSun = distance(texCoord, sunPos) < 0.058 ? 0.95 : 0;
+		// Retrieve sample at new location.
+		float hasSun = distance(gl_FragCoord.xy, uniforms.sunPos.xy * screenSize) < 0.058 ? 0.95 : 0;
 		vec3 _sample = min(texture(u_SceneDepth, texCoord).r, texture(u_OverlayDepth, texCoord).r) > .9992 ?
-				      vec3(0.10 + hasSun) : 
+				      vec3(0.10 + hasSun) :
 				      vec3(0, 0, 0); 
 		_sample *= illuminationDecay * weight;
-		godRayColor += _sample ;
+		godRayColor += _sample;
 		illuminationDecay *= decay;
 	}  
 

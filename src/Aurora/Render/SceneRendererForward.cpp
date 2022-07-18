@@ -79,6 +79,8 @@ namespace Aurora
 
 	void SceneRendererForward::LoadShaders()
 	{
+		SceneRenderer::LoadShaders();
+
 		m_ParticleComputeShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/Forward/Particle/Particles.comp");
 		m_ParticleRenderShader = GEngine->GetResourceManager()->LoadShader("Particles", {
 			{EShaderType::Vertex, "Assets/Shaders/Forward/Particle/Particles.vert"},
