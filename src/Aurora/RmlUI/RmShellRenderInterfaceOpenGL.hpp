@@ -30,6 +30,7 @@ namespace Aurora
 		int m_Width;
 		int m_Height;
 		bool m_TransformEnabled;
+		bool m_NeedsForceInputLayout = true;
 		Matrix4 m_Transform;
 		std::map<std::string, Texture_ptr> m_RegisteredCustomTextures;
 		Scissors m_Scissors;

@@ -97,7 +97,7 @@ namespace Aurora
 		END_UBW(m_CurrentState, m_ScissorBuffer, "Scissors");
 
 		GEngine->GetRenderDevice()->SetShader(m_CurrentState.Shader);
-		GEngine->GetRenderDevice()->BindShaderInputs(m_CurrentState);
+		GEngine->GetRenderDevice()->BindShaderInputs(m_CurrentState, m_NeedsForceInputLayout);
 		GEngine->GetRenderDevice()->BindShaderResources(m_CurrentState);
 
 		GEngine->GetRenderDevice()->SetBlendState(m_CurrentState.BlendState);
@@ -274,6 +274,7 @@ namespace Aurora
 	void RmShellRenderInterfaceOpenGL::PrepareRenderBuffer(const DrawCallState& drawCallState)
 	{
 		m_CurrentState = drawCallState;
+		m_NeedsForceInputLayout = true;
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
