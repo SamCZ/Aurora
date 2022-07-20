@@ -20,6 +20,8 @@
 
 #include "Aurora/Resource/ResourceManager.hpp"
 
+#include "Aurora/Render/PostProcessEffect.hpp"
+
 #include "Shaders/vs_common.h"
 #include "Shaders/PBR/Composite.h"
 #include "Shaders/PostProcess/ub_bloom.h"
@@ -49,6 +51,14 @@ namespace Aurora
 		m_ParticleInputLayout = GEngine->GetRenderDevice()->CreateInputLayout({
 			VertexAttributeDesc{"in_Pos", GraphicsFormat::RGBA32_FLOAT, 0, 0, 0, sizeof(Vector4), false, false}
 		});
+
+		LoadShaders();
+	}
+
+	void SceneRendererForward::LoadShaders()
+	{
+		SceneRenderer::LoadShaders();
+
 		m_ParticleComputeShader = GEngine->GetResourceManager()->LoadComputeShader("Assets/Shaders/Forward/Particle/Particles.comp");
 		m_ParticleRenderShader = GEngine->GetResourceManager()->LoadShader("Particles", {
 			{EShaderType::Vertex, "Assets/Shaders/Forward/Particle/Particles.vert"},
@@ -56,16 +66,10 @@ namespace Aurora
 			{EShaderType::Pixel, "Assets/Shaders/Forward/Particle/Particles.frag"}
 		});
 
-		m_TonemappingShader = GEngine->GetResourceManager()->LoadShader("Tonemaping", {
+		m_FinalPostShader = GEngine->GetResourceManager()->LoadShader("FinalPostProcess", {
 			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
-			{EShaderType::Pixel, "Assets/Shaders/PostProcess/Tonemapping.frag"}
+			{EShaderType::Pixel, "Assets/Shaders/PostProcess/FinalPost.frag"}
 		});
-
-		m_ScreenTextureShader = GEngine->GetResourceManager()->LoadShader("ScreenSpaceQuadTexture", {
-			{EShaderType::Vertex, "Assets/Shaders/FSQuad.vert"},
-			{EShaderType::Pixel, "Assets/Shaders/ScreenTexture.frag"}
-		});
-
 	}
 
 	void SceneRendererForward::Render(Scene* scene)
@@ -96,6 +100,7 @@ namespace Aurora
 			camera->UpdateFrustum();
 
 			auto depthBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Depth", (Vector2i)viewPort->ViewPort, GraphicsFormat::D32);
+			auto hrdColorBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Color", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA16_FLOAT);
 
 			const FFrustum& frustum = camera->GetFrustum();
 			Matrix4 viewMatrix = camera->GetViewMatrix();
@@ -206,7 +211,7 @@ namespace Aurora
 				}
 
 				drawState.ViewPort = viewPort->ViewPort;
-				drawState.BindTarget(0, viewPort->Target);
+				drawState.BindTarget(0, hrdColorBuffer);
 				drawState.BindDepthTarget(depthBuffer, 0, 0);
 
 				drawState.ClearColor = camera->GetClearColor();
@@ -237,7 +242,7 @@ namespace Aurora
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				drawCallState.ViewPort = viewPort->ViewPort;
-				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindTarget(0, hrdColorBuffer);
 				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 
 				UpdateModelState(Pass::Ambient, skyModelContexts, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
@@ -257,7 +262,7 @@ namespace Aurora
 				drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
 				drawCallState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
 				drawCallState.ViewPort = viewPort->ViewPort;
-				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindTarget(0, hrdColorBuffer);
 				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 				drawCallState.PrimitiveType = EPrimitiveType::PointList;
 
@@ -296,7 +301,7 @@ namespace Aurora
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				drawCallState.ViewPort = viewPort->ViewPort;
-				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindTarget(0, hrdColorBuffer);
 				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 
 				UpdateModelState(Pass::Ambient, translucentModelContexts, [](Material* mat, FRasterState& rasterState, FDepthStencilState& depthState, FBlendState& blendState)
@@ -324,7 +329,7 @@ namespace Aurora
 
 				drawState.ViewPort = viewPort->ViewPort;
 
-				drawState.BindTarget(0, viewPort->Target);
+				drawState.BindTarget(0, hrdColorBuffer);
 				drawState.BindDepthTarget(depthBuffer, 0, 0);
 
 				drawState.DepthStencilState.DepthWriteMask = EDepthWriteMask::Zero;
@@ -346,7 +351,7 @@ namespace Aurora
 				drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
 
 				drawCallState.ViewPort = viewPort->ViewPort;
-				drawCallState.BindTarget(0, viewPort->Target);
+				drawCallState.BindTarget(0, hrdColorBuffer);
 				drawCallState.BindDepthTarget(depthBuffer, 0, 0);
 				drawCallState.ClearColor = camera->GetClearColor();
 				drawCallState.ClearColorTarget = false;
@@ -373,53 +378,64 @@ namespace Aurora
 				RenderPass(Pass::Ambient, drawCallState, camera, overlayModelContexts, false);
 			}
 
+			bool enabledBloom = m_BloomSettings.Enabled;
+			bool enabledToneMapping = ToneMapSettings.Enabled();
+
+			bool enabledPostProcess = enabledBloom || enabledToneMapping;
+
+			// Post process
+			if (enabledPostProcess)
 			{
-				CPU_DEBUG_SCOPE("Tonemapping");
-				GPU_DEBUG_SCOPE("Tonemapping");
+				CPU_DEBUG_SCOPE("PostProcess");
+				GPU_DEBUG_SCOPE("PostProcess");
 
-				TemporalRenderTarget tempRenderTarget =
-					GEngine->GetRenderManager()->CreateTemporalRenderTarget(
-						"TempRenderTarget",
-						(Vector2i)viewPort->ViewPort,
-						viewPort->Target->GetDesc().ImageFormat
-					);
-				// prepare post-processing
-				DrawCallState drawCallState;
-				drawCallState.Shader = m_TonemappingShader;
+				// Bloom
 
+				TemporalRenderTarget bloomFinal;
+
+				if (enabledBloom)
+				{
+					bloomFinal = RenderBloom(viewPort->ViewPort, hrdColorBuffer);
+				}
+
+				// Final post pass that renders to viewport
+				// This also includes tone mapping
+
+				DrawCallState drawCallState = PostProcessEffect::PrepareState(m_FinalPostShader);
 				drawCallState.ViewPort = viewPort->ViewPort;
-				drawCallState.BindTarget(0, tempRenderTarget);
-				drawCallState.BindTexture("u_Texture", viewPort->Target);
-				drawCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
-				drawCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
-				drawCallState.RasterState.CullMode = ECullMode::Back;
-				drawCallState.DepthStencilState.DepthEnable = false;
+				drawCallState.BindTarget(0, viewPort->Target);
 
-				drawCallState.ClearColorTarget = false;
-				drawCallState.ClearDepthTarget = false;
+				drawCallState.BindTexture("_FinalColor", hrdColorBuffer);
 
-				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
-				GEngine->GetRenderDevice()->Draw(drawCallState, {DrawArguments(4) }, true);
+				if (enabledBloom)
+				{
+					drawCallState.BindTexture("_FinalBloom", bloomFinal);
+					drawCallState.BindSampler("_FinalBloom", Samplers::ClampClampLinearLinear);
+				}
 
-				// draw post-processing to the screen
-				DrawCallState screenCallState;
-				screenCallState.Shader = m_ScreenTextureShader;
+				{ // ToneMap uniform set
+					drawCallState.Uniforms.SetBool("u_LutToneMapEnabled"_HASH, ToneMapSettings.LutToneMapEnabled);
+					if (ToneMapSettings.LutToneMapEnabled && ToneMapSettings.LutTexture != nullptr)
+					{
+						int lutWidth = ToneMapSettings.LutTexture->GetDesc().Width;
+						float scale = (float)(lutWidth - 1) / (float)lutWidth;
+						float offset = 0.5f / (float)lutWidth;
+						drawCallState.Uniforms.SetVec2("u_LutToneMapData"_HASH, Vector2(scale, offset));
+						drawCallState.BindTexture("_LutTarget", ToneMapSettings.LutTexture);
+						drawCallState.BindSampler("_LutTarget", Samplers::ClampClampLinearLinear);
+					}
 
-				screenCallState.ViewPort = viewPort->ViewPort;
-				screenCallState.BindTarget(0, viewPort->Target);
-				screenCallState.BindTexture("u_Texture", tempRenderTarget);
-				screenCallState.BindSampler("u_Texture", Samplers::ClampClampNearestNearest);
-				screenCallState.PrimitiveType = EPrimitiveType::TriangleStrip;
-				screenCallState.RasterState.CullMode = ECullMode::Back;
-				screenCallState.DepthStencilState.DepthEnable = false;
+					drawCallState.Uniforms.SetBool("u_BasicToneMapEnabled"_HASH, ToneMapSettings.BasicToneMapEnabled);
+					drawCallState.Uniforms.SetUInt("u_BasicToneMapMode"_HASH, (uint)ToneMapSettings.BasicToneMapMode);
+				}
 
-				screenCallState.ClearColorTarget = false;
-				screenCallState.ClearDepthTarget = false;
+				PostProcessEffect::RenderState(drawCallState);
 
-				GEngine->GetRenderDevice()->BindRenderTargets(screenCallState);
-				GEngine->GetRenderDevice()->Draw(screenCallState, {DrawArguments(4) }, true);
-
-				tempRenderTarget.Free();
+				bloomFinal.Free();
+			}
+			else
+			{
+				GEngine->GetRenderDevice()->Blit(hrdColorBuffer, viewPort->Target);
 			}
 
 			// Reset State
@@ -427,6 +443,7 @@ namespace Aurora
 			GEngine->GetRenderDevice()->SetDepthStencilState(drawCallState.DepthStencilState);
 
 			depthBuffer.Free();
+			hrdColorBuffer.Free();
 		}
 	}
 }

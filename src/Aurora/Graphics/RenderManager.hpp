@@ -110,7 +110,7 @@ namespace Aurora
 			return m_Texture;
 		}
 
-		bool Empty() const
+		[[nodiscard]] bool Empty() const
 		{
 			return m_Texture == nullptr;
 		}

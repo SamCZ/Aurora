@@ -138,10 +138,8 @@ vec3 tonemapACES( vec3 x )
     return clamp((x*(a*x+b))/(x*(c*x+d)+e), 0.0, 1.0);
 }
 
-vec3 Tonemap(vec3 color, float exposure, int tonemapper)
+vec3 Tonemap(vec3 color, uint tonemapper)
 {
-    color *= exposure;
-
     switch (tonemapper)
     {
         case 0: return TimothyTonemapper(color);

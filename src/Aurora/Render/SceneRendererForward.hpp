@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SceneRenderer.hpp"
+#include "Aurora/Graphics/Material/MaterialDefinition.hpp"
 
 namespace Aurora
 {
@@ -12,12 +13,13 @@ namespace Aurora
 
 		InputLayout_ptr m_ParticleInputLayout;
 		Shader_ptr m_ParticleComputeShader;
-		Shader_ptr m_TonemappingShader;
-		Shader_ptr m_ScreenTextureShader;
 		Shader_ptr m_ParticleRenderShader;
 
+		Shader_ptr m_FinalPostShader;
 	public:
 		SceneRendererForward();
+
+		void LoadShaders() override;
 
 		void Render(Scene* scene) override;
 	};

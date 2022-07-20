@@ -80,6 +80,29 @@ namespace Aurora
 			float Intensity = 1.0f;
 		};
 
+		enum class ToneMapMode : uint8
+		{
+			Timothy,
+			DX11DSK,
+			Reinhard,
+			Uncharted2,
+			ACES,
+			None
+		};
+
+		struct FToneMapSettings
+		{
+			bool LutToneMapEnabled = false;
+			bool BasicToneMapEnabled = false;
+			ToneMapMode BasicToneMapMode = ToneMapMode::None;
+			Texture_ptr LutTexture = nullptr;
+
+			[[nodiscard]] bool Enabled() const
+			{
+				return (LutToneMapEnabled && LutTexture != nullptr) || BasicToneMapEnabled;
+			}
+		};
+
 		struct OutlineContext
 		{
 			std::vector<OutlineActorSet> Sets;
@@ -108,13 +131,20 @@ namespace Aurora
 		Buffer_ptr m_GlobDataBuffer;
 		Buffer_ptr m_BonesBuffer;
 
-		BloomSettings m_BloomSettings;
 		OutlineContext m_OutlineContext;
+
+		BloomSettings m_BloomSettings;
+		Shader_ptr m_BloomShader;
+		Shader_ptr m_BloomShaderSS;
+		Buffer_ptr m_BloomDescBuffer;
+		const int m_BloomComputeWorkgroupSize = 16;
+	public:
+		FToneMapSettings ToneMapSettings;
 	public:
 		SceneRenderer();
 		virtual ~SceneRenderer() = default;
 
-		virtual void LoadShaders() {};
+		virtual void LoadShaders();
 
 		inline void ClearVisibleEntities()
 		{
@@ -131,6 +161,8 @@ namespace Aurora
 
 		virtual void Render(Scene* scene) = 0;
 		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected = true);
+
+		TemporalRenderTarget RenderBloom(const FViewPort& wp, const Texture_ptr& inputHDRRT);
 
 		const InputLayout_ptr& GetInputLayoutForMesh(Mesh* mesh);
 		PassRenderEventEmitter& GetPassEmitter(PassType_t passType) { return m_InjectedPasses[passType]; }
