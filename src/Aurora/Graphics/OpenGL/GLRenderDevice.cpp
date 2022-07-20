@@ -334,10 +334,13 @@ namespace Aurora
 			}
 			else
 			{
-				AU_LOG_ERROR("Cannot validate shader program ", desc.GetName(), ": ", error);
+				AU_LOG_WARNING("Cannot validate shader program ", desc.GetName(), ": ", error);
 			}
 
-			return nullptr;
+			// TODO: Maybe remove shader validation ?
+			// since this error shows up on some gpus
+			// Validation failed! - Different sampler types for same sample texture unit in fragment shader.
+			//return nullptr;
 		}
 
 		auto shaderProgram = std::make_shared<GLShaderProgram>(programID, desc);
