@@ -33,4 +33,12 @@ namespace Aurora::Rand
 		std::uniform_int_distribution dist(min, max);
 		return dist(mt);
 	}
+
+	inline int RangeInt(int min, int max)
+	{
+		std::random_device rd;
+		std::mt19937 mt(rd());
+		std::uniform_int_distribution dist(min, max);
+		return dist(mt);
+	}
 }
