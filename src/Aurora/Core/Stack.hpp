@@ -30,6 +30,8 @@ namespace Aurora
 		const T& operator[](int index) const { return ptr[index]; }
 		T* begin() { return ptr; }
 		T* end() { return ptr + size; }
+		T* begin() const { return ptr; }
+		T* end() const { return ptr + size; }
 		const T* cbegin() const { return ptr; }
 		const T* cend() const { return ptr + size; }
 		T Top() const { return ptr[size - 1];  }
