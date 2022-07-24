@@ -62,6 +62,7 @@ namespace Aurora
 		Samplers::WrapWrapNearestNearest.reset();
 		Samplers::WrapWrapNearNearestFarLinear.reset();
 		Samplers::ClampClampNearNearestFarLinear.reset();
+		Samplers::LinearShadowCompare.reset();
 	}
 
 	TemporalRenderTarget RenderManager::CreateTemporalRenderTarget(const String &name, uint width, uint height, GraphicsFormat format, EDimensionType dimensionType, uint mipLevels, uint depthOrArraySize, TextureDesc::EUsage usage, bool uav)
