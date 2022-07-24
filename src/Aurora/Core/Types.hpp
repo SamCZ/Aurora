@@ -8,6 +8,7 @@
 #include "Enum.hpp"
 
 typedef uint32_t uint;
+typedef int32_t int32;
 typedef uint8_t uint8;
 typedef int8_t int8;
 using Path = std::filesystem::path;

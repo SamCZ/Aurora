@@ -309,11 +309,17 @@ namespace Aurora
 					basicUniform.Size = varSize;
 					basicUniform.ArraySize = size;
 
+					std::string::size_type arrPos = basicUniform.Name.find('[');
+					if (arrPos != std::string::npos)
+					{
+						basicUniform.Name = basicUniform.Name.substr(0, arrPos);
+					}
+
 					BasicUniforms[uniformIndex] = basicUniform;
 
 					if (uniformLocation >= 0)
 					{
-						m_Uniforms[Hash_djb2(namec)] = {namec, ShaderResourceType::Uniform, 0, 1, uniformLocation, glType.ComponentCount, glType.Size, GetGLVarType(dataType)};
+						m_Uniforms[Hash_djb2(basicUniform.Name.c_str())] = {basicUniform.Name, ShaderResourceType::Uniform, 0, uint32_t(size), uniformLocation, glType.ComponentCount, glType.Size, GetGLVarType(dataType)};
 					}
 
 					break;

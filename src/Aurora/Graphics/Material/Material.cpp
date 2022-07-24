@@ -118,6 +118,11 @@ namespace Aurora
 
 			if(textureVar->Texture == nullptr)
 			{
+				if (textureVar->InShaderName[0] == 'g')
+				{
+					continue;
+				}
+
 				// TODO: Look at this and maybe fix this
 				drawState.BindTexture(textureVar->InShaderName, GEngine->GetResourceManager()->LoadTexture("Assets/Textures/blueprint.png"));
 				drawState.BindSampler(textureVar->InShaderName, textureVar->Sampler);

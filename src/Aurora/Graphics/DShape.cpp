@@ -3,6 +3,7 @@
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Resource/ResourceManager.hpp"
 #include "Aurora/Framework/CameraComponent.hpp"
+#include "Aurora/Framework/Lights.hpp"
 #include "Aurora/Graphics/VgRender.hpp"
 
 namespace Aurora
@@ -12,6 +13,7 @@ namespace Aurora
 	std::vector<ShapeStructs::SphereShape> DShapes::m_SphereShapes;
 	std::vector<ShapeStructs::ArrowShape> DShapes::m_ArrowShapes;
 	std::vector<ShapeStructs::TextShape> DShapes::m_TextShapes;
+	std::vector<ShapeStructs::TextShape> DShapes::m_OnScreenTextShapes;
 
 	struct BaseShapeVertex
 	{
@@ -39,6 +41,36 @@ namespace Aurora
 			{EShaderType::Vertex, "Assets/Shaders/World/Debug/base_shape.vss"},
 			{EShaderType::Pixel, "Assets/Shaders/World/Debug/base_shape.fss"}
 		});
+	}
+
+	void DShapes::Frustum(const Matrix4& imvp, const Color& col, const float z0, const float z1)
+	{
+		auto worldPointsToCover = DirectionalLightComponent::FrustumCorners(imvp, z0, z1);
+
+		auto nearMid = (worldPointsToCover[0] +
+			worldPointsToCover[1] +
+			worldPointsToCover[3] +
+			worldPointsToCover[2]) * 0.25f;
+
+		Line(nearMid, worldPointsToCover[1], col);
+		Line(nearMid, worldPointsToCover[3], col);
+		Line(nearMid, worldPointsToCover[2], col);
+		Line(nearMid, worldPointsToCover[0], col);
+
+		Line(worldPointsToCover[0], worldPointsToCover[1], col);
+		Line(worldPointsToCover[1], worldPointsToCover[3], col);
+		Line(worldPointsToCover[3], worldPointsToCover[2], col);
+		Line(worldPointsToCover[2], worldPointsToCover[0], col);
+
+		Line(worldPointsToCover[0], worldPointsToCover[4], col);
+		Line(worldPointsToCover[1], worldPointsToCover[5], col);
+		Line(worldPointsToCover[2], worldPointsToCover[6], col);
+		Line(worldPointsToCover[3], worldPointsToCover[7], col);
+
+		Line(worldPointsToCover[4], worldPointsToCover[5], col);
+		Line(worldPointsToCover[5], worldPointsToCover[7], col);
+		Line(worldPointsToCover[7], worldPointsToCover[6], col);
+		Line(worldPointsToCover[6], worldPointsToCover[4], col);
 	}
 
 	void DShapes::Render(DrawCallState &drawState)
@@ -128,12 +160,20 @@ namespace Aurora
 			}
 		}
 
+		for(const ShapeStructs::TextShape& shape : m_OnScreenTextShapes)
+		{
+			GEngine->GetVgRender()->DrawString(shape.Text, Vector2(shape.Position.x, shape.Position.y), shape.Color, 12.0f, VgAlign::Left, VgAlign::Center);
+		}
+
+
 		m_TextShapes.clear();
+		m_OnScreenTextShapes.clear();
 	}
 
 	void DShapes::Reset()
 	{
 		m_TextShapes.clear();
+		m_OnScreenTextShapes.clear();
 
 		// Todo implement timeout
 	}

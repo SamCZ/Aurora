@@ -61,6 +61,7 @@ namespace Aurora
 		static std::vector<ShapeStructs::SphereShape> m_SphereShapes;
 		static std::vector<ShapeStructs::ArrowShape> m_ArrowShapes;
 		static std::vector<ShapeStructs::TextShape> m_TextShapes;
+		static std::vector<ShapeStructs::TextShape> m_OnScreenTextShapes;
 	public:
 		static void Init();
 		static void Render(DrawCallState& drawState);
@@ -132,6 +133,11 @@ namespace Aurora
 			Box(aabb, color, wireframe, thickness, lifetime, useDepthBuffer);
 		}
 
+		inline static void WireBox(const AABB& aabb, Color color = Color::green(), float thickness = 1.0f, uint32_t lifetime = 0, bool useDepthBuffer = true)
+		{
+			Box(aabb, color, true, thickness, lifetime, useDepthBuffer);
+		}
+
 		inline static void Sphere(const Vector3& pos, float radius, Color color = Color::green(), bool wireframe = false, float thickness = 1.0f, uint32_t lifetime = 0, bool useDepthBuffer = true)
 		{
 			ShapeStructs::SphereShape shape;
@@ -175,5 +181,18 @@ namespace Aurora
 			shape.Text = text;
 			m_TextShapes.emplace_back(shape);
 		}
+
+		inline static void ScreenText(const Vector2& pos, const String& text, Color color = Color::green())
+		{
+			ShapeStructs::TextShape shape;
+			shape.Position.x = pos.x;
+			shape.Position.y = pos.y;
+			shape.Color = color;
+			shape.Text = text;
+			m_OnScreenTextShapes.emplace_back(shape);
+		}
+
+		static void Frustum(const Matrix4& imvp, const Color& col, const float z0, const float z1);
+		inline static void Frustum(const Matrix4& imvp, const Color& col) { Frustum(imvp, col, -1, 1); }
 	};
 }

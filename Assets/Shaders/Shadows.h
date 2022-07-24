@@ -1,0 +1,1 @@
+#define NUM_SHADOW_MAP_LEVELS 3

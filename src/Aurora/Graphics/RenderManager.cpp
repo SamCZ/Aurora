@@ -22,6 +22,7 @@ namespace Aurora
 		Sampler_ptr WrapWrapNearestNearest;
 		Sampler_ptr WrapWrapNearNearestFarLinear;
 		Sampler_ptr ClampClampNearNearestFarLinear;
+		Sampler_ptr LinearShadowCompare;
 	}
 
 	RenderManager::RenderManager(IRenderDevice *renderDevice)
@@ -43,6 +44,12 @@ namespace Aurora
 		Samplers::ClampClampNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Clamp, EWrapMode::Clamp));
 		Samplers::WrapWrapNearestNearest = renderDevice->CreateSampler(SamplerDesc(false, false, false, EWrapMode::Wrap, EWrapMode::Wrap));
 		Samplers::ClampClampNearNearestFarLinear = renderDevice->CreateSampler(SamplerDesc(true, false, true, EWrapMode::Clamp, EWrapMode::Clamp));
+
+		{
+			SamplerDesc sampler(true, true, true, EWrapMode::Clamp,EWrapMode::Clamp);
+			sampler.ShadowCompare = true;
+			Samplers::LinearShadowCompare = renderDevice->CreateSampler(sampler);
+		}
 	}
 
 	RenderManager::~RenderManager()

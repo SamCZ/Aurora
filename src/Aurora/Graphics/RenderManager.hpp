@@ -29,6 +29,7 @@ namespace Aurora
 		AU_API extern Sampler_ptr ClampClampClampLinearLinearLinear;
 		AU_API extern Sampler_ptr WrapWrapNearestNearest;
 		AU_API extern Sampler_ptr ClampClampNearNearestFarLinear;
+		AU_API extern Sampler_ptr LinearShadowCompare;
 	}
 
 	struct RTCacheSort

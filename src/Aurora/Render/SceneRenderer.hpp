@@ -154,12 +154,12 @@ namespace Aurora
 			}
 		}
 
-		void PrepareMeshComponent(MeshComponent* scene, CameraComponent* camera);
-		void PrepareVisibleEntities(Scene* scene, CameraComponent* camera);
-		void PrepareVisibleEntities(Actor* actor, CameraComponent* camera);
+		void PrepareMeshComponent(MeshComponent* scene, CameraComponent* camera, const FFrustum& frustum);
+		void PrepareVisibleEntities(Scene* scene, CameraComponent* camera, const FFrustum& frustum);
+		void PrepareVisibleEntities(Actor* actor, CameraComponent* camera, const FFrustum& frustum);
 		void FillRenderSet(RenderSet& renderSet, int numberOfPasses, ...);
 
-		virtual void Render(Scene* scene) = 0;
+		virtual void Render(Scene* scene, CameraComponent* debugCamera = nullptr) = 0;
 		void RenderPass(PassType_t pass, DrawCallState& drawCallState, CameraComponent* camera, const RenderSet& renderSet, bool drawInjected = true);
 
 		TemporalRenderTarget RenderBloom(const FViewPort& wp, const Texture_ptr& inputHDRRT);

@@ -69,7 +69,7 @@ namespace Aurora
 
 		m_SkyBoxMaterial->SetTexture("CubeMap"_HASH, cubeMap);
 
-		m_SceneRenderer.Render(m_Scene);
+		m_SceneRenderer.Render(m_Scene, nullptr);
 		return target;
 	}
 
@@ -83,7 +83,7 @@ namespace Aurora
 		m_StaticMeshComponentSphere->SetActive(true);
 		m_StaticMeshComponentSphere->SetMaterial(0, material);
 
-		m_SceneRenderer.Render(m_Scene);
+		m_SceneRenderer.Render(m_Scene, nullptr);
 		return target;
 	}
 }

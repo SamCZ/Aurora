@@ -5,6 +5,7 @@
 
 #include "Hash.hpp"
 #include "Library.hpp"
+#include "Types.hpp"
 
 namespace Aurora
 {

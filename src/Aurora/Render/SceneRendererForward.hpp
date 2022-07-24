@@ -5,6 +5,8 @@
 
 namespace Aurora
 {
+	class CameraComponent;
+
 	class AU_API SceneRendererForward : public SceneRenderer
 	{
 	private:
@@ -21,6 +23,6 @@ namespace Aurora
 
 		void LoadShaders() override;
 
-		void Render(Scene* scene) override;
+		void Render(Scene* scene, CameraComponent* debugCamera) override;
 	};
 }

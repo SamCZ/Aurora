@@ -39,7 +39,7 @@ namespace Aurora
 		});
 	}
 
-	void SceneRenderer::PrepareMeshComponent(MeshComponent* meshComponent, CameraComponent* camera)
+	void SceneRenderer::PrepareMeshComponent(MeshComponent* meshComponent, CameraComponent* camera, const FFrustum& frustum)
 	{
 		if(!meshComponent->HasMesh() || !meshComponent->IsActive() || !meshComponent->IsParentActive())
 		{
@@ -49,7 +49,7 @@ namespace Aurora
 		Matrix4 transform = meshComponent->GetTransformationMatrix();
 		Mesh_ptr mesh = meshComponent->GetMesh();
 
-		if (!camera->GetFrustum().IsBoxVisible(mesh->m_Bounds.Transform(transform)) && !meshComponent->IsIgnoringFrustumChecks())
+		if (not frustum.IsBoxVisible(mesh->m_Bounds.Transform(transform)) &&  not meshComponent->IsIgnoringFrustumChecks())
 		{
 			return;
 		}
@@ -91,19 +91,19 @@ namespace Aurora
 		}
 	}
 
-	void SceneRenderer::PrepareVisibleEntities(Scene* scene, CameraComponent* camera)
+	void SceneRenderer::PrepareVisibleEntities(Scene* scene, CameraComponent* camera, const FFrustum& frustum)
 	{
 		for (MeshComponent* meshComponent : scene->GetComponents<MeshComponent>())
 		{
-			PrepareMeshComponent(meshComponent, camera);
+			PrepareMeshComponent(meshComponent, camera, frustum);
 		}
 	}
 
-	void SceneRenderer::PrepareVisibleEntities(Actor* actor, CameraComponent* camera)
+	void SceneRenderer::PrepareVisibleEntities(Actor* actor, CameraComponent* camera, const FFrustum& frustum)
 	{
 		for (MeshComponent* meshComponent : actor->FindComponentsOfType<MeshComponent>())
 		{
-			PrepareMeshComponent(meshComponent, camera);
+			PrepareMeshComponent(meshComponent, camera, frustum);
 		}
 	}
 

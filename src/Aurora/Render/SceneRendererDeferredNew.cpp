@@ -37,7 +37,7 @@ namespace Aurora
 
 	}
 
-	void SceneRendererDeferredNew::Render(Scene* scene)
+	void SceneRendererDeferredNew::Render(Scene* scene, CameraComponent* debugCamera)
 	{
 		for (CameraComponent* camera : scene->GetComponents<CameraComponent>())
 		{
@@ -73,7 +73,7 @@ namespace Aurora
 			Matrix4 viewMatrix = camera->GetViewMatrix();
 
 			// Prepate sets
-			PrepareVisibleEntities(scene, camera);
+			PrepareVisibleEntities(scene, camera, frustum);
 
 			RenderSet modelContextsOpaque;
 			FillRenderSet(modelContextsOpaque, 2, RenderSortType::Opaque, RenderSortType::Transparent);

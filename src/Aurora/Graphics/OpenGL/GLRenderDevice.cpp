@@ -1471,6 +1471,25 @@ namespace Aurora
 
 		const auto& uniforms = glShader->GetGLResource().GetUniforms();
 
+		// Arrays
+		for (const auto& [typeID, arr]: resources.UniformsMat4Arrays)
+		{
+			auto uniformTypeIt = uniforms.find(typeID);
+
+			if (uniformTypeIt == uniforms.end())
+				continue;
+
+			const UniformInfo& uniformInfo = uniformTypeIt->second;
+
+			if (uniformInfo.ArraySize != arr.size())
+			{
+				AU_LOG_WARNING("Uniform ", uniformInfo.Name, " ", VarType_Strings[(int)uniformInfo.Type], " has wrong array size: ", arr.size(), " / ", uniformInfo.ArraySize, " !");
+				continue;
+			}
+
+			glUniformMatrix4fv(uniformInfo.Location, arr.size(), false, glm::value_ptr(arr[0]));
+		}
+
 		for (const auto& [typeID, uniform]: resources.Uniforms)
 		{
 			auto uniformTypeIt = uniforms.find(typeID);

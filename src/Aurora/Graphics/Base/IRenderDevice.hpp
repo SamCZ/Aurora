@@ -18,6 +18,7 @@
 
 #include "../ViewPort.hpp"
 #include "Aurora/Core/Hash.hpp"
+#include "Aurora/Core/Map.hpp"
 #include "Aurora/Tools/robin_hood.h"
 
 namespace Aurora
@@ -111,11 +112,18 @@ namespace Aurora
 
 	struct UniformResources
 	{
-		robin_hood::unordered_map<TTypeID, UniformVariable> Uniforms{};
+		FastMap<TTypeID, UniformVariable> Uniforms{};
+		FastMap<TTypeID, std::vector<Matrix4>> UniformsMat4Arrays{};
 
 		void ResetResources()
 		{
 			Uniforms.clear();
+			UniformsMat4Arrays.clear();
+		}
+
+		inline void SetMat4Array(TTypeID typeID, const std::vector<Matrix4>& matrices)
+		{
+			UniformsMat4Arrays[typeID] = matrices;
 		}
 
 		inline bool GetVar(UniformVariable*& var_out, TTypeID typeID, VarType type)

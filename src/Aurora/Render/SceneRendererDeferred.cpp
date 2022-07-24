@@ -61,7 +61,7 @@ namespace Aurora
 		});
 	}
 
-	void SceneRendererDeferred::Render(Scene* scene)
+	void SceneRendererDeferred::Render(Scene* scene, CameraComponent* debugCamera)
 	{
 		for (CameraComponent* camera : scene->GetComponents<CameraComponent>())
 		{
@@ -120,7 +120,7 @@ namespace Aurora
 				GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
 				GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
 
-				PrepareVisibleEntities(scene, camera);
+				PrepareVisibleEntities(scene, camera, frustum);
 
 				RenderSet modelContexts;
 				FillRenderSet(modelContexts, 4, RenderSortType::Opaque, RenderSortType::Transparent, RenderSortType::Sky, RenderSortType::Translucent);
@@ -265,7 +265,7 @@ namespace Aurora
 					ClearVisibleEntities();
 					for (Actor* actor : outlineSet.Actors)
 					{
-						PrepareVisibleEntities(actor, camera);
+						PrepareVisibleEntities(actor, camera, frustum);
 					}
 
 					for (SceneComponent* sceneComponent : outlineSet.Components)
@@ -274,7 +274,7 @@ namespace Aurora
 						sceneComponent->GetComponentsOfType<MeshComponent>(meshComponents);
 						for (MeshComponent* meshComponent : meshComponents)
 						{
-							PrepareMeshComponent(meshComponent, camera);
+							PrepareMeshComponent(meshComponent, camera, frustum);
 						}
 					}
 

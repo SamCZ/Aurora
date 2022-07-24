@@ -18,7 +18,8 @@ namespace Aurora
 		{
 			None = 0,
 			Perspective,
-			Orthogonal
+			Orthogonal,
+			Raw
 		};
 
 		struct PerspectiveSettings
@@ -70,6 +71,11 @@ namespace Aurora
 
 		void SetPerspective(float fov, float near, float far);
 		void SetOrthographic(float left, float right, float bottom, float top, float near, float far);
+		void SetProjectionMatrix(const Matrix4& projection)
+		{
+			m_Projection = projection;
+			m_ProjectionType = ProjectionType::Raw;
+		}
 
 	private:
 		void Resize(const Vector2i&);

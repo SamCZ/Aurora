@@ -27,6 +27,7 @@
 #include "Shaders/PostProcess/ub_bloom.h"
 #include "Shaders/PostProcess/ub_outline.h"
 #include "Shaders/Decals.h"
+#include "Shaders/Shadows.h"
 
 namespace Aurora
 {
@@ -72,7 +73,7 @@ namespace Aurora
 		});
 	}
 
-	void SceneRendererForward::Render(Scene* scene)
+	void SceneRendererForward::Render(Scene* scene, CameraComponent* debugCamera)
 	{
 		for (CameraComponent* camera : scene->GetComponents<CameraComponent>())
 		{
@@ -97,16 +98,92 @@ namespace Aurora
 				continue;
 			}
 
+			if (debugCamera != nullptr && debugCamera->GetViewPort() != nullptr && debugCamera->GetProjectionType() != CameraComponent::ProjectionType::None)
+			{
+				viewPort = debugCamera->GetViewPort();
+			}
+
 			camera->UpdateFrustum();
 
 			auto depthBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Depth", (Vector2i)viewPort->ViewPort, GraphicsFormat::D32);
 			auto hrdColorBuffer = GEngine->GetRenderManager()->CreateTemporalRenderTarget("Color", (Vector2i)viewPort->ViewPort, GraphicsFormat::RGBA16_FLOAT);
 
+			GEngine->GetRenderDevice()->InvalidateState();
+
+			{ // Dir light depth
+				for(DirectionalLightComponent* dirLightComponent : scene->GetComponents<DirectionalLightComponent>())
+				{
+					if (not dirLightComponent->CastShadows())
+					{
+						continue;
+					}
+
+					GPU_DEBUG_SCOPE("DirLightShadows");
+					CPU_DEBUG_SCOPE("DirLightShadows");
+
+					if (dirLightComponent->RenderTexture == nullptr)
+					{
+						dirLightComponent->SetupShadowmaps(NUM_SHADOW_MAP_LEVELS, Vector2i(2048));
+						dirLightComponent->SetupSplitDistances(camera->GetPerspectiveSettings().Near, camera->GetPerspectiveSettings().Far, 3.0f);
+					}
+					dirLightComponent->SetTarget(camera);
+
+					DrawCallState drawCallState;
+					dirLightComponent->Render(drawCallState, [this, &drawCallState, scene, dirLightComponent](CameraComponent* lightCamera, const FFrustum* frustum, const Matrix4& lightViewMatrix, int layer)
+					{
+						ClearVisibleEntities();
+						PrepareVisibleEntities(scene, lightCamera, *frustum);
+
+						drawCallState.BindDepthTarget(dirLightComponent->RenderTexture, layer, 0);
+
+						RenderSet modelContextsOpaque;
+						FillRenderSet(modelContextsOpaque, 2, RenderSortType::Opaque, RenderSortType::Transparent);
+
+						drawCallState.ClearColorTarget = false;
+						drawCallState.ClearDepthTarget = true;
+
+						// Setup base vs data
+						BaseVSData baseVsData;
+						baseVsData.ProjectionMatrix = lightCamera->GetProjectionMatrix();
+						baseVsData.ProjectionViewMatrix = lightCamera->GetProjectionMatrix() * lightViewMatrix;
+						baseVsData.ViewMatrix = lightViewMatrix;
+						GEngine->GetRenderDevice()->WriteBuffer(m_BaseVsDataBuffer, &baseVsData);
+
+						// Setup basic global data
+						GLOB_Data globData;
+						globData.CameraPos = lightCamera->GetWorldPosition();
+						globData.CameraDir = lightCamera->GetForwardVector();
+						GEngine->GetRenderDevice()->WriteBuffer(m_GlobDataBuffer, &globData);
+
+						drawCallState.BindUniformBuffer("BaseVSData", m_BaseVsDataBuffer);
+						drawCallState.BindUniformBuffer("GLOB_Data", m_GlobDataBuffer);
+						drawCallState.BindUniformBuffer("Instances", m_InstancesBuffer);
+
+						drawCallState.ViewPort = FViewPort(dirLightComponent->Layers[layer].Resolution);
+
+						GEngine->GetRenderDevice()->BindRenderTargets(drawCallState);
+						GEngine->GetRenderDevice()->ClearRenderTargets(drawCallState);
+
+						RenderPass(Pass::Depth, drawCallState, lightCamera, modelContextsOpaque);
+					});
+
+					/*for (int i = 0; i < dirLightComponent->ShadowMatrices.size(); ++i)
+					{
+						DShapes::Frustum(glm::inverse(dirLightComponent->ShadowMatrices[i]), Color::white());
+					}*/
+
+					break;
+				}
+			}
+
+			DShapes::Frustum(glm::inverse(camera->GetProjectionViewMatrix()), Color::red());
+
 			const FFrustum& frustum = camera->GetFrustum();
 			Matrix4 viewMatrix = camera->GetViewMatrix();
 
 			// Prepate sets
-			PrepareVisibleEntities(scene, camera);
+			ClearVisibleEntities();
+			PrepareVisibleEntities(scene, camera, frustum);
 
 			RenderSet modelContextsOpaque;
 			FillRenderSet(modelContextsOpaque, 2, RenderSortType::Opaque, RenderSortType::Transparent);
@@ -120,20 +197,36 @@ namespace Aurora
 			RenderSet overlayModelContexts;
 			FillRenderSet(overlayModelContexts, 1, RenderSortType::Overlay);
 
-			// Setup base vs data
-			BaseVSData baseVsData;
-			baseVsData.ProjectionMatrix = camera->GetProjectionMatrix();
-			baseVsData.ProjectionViewMatrix = camera->GetProjectionViewMatrix();
-			baseVsData.ViewMatrix = viewMatrix;
-			GEngine->GetRenderDevice()->WriteBuffer(m_BaseVsDataBuffer, &baseVsData);
+			if (debugCamera == nullptr)
+			{
+				// Setup base vs data
+				BaseVSData baseVsData;
+				baseVsData.ProjectionMatrix = camera->GetProjectionMatrix();
+				baseVsData.ProjectionViewMatrix = camera->GetProjectionViewMatrix();
+				baseVsData.ViewMatrix = viewMatrix;
+				GEngine->GetRenderDevice()->WriteBuffer(m_BaseVsDataBuffer, &baseVsData);
 
-			// Setup basic global data
-			GLOB_Data globData;
-			globData.CameraPos = camera->GetWorldPosition();
-			globData.CameraDir = camera->GetForwardVector();
-			GEngine->GetRenderDevice()->WriteBuffer(m_GlobDataBuffer, &globData);
+				// Setup basic global data
+				GLOB_Data globData;
+				globData.CameraPos = camera->GetWorldPosition();
+				globData.CameraDir = camera->GetForwardVector();
+				GEngine->GetRenderDevice()->WriteBuffer(m_GlobDataBuffer, &globData);
+			}
+			else
+			{
+				// Setup base vs data
+				BaseVSData baseVsData;
+				baseVsData.ProjectionMatrix = debugCamera->GetProjectionMatrix();
+				baseVsData.ProjectionViewMatrix = debugCamera->GetProjectionViewMatrix();
+				baseVsData.ViewMatrix = debugCamera->GetViewMatrix();
+				GEngine->GetRenderDevice()->WriteBuffer(m_BaseVsDataBuffer, &baseVsData);
 
-			GEngine->GetRenderDevice()->InvalidateState();
+				// Setup basic global data
+				GLOB_Data globData;
+				globData.CameraPos = camera->GetWorldPosition();
+				globData.CameraDir = camera->GetForwardVector();
+				GEngine->GetRenderDevice()->WriteBuffer(m_GlobDataBuffer, &globData);
+			}
 
 			//if (!modelContextsOpaque.empty())
 			{ // Depth pre pass
@@ -207,7 +300,16 @@ namespace Aurora
 
 				for (DirectionalLightComponent* dirLight : scene->GetComponents<DirectionalLightComponent>())
 				{
+					if (dirLight->CastShadows())
+					{
+						drawState.Uniforms.SetMat4Array("ShadowmapMatrix"_HASH, dirLight->ShadowMatrices);
+						drawState.BindTexture("g_ShadowmapTexture", dirLight->RenderTexture);
+						drawState.BindSampler("g_ShadowmapTexture", Samplers::LinearShadowCompare);
+					}
+
 					drawState.Uniforms.SetVec3("LightDir"_HASH, glm::normalize(dirLight->GetForwardVector()));
+
+					break;
 				}
 
 				drawState.ViewPort = viewPort->ViewPort;

@@ -22,6 +22,6 @@ namespace Aurora
 		SceneRendererDeferred();
 		void LoadShaders() override;
 
-		void Render(Scene* scene) override;
+		void Render(Scene* scene, CameraComponent* debugCamera) override;
 	};
 }

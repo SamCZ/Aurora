@@ -8,6 +8,6 @@ out vec3 Normal;
 void main() {
 	mat4 view = ViewMatrix;
 	view[3].xyz = vec3(0.0);
-	gl_Position = ProjectionMatrix * view * vec4(POSITION * 10.0, 1.0);
+	gl_Position = ProjectionMatrix * view * vec4(POSITION * 1.0, 1.0);
 	Normal = POSITION - vec3(0.0);
 }
