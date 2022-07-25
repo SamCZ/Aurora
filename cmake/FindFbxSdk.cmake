@@ -1,0 +1,110 @@
+
+find_path(FBX_SDK_INCLUDE_DIRS fbxsdk.h HINTS ENV FBX_ROOT PATH_SUFFIXES include)
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+	set(PROCESSOR_TYPE x64)
+else ()
+	set(PROCESSOR_TYPE x86)
+endif ()
+
+function(create_fbx_sdk_path_suffixes_for_build_type BUILD_TYPE)
+	string(TOUPPER ${BUILD_TYPE} BUILD_TYPE_UPPERCASE)
+	set(FBX_SDK_PATH_SUFFIXES_${BUILD_TYPE_UPPERCASE}
+					# Windows
+					lib/vs2026/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					lib/vs2025/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					lib/vs2024/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					lib/vs2022/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					lib/vs2019/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					lib/vs2017/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					lib/vs2015/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					# Linux
+					lib/gcc/${PROCESSOR_TYPE}/${BUILD_TYPE}
+					# MacOS
+					lib/clang/${BUILD_TYPE}
+					PARENT_SCOPE)
+endfunction()
+
+create_fbx_sdk_path_suffixes_for_build_type(debug)
+create_fbx_sdk_path_suffixes_for_build_type(release)
+
+find_library(FBX_SDK_LIBRARY_RELEASE
+				NAMES libfbxsdk.a libfbxsdk.lib
+				HINTS ENV FBX_ROOT
+				PATH_SUFFIXES ${FBX_SDK_PATH_SUFFIXES_RELEASE})
+
+find_library(FBX_SDK_LIBRARY_DEBUG
+				NAMES libfbxsdk.a libfbxsdk.lib
+				HINTS ENV FBX_ROOT
+				PATH_SUFFIXES ${FBX_SDK_PATH_SUFFIXES_DEBUG})
+
+find_file(FBX_SDK_DLL_RELEASE
+				NAMES libfbxsdk.dll
+				HINTS ENV FBX_ROOT
+				PATHS ${FBX_SDK_PATH_SUFFIXES_RELEASE}
+				NO_CACHE)
+
+find_file(FBX_SDK_DLL_DEBUG
+				NAMES libfbxsdk.dll
+				HINTS ENV FBX_ROOT
+				PATHS ${FBX_SDK_PATH_SUFFIXES_DEBUG})
+
+find_library(FBX_SDK_ZLIB_LIBRARY_RELEASE
+				NAMES zlib-mt.lib
+				HINTS ENV FBX_ROOT
+				PATH_SUFFIXES ${FBX_SDK_PATH_SUFFIXES_RELEASE})
+
+find_library(FBX_SDK_ZLIB_LIBRARY_DEBUG
+				NAMES zlib-mt.lib
+				HINTS ENV FBX_ROOT
+				PATH_SUFFIXES ${FBX_SDK_PATH_SUFFIXES_DEBUG})
+
+find_library(FBX_SDK_LIBXML_LIBRARY_RELEASE
+				NAMES libxml2-mt.lib
+				HINTS ENV FBX_ROOT
+				PATH_SUFFIXES ${FBX_SDK_PATH_SUFFIXES_RELEASE})
+
+find_library(FBX_SDK_LIBXML_LIBRARY_DEBUG
+				NAMES libxml2-mt.lib
+				HINTS ENV FBX_ROOT
+				PATH_SUFFIXES ${FBX_SDK_PATH_SUFFIXES_DEBUG})
+
+if (FBX_SDK_INCLUDE_DIRS AND FBX_SDK_LIBRARY_RELEASE AND FBX_SDK_LIBRARY_DEBUG)
+	set(FBX_SDK_FOUND TRUE)
+	if (NOT TARGET FbxSdk::fbx_sdk)
+		add_library(FbxSdk::fbx_sdk STATIC IMPORTED)
+		set_target_properties(FbxSdk::fbx_sdk PROPERTIES
+						INTERFACE_INCLUDE_DIRECTORIES "${FBX_SDK_INCLUDE_DIRS}")
+
+		if (FBX_SDK_ZLIB_LIBRARY_RELEASE AND FBX_SDK_ZLIB_LIBRARY_DEBUG AND
+						FBX_SDK_LIBXML_LIBRARY_RELEASE AND FBX_SDK_LIBXML_LIBRARY_DEBUG)
+			add_library(FbxSdk::libxml2 STATIC IMPORTED)
+			set_target_properties(FbxSdk::libxml2 PROPERTIES
+							IMPORTED_CONFIGURATIONS "DEBUG;RELEASE"
+							IMPORTED_LOCATION_DEBUG "${FBX_SDK_LIBXML_LIBRARY_DEBUG}"
+							IMPORTED_LOCATION_RELEASE "${FBX_SDK_LIBXML_LIBRARY_RELEASE}")
+
+			add_library(FbxSdk::zlib STATIC IMPORTED)
+			set_target_properties(FbxSdk::zlib PROPERTIES
+							IMPORTED_CONFIGURATIONS "DEBUG;RELEASE"
+							IMPORTED_LOCATION_DEBUG "${FBX_SDK_ZLIB_LIBRARY_DEBUG}"
+							IMPORTED_LOCATION_RELEASE "${FBX_SDK_ZLIB_LIBRARY_RELEASE}")
+
+			set_target_properties(FbxSdk::fbx_sdk PROPERTIES
+							INTERFACE_LINK_LIBRARIES "FbxSdk::libxml2;FbxSdk::zlib")
+		else ()
+			find_package(LibXml2 REQUIRED)
+			find_package(ZLIB REQUIRED)
+
+			set_target_properties(FbxSdk::fbx_sdk PROPERTIES
+							INTERFACE_LINK_LIBRARIES "LibXml2::LibXml2;ZLIB::ZLIB")
+		endif ()
+
+		set_target_properties(FbxSdk::fbx_sdk PROPERTIES
+						IMPORTED_CONFIGURATIONS "DEBUG;RELEASE"
+						IMPORTED_LOCATION_DEBUG "${FBX_SDK_LIBRARY_DEBUG}"
+						IMPORTED_LOCATION_RELEASE "${FBX_SDK_LIBRARY_RELEASE}")
+	endif ()
+else ()
+	set(FBX_SDK_FOUND FALSE)
+endif ()

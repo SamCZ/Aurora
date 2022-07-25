@@ -19,6 +19,8 @@ IF(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin CACHE PATH "Directory for dlls and binaries")
 endif()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+
 #if(MSVC)
 #    # Force to always compile with W4
 #    if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -96,11 +98,33 @@ endif()
 target_link_libraries(Aurora PUBLIC glad glfw glm nlohmann_json TracyClient ImGui assimp stb_utils)
 target_link_libraries(Aurora PUBLIC RmlCore RmlDebugger)
 
+find_package(FbxSdk REQUIRED)
+
+if (FBX_SDK_FOUND)
+    target_link_libraries(Aurora PRIVATE FbxSdk::fbx_sdk)
+
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        add_custom_command(TARGET Aurora POST_BUILD # Adds a post-build event to MyTest
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different # which executes "cmake - E copy_if_different..."
+                "$ENV{FBX_ROOT}lib/vs2019/x64/Release/libfbxsdk.dll" # <--this is in-file
+                $<TARGET_FILE_DIR:Aurora>) # <--this is out-file path
+    elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND WIN32)
+        add_custom_command(TARGET Aurora POST_BUILD # Adds a post-build event to MyTest
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different # which executes "cmake - E copy_if_different..."
+                "$ENV{FBX_ROOT}lib/vs2019/x64/Debug/libfbxsdk.dll" # <--this is in-file
+                $<TARGET_FILE_DIR:Aurora>) # <--this is out-file path
+    endif()
+
+else()
+    message("FBX SDK NOT FOUND!")
+endif()
+
 if (AU_FMOD_SOUND)
     target_compile_definitions(Aurora PUBLIC AU_FMOD_SOUND=1)
     target_include_directories(Aurora PUBLIC ${AURORA_ADD_INCLUDE_DIRS})
     target_link_libraries(Aurora PUBLIC ${FMOD_CORE_LIBRARY})
     target_link_libraries(Aurora PUBLIC ${FMOD_STUDIO_LIBRARY})
+    target_compile_definitions(Aurora PUBLIC FBXSDK_SHARED=1)
 
     add_custom_command(TARGET Aurora POST_BUILD # Adds a post-build event to MyTest
             COMMAND ${CMAKE_COMMAND} -E copy_if_different # which executes "cmake - E copy_if_different..."

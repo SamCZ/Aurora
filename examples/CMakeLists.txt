@@ -1,3 +1,4 @@
 add_subdirectory(base_app)
 add_subdirectory(physics)
 add_subdirectory(benchmark)
+add_subdirectory(animation_retarget)
