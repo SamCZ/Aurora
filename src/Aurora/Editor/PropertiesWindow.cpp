@@ -109,6 +109,7 @@ namespace Aurora
 	{
 		ImGui::DragFloat("Intensity", &component->GetIntensity(), 0.1f);
 		ImGui::ColorEdit3("Color", reinterpret_cast<float*>(&component->GetColor()), ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
+		ImGui::Checkbox("Cast Shadows", &component->CastShadows());
 	}
 
 	void PropertiesWindow::DrawDirectionalLightComponentGui(ActorComponent* baseComponent)

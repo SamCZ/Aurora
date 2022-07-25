@@ -41,7 +41,7 @@ float GetShadowValue(in float shadowBias)
 
 		if(inRange)
 		{
-			vec2 texelSize = 1.0f / textureSize(g_ShadowmapTexture, 0).xy;
+			//vec2 texelSize = 1.0f / textureSize(g_ShadowmapTexture, 0).xy;
 			//inverseShadow = LinearShadowSample(g_ShadowmapTexture, shadowLevel, shadowCoord.xy, shadowCoord.z - shadowBias, texelSize);
 			inverseShadow = texture(g_ShadowmapTexture, vec4(shadowCoord.xy, shadowLevel, shadowCoord.z-shadowBias));
 			break;
