@@ -14,6 +14,7 @@ namespace Aurora
 		[[nodiscard]] virtual uint32_t GetSize() const = 0;
 		[[nodiscard]] virtual uint32_t GetStride() const = 0;
 		virtual void Inflate(int size) = 0;
+		virtual void Clear() = 0;
 	};
 
 	template<typename VertexBufferType>
@@ -63,6 +64,11 @@ namespace Aurora
 		inline void Inflate(int size) override
 		{
 			Buffer.reserve(Buffer.size() + size);
+		}
+
+		void Clear() override
+		{
+			Buffer.clear();
 		}
 	};
 }

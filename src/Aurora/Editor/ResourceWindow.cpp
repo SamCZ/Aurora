@@ -113,6 +113,22 @@ namespace Aurora
 			}
 		}
 
+		{ // Update files to import
+			while (not m_FilesToImport.empty())
+			{
+				Path path = m_FilesToImport.front();
+
+				if (path == m_CurrentFileToImport)
+				{
+					break;
+				}
+
+				m_CurrentFileToImport = path;
+
+				//OnImportRequest();
+			}
+		}
+
 		ImGui::Begin("Resources", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		{
 			CPU_DEBUG_SCOPE("ResourceWindowBegin");
@@ -438,7 +454,8 @@ namespace Aurora
 				continue;
 			}
 
-			GEngine->GetResourceManager()->ImportAsset(item, m_CurrentPath);
+			m_FilesToImport.push(item);
+			//GEngine->GetResourceManager()->ImportAsset(item, m_CurrentPath);
 		}
 	}
 

@@ -684,7 +684,7 @@ namespace Aurora
 		{
 			StaticMesh_ptr newMesh = std::make_shared<StaticMesh>();
 			newMesh->Deserialize(archive);
-			newMesh->UploadToGPU(false);
+			newMesh->UploadToGPU(true);
 			return newMesh;
 		}
 

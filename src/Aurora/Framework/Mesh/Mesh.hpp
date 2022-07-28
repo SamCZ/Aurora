@@ -185,6 +185,9 @@ namespace Aurora
 			Vector3 Normal;
 			Vector3 Tangent;
 			Vector3 BiTangent;
+
+			Vertex() = default;
+			Vertex(const vec3& pos) : Position(pos) {}
 		};
 
 		[[nodiscard]] VertexLayout GetVertexLayoutDesc() const override

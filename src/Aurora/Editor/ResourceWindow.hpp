@@ -37,6 +37,9 @@ namespace Aurora
 		std::queue<Path> m_FilesToDelete;
 		AssetPreviewRenderer* m_PreviewRenderer;
 
+		std::queue<Path> m_FilesToImport;
+		Path m_CurrentFileToImport;
+
 		// Icons
 		Texture_ptr m_ShaderIcon;
 		Texture_ptr m_MaterialIcon;

@@ -138,6 +138,13 @@ namespace Aurora
 			Box(aabb, color, true, thickness, lifetime, useDepthBuffer);
 		}
 
+		inline static void WireTriangle(const vec3& p0, const vec3& p1, const vec3& p2, Color color = Color::green(), float thickness = 1.0f, uint32_t lifetime = 0, bool useDepthBuffer = true)
+		{
+			Line(p0, p1, color, thickness, lifetime, false);
+			Line(p1, p2, color, thickness, lifetime, false);
+			Line(p2, p0, color, thickness, lifetime, false);
+		}
+
 		inline static void Sphere(const Vector3& pos, float radius, Color color = Color::green(), bool wireframe = false, float thickness = 1.0f, uint32_t lifetime = 0, bool useDepthBuffer = true)
 		{
 			ShapeStructs::SphereShape shape;

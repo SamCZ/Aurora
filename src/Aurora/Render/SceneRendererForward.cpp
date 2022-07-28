@@ -176,7 +176,7 @@ namespace Aurora
 				}
 			}
 
-			DShapes::Frustum(glm::inverse(camera->GetProjectionViewMatrix()), Color::red());
+			//DShapes::Frustum(glm::inverse(camera->GetProjectionViewMatrix()), Color::red());
 
 			const FFrustum& frustum = camera->GetFrustum();
 			Matrix4 viewMatrix = camera->GetViewMatrix();
