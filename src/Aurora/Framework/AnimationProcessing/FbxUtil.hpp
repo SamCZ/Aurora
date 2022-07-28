@@ -15,18 +15,6 @@ namespace FbxUtil
 		return vector.size() * sizeof(T);
 	}
 
-	template<typename T, typename U>
-	U map(T const from_start, T const from_end, U const to_start, U const to_end, T const from)
-	{
-		return to_start + (to_end - to_start)*(from - from_start)/(from_end - from_start);
-	}
-
-	template<typename T>
-	glm::quat map(T const from_start, T const from_end, glm::quat const to_start, glm::quat const to_end, T const from)
-	{
-		return glm::slerp(to_start, to_end, (from - from_start)/(from_end - from_start));
-	}
-
 	inline glm::mat4 fbx_to_glm(FbxAMatrix const& m)
 	{
 		return glm::make_mat4(static_cast<double const*>(m));
@@ -42,13 +30,23 @@ namespace FbxUtil
 		return glm::vec3{vector.mData[0], vector.mData[1], vector.mData[2]};
 	}
 
-	inline glm::vec3 to_glm_vec(FbxVector4 const& vector) {
+	inline glm::vec4 to_glm_vec(FbxVector4 const& vector) {
 		return {
 			vector.mData[0],
 			vector.mData[1],
 			vector.mData[2],
+			vector.mData[3]
 		};
 	}
+
+	inline glm::vec3 to_glm_vec3(FbxVector4 const& vector) {
+		return {
+			vector.mData[0],
+			vector.mData[1],
+			vector.mData[2]
+		};
+	}
+
 	inline glm::vec2 to_glm_vec(FbxVector2 const& vector) {
 		return {
 			vector.mData[0],
