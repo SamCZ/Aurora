@@ -92,6 +92,7 @@ class BaseAppContext : public AppContext
 			}
 
 			meshComponent->GetTransform().SetScale(0.01f);
+			meshComponent->GetTransform().SetLocation(0, 0.5f, 0);
 		}
 
 		{ // Mesh obj final
@@ -209,6 +210,10 @@ class BaseAppContext : public AppContext
 				vec3 v0 = vertexBuffer->Get(i0).Position * 0.01f;
 				vec3 v1 = vertexBuffer->Get(i1).Position * 0.01f;
 				vec3 v2 = vertexBuffer->Get(i2).Position * 0.01f;
+
+				v0.y += 0.5f;
+				v1.y += 0.5f;
+				v2.y += 0.5f;
 
 				Vector3 pts[3] = {
 					v0, v1, v2
