@@ -1,6 +1,7 @@
 #include <Aurora/Aurora.hpp>
 
 #include <Aurora/Core/AUID.hpp>
+#include <Aurora/Core/Random.hpp>
 #include <Aurora/Resource/ResourceManager.hpp>
 
 #include <Aurora/Graphics/Material/MaterialDefinition.hpp>
@@ -34,7 +35,272 @@
 
 #include <Aurora/Framework/AnimationProcessing/FbxImporter.hpp>
 
+#include <Aurora/Tools/ImGuiHelper.hpp>
+
 using namespace Aurora;
+
+struct Triangle
+{
+	union {
+		struct
+		{
+			vec3 V0;
+			vec3 V1;
+			vec3 V2;
+		};
+
+		vec3 Points[3];
+	};
+
+	Triangle() {}
+
+	Triangle(const vec3& v0, const vec3& v1, const vec3& v2)
+		: V0(v0), V1(v1), V2(v2) {}
+};
+
+vec3 GetTriNormal(const Triangle& tri)
+{
+	return glm::normalize(glm::cross(tri.V0 - tri.V2, tri.V0 - tri.V1));
+}
+
+enum class TriangleClipResult : uint8_t
+{
+	InFront,
+	Back,
+	Clipped
+};
+
+static TriangleClipResult ClipTriangle(const Triangle& inputTriangle, const Vector4& plane, std::vector<Triangle>& outTriangles)
+{
+	constexpr uint8_t PointsInTriangle = 3;
+
+	int sides[PointsInTriangle];
+	float distances[PointsInTriangle];
+	int numSides[2];
+	numSides[0] = numSides[1] = 0;
+
+	vec3 planeNormal = vec3(plane);
+
+	for (uint8_t i = 0; i < PointsInTriangle; ++i)
+	{
+		float dist = glm::dot(planeNormal, inputTriangle.Points[i]) + plane.w;
+		uint8_t side = (dist >= 0) ? 0u : 1u;
+
+		sides[i] = side;
+		distances[i] = dist;
+		numSides[side]++;
+	}
+
+	if (numSides[1] == PointsInTriangle)
+		return TriangleClipResult::InFront;
+
+	if (numSides[0] == PointsInTriangle)
+		return TriangleClipResult::Back;
+
+	vec3 output[16];
+	int npoints = 0;
+	for (uint8_t v0 = 0; v0 < PointsInTriangle && npoints < 16; v0++)
+	{
+		int v1 = (v0 + 1) % PointsInTriangle;
+
+		if (sides[v0] == 0) //inside->copy
+		{
+			output[npoints++] = inputTriangle.Points[v0];
+		}
+
+		if (sides[v1] == sides[v0]) //both on the same side
+		{
+			continue;
+		}
+
+		float dot = distances[v0] / (distances[v0] - distances[v1]);
+		output[npoints++] = glm::mix(inputTriangle.Points[v0], inputTriangle.Points[v1], dot);
+	}
+
+	uint index = 1;
+
+	//build triangle list indices
+	for(uint n = 0; n < npoints - 2; n++)
+	{
+		vec3 cv0 = output[0];
+		vec3 cv1 = output[index];
+		index++;
+		vec3 cv2 = output[index % npoints];
+
+		outTriangles.emplace_back(cv0, cv1, cv2);
+	}
+
+	return TriangleClipResult::Clipped;
+}
+
+bool IsPointOnPlane(const vec3& point, const vec4& plane)
+{
+	float dist = glm::dot(vec3(plane), point) + plane.w;
+
+	if (glm::abs(dist) <= 0.00001f)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool IsPointNearlySame(const vec3& left, const vec3& right)
+{
+	float d = glm::distance(left, right);
+	return d <= 0.00001f;
+}
+
+bool FindPointOnPlane(const vec4& plane, const Triangle& tri, const vec3* ignorePoint, vec3& foundPoint)
+{
+	bool hasIgnorePoint = false;
+	bool foundAnotherPointOnPlane = false;
+
+	for (int i = 0; i < 3; i++)
+	{
+		const vec3& point = tri.Points[i];
+
+		if (ignorePoint != nullptr && IsPointNearlySame(point, *ignorePoint))
+		{
+			hasIgnorePoint = true;
+			continue;
+		}
+
+		if (IsPointOnPlane(point, plane))
+		{
+			foundPoint = point;
+			foundAnotherPointOnPlane = true;
+
+			if (hasIgnorePoint)
+				break;
+		}
+	}
+
+	return (ignorePoint == nullptr || hasIgnorePoint) && foundAnotherPointOnPlane;
+}
+
+bool IsPointInTriangle(const vec3& point, const Triangle& tri)
+{
+	for (int i = 0; i < 3; ++i)
+	{
+		if (IsPointNearlySame(point, tri.Points[i]))
+			return true;
+	}
+	return false;
+}
+
+
+std::vector<Triangle> clippedTrisTest;
+
+
+void FillClippedHole(const vec4& plane, std::vector<Triangle> clipped, std::vector<Triangle>& leftTriangles, std::vector<Triangle>& rightTriangle)
+{
+	if (clipped.empty())
+		return;
+
+	// Find path
+	std::vector<vec3> pathPoints;
+
+	//clippedTrisTest = clipped;
+	Triangle firstTriangle = clipped[0];
+
+
+	// Find first point on plane
+	vec3 foundFistPoint;
+	if (not FindPointOnPlane(plane, clipped[0], nullptr, foundFistPoint))
+	{
+		AU_LOG_FATAL("Fist point on plane not found !");
+		return;
+	}
+
+	pathPoints.emplace_back(foundFistPoint);
+	clipped.erase(clipped.begin());
+
+	uint32_t numIterations = 0;
+
+	// Find path along triangles
+	while (true)
+	{
+		if (numIterations > 200'000)
+		{
+			AU_LOG_INFO("Something went wrong! Triangle path finding was stuck in infinite loop");
+			break;
+		}
+
+		const vec3& startPoint = pathPoints[pathPoints.size() - 1];
+
+		if (pathPoints.size() > 2 && IsPointInTriangle(startPoint, firstTriangle))
+			break;
+
+		vec3 newPathPoint;
+		bool nextPointFound = false;
+
+		for (int i = 0; i < clipped.size(); ++i)
+		{
+			if (FindPointOnPlane(plane, clipped[i], &startPoint, newPathPoint))
+			{
+				pathPoints.push_back(newPathPoint);
+				nextPointFound = true;
+				clipped.erase(clipped.begin() + i);
+				break;
+			}
+		}
+
+		if (not nextPointFound)
+		{
+			AU_LOG_INFO("Triangle path did not found next triangle");
+			break;
+		}
+
+		numIterations++;
+	}
+
+	// Old style - find middle point and build triangles around that
+	std::vector<vec3> pointsInsidePlane;
+	vec3 mid = vec3(0.0f);
+
+	// Find points on the plane and remove duplicates
+	for (const vec3& point: pathPoints)
+	{
+		//for (int i = 0; i < 3; ++i)
+		{
+			//const vec3& point = tri.Points[i];
+
+			//if (IsPointOnPlane(point, plane))
+			{
+				bool found = false;
+				for (const vec3& p: pointsInsidePlane)
+				{
+					if (glm::distance(p, point) < 0.00001f)
+					{
+						found = true;
+					}
+				}
+
+				if (not found)
+				{
+					pointsInsidePlane.push_back(point);
+					mid += point;
+				}
+			}
+		}
+	}
+
+	// Build new triangles
+	// TODO: improve filling be knowing the path of points do not create triangles intersecting with path
+
+	int32_t numPoints = int32_t(pointsInsidePlane.size());
+
+	mid /= float(numPoints);
+
+	for (int v0 = 0; v0 < numPoints; ++v0)
+	{
+		int v1 = (v0 + 1) % numPoints;
+		leftTriangles.emplace_back(pointsInsidePlane[v0], mid, pointsInsidePlane[v1]);
+		rightTriangle.emplace_back(pointsInsidePlane[v0], pointsInsidePlane[v1], mid);
+	}
+
+}
 
 class BaseAppContext : public AppContext
 {
@@ -52,6 +318,10 @@ class BaseAppContext : public AppContext
 	StaticMesh_ptr mesh;
 	StaticMesh_ptr finalMesh;
 	Actor* planeActor;
+	StaticMeshComponent* meshComponent;
+
+	std::vector<Triangle> OriginalMeshTriangles;
+	std::vector<std::vector<Triangle>> SplitPieces;
 
 	void Init() override
 	{
@@ -66,6 +336,10 @@ class BaseAppContext : public AppContext
 			camera->SetPerspective(90.0f, 0.1, 200.0f);
 		}
 
+		planeActor = AppContext::GetScene()->SpawnActor<Actor>("Plane");
+		planeActor->GetTransform().SetLocation(0, 0.025, 0);
+		planeActor->GetTransform().SetRotation(45, 0, 0);
+
 		//FbxImport::LoadScene(GEngine->GetResourceManager()->LoadFile("Assets/pickaxe.fbx"));
 
 		MeshImportOptions importOptions;
@@ -74,27 +348,107 @@ class BaseAppContext : public AppContext
 		importOptions.UploadToGPU = true;
 
 		AssimpModelLoader modelLoader;
-		MeshImportedData importedData = modelLoader.ImportModel("mesh", GEngine->GetResourceManager()->LoadFile("Assets/sphere.fbx"), importOptions);
+		MeshImportedData importedData = modelLoader.ImportModel("mesh", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"), importOptions);
 
 		mesh = importedData.Get<StaticMesh>();
 
 		//mesh = StaticMesh::Cast(GEngine->GetResourceManager()->LoadMesh("Assets/Shapes/Sphere.amesh"));
 
 		{ // Mesh obj
-			Material_ptr material = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
-
-			StaticMeshComponent* meshComponent = AppContext::GetScene()->SpawnActor<Actor, StaticMeshComponent>("Mesh")->GetRootComponent<StaticMeshComponent>();
-			meshComponent->SetMesh(mesh);
-
-			for (int i = 0; i < meshComponent->GetNumMaterialSlots(); ++i)
+			if (true)
 			{
-				meshComponent->SetMaterial(i, material);
+				Material_ptr material = GEngine->GetResourceManager()->GetOrLoadMaterialDefinition("Assets/Materials/Base/Color.matd");
+
+				meshComponent = AppContext::GetScene()->SpawnActor<Actor, StaticMeshComponent>("Mesh")->GetRootComponent<StaticMeshComponent>();
+				meshComponent->SetMesh(mesh);
+
+				for (int i = 0; i < meshComponent->GetNumMaterialSlots(); ++i)
+				{
+					meshComponent->SetMaterial(i, material);
+				}
+
+				meshComponent->GetTransform().SetScale(0.01f);
+				meshComponent->GetTransform().SetLocation(0, 0.5f, 0);
 			}
 
-			meshComponent->GetTransform().SetScale(0.01f);
-			meshComponent->GetTransform().SetLocation(0, 0.5f, 0);
+			OriginalMeshTriangles.clear();
+
+			VertexBuffer<StaticMesh::Vertex>* vertexBuffer = mesh->GetVertexBuffer<StaticMesh::Vertex>();
+			//VertexBuffer<StaticMesh::Vertex>* finalVertexBuffer = finalMesh->GetVertexBuffer<StaticMesh::Vertex>();
+			//finalVertexBuffer->Clear();
+			//finalMesh->LODResources[0].Indices.clear();
+
+			//vec4 plane(0, 1, 0, 0.25);
+			std::vector<vec4> clipPlanes;
+			clipPlanes.push_back(vec4(planeActor->GetRootComponent()->GetForwardVector(), glm::distance(planeActor->GetRootComponent()->GetWorldPosition(), vec3(0, -0.5f, 0))));
+
+			for (int i = 0; i < 3; ++i)
+			{
+				clipPlanes.push_back(vec4(Rand::RangeFloat(-1, 1), Rand::RangeFloat(-1, 1), Rand::RangeFloat(-1, 1), Rand::RangeFloat(-0.5, 0.5)));
+				int a = 0;
+			}
+
+			for (const auto& [lod, lodData]: mesh->LODResources)
+			{
+				for (int i = 0; i < lodData.Indices.size(); i += 3)
+				{
+					uint i0 = lodData.Indices[i + 0];
+					uint i1 = lodData.Indices[i + 1];
+					uint i2 = lodData.Indices[i + 2];
+
+					vec3 v0 = vertexBuffer->Get(i0).Position * 0.01f;
+					vec3 v1 = vertexBuffer->Get(i1).Position * 0.01f;
+					vec3 v2 = vertexBuffer->Get(i2).Position * 0.01f;
+
+					v0.y += 0.5f;
+					v1.y += 0.5f;
+					v2.y += 0.5f;
+
+					OriginalMeshTriangles.emplace_back(v0, v1, v2);
+				}
+			}
+
+			SplitPieces.push_back(OriginalMeshTriangles);
+			bool removedFirst = false;
+
+			for (const vec4& plane: clipPlanes)
+			{
+				std::vector<std::vector<Triangle>> splitPiecesCopy = SplitPieces;
+				SplitPieces.clear();
+
+				for (const std::vector<Triangle>& pieceTriangles : splitPiecesCopy)
+				{
+					std::vector<Triangle> splitLeft;
+					std::vector<Triangle> splitLeftClipped;
+					std::vector<Triangle> splitRight;
+
+					for (const Triangle& tri : pieceTriangles)
+					{
+						if (ClipTriangle(tri, plane, splitLeftClipped) == TriangleClipResult::Back)
+						{
+							splitLeft.push_back(tri);
+						}
+
+						if (ClipTriangle(tri, -plane, splitRight) == TriangleClipResult::Back)
+						{
+							splitRight.push_back(tri);
+						}
+					}
+
+					splitLeft.insert(splitLeft.begin(), splitLeftClipped.begin(), splitLeftClipped.end());
+
+					FillClippedHole(plane, splitLeftClipped, splitLeft, splitRight);
+
+					if (not splitLeft.empty())
+						SplitPieces.emplace_back(splitLeft);
+
+					if (not splitRight.empty())
+						SplitPieces.emplace_back(splitRight);
+				}
+			}
 		}
 
+		if (false)
 		{ // Mesh obj final
 			FMeshSection section;
 
@@ -114,178 +468,130 @@ class BaseAppContext : public AppContext
 
 			meshComponent->GetTransform().SetLocation(3, 0, 0);
 		}
-
-		planeActor = AppContext::GetScene()->SpawnActor<Actor>("Plane");
-		planeActor->GetTransform().SetLocation(0, 0.025, 0);
-		planeActor->GetTransform().SetRotation(90, 0, 0);
 	}
 
-	float DistFromPlane(const vec4& plane, const vec3& point)
+	typedef struct HsvColor
 	{
-		return glm::dot(vec3(plane), point) + plane.w;
-	}
+		unsigned char h;
+		unsigned char s;
+		unsigned char v;
+	} HsvColor;
 
-	bool IsOnPlaneSide(const vec4& plane, const vec3& point)
+	Color HsvToRgb(HsvColor hsv)
 	{
-		float d1 = DistFromPlane(plane, point);
-		return d1 < glm::epsilon<float>();
-	}
+		Color rgb;
+		unsigned char region, remainder, p, q, t;
 
-	bool IsOnPlane(const vec4& plane, const vec3& point)
-	{
-		float d1 = DistFromPlane(plane, point);
-		return abs(d1) >= glm::epsilon<float>();
-	}
-
-	int ClipPoly(const Vector3 *pts, int npts, Vector3 *dest, const Vector4& plane)
-	{
-		int sides[32];
-		float dists[32];
-		int numsides[2];
-
-		numsides[0] = numsides[1] = 0;
-
-		//qualify sides
-		for (int v = 0; v < npts; v++)
+		if (hsv.s == 0)
 		{
-			vec3 point = pts[v];
-			float dist = glm::dot(vec3(plane), point) + plane.w;
-			int side = (dist >= 0) ? 0 : 1;
-			dists[v] = dist;
-			sides[v] = side;
-			numsides[side]++;
+			rgb.r = hsv.v;
+			rgb.g = hsv.v;
+			rgb.b = hsv.v;
+			return rgb;
 		}
 
-		if (numsides[1] == npts)
-			return 0;
+		region = hsv.h / 43;
+		remainder = (hsv.h - (region * 43)) * 6;
 
-		if (numsides[0] == npts)
+		p = (hsv.v * (255 - hsv.s)) >> 8;
+		q = (hsv.v * (255 - ((hsv.s * remainder) >> 8))) >> 8;
+		t = (hsv.v * (255 - ((hsv.s * (255 - remainder)) >> 8))) >> 8;
+
+		switch (region)
 		{
-			return -1;
+			case 0:
+				rgb.r = hsv.v; rgb.g = t; rgb.b = p;
+				break;
+			case 1:
+				rgb.r = q; rgb.g = hsv.v; rgb.b = p;
+				break;
+			case 2:
+				rgb.r = p; rgb.g = hsv.v; rgb.b = t;
+				break;
+			case 3:
+				rgb.r = p; rgb.g = q; rgb.b = hsv.v;
+				break;
+			case 4:
+				rgb.r = t; rgb.g = p; rgb.b = hsv.v;
+				break;
+			default:
+				rgb.r = hsv.v; rgb.g = p; rgb.b = q;
+				break;
 		}
 
-		//clip poly
-		int nvert = 0;
-
-		for (int v0 = 0; v0 < npts && nvert < 31; v0++)
-		{
-			int v1 = (v0 + 1) % npts;
-
-			if (sides[v0] == 0) //inside->copy
-			{
-				dest[nvert++] = pts[v0];
-			}
-
-			if (sides[v1] == sides[v0]) //both on the same side
-				continue;
-
-			float dot = dists[v0] / (dists[v0] - dists[v1]);
-			dest[nvert++] = glm::mix(pts[v0], pts[v1], dot);
-		}
-
-		return nvert;
+		return rgb;
 	}
 
 	void Update(double delta) override
 	{
 		VertexBuffer<StaticMesh::Vertex>* vertexBuffer = mesh->GetVertexBuffer<StaticMesh::Vertex>();
-		VertexBuffer<StaticMesh::Vertex>* finalVertexBuffer = finalMesh->GetVertexBuffer<StaticMesh::Vertex>();
-		finalVertexBuffer->Clear();
-		finalMesh->LODResources[0].Indices.clear();
+		//VertexBuffer<StaticMesh::Vertex>* finalVertexBuffer = finalMesh->GetVertexBuffer<StaticMesh::Vertex>();
+		//finalVertexBuffer->Clear();
+		//finalMesh->LODResources[0].Indices.clear();
 
 		//vec4 plane(0, 1, 0, 0.25);
-		std::vector<vec4> clipPlanes(1);
-		clipPlanes[0] = vec4(planeActor->GetRootComponent()->GetForwardVector(), glm::distance(planeActor->GetRootComponent()->GetWorldPosition(), vec3(0, -0.5f, 0)));
 
-		int finalIndex = 0;
+		static float distanceMod = 1.0f;
+		ImGui::SliderFloat("Explode", &distanceMod, 0, 1);
 
-		for (const auto& [lod, lodData]: mesh->LODResources)
+		if (distanceMod < 0.0001)
 		{
-			for (int i = 0; i < lodData.Indices.size(); i += 3)
+			meshComponent->GetOwner()->SetActive(true);
+		}
+		else
+		{
+			meshComponent->GetOwner()->SetActive(false);
+
+			int i = 0;
+			int inc = 255 / SplitPieces.size();
+			for (const std::vector<Triangle>& pieceTriangles : SplitPieces)
 			{
-				uint i0 = lodData.Indices[i + 0];
-				uint i1 = lodData.Indices[i + 1];
-				uint i2 = lodData.Indices[i + 2];
+				vec3 off = vec3(0.0f);
 
-				vec3 v0 = vertexBuffer->Get(i0).Position * 0.01f;
-				vec3 v1 = vertexBuffer->Get(i1).Position * 0.01f;
-				vec3 v2 = vertexBuffer->Get(i2).Position * 0.01f;
+				HsvColor hsvColor = {(unsigned char)(i * inc), 255, 255};
+				Color c = HsvToRgb(hsvColor);
 
-				v0.y += 0.5f;
-				v1.y += 0.5f;
-				v2.y += 0.5f;
+				vec3 mid = vec3(0.0f);
+				for (const Triangle& tri : pieceTriangles)
+					for (int j = 0; j < 3; ++j)
+						mid += tri.Points[j];
+				mid /= float(pieceTriangles.size() * 3);
 
-				Vector3 pts[3] = {
-					v0, v1, v2
-				};
+				vec3 normalFromCenter = glm::normalize(mid - vec3(0.0f));
+				float distTo0 = glm::distance(mid, vec3(0.0f));
 
-				Vector3* srcpoints = pts;
+				off = normalFromCenter * distTo0 * distanceMod;
 
-				int npoints = 3;
-
-				static const int maxPoints = 16;
-				Vector3 clippoints[2][maxPoints];
-
-				Vector3* destpoints = clippoints[0];
-				uint	flip = 0;
-
-				for(uint p = 0; p < clipPlanes.size(); p++)
+				for (const Triangle& tri : pieceTriangles)
 				{
-					int res = ClipPoly(srcpoints, npoints, destpoints, clipPlanes[p]);
-					if(res == 0)
-						continue;
-					if(res < 0)
-						continue;
+					vec3 norm = GetTriNormal(tri);
+					vec3 normColor = norm * 0.5f + 0.5f;
 
-					npoints = res;
-					srcpoints = clippoints[flip];
-					flip ^= 1;
-					destpoints = clippoints[flip];
+					DShapes::Triangle(tri.V2 + off, tri.V1 + off, tri.V0 + off, Color(normColor));
 				}
-
-				uint index = 1;
-
-				//build triangle list indices
-				for(uint n = 0; n < npoints - 2; n++)
-				{
-					vec3 cv0 = srcpoints[0];
-					vec3 cv1 = srcpoints[index];
-					index++;
-					vec3 cv2 = srcpoints[index % npoints];
-
-					if (IsOnPlaneSide(clipPlanes[0], cv0) && IsOnPlaneSide(clipPlanes[0], cv1) && IsOnPlaneSide(clipPlanes[0], cv2))
-					{
-
-					}
-					else
-					{
-						if (IsOnPlane(clipPlanes[0], cv0) && IsOnPlane(clipPlanes[0], cv1) && IsOnPlane(clipPlanes[0], cv2))
-						{
-							DShapes::WireTriangle(cv0, cv1, cv2, Color::green());
-						}
-						else
-						{
-							DShapes::WireTriangle(cv0, cv1, cv2, Color::blue());
-						}
-
-						finalVertexBuffer->Add(StaticMesh::Vertex(cv0));
-						finalVertexBuffer->Add(StaticMesh::Vertex(cv1));
-						finalVertexBuffer->Add(StaticMesh::Vertex(cv2));
-
-						finalMesh->LODResources[0].Indices.push_back(finalIndex++);
-						finalMesh->LODResources[0].Indices.push_back(finalIndex++);
-						finalMesh->LODResources[0].Indices.push_back(finalIndex++);
-					}
-				}
-
-				//DShapes::WireTriangle(v0, v1, v2, Color::blue());
-
+				//break;
+				i++;
 			}
 		}
 
-		finalMesh->LODResources[0].Sections[0].NumTriangles = finalIndex;
+		for (const auto& tri: clippedTrisTest)
+		{
+			vec3 norm = GetTriNormal(tri);
+			vec3 normColor = norm * 0.5f + 0.5f;
 
-		finalMesh->UploadToGPU(true, true);
+			DShapes::WireTriangle(tri.V2, tri.V1, tri.V0, Color(normColor));
+		}
+
+		//for (const auto& item: pathPoints)
+		//{
+		//	DShapes::WireBox(AABB(item - 0.01f, item + 0.01f));
+		//}
+
+
+
+		//finalMesh->LODResources[0].Sections[0].NumTriangles = finalIndex;
+
+		//finalMesh->UploadToGPU(true, true);
 	}
 
 	void Render() override

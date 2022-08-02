@@ -106,12 +106,12 @@ if (FBX_SDK_FOUND)
     if (CMAKE_BUILD_TYPE STREQUAL "Release")
         add_custom_command(TARGET Aurora POST_BUILD # Adds a post-build event to MyTest
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different # which executes "cmake - E copy_if_different..."
-                "$ENV{FBX_ROOT}lib/vs2019/x64/Release/libfbxsdk.dll" # <--this is in-file
+                "$ENV{FBX_ROOT}/lib/vs2019/x64/Release/libfbxsdk.dll" # <--this is in-file
                 $<TARGET_FILE_DIR:Aurora>) # <--this is out-file path
     elseif(CMAKE_BUILD_TYPE STREQUAL "Debug" AND WIN32)
         add_custom_command(TARGET Aurora POST_BUILD # Adds a post-build event to MyTest
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different # which executes "cmake - E copy_if_different..."
-                "$ENV{FBX_ROOT}lib/vs2019/x64/Debug/libfbxsdk.dll" # <--this is in-file
+                "$ENV{FBX_ROOT}/lib/vs2019/x64/Debug/libfbxsdk.dll" # <--this is in-file
                 $<TARGET_FILE_DIR:Aurora>) # <--this is out-file path
     endif()
 

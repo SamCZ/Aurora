@@ -14,6 +14,7 @@ namespace Aurora
 	std::vector<ShapeStructs::ArrowShape> DShapes::m_ArrowShapes;
 	std::vector<ShapeStructs::TextShape> DShapes::m_TextShapes;
 	std::vector<ShapeStructs::TextShape> DShapes::m_OnScreenTextShapes;
+	std::vector<ShapeStructs::TriangleShape> DShapes::m_TriangleShapes;
 
 	struct BaseShapeVertex
 	{
@@ -75,70 +76,143 @@ namespace Aurora
 
 	void DShapes::Render(DrawCallState &drawState)
 	{
-		std::sort(m_LineShapes.begin(), m_LineShapes.end(), [](const ShapeStructs::LineShape& left, const ShapeStructs::LineShape& right) -> bool
-		{
-
-			if(left.UseDepthBuffer < right.UseDepthBuffer) return true;
-			if(left.Thickness < right.Thickness) return true;
-
-			return false;
-		});
-
-		drawState.SetVertexBuffer(0, g_LineBuffer);
-		drawState.InputLayoutHandle = g_LineInputLayout;
-		drawState.Shader = g_LineShader;
-
-		int lineDrawCount = 0;
-
-		for (int i = 0; i < m_LineShapes.size(); ++i)
-		{
-			const ShapeStructs::LineShape& currentShape = m_LineShapes[i];
-
-			BaseShapeVertex* vertices = GEngine->GetRenderDevice()->MapBuffer<BaseShapeVertex>(g_LineBuffer, EBufferAccess::WriteOnly);
-
-			vertices->Position = currentShape.P0;
-			vertices->Color = currentShape.Color;
-			vertices++;
-			vertices->Position = currentShape.P1;
-			vertices->Color = currentShape.Color;
-			vertices++;
-
-			uint32_t renderLineCount = 1;
-
-			 // If not at the end of an array
-			if(i != m_LineShapes.size() - 1)
+		{ // Render lines
+			std::sort(m_LineShapes.begin(), m_LineShapes.end(), [](const ShapeStructs::LineShape& left, const ShapeStructs::LineShape& right) -> bool
 			{
-				for (int j = i + 1; j < m_LineShapes.size(); ++j)
+
+				if(left.UseDepthBuffer < right.UseDepthBuffer) return true;
+				if(left.Thickness < right.Thickness) return true;
+
+				return false;
+			});
+
+			drawState.SetVertexBuffer(0, g_LineBuffer);
+			drawState.InputLayoutHandle = g_LineInputLayout;
+			drawState.Shader = g_LineShader;
+
+			int lineDrawCount = 0;
+
+			for (int i = 0; i < m_LineShapes.size(); ++i)
+			{
+				const ShapeStructs::LineShape& currentShape = m_LineShapes[i];
+
+				BaseShapeVertex* vertices = GEngine->GetRenderDevice()->MapBuffer<BaseShapeVertex>(g_LineBuffer, EBufferAccess::WriteOnly);
+
+				vertices->Position = currentShape.P0;
+				vertices->Color = currentShape.Color;
+				vertices++;
+				vertices->Position = currentShape.P1;
+				vertices->Color = currentShape.Color;
+				vertices++;
+
+				uint32_t renderLineCount = 1;
+
+				// If not at the end of an array
+				if(i != m_LineShapes.size() - 1)
 				{
-					const ShapeStructs::LineShape& nextShape = m_LineShapes[j];
+					for (int j = i + 1; j < m_LineShapes.size(); ++j)
+					{
+						const ShapeStructs::LineShape& nextShape = m_LineShapes[j];
 
-					if(nextShape.Thickness != currentShape.Thickness || nextShape.UseDepthBuffer != currentShape.UseDepthBuffer)
-						break;
+						if(nextShape.Thickness != currentShape.Thickness || nextShape.UseDepthBuffer != currentShape.UseDepthBuffer)
+							break;
 
-					vertices->Position = nextShape.P0;
-					vertices->Color = nextShape.Color;
-					vertices++;
-					vertices->Position = nextShape.P1;
-					vertices->Color = nextShape.Color;
-					vertices++;
+						vertices->Position = nextShape.P0;
+						vertices->Color = nextShape.Color;
+						vertices++;
+						vertices->Position = nextShape.P1;
+						vertices->Color = nextShape.Color;
+						vertices++;
 
-					renderLineCount++;
-					i++;
+						renderLineCount++;
+						i++;
+					}
 				}
+
+				GEngine->GetRenderDevice()->UnmapBuffer(g_LineBuffer);
+
+				drawState.PrimitiveType = EPrimitiveType::LineList;
+				drawState.RasterState.LineWidth = currentShape.Thickness;
+				drawState.DepthStencilState.DepthEnable = currentShape.UseDepthBuffer;
+
+				DrawArguments drawArguments;
+				drawArguments.VertexCount = renderLineCount * 2;
+
+				GEngine->GetRenderDevice()->Draw(drawState, {drawArguments});
+
+				lineDrawCount++;
 			}
+		}
 
-			GEngine->GetRenderDevice()->UnmapBuffer(g_LineBuffer);
+		{ // Render triangles
+			std::sort(m_TriangleShapes.begin(), m_TriangleShapes.end(), [](const auto& left, const auto& right) -> bool
+			{
 
-			drawState.PrimitiveType = EPrimitiveType::LineList;
-			drawState.RasterState.LineWidth = currentShape.Thickness;
-			drawState.DepthStencilState.DepthEnable = currentShape.UseDepthBuffer;
+				if(left.UseDepthBuffer < right.UseDepthBuffer) return true;
+				if(left.Thickness < right.Thickness) return true;
 
-			DrawArguments drawArguments;
-			drawArguments.VertexCount = renderLineCount * 2;
+				return false;
+			});
 
-			GEngine->GetRenderDevice()->Draw(drawState, {drawArguments});
+			drawState.SetVertexBuffer(0, g_LineBuffer);
+			drawState.InputLayoutHandle = g_LineInputLayout;
+			drawState.Shader = g_LineShader;
 
-			lineDrawCount++;
+			for (int i = 0; i < m_TriangleShapes.size(); ++i)
+			{
+				const ShapeStructs::TriangleShape& currentShape = m_TriangleShapes[i];
+
+				BaseShapeVertex* vertices = GEngine->GetRenderDevice()->MapBuffer<BaseShapeVertex>(g_LineBuffer, EBufferAccess::WriteOnly);
+
+				vertices->Position = currentShape.P0;
+				vertices->Color = currentShape.Color;
+				vertices++;
+				vertices->Position = currentShape.P1;
+				vertices->Color = currentShape.Color;
+				vertices++;
+				vertices->Position = currentShape.P2;
+				vertices->Color = currentShape.Color;
+				vertices++;
+
+				uint32_t renderTriCount = 1;
+
+				// If not at the end of an array
+				if(i != m_TriangleShapes.size() - 1)
+				{
+					for (int j = i + 1; j < m_TriangleShapes.size(); ++j)
+					{
+						const ShapeStructs::TriangleShape& nextShape = m_TriangleShapes[j];
+
+						if(nextShape.Thickness != currentShape.Thickness || nextShape.UseDepthBuffer != currentShape.UseDepthBuffer)
+							break;
+
+						vertices->Position = nextShape.P0;
+						vertices->Color = nextShape.Color;
+						vertices++;
+						vertices->Position = nextShape.P1;
+						vertices->Color = nextShape.Color;
+						vertices++;
+						vertices->Position = nextShape.P2;
+						vertices->Color = nextShape.Color;
+						vertices++;
+
+						renderTriCount++;
+						i++;
+					}
+				}
+
+				GEngine->GetRenderDevice()->UnmapBuffer(g_LineBuffer);
+
+				drawState.PrimitiveType = EPrimitiveType::TriangleList;
+				drawState.RasterState.LineWidth = currentShape.Thickness;
+				drawState.DepthStencilState.DepthEnable = currentShape.UseDepthBuffer;
+				drawState.RasterState.CullMode = ECullMode::None;
+
+				DrawArguments drawArguments;
+				drawArguments.VertexCount = renderTriCount * 3;
+
+				GEngine->GetRenderDevice()->Draw(drawState, {drawArguments});
+			}
 		}
 
 		// TODO: Implement box, sphere and arrow shape render
@@ -147,6 +221,7 @@ namespace Aurora
 		m_BoxShapes.clear();
 		m_SphereShapes.clear();
 		m_ArrowShapes.clear();
+		m_TriangleShapes.clear();
 	}
 
 	void DShapes::RenderText(CameraComponent* camera)

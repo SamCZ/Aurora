@@ -12,8 +12,6 @@
 
 #include "Binding.hpp"
 
-#include <Aurora/App/ISystemWindow.hpp>
-
 namespace Aurora::Input
 {
     enum class InputType : uint8_t

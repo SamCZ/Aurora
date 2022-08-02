@@ -45,6 +45,13 @@ namespace Aurora
 			Vector3 Direction;
 		};
 
+		struct TriangleShape : ShapeBase
+		{
+			Vector3 P0;
+			Vector3 P1;
+			Vector3 P2;
+		};
+
 		struct TextShape
 		{
 			Vector3 Position;
@@ -62,6 +69,7 @@ namespace Aurora
 		static std::vector<ShapeStructs::ArrowShape> m_ArrowShapes;
 		static std::vector<ShapeStructs::TextShape> m_TextShapes;
 		static std::vector<ShapeStructs::TextShape> m_OnScreenTextShapes;
+		static std::vector<ShapeStructs::TriangleShape> m_TriangleShapes;
 	public:
 		static void Init();
 		static void Render(DrawCallState& drawState);
@@ -140,9 +148,24 @@ namespace Aurora
 
 		inline static void WireTriangle(const vec3& p0, const vec3& p1, const vec3& p2, Color color = Color::green(), float thickness = 1.0f, uint32_t lifetime = 0, bool useDepthBuffer = true)
 		{
-			Line(p0, p1, color, thickness, lifetime, false);
-			Line(p1, p2, color, thickness, lifetime, false);
-			Line(p2, p0, color, thickness, lifetime, false);
+			Line(p0, p1, color, thickness, lifetime, useDepthBuffer);
+			Line(p1, p2, color, thickness, lifetime, useDepthBuffer);
+			Line(p2, p0, color, thickness, lifetime, useDepthBuffer);
+		}
+
+		inline static void Triangle(const vec3& p0, const vec3& p1, const vec3& p2, Color color = Color::green(), uint32_t lifetime = 0, bool useDepthBuffer = true)
+		{
+			ShapeStructs::TriangleShape shape;
+			shape.P0 = p0;
+			shape.P1 = p1;
+			shape.P2 = p2;
+
+			shape.Color = color;
+			shape.Thickness = 1.0f;
+			shape.LifeTime = lifetime;
+			shape.Wireframe = false;
+			shape.UseDepthBuffer = useDepthBuffer;
+			m_TriangleShapes.emplace_back(shape);
 		}
 
 		inline static void Sphere(const Vector3& pos, float radius, Color color = Color::green(), bool wireframe = false, float thickness = 1.0f, uint32_t lifetime = 0, bool useDepthBuffer = true)

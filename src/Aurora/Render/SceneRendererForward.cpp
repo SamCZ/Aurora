@@ -434,7 +434,7 @@ namespace Aurora
 				drawState.BindTarget(0, hrdColorBuffer);
 				drawState.BindDepthTarget(depthBuffer, 0, 0);
 
-				drawState.DepthStencilState.DepthWriteMask = EDepthWriteMask::Zero;
+				//drawState.DepthStencilState.DepthWriteMask = EDepthWriteMask::Zero;
 
 				GEngine->GetRenderDevice()->BindRenderTargets(drawState);
 				// Render debug shapes
