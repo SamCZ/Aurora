@@ -296,10 +296,11 @@ void FillClippedHole(const vec4& plane, std::vector<Triangle> clipped, std::vect
 	for (int v0 = 0; v0 < numPoints; ++v0)
 	{
 		int v1 = (v0 + 1) % numPoints;
-		leftTriangles.emplace_back(pointsInsidePlane[v0], mid, pointsInsidePlane[v1]);
-		rightTriangle.emplace_back(pointsInsidePlane[v0], pointsInsidePlane[v1], mid);
-	}
+		//leftTriangles.emplace_back(pointsInsidePlane[v0], mid, pointsInsidePlane[v1]);
+		//rightTriangle.emplace_back(pointsInsidePlane[v0], pointsInsidePlane[v1], mid);
 
+		clippedTrisTest.emplace_back(pointsInsidePlane[v0], mid, pointsInsidePlane[v1]);
+	}
 }
 
 class BaseAppContext : public AppContext
@@ -338,7 +339,7 @@ class BaseAppContext : public AppContext
 
 		planeActor = AppContext::GetScene()->SpawnActor<Actor>("Plane");
 		planeActor->GetTransform().SetLocation(0, 0.025, 0);
-		planeActor->GetTransform().SetRotation(45, 0, 0);
+		planeActor->GetTransform().SetRotation(90, 0, 0);
 
 		//FbxImport::LoadScene(GEngine->GetResourceManager()->LoadFile("Assets/pickaxe.fbx"));
 
@@ -348,7 +349,7 @@ class BaseAppContext : public AppContext
 		importOptions.UploadToGPU = true;
 
 		AssimpModelLoader modelLoader;
-		MeshImportedData importedData = modelLoader.ImportModel("mesh", GEngine->GetResourceManager()->LoadFile("Assets/box.fbx"), importOptions);
+		MeshImportedData importedData = modelLoader.ImportModel("mesh", GEngine->GetResourceManager()->LoadFile("Assets/weird_shape.fbx"), importOptions);
 
 		mesh = importedData.Get<StaticMesh>();
 
@@ -384,7 +385,7 @@ class BaseAppContext : public AppContext
 
 			for (int i = 0; i < 3; ++i)
 			{
-				clipPlanes.push_back(vec4(Rand::RangeFloat(-1, 1), Rand::RangeFloat(-1, 1), Rand::RangeFloat(-1, 1), Rand::RangeFloat(-0.5, 0.5)));
+				//clipPlanes.push_back(vec4(Rand::RangeFloat(-1, 1), Rand::RangeFloat(-1, 1), Rand::RangeFloat(-1, 1), Rand::RangeFloat(-0.5, 0.5)));
 				int a = 0;
 			}
 
@@ -560,7 +561,7 @@ class BaseAppContext : public AppContext
 				vec3 normalFromCenter = glm::normalize(mid - vec3(0.0f));
 				float distTo0 = glm::distance(mid, vec3(0.0f));
 
-				off = normalFromCenter * distTo0 * distanceMod;
+				//off = normalFromCenter * distTo0 * distanceMod;
 
 				for (const Triangle& tri : pieceTriangles)
 				{
@@ -569,7 +570,7 @@ class BaseAppContext : public AppContext
 
 					DShapes::Triangle(tri.V2 + off, tri.V1 + off, tri.V0 + off, Color(normColor));
 				}
-				//break;
+				break;
 				i++;
 			}
 		}
@@ -579,7 +580,7 @@ class BaseAppContext : public AppContext
 			vec3 norm = GetTriNormal(tri);
 			vec3 normColor = norm * 0.5f + 0.5f;
 
-			DShapes::WireTriangle(tri.V2, tri.V1, tri.V0, Color(normColor));
+			DShapes::WireTriangle(tri.V2, tri.V1, tri.V0, Color::red());
 		}
 
 		//for (const auto& item: pathPoints)
