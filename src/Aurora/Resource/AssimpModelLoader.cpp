@@ -341,7 +341,7 @@ namespace Aurora
 	{
 		aiMatrix4x4 transform;
 
-		if (scene->HasAnimations())
+		if (scene->HasAnimations() || false)
 		{
 			// No parent transform for animated meshes
 			transform = node->mTransformation;
@@ -575,7 +575,15 @@ namespace Aurora
 
 				aiMatrix4x4 invTrans = scene->mRootNode->mTransformation;
 				invTrans.Inverse();
-				skeletalMesh->Armature.GlobalInverseTransform = mat4_cast(invTrans);
+
+				if (importOptions.PreTransform)
+				{
+					skeletalMesh->Armature.GlobalInverseTransform = glm::identity<Matrix4>();
+				}
+				else
+				{
+					skeletalMesh->Armature.GlobalInverseTransform = mat4_cast(invTrans);
+				}
 
 				/*for (int i = 0; i < scene->mNumAnimations; ++i)
 				{

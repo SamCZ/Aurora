@@ -176,7 +176,7 @@ namespace Aurora
 				}
 			}
 
-			DShapes::Frustum(glm::inverse(camera->GetProjectionViewMatrix()), Color::red());
+			//DShapes::Frustum(glm::inverse(camera->GetProjectionViewMatrix()), Color::red());
 
 			const FFrustum& frustum = camera->GetFrustum();
 			Matrix4 viewMatrix = camera->GetViewMatrix();
@@ -302,9 +302,14 @@ namespace Aurora
 				{
 					if (dirLight->CastShadows())
 					{
+						drawState.Uniforms.SetBool("HasDirlightShadow"_HASH, true);
 						drawState.Uniforms.SetMat4Array("ShadowmapMatrix"_HASH, dirLight->ShadowMatrices);
 						drawState.BindTexture("g_ShadowmapTexture", dirLight->RenderTexture);
 						drawState.BindSampler("g_ShadowmapTexture", Samplers::LinearShadowCompare);
+					}
+					else
+					{
+						drawState.Uniforms.SetBool("HasDirlightShadow"_HASH, false);
 					}
 
 					drawState.Uniforms.SetVec3("LightDir"_HASH, glm::normalize(dirLight->GetForwardVector()));

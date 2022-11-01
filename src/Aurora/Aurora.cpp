@@ -373,6 +373,7 @@ namespace Aurora
 					std::stringstream ss;
 
 					ss << m_Window->GetOriginalTitle();
+					ss << " - " << std::to_string(m_Window->GetWidth()) << "x" << std::to_string(m_Window->GetHeight());
 					ss << " - " << frameRate << " fps, " << (frameTime * 1000) << "ms, avg=" << avgFrameTimeMs;
 
 					m_Window->SetTitle(ss.str());

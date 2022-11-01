@@ -19,17 +19,31 @@ float LinearShadowSample(sampler2DArrayShadow sampler, int shadowLevel, vec2 coo
 	return mix(mixA, mixB, fracPart.x);
 }
 
+uniform bool HasDirlightShadow;
+
+#define SHADOW_MAP_BIAS 0.9
+
 float GetShadowValue(in float shadowBias)
 {
+	if (HasDirlightShadow == false)
+	{
+		return 1.0f;
+	}
+
 	int shadowLevel = 0;
 	bool inRange = false;
 
-	float inverseShadow = 1.0;
+	float inverseShadow = 0.0;
 
 	for(; shadowLevel < NUM_SHADOW_MAP_LEVELS; shadowLevel++)
 	{
 		vec3 shadowCoord = ShadowCoords[shadowLevel];
 		//shadowCoord.xy = shadowCoord.xy * 0.5 + 0.5;
+
+		/*float dist = sqrt(shadowCoord.x * shadowCoord.x + shadowCoord.y * shadowCoord.y);
+		float distortFactor = (1.0f - SHADOW_MAP_BIAS) + dist * SHADOW_MAP_BIAS;
+		shadowCoord.xy *= 0.95f / distortFactor;*/
+
 		inRange = shadowCoord.x >= 0 &&
 		shadowCoord.y >= 0 &&
 		shadowCoord.x <  1 &&
@@ -41,8 +55,9 @@ float GetShadowValue(in float shadowBias)
 
 		if(inRange)
 		{
-			vec2 texelSize = 1.0f / textureSize(g_ShadowmapTexture, 0).xy;
+			//vec2 texelSize = 1.0f / textureSize(g_ShadowmapTexture, 0).xy;
 			//inverseShadow = LinearShadowSample(g_ShadowmapTexture, shadowLevel, shadowCoord.xy, shadowCoord.z - shadowBias, texelSize);
+
 			inverseShadow = texture(g_ShadowmapTexture, vec4(shadowCoord.xy, shadowLevel, shadowCoord.z-shadowBias));
 			break;
 		}
