@@ -3,6 +3,7 @@ layout(early_fragment_tests) in;
 layout(location = 0) out vec4 FragColor;
 
 #include "../../Decals.h"
+#include "../../Shadows.h"
 
 uniform Color
 {
@@ -13,6 +14,7 @@ in vec2 TexCoord;
 in vec3 Normal;
 in mat3 TBN;
 in vec4 WorldPos;
+in highp vec3 ShadowCoords[NUM_SHADOW_MAP_LEVELS];
 
 #ifdef HAS_DECALS
 in vec4 DecalProjections[10];
@@ -29,6 +31,10 @@ uniform sampler2D AOMap;
 
 uniform sampler2D g_DecalTexture;
 uniform vec3 LightDir;
+
+uniform sampler2DArrayShadow g_ShadowmapTexture;
+
+#include "/Assets/Shaders/ShadowsPS.glsl"
 
 void main()
 {
@@ -53,6 +59,13 @@ void main()
 	nDotL = max(nDotL, 0.5);
 
 	FragColor.rgb *= nDotL;
+
+	// Default bias: 0.001
+	// Procedural offset default: 0.016
+	float bias = 0.001;// + smoothstep(0.65, 1.0, (1.0 - max(0, nDotL))) * 0.01f;
+
+	float inverseShadow = GetShadowValue(bias);
+	FragColor.rgb *= max(inverseShadow, 0.45f);
 
 #ifdef HAS_DECALS
 	vec3 projCoords;
