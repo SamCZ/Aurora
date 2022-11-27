@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "Types.hpp"
-#include "Vector.hpp"
+#include "Math.hpp"
 
 #define DEF_OP(type) public: \
     inline friend Archive& operator<<(Archive& buffer, type value) \

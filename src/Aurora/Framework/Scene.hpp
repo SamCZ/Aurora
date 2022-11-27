@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Logger/Logger.hpp"
 #include "Aurora/Memory/Aum.hpp"

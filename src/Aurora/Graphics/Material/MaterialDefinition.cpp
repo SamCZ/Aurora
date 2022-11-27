@@ -97,7 +97,7 @@ namespace Aurora
 				if(samplerName[0] == 'g' && samplerName[1] == '_')
 					continue;
 
-				TTypeID samplerId = Hash_djb2(samplerName.c_str());
+				StrHashID samplerId = HashDjb2(samplerName.c_str());
 
 				const auto& it = m_TextureVars.find(samplerId);
 				if(it == m_TextureVars.end())
@@ -147,7 +147,7 @@ namespace Aurora
 
 				MUniformBlock uniformBlock;
 				uniformBlock.Name = block.Name;
-				uniformBlock.NameID = Hash_djb2(block.Name.c_str());
+				uniformBlock.NameID = HashDjb2(block.Name.c_str());
 				uniformBlock.Size = block.Size;
 				uniformBlock.Offset = memorySize;
 
@@ -155,7 +155,7 @@ namespace Aurora
 
 				for (const auto& var : block.Variables)
 				{
-					TTypeID varId = Hash_djb2(var.Name.data());
+					TTypeID varId = HashDjb2(var.Name.data());
 
 					MUniformVar uniformVar;
 					uniformVar.Name = var.Name;

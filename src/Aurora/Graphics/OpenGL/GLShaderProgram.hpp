@@ -23,7 +23,7 @@ namespace Aurora
 		std::vector<ShaderResourceDesc> m_SamplerDescriptorCache;
 		bool m_SamplerDescriptorCacheInitialized;
 
-		robin_hood::unordered_map<TTypeID, GLint> m_UniformLocationCache;
+		robin_hood::unordered_map<StrHashID, GLint> m_UniformLocationCache;
 	public:
 		GLShaderProgram(GLuint handle, ShaderProgramDesc desc);
 		~GLShaderProgram();
@@ -38,7 +38,7 @@ namespace Aurora
 		[[nodiscard]] GLuint Handle() const noexcept { return m_Handle; }
 		[[nodiscard]] const GLShaderResources& GetGLResource() const { return m_Resources; }
 
-		GLint GetUniformLocation(TTypeID nameID) const;
-		inline GLint GetUniformLocation(const std::string& name) const { return GetUniformLocation(Hash_djb2(name.c_str())); }
+		GLint GetUniformLocation(StrHashID nameID) const;
+		inline GLint GetUniformLocation(const std::string& name) const { return GetUniformLocation(HashDjb2(name.c_str())); }
 	};
 }

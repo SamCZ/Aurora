@@ -1,4 +1,4 @@
-#include "Vector.hpp"
+#include "Math.hpp"
 
 namespace glm
 {
@@ -147,4 +147,3 @@ namespace glm
 		return true;
 	}
 }
-

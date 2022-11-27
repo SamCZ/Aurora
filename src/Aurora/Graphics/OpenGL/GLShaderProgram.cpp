@@ -158,7 +158,7 @@ namespace Aurora
 		return {};
 	}
 
-	GLint GLShaderProgram::GetUniformLocation(TTypeID nameID) const
+	GLint GLShaderProgram::GetUniformLocation(StrHashID nameID) const
 	{
 		auto it = m_Resources.GetUniforms().find(nameID);
 

@@ -4,7 +4,7 @@
 
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/String.hpp>
-#include <Aurora/Core/Vector.hpp>
+#include <Aurora/Core/Math.hpp>
 
 struct FMOD_STUDIO_EVENTINSTANCE;
 

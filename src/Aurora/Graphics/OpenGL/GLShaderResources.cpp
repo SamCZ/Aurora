@@ -319,7 +319,7 @@ namespace Aurora
 
 					if (uniformLocation >= 0)
 					{
-						m_Uniforms[Hash_djb2(basicUniform.Name.c_str())] = {basicUniform.Name, ShaderResourceType::Uniform, 0, uint32_t(size), uniformLocation, glType.ComponentCount, glType.Size, GetGLVarType(dataType)};
+						m_Uniforms[HashDjb2(basicUniform.Name.c_str())] = {basicUniform.Name, ShaderResourceType::Uniform, 0, uint32_t(size), uniformLocation, glType.ComponentCount, glType.Size, GetGLVarType(dataType)};
 					}
 
 					break;

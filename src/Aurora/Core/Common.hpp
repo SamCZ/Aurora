@@ -12,6 +12,25 @@
 #include "Types.hpp"
 #include "Library.hpp"
 
+#ifndef FINLINE
+#	ifdef _MSC_VER
+#		define FINLINE __forceinline
+#   elif __CLANG__
+#       define FINLINE [[clang::always_inline]]
+#	elif __GNUC__
+#       define FINLINE  __attribute__((always_inline))
+#   endif
+#endif
+
+#if defined( __GNUC__ ) || defined(__INTEGRITY)
+	#define AU_ALIGNAS(_x)          __attribute__ ((aligned(_x)))
+#elif defined( _WIN32) && (_MSC_VER)
+	#define AU_ALIGNAS(_x)          __declspec(align(_x))
+#else
+#warning  Need to implement some method to align data here
+	#define  AU_ALIGNAS(_x)
+#endif
+
 template<typename T>
 class SharedFromThis : public std::enable_shared_from_this<T>
 {

@@ -3,19 +3,12 @@
 #include <type_traits>
 #include <memory>
 
-#include "Hash.hpp"
+#include "TypeID.hpp"
 #include "Library.hpp"
-#include "Types.hpp"
 
 namespace Aurora
 {
 	class ObjectBase;
-
-	template <typename Type>
-	struct AU_API TypeIDCache
-	{
-		constexpr static const TTypeID value = Hash_djb2(Type::TypeName());
-	};
 
 	class AU_API ObjectBase
 	{
@@ -23,7 +16,7 @@ namespace Aurora
 		virtual ~ObjectBase() = default;
 	public:
 		static constexpr const char* TypeName() { return "ObjectBase"; }
-		static TTypeID TypeID() { return TypeIDCache<ObjectBase>::value; }
+		static TTypeID TypeID() { return TypeIDCache<ObjectBase>::Value; }
 		[[nodiscard]] virtual TTypeID GetTypeID() const = 0;
 		[[nodiscard]] virtual const char* GetTypeName() const { return TypeName(); }
 		[[nodiscard]] virtual bool HasType(TTypeID type) const { return false; }
@@ -48,7 +41,7 @@ namespace Aurora
 #define CLASS_OBJ(className, parentClass) \
     typedef parentClass Super;\
 	static constexpr const char* TypeName() { return #className; } \
-	static TTypeID TypeID() { return TypeIDCache<className>::value; } \
+	static TTypeID TypeID() { return TypeIDCache<className>::Value; } \
 	[[nodiscard]] TTypeID GetTypeID() const override { return TypeID(); } \
 	[[nodiscard]] const char* GetTypeName() const override { return TypeName(); } \
 	[[nodiscard]] bool HasType(TTypeID type) const override { if (type == TypeID()) return true; else return parentClass::HasType(type); } \

@@ -5,7 +5,7 @@
 #include <Aurora/Engine.hpp>
 #include <Aurora/Core/Common.hpp>
 #include <Aurora/Core/String.hpp>
-#include <Aurora/Core/Vector.hpp>
+#include <Aurora/Core/Math.hpp>
 #include <Aurora/Core/Library.hpp>
 #include <Aurora/RmlUI/RmlUI.hpp>
 #include <RmlUi/Core/DataModelHandle.h>

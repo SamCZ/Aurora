@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "Aurora/Core/Hash.hpp"
 #include "Aurora/Engine.hpp"
 #include "Aurora/Logger/Logger.hpp"
 #include "Aurora/Graphics/Material/MaterialDefinition.hpp"
@@ -75,7 +76,7 @@ namespace Aurora
 
 				auto texturePath = value.get<String>();
 
-				TTypeID nameId = Hash_djb2(name.c_str());
+				StrHashID nameId = HashDjb2(name.c_str());
 
 				MTextureVar textureVar;
 				textureVar.Name = name;
@@ -103,7 +104,7 @@ namespace Aurora
 					MNumericValDesc numericValDesc;
 					numericValDesc.Name = name;
 					numericValDesc.InShaderName = in_shader_name;
-					numericValDesc.InShaderNameID = Hash_djb2(in_shader_name.c_str());
+					numericValDesc.InShaderNameID = HashDjb2(in_shader_name.c_str());
 					numericValDesc.Numbers = value.get<std::vector<float>>();
 
 					if (it.contains("widget"))

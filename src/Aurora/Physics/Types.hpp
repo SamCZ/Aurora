@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 
 #ifdef AU_PHYSICS_USE_DOUBLE
 typedef double phScalar;

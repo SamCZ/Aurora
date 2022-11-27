@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Core/String.hpp"
 #include "Aurora/Tools/robin_hood.h"
 #include "Bone.hpp"

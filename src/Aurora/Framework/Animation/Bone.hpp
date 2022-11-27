@@ -2,7 +2,7 @@
 
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Core/String.hpp"
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 
 namespace Aurora::Animation
 {

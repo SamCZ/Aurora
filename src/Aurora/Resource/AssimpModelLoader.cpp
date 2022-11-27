@@ -5,7 +5,7 @@
 #include <assimp/postprocess.h>
 
 #include "Aurora/Logger/Logger.hpp"
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 
 #include <stb_image.h>
 #include <stb_image_resize.h>

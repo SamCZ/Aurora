@@ -680,6 +680,16 @@ namespace Aurora
 
 		TTypeID meshType = Mesh::ReadMeshType(archive);
 
+		{ // Legacy
+			if (meshType == 2951506970)
+			{
+				StaticMesh_ptr newMesh = std::make_shared<StaticMesh>();
+				newMesh->Deserialize(archive);
+				newMesh->UploadToGPU(false);
+				return newMesh;
+			}
+		}
+
 		if (meshType == StaticMesh::TypeID())
 		{
 			StaticMesh_ptr newMesh = std::make_shared<StaticMesh>();

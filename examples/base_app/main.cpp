@@ -278,6 +278,9 @@ class BaseAppContext : public AppContext
 			ParticleSystemComponent* particleSystemComponent = GetScene()->SpawnActor<Actor, ParticleSystemComponent>("Particles")->GetRootComponent<ParticleSystemComponent>();
 
 		}
+
+		AU_LOG_INFO("StaticMesh typeid: ", StaticMesh::TypeID());
+		AU_LOG_INFO("SkeletalMesh typeid: ", SkeletalMesh::TypeID());
 	}
 
 	void Update(double delta) override

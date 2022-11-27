@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Aurora/Core/Types.hpp"
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Core/Object.hpp"
 #include "Aurora/Core/Library.hpp"
 #include "Aurora/Core/Archive.hpp"

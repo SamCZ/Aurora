@@ -32,7 +32,7 @@ namespace Aurora
 	{
 		String Name;
 		String InShaderName;
-		TTypeID InShaderNameID;
+		StrHashID InShaderNameID;
 		String Widget; // TODO: Change to enum
 		std::vector<float> Numbers;
 
@@ -69,13 +69,13 @@ namespace Aurora
 	struct MUniformBlock
 	{
 		String Name;
-		TTypeID NameID;
+		StrHashID NameID;
 		size_t Size;
 		size_t Offset;
 
-		robin_hood::unordered_map<TTypeID, MUniformVar> Vars;
+		robin_hood::unordered_map<StrHashID, MUniformVar> Vars;
 
-		MUniformVar* FindVar(TTypeID id)
+		MUniformVar* FindVar(StrHashID id)
 		{
 			const auto& it = Vars.find(id);
 
@@ -125,7 +125,7 @@ namespace Aurora
 		MaterialDefinition* m_MatDef;
 
 		std::vector<uint8> m_UniformData;
-		robin_hood::unordered_map<TTypeID, MTextureVar> m_TextureVars;
+		robin_hood::unordered_map<StrHashID, MTextureVar> m_TextureVars;
 
 		ShaderMacros m_Macros; // TODO: Finish macros
 
@@ -181,10 +181,10 @@ namespace Aurora
 			return m_Macros.contains("USE_ALPHA_THRESHOLD");
 		}
 
-		uint8* GetBlockMemory(TTypeID id, size_t size);
+		uint8* GetBlockMemory(StrHashID id, size_t size);
 
 		template<typename VarBlock>
-		bool SetVarBlock(TTypeID id, VarBlock& block)
+		bool SetVarBlock(StrHashID id, VarBlock& block)
 		{
 			if(auto* blockPtr = reinterpret_cast<VarBlock*>(GetBlockMemory(id, sizeof(VarBlock))))
 			{
@@ -196,18 +196,18 @@ namespace Aurora
 		}
 
 		template<typename VarBlock>
-		VarBlock* GetVarBlock(TTypeID id)
+		VarBlock* GetVarBlock(StrHashID id)
 		{
 			return reinterpret_cast<VarBlock*>(GetBlockMemory(id, sizeof(VarBlock)));
 		}
 
 		//////// Variables ////////
 
-		uint8* GetVariableMemory(TTypeID varId, size_t size);
-		bool SetVariable(TTypeID varId, uint8* data, size_t size);
+		uint8* GetVariableMemory(StrHashID varId, size_t size);
+		bool SetVariable(StrHashID varId, uint8* data, size_t size);
 
 		template<typename VarType>
-		bool SetVariable(TTypeID varId, VarType var)
+		bool SetVariable(StrHashID varId, VarType var)
 		{
 			auto* rawData = (uint8*)(&var);
 			size_t size = sizeof(VarType);
@@ -216,7 +216,7 @@ namespace Aurora
 		}
 
 		template<typename VarType>
-		bool GetVariable(TTypeID varId, VarType& outVar)
+		bool GetVariable(StrHashID varId, VarType& outVar)
 		{
 			size_t size = sizeof(VarType);
 			uint8* memory = GetVariableMemory(varId, size);
@@ -232,16 +232,16 @@ namespace Aurora
 
 		//////// Textures ////////
 	public:
-		MTextureVar* GetTextureVar(TTypeID varId);
+		MTextureVar* GetTextureVar(StrHashID varId);
 	public:
-		bool SetTexture(TTypeID varId, const Texture_ptr& texture);
-		bool SetSampler(TTypeID varId, const Sampler_ptr& texture);
+		bool SetTexture(StrHashID varId, const Texture_ptr& texture);
+		bool SetSampler(StrHashID varId, const Sampler_ptr& texture);
 
-		Texture_ptr GetTexture(TTypeID varId);
-		Sampler_ptr GetSampler(TTypeID varId);
+		Texture_ptr GetTexture(StrHashID varId);
+		Sampler_ptr GetSampler(StrHashID varId);
 
 		//////// Buffers ////////
-		bool SetBuffer(TTypeID bufferId, const Buffer_ptr& buffer) { return false; } // TODO: Complete buffers
+		bool SetBuffer(StrHashID bufferId, const Buffer_ptr& buffer) { return false; } // TODO: Complete buffers
 	};
 
 	using matref = std::shared_ptr<Material>;

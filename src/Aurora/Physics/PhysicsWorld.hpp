@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Aurora/Core/Library.hpp"
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Framework/Physics/ColliderComponent.hpp"
 #include "AABBTree.hpp"
 

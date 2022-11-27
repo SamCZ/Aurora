@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 
 #define IM_VEC2_CLASS_EXTRA \
 		ImVec2(const glm::vec2& f) { x = f.x; y = f.y; }\

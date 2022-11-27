@@ -7,7 +7,7 @@
 #include "Format.hpp"
 #include "TypeBase.hpp"
 #include "Aurora/Graphics/Color.hpp"
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Resource/ResourceName.hpp"
 
 namespace Aurora

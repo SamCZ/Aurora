@@ -184,7 +184,7 @@ namespace Aurora
 		m_MatDef->ReloadShader();
 	}
 
-	uint8* Material::GetBlockMemory(TTypeID id, size_t size)
+	uint8* Material::GetBlockMemory(StrHashID id, size_t size)
 	{
 		MUniformBlock* block = m_MatDef->FindUniformBlock(id);
 
@@ -218,7 +218,7 @@ namespace Aurora
 		return memoryStart;
 	}
 
-	uint8* Material::GetVariableMemory(TTypeID varId, size_t size)
+	uint8* Material::GetVariableMemory(StrHashID varId, size_t size)
 	{
 		MUniformBlock* block = nullptr;
 		MUniformVar* var = m_MatDef->FindUniformVar(varId, &block);
@@ -253,7 +253,7 @@ namespace Aurora
 		return varMemoryStart;
 	}
 
-	bool Material::SetVariable(TTypeID varId, uint8 *data, size_t size)
+	bool Material::SetVariable(StrHashID varId, uint8 *data, size_t size)
 	{
 		uint8* varMemoryStart = GetVariableMemory(varId, size);
 
@@ -268,7 +268,7 @@ namespace Aurora
 
 	///////////////////////////////////// TEXTURES /////////////////////////////////////
 
-	MTextureVar* Material::GetTextureVar(TTypeID varId)
+	MTextureVar* Material::GetTextureVar(StrHashID varId)
 	{
 		const auto& it = m_TextureVars.find(varId);
 
@@ -288,7 +288,7 @@ namespace Aurora
 		return &it->second;
 	}
 
-	bool Material::SetTexture(TTypeID varId, const Texture_ptr& texture)
+	bool Material::SetTexture(StrHashID varId, const Texture_ptr& texture)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 
@@ -303,7 +303,7 @@ namespace Aurora
 		return true;
 	}
 
-	bool Material::SetSampler(TTypeID varId, const Sampler_ptr& sampler)
+	bool Material::SetSampler(StrHashID varId, const Sampler_ptr& sampler)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 
@@ -314,7 +314,7 @@ namespace Aurora
 		return true;
 	}
 
-	Texture_ptr Material::GetTexture(TTypeID varId)
+	Texture_ptr Material::GetTexture(StrHashID varId)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 
@@ -324,7 +324,7 @@ namespace Aurora
 		return var->Texture;
 	}
 
-	Sampler_ptr Material::GetSampler(TTypeID varId)
+	Sampler_ptr Material::GetSampler(StrHashID varId)
 	{
 		MTextureVar* var = GetTextureVar(varId);
 

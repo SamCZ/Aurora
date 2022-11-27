@@ -2,7 +2,7 @@
 
 #include <map>
 #include "Aurora/Core/String.hpp"
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Core/Types.hpp"
 #include "Aurora/Graphics/Color.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"

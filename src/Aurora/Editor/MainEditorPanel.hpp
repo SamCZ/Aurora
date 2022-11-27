@@ -7,7 +7,7 @@
 #include "MaterialWindow.hpp"
 #include "PropertiesWindow.hpp"
 
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Graphics/Base/Texture.hpp"
 
 namespace Aurora

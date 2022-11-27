@@ -5,7 +5,7 @@
 
 #include "Aurora/Core/Library.hpp"
 #include "Aurora/Core/String.hpp"
-#include "Aurora/Core/Vector.hpp"
+#include "Aurora/Core/Math.hpp"
 #include "Aurora/Core/Delegate.hpp"
 #include "Aurora/Graphics/Base/SwapChain.hpp"
 

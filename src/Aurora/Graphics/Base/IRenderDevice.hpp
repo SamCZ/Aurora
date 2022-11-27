@@ -17,7 +17,7 @@
 #include "FDepthStencilState.hpp"
 
 #include "../ViewPort.hpp"
-#include "Aurora/Core/Hash.hpp"
+#include "Aurora/Core/TypeID.hpp"
 #include "Aurora/Core/Map.hpp"
 #include "Aurora/Tools/robin_hood.h"
 

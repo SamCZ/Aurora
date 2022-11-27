@@ -65,7 +65,7 @@ namespace Aurora
 		uint32_t m_StorageBufferBinding;
 
 		std::vector<UniformBufferInfo> m_UniformBlocks;
-		FastMap<TTypeID, UniformInfo> m_Uniforms;
+		FastMap<StrHashID, UniformInfo> m_Uniforms;
 		std::vector<SamplerInfo>       m_Samplers;
 		std::vector<ImageInfo>         m_Images;
 		std::vector<StorageBlockInfo>  m_StorageBlocks;
@@ -75,7 +75,7 @@ namespace Aurora
 		void LoadUniforms(GLuint program);
 
 		[[nodiscard]] inline const std::vector<UniformBufferInfo>& GetUniformBlocks() const noexcept { return m_UniformBlocks; }
-		[[nodiscard]] inline const FastMap<TTypeID, UniformInfo>& GetUniforms() const noexcept { return m_Uniforms; }
+		[[nodiscard]] inline const FastMap<StrHashID, UniformInfo>& GetUniforms() const noexcept { return m_Uniforms; }
 		[[nodiscard]] inline const std::vector<SamplerInfo>& GetSamplers() const noexcept { return m_Samplers; }
 		[[nodiscard]] inline const std::vector<ImageInfo>& GetImages() const noexcept { return m_Images; }
 		[[nodiscard]] inline const std::vector<StorageBlockInfo>& GetStorageBlocks() const noexcept { return m_StorageBlocks; }
