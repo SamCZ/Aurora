@@ -11,6 +11,7 @@
 #include "../Logger/Logger.hpp"
 #include "Types.hpp"
 #include "Library.hpp"
+#include "ObjectMacros.hpp"
 
 #ifndef FINLINE
 #	ifdef _MSC_VER
