@@ -18,6 +18,7 @@ namespace Aurora
 		Shader_ptr m_ParticleRenderShader;
 
 		Shader_ptr m_FinalPostShader;
+	
 	public:
 		SceneRendererForward();
 

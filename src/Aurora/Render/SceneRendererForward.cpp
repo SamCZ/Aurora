@@ -532,8 +532,12 @@ namespace Aurora
 						drawCallState.BindSampler("_LutTarget", Samplers::ClampClampLinearLinear);
 					}
 
+					m_BloodEffect = glm::mix(m_BloodEffect, m_TargetBloodEffect, 0.02f); // todo: we need delta time 
+					if (m_BloodEffect >= m_TargetBloodEffect-0.01f) m_TargetBloodEffect = 0.0f;
+
 					drawCallState.Uniforms.SetBool("u_BasicToneMapEnabled"_HASH, ToneMapSettings.BasicToneMapEnabled);
 					drawCallState.Uniforms.SetUInt("u_BasicToneMapMode"_HASH, (uint)ToneMapSettings.BasicToneMapMode);
+					drawCallState.Uniforms.SetFloat("u_BloodEffect"_HASH, m_BloodEffect);
 				}
 
 				PostProcessEffect::RenderState(drawCallState);

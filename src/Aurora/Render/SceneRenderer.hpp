@@ -138,9 +138,13 @@ namespace Aurora
 		Shader_ptr m_BloomShaderSS;
 		Buffer_ptr m_BloomDescBuffer;
 		const int m_BloomComputeWorkgroupSize = 16;
+
+		float m_BloodEffect = 0.0f;
+		float m_TargetBloodEffect = 0.0f;
 	public:
 		FToneMapSettings ToneMapSettings;
 	public:
+
 		SceneRenderer();
 		virtual ~SceneRenderer() = default;
 
@@ -152,6 +156,11 @@ namespace Aurora
 			{
 				m_VisibleEntities[i].clear();
 			}
+		}
+
+		void ShowBloodEffect(float intensity = 1.0f)
+		{
+			m_TargetBloodEffect = intensity;
 		}
 
 		void PrepareMeshComponent(MeshComponent* scene, CameraComponent* camera, const FFrustum& frustum);
