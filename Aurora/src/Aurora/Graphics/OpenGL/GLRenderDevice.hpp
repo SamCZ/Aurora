@@ -18,7 +18,7 @@ namespace Aurora
 	{
 		static constexpr int MaxRenderTargets = 8;
 		std::array<TargetBinding, MaxRenderTargets> RenderTargets;
-		Texture_ptr DepthTarget;
+		ITexture* DepthTarget;
 		uint32_t DepthIndex;
 		uint32_t DepthMipSlice;
 

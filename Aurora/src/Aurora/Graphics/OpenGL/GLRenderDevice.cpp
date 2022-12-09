@@ -1613,7 +1613,7 @@ namespace Aurora
 		}
 
 		FrameBufferKey key = {
-			state.RenderTargets, state.DepthTarget, state.DepthIndex, state.DepthMipSlice
+			state.RenderTargets, state.DepthTarget.get(), state.DepthIndex, state.DepthMipSlice
 		};
 
 		auto it = m_CachedFrameBuffers.find(key);
