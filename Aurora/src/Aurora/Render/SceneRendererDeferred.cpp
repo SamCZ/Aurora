@@ -191,7 +191,7 @@ namespace Aurora
 			CompositeDefaults defaults = {};
 			defaults.InvProjectionView = glm::inverse(camera->GetProjectionViewMatrix());
 			defaults.ViewMatrix = camera->GetViewMatrix();
-			defaults.CameraPos = Vector4(camera->GetWorldPosition(), 0);
+			defaults._CameraPos = Vector4(camera->GetWorldPosition(), 0);
 
 			GEngine->GetRenderDevice()->WriteBuffer(m_CompositeDefaultsBuffer, &defaults);
 

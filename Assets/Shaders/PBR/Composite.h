@@ -7,7 +7,7 @@ uniformbuffer CompositeDefaults
 {
 	mat4 InvProjectionView;
 	mat4 ViewMatrix;
-	vec4 CameraPos;
+	vec4 _CameraPos;
 	vec4 TestOptions;
 };
 
